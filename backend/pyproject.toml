@@ -1,0 +1,110 @@
+[tool.poetry]
+name = "jd-ingestion-engine"
+version = "0.1.0"
+description = "Government Job Description Ingestion Engine for AI Applications"
+authors = ["Pierre-Yves Fortin <pierreyves.fortin@hrsdc-rhdcc.gc.ca>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "src/jd_ingestion"}]
+classifiers = [ # Moved from the [project] section to here
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.14" # Python version range
+spacy = "^3.8.7"
+spacy-transformers = "^1.3.9"
+psutil = "^7.0.0" # This seems like a core dependency
+sqlmodel = "^0.0.16"
+fastapi = "0.115.0"
+uvicorn = {version = "0.30.6", extras = ["standard"]}
+pydantic = "2.9.2"
+sqlalchemy = "2.0.35"
+psycopg2-binary = "2.9.9"
+asyncpg = "0.29.0"
+alembic = "1.13.2"
+pgvector = "0.3.2"
+pandas = "2.2.3"
+chardet = "5.2.0"
+python-multipart = "0.0.10"
+openai = "1.51.2"
+sentence-transformers = "3.1.1"
+celery = "5.4.0"
+redis = "5.1.1"
+pydantic-settings = "2.5.2"
+structlog = "24.4.0"
+python-dotenv = "1.0.1"
+python-jose = {version = "3.3.0", extras = ["cryptography"]}
+passlib = {version = "1.7.4", extras = ["bcrypt"]}
+
+# Development dependencies (moved from core dependencies)
+aiosqlite = "^0.21.0"
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.2" # Using the latest specified version
+pytest-asyncio = "0.24.0"
+black = "24.8.0"
+flake8 = "7.1.1"
+mypy = "1.11.2"
+pytest-mock = "3.14.0"
+pytest-cov = "5.0.0"
+httpx = "0.27.0"
+factory-boy = "3.3.0"
+faker = "26.0.0"
+pytest-xdist = "3.8.0"
+pytest-benchmark = "4.0.0"
+respx = "0.21.1"
+aiosqlite = "^0.21.0"
+
+# Build system is managed by Poetry, no need for the setuptools one
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+# Tool configurations
+[tool.black]
+line-length = 88
+target-version = ['py39', 'py310', 'py311', 'py312'] # Update target versions
+include = '\.pyi?$'
+
+[tool.mypy]
+python_version = "3.9" # Consider updating if your lowest supported is 3.9
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+python_classes = ["Test*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--cov=src",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--cov-fail-under=80",
+    "--asyncio-mode=auto",
+    "--dist=worksteal",
+    "-n=auto"
+]
+norecursedirs = ["scripts"]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow tests",
+    "api: API tests",
+    "database: Database tests",
+    "external: Tests requiring external services"
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning"
+]

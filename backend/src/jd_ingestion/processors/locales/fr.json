@@ -1,0 +1,25 @@
+{
+  "general_accountability": [
+    "RESPONSABILITÉ\\\\s+GÉNÉRALE\\\\s*:?\\\\s*(.*?)(?=STRUCTURE|NATURE|RESPONSABILITÉS|DIMENSIONS|$)",
+    "RESPONSABILITÉS?\\\\s*:?\\\\s*(.*?)(?=STRUCTURE|NATURE|DIMENSIONS|$)"
+  ],
+  "organization_structure": [
+    "STRUCTURE\\\\s+ORGANISATIONNELLE\\\\s*:?\\\\s*(.*?)(?=NATURE|RESPONSABILITÉS|DIMENSIONS|$)",
+    "ORGANISATION\\\\s*:?\\\\s*(.*?)(?=NATURE|RESPONSABILITÉS|DIMENSIONS|$)"
+  ],
+  "nature_scope": [
+    "NATURE\\\\s+ET\\\\s+PORTÉE\\\\s*:?\\\\s*(.*?)(?=DIMENSIONS|RESPONSABILITÉS|$)",
+    "NATURE\\\\s*&\\\\s*PORTÉE\\\\s*:?\\\\s*(.*?)(?=DIMENSIONS|RESPONSABILITÉS|$)"
+  ],
+  "specific_accountabilities": [
+    "RESPONSABILITÉS\\\\s+SPÉCIFIQUES\\\\s*:?\\\\s*(.*?)(?=DIMENSIONS|CERTIFICATION|CONNAISSANCES|$)",
+    "RESPONSABILITÉS\\\\s+PARTICULIÈRES\\\\s*:?\\\\s*(.*?)(?=DIMENSIONS|CERTIFICATION|CONNAISSANCES|$)"
+  ],
+  "dimensions": [
+    "DIMENSIONS\\\\s*:?\\\\s*(.*?)(?=CONNAISSANCES|CERTIFICATION|FORMATION|$)"
+  ],
+  "knowledge_skills": [
+    "CONNAISSANCES[,\\\\s]*COMPÉTENCES?\\\\s*:?\\\\s*(.*?)(?=CERTIFICATION|FORMATION|EXPÉRIENCE|$)",
+    "COMPÉTENCES?\\\\s*:?\\\\s*(.*?)(?=CERTIFICATION|FORMATION|EXPÉRIENCE|$)"
+  ]
+}

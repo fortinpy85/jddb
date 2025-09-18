@@ -1,0 +1,686 @@
+"""
+Usage analytics and tracking service for JDDB system.
+"""
+
+import asyncio
+import uuid
+from datetime import datetime, timedelta
+from typing import Dict, List, Any, Optional, Union
+from decimal import Decimal
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, and_, or_, desc
+from sqlalchemy.sql import text
+
+from ..database.models import (
+    UsageAnalytics,
+    SystemMetrics,
+    AIUsageTracking,
+    JobDescription,
+)
+from ..utils.logging import get_logger
+
+logger = get_logger(__name__)
+
+
+class AnalyticsService:
+    """Service for tracking and analyzing system usage patterns."""
+
+    def __init__(self):
+        self.session_cache = {}  # In-memory session tracking
+
+    async def track_activity(
+        self,
+        db: AsyncSession,
+        action_type: str,
+        endpoint: str,
+        http_method: str = "GET",
+        session_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
+        resource_id: Optional[str] = None,
+        response_time_ms: Optional[int] = None,
+        status_code: Optional[int] = 200,
+        search_query: Optional[str] = None,
+        search_filters: Optional[Dict] = None,
+        results_count: Optional[int] = None,
+        processing_time_ms: Optional[int] = None,
+        files_processed: Optional[int] = None,
+        metadata: Optional[Dict] = None,
+    ) -> None:
+        """
+        Track user activity and system usage.
+
+        Args:
+            db: Database session
+            action_type: Type of action ('search', 'upload', 'export', 'view', 'analyze')
+            endpoint: API endpoint accessed
+            http_method: HTTP method used
+            session_id: User session identifier
+            user_id: User identifier (for future authentication)
+            ip_address: Client IP address
+            user_agent: Client user agent string
+            resource_id: ID of resource accessed (job_id, etc.)
+            response_time_ms: Response time in milliseconds
+            status_code: HTTP status code
+            search_query: Search query text (for search actions)
+            search_filters: Search filters applied
+            results_count: Number of results returned
+            processing_time_ms: Processing time for operations
+            files_processed: Number of files processed
+            metadata: Additional context data
+        """
+        try:
+            # Generate session ID if not provided
+            if not session_id:
+                session_id = str(uuid.uuid4())
+
+            # Create usage analytics record
+            usage_record = UsageAnalytics(
+                session_id=session_id,
+                user_id=user_id,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                action_type=action_type,
+                endpoint=endpoint,
+                http_method=http_method,
+                resource_id=resource_id,
+                response_time_ms=response_time_ms,
+                status_code=status_code,
+                search_query=search_query,
+                search_filters=search_filters,
+                results_count=results_count,
+                processing_time_ms=processing_time_ms,
+                files_processed=files_processed,
+                request_metadata=metadata,
+            )
+
+            db.add(usage_record)
+            await db.commit()
+
+            logger.info(
+                "Activity tracked",
+                action_type=action_type,
+                endpoint=endpoint,
+                session_id=session_id,
+            )
+
+        except Exception as e:
+            logger.error("Failed to track activity", error=str(e))
+            await db.rollback()
+
+    async def track_ai_usage(
+        self,
+        db: AsyncSession,
+        service_type: str,
+        operation_type: str,
+        model_name: str,
+        input_tokens: int = 0,
+        output_tokens: int = 0,
+        cost_usd: Decimal = Decimal("0.0"),
+        request_id: Optional[str] = None,
+        success: str = "success",
+        error_message: Optional[str] = None,
+        metadata: Optional[Dict] = None,
+    ) -> None:
+        """
+        Track AI service usage and costs.
+
+        Args:
+            db: Database session
+            service_type: AI service used ('openai', 'anthropic', etc.)
+            operation_type: Type of operation ('embedding', 'completion', 'classification')
+            model_name: Name of the AI model used
+            input_tokens: Number of input tokens
+            output_tokens: Number of output tokens
+            cost_usd: Cost in USD
+            request_id: Unique request identifier
+            success: Success status ('success', 'error', 'timeout')
+            error_message: Error message if failed
+            metadata: Additional metadata
+        """
+        try:
+            total_tokens = input_tokens + output_tokens
+
+            ai_usage_record = AIUsageTracking(
+                service_type=service_type,
+                operation_type=operation_type,
+                model_name=model_name,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                total_tokens=total_tokens,
+                cost_usd=cost_usd,
+                request_id=request_id,
+                success=success,
+                error_message=error_message,
+                request_metadata=metadata,
+            )
+
+            db.add(ai_usage_record)
+            await db.commit()
+
+            logger.info(
+                "AI usage tracked",
+                service=service_type,
+                operation=operation_type,
+                tokens=total_tokens,
+                cost=float(cost_usd),
+            )
+
+        except Exception as e:
+            logger.error("Failed to track AI usage", error=str(e))
+            await db.rollback()
+
+    async def get_usage_statistics(
+        self,
+        db: AsyncSession,
+        period: str = "day",
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get usage statistics for a specified period.
+
+        Args:
+            db: Database session
+            period: Time period ('hour', 'day', 'week', 'month')
+            start_date: Start date for analysis
+            end_date: End date for analysis
+
+        Returns:
+            Dictionary with usage statistics
+        """
+        try:
+            # Calculate date range
+            if not end_date:
+                end_date = datetime.utcnow()
+
+            if not start_date:
+                if period == "hour":
+                    start_date = end_date - timedelta(hours=1)
+                elif period == "day":
+                    start_date = end_date - timedelta(days=1)
+                elif period == "week":
+                    start_date = end_date - timedelta(weeks=1)
+                elif period == "month":
+                    start_date = end_date - timedelta(days=30)
+                else:
+                    start_date = end_date - timedelta(days=1)
+
+            # Get basic usage stats
+            usage_stats = await self._get_basic_usage_stats(db, start_date, end_date)
+
+            # Get AI usage stats
+            ai_stats = await self._get_ai_usage_stats(db, start_date, end_date)
+
+            # Get search patterns
+            search_stats = await self._get_search_patterns(db, start_date, end_date)
+
+            # Get performance metrics
+            performance_stats = await self._get_performance_metrics(
+                db, start_date, end_date
+            )
+
+            return {
+                "period": period,
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "usage": usage_stats,
+                "ai_usage": ai_stats,
+                "search_patterns": search_stats,
+                "performance": performance_stats,
+            }
+
+        except Exception as e:
+            logger.error("Failed to get usage statistics", error=str(e))
+            raise
+
+    async def _get_basic_usage_stats(
+        self, db: AsyncSession, start_date: datetime, end_date: datetime
+    ) -> Dict[str, Any]:
+        """Get basic usage statistics."""
+
+        # Total requests
+        total_requests_query = select(func.count(UsageAnalytics.id)).where(
+            and_(
+                UsageAnalytics.timestamp >= start_date,
+                UsageAnalytics.timestamp <= end_date,
+            )
+        )
+        total_requests_result = await db.execute(total_requests_query)
+        total_requests = total_requests_result.scalar() or 0
+
+        # Unique sessions
+        unique_sessions_query = select(
+            func.count(func.distinct(UsageAnalytics.session_id))
+        ).where(
+            and_(
+                UsageAnalytics.timestamp >= start_date,
+                UsageAnalytics.timestamp <= end_date,
+            )
+        )
+        unique_sessions_result = await db.execute(unique_sessions_query)
+        unique_sessions = unique_sessions_result.scalar() or 0
+
+        # Action type breakdown
+        action_breakdown_query = (
+            select(
+                UsageAnalytics.action_type, func.count(UsageAnalytics.id).label("count")
+            )
+            .where(
+                and_(
+                    UsageAnalytics.timestamp >= start_date,
+                    UsageAnalytics.timestamp <= end_date,
+                )
+            )
+            .group_by(UsageAnalytics.action_type)
+        )
+
+        action_breakdown_result = await db.execute(action_breakdown_query)
+        action_breakdown = {
+            row.action_type: row.count for row in action_breakdown_result.fetchall()
+        }
+
+        # Popular endpoints
+        endpoints_query = (
+            select(
+                UsageAnalytics.endpoint, func.count(UsageAnalytics.id).label("count")
+            )
+            .where(
+                and_(
+                    UsageAnalytics.timestamp >= start_date,
+                    UsageAnalytics.timestamp <= end_date,
+                )
+            )
+            .group_by(UsageAnalytics.endpoint)
+            .order_by(desc("count"))
+            .limit(10)
+        )
+
+        endpoints_result = await db.execute(endpoints_query)
+        popular_endpoints = [
+            {"endpoint": row.endpoint, "requests": row.count}
+            for row in endpoints_result.fetchall()
+        ]
+
+        return {
+            "total_requests": total_requests,
+            "unique_sessions": unique_sessions,
+            "action_breakdown": action_breakdown,
+            "popular_endpoints": popular_endpoints,
+        }
+
+    async def _get_ai_usage_stats(
+        self, db: AsyncSession, start_date: datetime, end_date: datetime
+    ) -> Dict[str, Any]:
+        """Get AI usage statistics."""
+
+        # Total AI requests and costs
+        ai_stats_query = select(
+            func.count(AIUsageTracking.id).label("total_requests"),
+            func.sum(AIUsageTracking.total_tokens).label("total_tokens"),
+            func.sum(AIUsageTracking.cost_usd).label("total_cost"),
+        ).where(
+            and_(
+                AIUsageTracking.request_timestamp >= start_date,
+                AIUsageTracking.request_timestamp <= end_date,
+            )
+        )
+
+        ai_stats_result = await db.execute(ai_stats_query)
+        ai_stats = ai_stats_result.first()
+
+        total_ai_requests = ai_stats.total_requests or 0
+        total_tokens = ai_stats.total_tokens or 0
+        total_cost = float(ai_stats.total_cost or 0)
+
+        # Usage by service type
+        service_breakdown_query = (
+            select(
+                AIUsageTracking.service_type,
+                func.count(AIUsageTracking.id).label("requests"),
+                func.sum(AIUsageTracking.total_tokens).label("tokens"),
+                func.sum(AIUsageTracking.cost_usd).label("cost"),
+            )
+            .where(
+                and_(
+                    AIUsageTracking.request_timestamp >= start_date,
+                    AIUsageTracking.request_timestamp <= end_date,
+                )
+            )
+            .group_by(AIUsageTracking.service_type)
+        )
+
+        service_breakdown_result = await db.execute(service_breakdown_query)
+        service_breakdown = [
+            {
+                "service": row.service_type,
+                "requests": row.requests,
+                "tokens": row.tokens or 0,
+                "cost": float(row.cost or 0),
+            }
+            for row in service_breakdown_result.fetchall()
+        ]
+
+        # Usage by operation type
+        operation_breakdown_query = (
+            select(
+                AIUsageTracking.operation_type,
+                func.count(AIUsageTracking.id).label("requests"),
+                func.sum(AIUsageTracking.total_tokens).label("tokens"),
+            )
+            .where(
+                and_(
+                    AIUsageTracking.request_timestamp >= start_date,
+                    AIUsageTracking.request_timestamp <= end_date,
+                )
+            )
+            .group_by(AIUsageTracking.operation_type)
+        )
+
+        operation_breakdown_result = await db.execute(operation_breakdown_query)
+        operation_breakdown = [
+            {
+                "operation": row.operation_type,
+                "requests": row.requests,
+                "tokens": row.tokens or 0,
+            }
+            for row in operation_breakdown_result.fetchall()
+        ]
+
+        return {
+            "total_requests": total_ai_requests,
+            "total_tokens": total_tokens,
+            "total_cost_usd": total_cost,
+            "service_breakdown": service_breakdown,
+            "operation_breakdown": operation_breakdown,
+        }
+
+    async def _get_search_patterns(
+        self, db: AsyncSession, start_date: datetime, end_date: datetime
+    ) -> Dict[str, Any]:
+        """Get search usage patterns."""
+
+        # Total searches
+        search_count_query = select(func.count(UsageAnalytics.id)).where(
+            and_(
+                UsageAnalytics.action_type == "search",
+                UsageAnalytics.timestamp >= start_date,
+                UsageAnalytics.timestamp <= end_date,
+            )
+        )
+        search_count_result = await db.execute(search_count_query)
+        total_searches = search_count_result.scalar() or 0
+
+        # Average results per search
+        avg_results_query = select(func.avg(UsageAnalytics.results_count)).where(
+            and_(
+                UsageAnalytics.action_type == "search",
+                UsageAnalytics.results_count.isnot(None),
+                UsageAnalytics.timestamp >= start_date,
+                UsageAnalytics.timestamp <= end_date,
+            )
+        )
+        avg_results_result = await db.execute(avg_results_query)
+        avg_results = float(avg_results_result.scalar() or 0)
+
+        # Popular search terms (basic analysis)
+        search_terms_query = (
+            select(
+                UsageAnalytics.search_query,
+                func.count(UsageAnalytics.id).label("count"),
+            )
+            .where(
+                and_(
+                    UsageAnalytics.action_type == "search",
+                    UsageAnalytics.search_query.isnot(None),
+                    UsageAnalytics.timestamp >= start_date,
+                    UsageAnalytics.timestamp <= end_date,
+                )
+            )
+            .group_by(UsageAnalytics.search_query)
+            .order_by(desc("count"))
+            .limit(10)
+        )
+
+        search_terms_result = await db.execute(search_terms_query)
+        popular_searches = [
+            {"query": row.search_query, "count": row.count}
+            for row in search_terms_result.fetchall()
+        ]
+
+        return {
+            "total_searches": total_searches,
+            "average_results_per_search": avg_results,
+            "popular_searches": popular_searches,
+        }
+
+    async def _get_performance_metrics(
+        self, db: AsyncSession, start_date: datetime, end_date: datetime
+    ) -> Dict[str, Any]:
+        """Get performance metrics."""
+
+        # Average response time
+        avg_response_time_query = select(
+            func.avg(UsageAnalytics.response_time_ms)
+        ).where(
+            and_(
+                UsageAnalytics.response_time_ms.isnot(None),
+                UsageAnalytics.timestamp >= start_date,
+                UsageAnalytics.timestamp <= end_date,
+            )
+        )
+        avg_response_time_result = await db.execute(avg_response_time_query)
+        avg_response_time = float(avg_response_time_result.scalar() or 0)
+
+        # Error rate
+        total_requests_query = select(func.count(UsageAnalytics.id)).where(
+            and_(
+                UsageAnalytics.timestamp >= start_date,
+                UsageAnalytics.timestamp <= end_date,
+            )
+        )
+        total_requests_result = await db.execute(total_requests_query)
+        total_requests = total_requests_result.scalar() or 0
+
+        error_requests_query = select(func.count(UsageAnalytics.id)).where(
+            and_(
+                UsageAnalytics.status_code >= 400,
+                UsageAnalytics.timestamp >= start_date,
+                UsageAnalytics.timestamp <= end_date,
+            )
+        )
+        error_requests_result = await db.execute(error_requests_query)
+        error_requests = error_requests_result.scalar() or 0
+
+        error_rate = (
+            (error_requests / total_requests * 100) if total_requests > 0 else 0
+        )
+
+        # Status code breakdown
+        status_breakdown_query = (
+            select(
+                UsageAnalytics.status_code, func.count(UsageAnalytics.id).label("count")
+            )
+            .where(
+                and_(
+                    UsageAnalytics.timestamp >= start_date,
+                    UsageAnalytics.timestamp <= end_date,
+                )
+            )
+            .group_by(UsageAnalytics.status_code)
+        )
+
+        status_breakdown_result = await db.execute(status_breakdown_query)
+        status_breakdown = {
+            str(row.status_code): row.count
+            for row in status_breakdown_result.fetchall()
+        }
+
+        return {
+            "average_response_time_ms": avg_response_time,
+            "error_rate_percent": error_rate,
+            "total_requests": total_requests,
+            "error_requests": error_requests,
+            "status_code_breakdown": status_breakdown,
+        }
+
+    async def generate_system_metrics(
+        self, db: AsyncSession, metric_type: str = "daily"
+    ) -> Dict[str, Any]:
+        """
+        Generate and store aggregated system metrics.
+
+        Args:
+            db: Database session
+            metric_type: Type of metrics to generate ('hourly', 'daily', 'weekly', 'monthly')
+
+        Returns:
+            Generated metrics summary
+        """
+        try:
+            # Calculate period boundaries
+            now = datetime.utcnow()
+
+            if metric_type == "hourly":
+                period_start = now.replace(
+                    minute=0, second=0, microsecond=0
+                ) - timedelta(hours=1)
+                period_end = now.replace(minute=0, second=0, microsecond=0)
+            elif metric_type == "daily":
+                period_start = now.replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                ) - timedelta(days=1)
+                period_end = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            elif metric_type == "weekly":
+                days_since_monday = now.weekday()
+                period_start = now.replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                ) - timedelta(days=days_since_monday + 7)
+                period_end = now.replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                ) - timedelta(days=days_since_monday)
+            elif metric_type == "monthly":
+                period_start = now.replace(
+                    day=1, hour=0, minute=0, second=0, microsecond=0
+                ) - timedelta(days=1)
+                period_start = period_start.replace(day=1)
+                period_end = now.replace(
+                    day=1, hour=0, minute=0, second=0, microsecond=0
+                )
+
+            # Get comprehensive statistics
+            stats = await self.get_usage_statistics(
+                db, metric_type, period_start, period_end
+            )
+
+            # Get job processing stats
+            job_stats_query = select(func.count(JobDescription.id)).where(
+                and_(
+                    JobDescription.processed_date >= period_start,
+                    JobDescription.processed_date <= period_end,
+                )
+            )
+            job_stats_result = await db.execute(job_stats_query)
+            jobs_processed = job_stats_result.scalar() or 0
+
+            # Create system metrics record
+            system_metrics = SystemMetrics(
+                metric_type=metric_type,
+                period_start=period_start,
+                period_end=period_end,
+                total_requests=stats["usage"]["total_requests"],
+                unique_sessions=stats["usage"]["unique_sessions"],
+                total_searches=stats["search_patterns"]["total_searches"],
+                total_uploads=stats["usage"]["action_breakdown"].get("upload", 0),
+                total_exports=stats["usage"]["action_breakdown"].get("export", 0),
+                avg_response_time_ms=int(
+                    stats["performance"]["average_response_time_ms"]
+                ),
+                error_rate=Decimal(
+                    str(stats["performance"]["error_rate_percent"] / 100)
+                ),
+                total_ai_requests=stats["ai_usage"]["total_requests"],
+                total_tokens_used=stats["ai_usage"]["total_tokens"],
+                total_ai_cost_usd=Decimal(str(stats["ai_usage"]["total_cost_usd"])),
+                total_jobs_processed=jobs_processed,
+                detailed_metrics=stats,
+            )
+
+            db.add(system_metrics)
+            await db.commit()
+
+            logger.info(
+                "System metrics generated",
+                metric_type=metric_type,
+                period_start=period_start.isoformat(),
+                period_end=period_end.isoformat(),
+            )
+
+            return {
+                "metric_type": metric_type,
+                "period_start": period_start.isoformat(),
+                "period_end": period_end.isoformat(),
+                "metrics_id": system_metrics.id,
+                "summary": {
+                    "requests": stats["usage"]["total_requests"],
+                    "sessions": stats["usage"]["unique_sessions"],
+                    "searches": stats["search_patterns"]["total_searches"],
+                    "ai_cost": stats["ai_usage"]["total_cost_usd"],
+                    "jobs_processed": jobs_processed,
+                },
+            }
+
+        except Exception as e:
+            logger.error("Failed to generate system metrics", error=str(e))
+            await db.rollback()
+            raise
+
+    async def get_analytics_dashboard(self, db: AsyncSession) -> Dict[str, Any]:
+        """
+        Get comprehensive analytics dashboard data.
+
+        Args:
+            db: Database session
+
+        Returns:
+            Dashboard data with various analytics
+        """
+        try:
+            # Get recent activity (last 24 hours)
+            recent_stats = await self.get_usage_statistics(db, "day")
+
+            # Get weekly trends
+            weekly_stats = await self.get_usage_statistics(db, "week")
+
+            # Get latest system metrics
+            latest_metrics_query = (
+                select(SystemMetrics).order_by(desc(SystemMetrics.timestamp)).limit(5)
+            )
+            latest_metrics_result = await db.execute(latest_metrics_query)
+            latest_metrics = [
+                {
+                    "timestamp": metric.timestamp.isoformat(),
+                    "metric_type": metric.metric_type,
+                    "requests": metric.total_requests,
+                    "sessions": metric.unique_sessions,
+                    "ai_cost": float(metric.total_ai_cost_usd or 0),
+                    "error_rate": float(metric.error_rate or 0),
+                }
+                for metric in latest_metrics_result.scalars().all()
+            ]
+
+            return {
+                "recent_activity": recent_stats,
+                "weekly_trends": weekly_stats,
+                "historical_metrics": latest_metrics,
+                "generated_at": datetime.utcnow().isoformat(),
+            }
+
+        except Exception as e:
+            logger.error("Failed to generate analytics dashboard", error=str(e))
+            raise
+
+
+# Global service instance
+analytics_service = AnalyticsService()

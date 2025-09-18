@@ -1,0 +1,135 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to suggest a new feature! Please fill out the form below with as much detail as possible.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: A brief, clear summary of the feature you'd like to see
+      placeholder: "In one sentence, describe what you want..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What use case does it address?
+      placeholder: "I'm frustrated when... / It would be helpful if... / Currently, users need to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see
+      placeholder: "I would like to see... / The feature should work by..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: Have you considered any alternative solutions or workarounds?
+      placeholder: "Other approaches could include... / I've tried..."
+
+  - type: textarea
+    id: user-stories
+    attributes:
+      label: User Stories
+      description: Describe how different users would interact with this feature
+      placeholder: |
+        As a [type of user], I want [goal] so that [benefit]
+
+        Example scenarios:
+        - When a user...
+        - If an administrator...
+
+  - type: checkboxes
+    id: component
+    attributes:
+      label: Component
+      description: Which component would this feature affect?
+      options:
+        - label: Backend API
+        - label: Frontend UI
+        - label: Database schema
+        - label: File processing
+        - label: Search functionality
+        - label: Authentication/Authorization
+        - label: Documentation
+        - label: CI/CD Pipeline
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Critical (Blocking major workflows)
+        - High (Significantly improves user experience)
+        - Medium (Nice to have, moderate impact)
+        - Low (Minor enhancement)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Estimated Implementation Effort
+      description: Based on your understanding, how complex might this be?
+      options:
+        - Small (< 1 week)
+        - Medium (1-4 weeks)
+        - Large (1-3 months)
+        - Unknown
+    validations:
+      required: true
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups/Wireframes
+      description: If applicable, add mockups, wireframes, or screenshots to illustrate your idea
+
+  - type: textarea
+    id: technical-notes
+    attributes:
+      label: Technical Considerations
+      description: Any technical constraints, dependencies, or considerations to keep in mind?
+      placeholder: "This might require... / Should integrate with... / Could impact performance of..."
+
+  - type: checkboxes
+    id: government-context
+    attributes:
+      label: Government Context
+      description: Is this feature specific to government/public sector use?
+      options:
+        - label: This feature is specific to government job descriptions
+        - label: This feature addresses Treasury Board compliance
+        - label: This feature supports bilingual requirements (EN/FR)
+        - label: This feature is relevant for general enterprise use
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify the following before submitting
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: I have provided sufficient detail about the problem and solution
+          required: true
+        - label: This feature aligns with the project's goals and scope
+          required: true

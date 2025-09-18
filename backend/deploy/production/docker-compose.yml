@@ -1,0 +1,147 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: deploy/production/Dockerfile
+    env_file:
+      - ../../.env.production
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - app-data:/app/data
+      - app-logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  celery-worker:
+    build:
+      context: ../..
+      dockerfile: deploy/production/Dockerfile
+    env_file:
+      - ../../.env.production
+    command:
+      [
+        "celery",
+        "-A",
+        "jd_ingestion.tasks.celery_app",
+        "worker",
+        "--loglevel=info",
+        "--concurrency=8",
+      ]
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - app-data:/app/data
+      - app-logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "celery",
+          "-A",
+          "jd_ingestion.tasks.celery_app",
+          "inspect",
+          "ping",
+        ]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
+
+  celery-beat:
+    build:
+      context: ../..
+      dockerfile: deploy/production/Dockerfile
+    env_file:
+      - ../../.env.production
+    command:
+      [
+        "celery",
+        "-A",
+        "jd_ingestion.tasks.celery_app",
+        "beat",
+        "--loglevel=info",
+      ]
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - app-data:/app/data
+      - app-logs:/app/logs
+    restart: unless-stopped
+
+  flower:
+    build:
+      context: ../..
+      dockerfile: deploy/production/Dockerfile
+    env_file:
+      - ../../.env.production
+    command:
+      ["celery", "-A", "jd_ingestion.tasks.celery_app", "flower", "--port=5555"]
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  postgres:
+    image: pgvector/pgvector:pg15
+    environment:
+      POSTGRES_DB: jd_ingestion_prod
+      POSTGRES_USER: jd_user
+      POSTGRES_PASSWORD: secure-password-change-this
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jd_user -d jd_ingestion_prod"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:
+  app-data:
+  app-logs:

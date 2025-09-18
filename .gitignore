@@ -1,0 +1,307 @@
+# ========================
+# Python/Backend Ignores
+# ========================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+.ENV/
+.env/
+
+# Poetry
+poetry.lock
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Spacy language models
+*.bin
+
+# ========================
+# Node.js/Frontend Ignores
+# ========================
+
+# Dependencies
+node_modules/
+.npm
+.yarn/
+.pnp.*
+
+# Build outputs
+out/
+dist/
+build/
+*.tgz
+.next/
+
+# Code coverage
+coverage/
+*.lcov
+
+# Logs
+logs/
+*.log
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Caches
+.eslintcache
+.cache/
+*.tsbuildinfo
+.turbo/
+
+# Bun specific
+.bun/
+
+# ========================
+# Environment Variables
+# ========================
+
+.env
+.env.*
+!.env.example
+
+# Specific env files
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# ========================
+# Database
+# ========================
+
+# PostgreSQL
+*.sql
+*.dump
+*.backup
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# Database data directories
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# ========================
+# IDE and Editor Files
+# ========================
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ========================
+# OS Generated Files
+# ========================
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ========================
+# Development Tools
+# ========================
+
+# Docker
+.dockerignore
+Dockerfile.local
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# ========================
+# Security
+# ========================
+
+# API keys and secrets
+*.key
+*.pem
+*.p12
+*.crt
+secrets.json
+config/secrets.*
+
+# ========================
+# Testing
+# ========================
+
+# Test reports
+test-results/
+reports/
+.nyc_output/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# ========================
+# Documentation
+# ========================
+
+# Generated docs
+docs/_build/
+docs/build/
+site/
+
+# ========================
+# Monitoring and Logging
+# ========================
+
+# Application logs
+*.log.*
+application.log
+
+# ========================
+# AI and ML
+# ========================
+
+# Model files
+*.model
+*.pkl
+*.pickle
+models/
+embeddings/
+
+# ========================
+# Project Specific
+# ========================
+
+# JDDB specific ignores
+uploads/
+processed_files/
+.venv
+*.pyc
