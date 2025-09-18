@@ -305,3 +305,6 @@ uploads/
 processed_files/
 .venv
 *.pyc
+
+# PostgreSQL extension source code
+pgvector/
