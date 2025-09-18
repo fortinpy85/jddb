@@ -33,7 +33,7 @@ alembic = "1.13.2"
 pgvector = "0.3.2"
 pandas = "2.2.3"
 chardet = "5.2.0"
-python-multipart = "0.0.10"
+python-multipart = "0.0.20"
 openai = "1.51.2"
 sentence-transformers = "3.1.1"
 celery = "5.4.0"
@@ -41,7 +41,7 @@ redis = "5.1.1"
 pydantic-settings = "2.5.2"
 structlog = "24.4.0"
 python-dotenv = "1.0.1"
-python-jose = {version = "3.3.0", extras = ["cryptography"]}
+python-jose = {version = "3.5.0", extras = ["cryptography"]}
 passlib = {version = "1.7.4", extras = ["bcrypt"]}
 
 # Development dependencies (moved from core dependencies)
