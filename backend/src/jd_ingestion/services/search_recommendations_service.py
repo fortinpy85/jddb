@@ -76,37 +76,60 @@ class SearchRecommendationsService:
             suggestions = []
 
             # 1. Get popular similar queries from analytics
-            popular_queries = await self._get_popular_similar_queries(
-                db, partial_query, limit
-            )
-            suggestions.extend(popular_queries)
+            try:
+                popular_queries = await self._get_popular_similar_queries(
+                    db, partial_query, limit
+                )
+                suggestions.extend(popular_queries)
+            except Exception as e:
+                logger.warning("Failed to get popular similar queries", error=str(e))
 
             # 2. Generate semantic-based suggestions
-            semantic_suggestions = await self._get_semantic_suggestions(
-                db, partial_query, limit
-            )
-            suggestions.extend(semantic_suggestions)
+            try:
+                semantic_suggestions = await self._get_semantic_suggestions(
+                    db, partial_query, limit
+                )
+                suggestions.extend(semantic_suggestions)
+            except Exception as e:
+                logger.warning("Failed to get semantic suggestions", error=str(e))
 
             # 3. Get user-specific suggestions if available
             if user_id or session_id:
-                user_suggestions = await self._get_user_based_suggestions(
-                    db, partial_query, user_id, session_id, limit
-                )
-                suggestions.extend(user_suggestions)
+                try:
+                    user_suggestions = await self._get_user_based_suggestions(
+                        db, partial_query, user_id, session_id, limit
+                    )
+                    suggestions.extend(user_suggestions)
+                except Exception as e:
+                    logger.warning("Failed to get user-based suggestions", error=str(e))
 
             # 4. Generate content-based suggestions
-            content_suggestions = await self._get_content_based_suggestions(
-                db, partial_query, limit
-            )
-            suggestions.extend(content_suggestions)
+            try:
+                content_suggestions = await self._get_content_based_suggestions(
+                    db, partial_query, limit
+                )
+                suggestions.extend(content_suggestions)
+            except Exception as e:
+                logger.warning("Failed to get content-based suggestions", error=str(e))
 
             # Deduplicate and rank suggestions
             final_suggestions = self._rank_and_deduplicate_suggestions(
                 suggestions, partial_query, limit
             )
 
+            # If no suggestions found, provide basic fallback suggestions
+            if not final_suggestions:
+                final_suggestions = self._get_fallback_suggestions(partial_query, limit)
+
             # Cache results
-            await cache_service.set(cache_key, final_suggestions, ttl=self.cache_ttl)
+            try:
+                await cache_service.set(
+                    cache_key, final_suggestions, expiry_seconds=self.cache_ttl
+                )
+            except Exception as cache_error:
+                logger.warning(
+                    "Failed to cache query suggestions", error=str(cache_error)
+                )
 
             logger.info(
                 "Generated query suggestions",
@@ -211,7 +234,7 @@ class SearchRecommendationsService:
                     and_(
                         SearchAnalytics.query_text.ilike(f"%{partial_query}%"),
                         SearchAnalytics.total_results > 0,
-                        SearchAnalytics.created_at
+                        SearchAnalytics.timestamp
                         >= datetime.now() - timedelta(days=30),
                     )
                 )
@@ -260,11 +283,13 @@ class SearchRecommendationsService:
             # Find semantically similar content chunks and extract key terms
             similarity_query = text(
                 """
-                SELECT DISTINCT c.content, c.section_type, j.title, j.classification
+                SELECT c.chunk_text, s.section_type, j.title, j.classification,
+                       (c.embedding <=> :query_embedding) as distance
                 FROM content_chunks c
                 JOIN job_descriptions j ON c.job_id = j.id
+                LEFT JOIN job_sections s ON c.section_id = s.id
                 WHERE c.embedding <=> :query_embedding < 0.3
-                ORDER BY c.embedding <=> :query_embedding
+                ORDER BY (c.embedding <=> :query_embedding)
                 LIMIT :limit
             """
             )
@@ -284,7 +309,7 @@ class SearchRecommendationsService:
             processed_terms = set()
 
             for content_row in similar_content:
-                terms = self._extract_key_terms(content_row.content, partial_query)
+                terms = self._extract_key_terms(content_row.chunk_text, partial_query)
                 for term in terms:
                     if (
                         term not in processed_terms
@@ -334,18 +359,17 @@ class SearchRecommendationsService:
                 select(
                     SearchAnalytics.query_text,
                     SearchAnalytics.total_results,
-                    SearchAnalytics.created_at,
+                    SearchAnalytics.timestamp,
                 )
                 .where(
                     and_(
                         *conditions,
                         SearchAnalytics.total_results > 0,
-                        SearchAnalytics.created_at
-                        >= datetime.now() - timedelta(days=7),
+                        SearchAnalytics.timestamp >= datetime.now() - timedelta(days=7),
                         SearchAnalytics.query_text.ilike(f"%{partial_query}%"),
                     )
                 )
-                .order_by(desc(SearchAnalytics.created_at))
+                .order_by(desc(SearchAnalytics.timestamp))
                 .limit(limit)
             )
 
@@ -380,7 +404,7 @@ class SearchRecommendationsService:
             # Search for matching terms in job titles and sections
             query = text(
                 """
-                SELECT DISTINCT
+                SELECT
                     j.title,
                     j.classification,
                     COUNT(*) as match_count
@@ -388,7 +412,7 @@ class SearchRecommendationsService:
                 JOIN job_sections s ON j.id = s.job_id
                 WHERE
                     j.title ILIKE :partial_query OR
-                    s.content ILIKE :partial_query OR
+                    s.section_content ILIKE :partial_query OR
                     j.classification ILIKE :partial_query
                 GROUP BY j.title, j.classification
                 ORDER BY match_count DESC
@@ -592,7 +616,7 @@ class SearchRecommendationsService:
                 select(SearchAnalytics.query_text, func.count().label("frequency"))
                 .where(
                     and_(
-                        SearchAnalytics.created_at
+                        SearchAnalytics.timestamp
                         >= datetime.now() - timedelta(hours=24),
                         SearchAnalytics.total_results > 0,
                     )
@@ -722,6 +746,100 @@ class SearchRecommendationsService:
         except Exception as e:
             logger.error("Error getting popular in category", error=str(e))
             return []
+
+    def _get_fallback_suggestions(
+        self, partial_query: str, limit: int
+    ) -> List[Dict[str, Any]]:
+        """
+        Provide basic fallback suggestions when ML components fail.
+        Uses simple pattern matching and common job-related terms.
+        """
+        partial_lower = partial_query.lower().strip()
+
+        # Common job-related terms and completions
+        common_terms = {
+            "director": ["director", "director general", "director of operations"],
+            "manager": [
+                "manager",
+                "project manager",
+                "senior manager",
+                "program manager",
+            ],
+            "analyst": [
+                "analyst",
+                "policy analyst",
+                "business analyst",
+                "senior analyst",
+            ],
+            "advisor": [
+                "advisor",
+                "senior advisor",
+                "policy advisor",
+                "special advisor",
+            ],
+            "officer": [
+                "officer",
+                "program officer",
+                "executive officer",
+                "chief officer",
+            ],
+            "coordinator": [
+                "coordinator",
+                "program coordinator",
+                "project coordinator",
+            ],
+            "specialist": ["specialist", "senior specialist", "technical specialist"],
+            "lead": ["lead", "team lead", "technical lead", "project lead"],
+            "senior": [
+                "senior analyst",
+                "senior manager",
+                "senior advisor",
+                "senior specialist",
+            ],
+            "executive": ["executive", "executive director", "chief executive officer"],
+        }
+
+        suggestions = []
+
+        # Find matching patterns
+        for key, completions in common_terms.items():
+            if key.startswith(partial_lower) or partial_lower in key:
+                for completion in completions:
+                    if completion.startswith(partial_lower):
+                        suggestions.append(
+                            {
+                                "text": completion,
+                                "type": "fallback",
+                                "score": 0.5,
+                                "source": "pattern_match",
+                            }
+                        )
+
+        # If partial query matches any completion, add it
+        for completions in common_terms.values():
+            for completion in completions:
+                if (
+                    partial_lower in completion.lower()
+                    and partial_lower != completion.lower()
+                ):
+                    suggestions.append(
+                        {
+                            "text": completion,
+                            "type": "fallback",
+                            "score": 0.4,
+                            "source": "contains_match",
+                        }
+                    )
+
+        # Remove duplicates and limit results
+        seen = set()
+        unique_suggestions = []
+        for suggestion in suggestions:
+            if suggestion["text"] not in seen:
+                seen.add(suggestion["text"])
+                unique_suggestions.append(suggestion)
+
+        return unique_suggestions[:limit]
 
 
 # Global instance

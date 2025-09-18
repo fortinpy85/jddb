@@ -63,7 +63,9 @@ export function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
   );
 
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const suggestionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suggestionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   // Load facets on mount
   useEffect(() => {
@@ -205,7 +207,11 @@ export function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                       }
                     }}
                     onFocus={() => {
-                      if (suggestions && suggestions.suggestions && suggestions.suggestions.length > 0) {
+                      if (
+                        suggestions &&
+                        suggestions.suggestions &&
+                        suggestions.suggestions.length > 0
+                      ) {
                         setShowSuggestions(true);
                       }
                     }}

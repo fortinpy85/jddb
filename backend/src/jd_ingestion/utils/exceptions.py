@@ -95,7 +95,9 @@ class JDDBBaseException(Exception):
             "recoverable": self.recoverable,
             "recovery_suggestions": self.recovery_suggestions,
             "user_message": self.user_message,
-            "original_exception": str(self.original_exception) if self.original_exception else None,
+            "original_exception": (
+                str(self.original_exception) if self.original_exception else None
+            ),
             "stack_trace": self.stack_trace,
         }
 
@@ -132,11 +134,7 @@ class DatabaseException(JDDBBaseException):
     """Exceptions related to database operations."""
 
     def __init__(self, message: str, **kwargs):
-        super().__init__(
-            message=message,
-            category=ErrorCategory.DATABASE,
-            **kwargs
-        )
+        super().__init__(message=message, category=ErrorCategory.DATABASE, **kwargs)
 
     def _generate_user_message(self) -> str:
         return "A database error occurred. The issue has been logged and will be addressed shortly."
@@ -155,7 +153,7 @@ class DatabaseConnectionException(DatabaseException):
                 "Verify database server is running",
                 "Retry the operation in a few moments",
             ],
-            **kwargs
+            **kwargs,
         )
 
 
@@ -174,7 +172,7 @@ class DatabaseQueryException(DatabaseException):
                 "Check data constraints and foreign keys",
                 "Retry with valid parameters",
             ],
-            **kwargs
+            **kwargs,
         )
 
 
@@ -182,7 +180,12 @@ class DatabaseQueryException(DatabaseException):
 class ValidationException(JDDBBaseException):
     """Exceptions related to data validation."""
 
-    def __init__(self, message: str, field_errors: Optional[Dict[str, List[str]]] = None, **kwargs):
+    def __init__(
+        self,
+        message: str,
+        field_errors: Optional[Dict[str, List[str]]] = None,
+        **kwargs,
+    ):
         context = kwargs.get("context", {})
         context["field_errors"] = field_errors or {}
         kwargs["context"] = context
@@ -192,7 +195,7 @@ class ValidationException(JDDBBaseException):
             category=ErrorCategory.VALIDATION,
             severity=ErrorSeverity.LOW,
             recoverable=True,
-            **kwargs
+            **kwargs,
         )
 
     def _generate_user_message(self) -> str:
@@ -204,10 +207,12 @@ class FileValidationException(ValidationException):
 
     def __init__(self, file_path: str, validation_errors: List[str], **kwargs):
         context = kwargs.get("context", {})
-        context.update({
-            "file_path": file_path,
-            "validation_errors": validation_errors,
-        })
+        context.update(
+            {
+                "file_path": file_path,
+                "validation_errors": validation_errors,
+            }
+        )
         kwargs["context"] = context
 
         super().__init__(
@@ -217,7 +222,7 @@ class FileValidationException(ValidationException):
                 "Ensure file meets required specifications",
                 "Verify file is not corrupted",
             ],
-            **kwargs
+            **kwargs,
         )
 
 
@@ -231,9 +236,7 @@ class FileProcessingException(JDDBBaseException):
         kwargs["context"] = context
 
         super().__init__(
-            message=message,
-            category=ErrorCategory.FILE_PROCESSING,
-            **kwargs
+            message=message, category=ErrorCategory.FILE_PROCESSING, **kwargs
         )
 
     def _generate_user_message(self) -> str:
@@ -254,14 +257,16 @@ class FileNotFoundException(FileProcessingException):
                 "Check if the file exists",
                 "Ensure proper file permissions",
             ],
-            **kwargs
+            **kwargs,
         )
 
 
 class FileCorruptedException(FileProcessingException):
     """File corruption errors."""
 
-    def __init__(self, file_path: str, corruption_details: Optional[str] = None, **kwargs):
+    def __init__(
+        self, file_path: str, corruption_details: Optional[str] = None, **kwargs
+    ):
         context = kwargs.get("context", {})
         if corruption_details:
             context["corruption_details"] = corruption_details
@@ -277,7 +282,7 @@ class FileCorruptedException(FileProcessingException):
                 "Check file integrity",
                 "Contact the file provider",
             ],
-            **kwargs
+            **kwargs,
         )
 
 
@@ -290,11 +295,7 @@ class ExternalAPIException(JDDBBaseException):
         context["api_name"] = api_name
         kwargs["context"] = context
 
-        super().__init__(
-            message=message,
-            category=ErrorCategory.EXTERNAL_API,
-            **kwargs
-        )
+        super().__init__(message=message, category=ErrorCategory.EXTERNAL_API, **kwargs)
 
     def _generate_user_message(self) -> str:
         return "An external service is currently unavailable. Please try again later."
@@ -318,7 +319,7 @@ class OpenAIAPIException(ExternalAPIException):
                 "Retry after a brief delay",
                 "Contact support if issue persists",
             ],
-            **kwargs
+            **kwargs,
         )
 
 
@@ -337,11 +338,15 @@ class RateLimitExceededException(ExternalAPIException):
             severity=ErrorSeverity.MEDIUM,
             recoverable=True,
             recovery_suggestions=[
-                f"Wait {retry_after} seconds before retrying" if retry_after else "Wait before retrying",
+                (
+                    f"Wait {retry_after} seconds before retrying"
+                    if retry_after
+                    else "Wait before retrying"
+                ),
                 "Implement exponential backoff",
                 "Consider upgrading API plan",
             ],
-            **kwargs
+            **kwargs,
         )
 
 
@@ -351,9 +356,7 @@ class BusinessLogicException(JDDBBaseException):
 
     def __init__(self, message: str, **kwargs):
         super().__init__(
-            message=message,
-            category=ErrorCategory.BUSINESS_LOGIC,
-            **kwargs
+            message=message, category=ErrorCategory.BUSINESS_LOGIC, **kwargs
         )
 
     def _generate_user_message(self) -> str:
@@ -363,12 +366,16 @@ class BusinessLogicException(JDDBBaseException):
 class InsufficientPermissionsException(BusinessLogicException):
     """User lacks required permissions for operation."""
 
-    def __init__(self, required_permission: str, user_id: Optional[str] = None, **kwargs):
+    def __init__(
+        self, required_permission: str, user_id: Optional[str] = None, **kwargs
+    ):
         context = kwargs.get("context", {})
-        context.update({
-            "required_permission": required_permission,
-            "user_id": user_id,
-        })
+        context.update(
+            {
+                "required_permission": required_permission,
+                "user_id": user_id,
+            }
+        )
         kwargs["context"] = context
 
         super().__init__(
@@ -380,7 +387,7 @@ class InsufficientPermissionsException(BusinessLogicException):
                 "Contact administrator for required permissions",
                 "Verify user role and access rights",
             ],
-            **kwargs
+            **kwargs,
         )
 
     def _get_http_status_code(self) -> int:
@@ -406,7 +413,7 @@ class ConfigurationException(JDDBBaseException):
                 "Verify environment variables",
                 "Contact system administrator",
             ],
-            **kwargs
+            **kwargs,
         )
 
     def _generate_user_message(self) -> str:
@@ -426,7 +433,7 @@ class SystemResourceException(JDDBBaseException):
             message=message,
             category=ErrorCategory.SYSTEM,
             severity=ErrorSeverity.HIGH,
-            **kwargs
+            **kwargs,
         )
 
     def _generate_user_message(self) -> str:
@@ -436,7 +443,12 @@ class SystemResourceException(JDDBBaseException):
 class DiskSpaceException(SystemResourceException):
     """Insufficient disk space errors."""
 
-    def __init__(self, available_space: Optional[int] = None, required_space: Optional[int] = None, **kwargs):
+    def __init__(
+        self,
+        available_space: Optional[int] = None,
+        required_space: Optional[int] = None,
+        **kwargs,
+    ):
         context = kwargs.get("context", {})
         if available_space is not None:
             context["available_space_bytes"] = available_space
@@ -453,7 +465,7 @@ class DiskSpaceException(SystemResourceException):
                 "Contact administrator to increase storage",
                 "Move files to alternative storage",
             ],
-            **kwargs
+            **kwargs,
         )
 
 
@@ -476,5 +488,5 @@ class MemoryException(SystemResourceException):
                 "Restart the service",
                 "Contact administrator to increase memory allocation",
             ],
-            **kwargs
+            **kwargs,
         )

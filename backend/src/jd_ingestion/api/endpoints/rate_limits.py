@@ -29,7 +29,7 @@ async def get_rate_limit_status(
     Get current rate limit status for a service.
     """
     try:
-        with PerformanceTimer() as timer:
+        with PerformanceTimer("rate_limit_status") as timer:
             # Check if service exists
             if service not in rate_limiting_service.rate_limits:
                 raise HTTPException(

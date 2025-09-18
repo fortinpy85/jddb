@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Component, ReactNode } from "react";
+import React, { Component, type ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, Home, Bug } from "lucide-react";
@@ -89,7 +89,7 @@ export class ErrorBoundary extends Component<
     const { resetOnPropsChange, resetKeys } = this.props;
     const { hasError } = this.state;
 
-    if (hasError && !prevProps.hasError) {
+    if (hasError && prevProps !== this.props) {
       // Error just occurred
       return;
     }

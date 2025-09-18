@@ -874,11 +874,11 @@
 /* Mobile optimizations */
 @layer utilities {
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* Internet Explorer 10+ */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
   }
   .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Safari and Chrome */
+    display: none; /* Safari and Chrome */
   }
 
   /* Touch target improvements for mobile */
@@ -976,13 +976,13 @@
   }
 
   .mobile-tabs::after {
-    content: '';
+    content: "";
     position: absolute;
     right: 0;
     top: 0;
     bottom: 0;
     width: 20px;
-    background: linear-gradient(to left, rgba(255,255,255,0.8), transparent);
+    background: linear-gradient(to left, rgba(255, 255, 255, 0.8), transparent);
     pointer-events: none;
   }
 
@@ -991,7 +991,7 @@
     border-radius: 0.75rem;
     box-shadow: var(--shadow-sm);
     transition: all 0.2s ease;
-    transform: translate3d(0,0,0); /* Force hardware acceleration */
+    transform: translate3d(0, 0, 0); /* Force hardware acceleration */
   }
 
   .mobile-card:active {
@@ -1007,7 +1007,7 @@
   }
 
   .touch-button::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 50%;
     left: 50%;
@@ -1016,7 +1016,9 @@
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.3);
     transform: translate(-50%, -50%);
-    transition: width 0.3s ease, height 0.3s ease;
+    transition:
+      width 0.3s ease,
+      height 0.3s ease;
   }
 
   .touch-button:active::before {
@@ -1045,7 +1047,7 @@
     background: linear-gradient(
       90deg,
       var(--muted) 25%,
-      rgba(255,255,255,0.5) 50%,
+      rgba(255, 255, 255, 0.5) 50%,
       var(--muted) 75%
     );
     background-size: 200% 100%;

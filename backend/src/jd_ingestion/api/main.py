@@ -39,8 +39,8 @@ async def lifespan(app: FastAPI):
     """Manage application lifespan events."""
     # Startup
     logger.info(
-        "Starting Job Description Ingestion Engine API",
-        version="0.1.0",
+        "Starting JDDB - Government Job Description Database API",
+        version="1.0.0",
         debug=settings.debug,
     )
 
@@ -51,17 +51,58 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
-    logger.info("Shutting down Job Description Ingestion Engine API")
+    logger.info("Shutting down JDDB - Government Job Description Database API")
 
 
 # Create FastAPI app
 app = FastAPI(
-    title="Job Description Ingestion Engine",
-    description="API for processing government job description files into a structured database optimized for AI applications",
-    version="0.1.0",
+    title="JDDB - Government Job Description Database",
+    description="""
+    ## Government Job Description Management System
+
+    A comprehensive API for processing, managing, and searching government job description files.
+    Built for the Government of Canada to modernize job description workflows.
+
+    ### Key Features
+    - **File Processing**: Support for .txt, .doc, .docx, and .pdf formats
+    - **Semantic Search**: AI-powered search with pgvector and OpenAI embeddings
+    - **Bilingual Support**: Full English/French language support
+    - **Content Analysis**: Automated parsing of job sections and metadata
+    - **Quality Assurance**: Built-in validation and quality checks
+    - **Analytics**: Comprehensive usage tracking and analytics
+
+    ### API Documentation
+    - **Interactive Docs**: Available at `/api/docs`
+    - **OpenAPI Schema**: Available at `/api/openapi.json`
+    - **Health Check**: Available at `/health`
+
+    ### Authentication
+    Currently operating in development mode. Production deployment will include
+    appropriate government authentication mechanisms.
+
+    ### Support
+    For issues and support, visit: https://github.com/fortinpy85/jddb/issues
+    """,
+    version="1.0.0",
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",
     lifespan=lifespan,
+    contact={
+        "name": "JDDB Development Team",
+        "url": "https://github.com/fortinpy85/jddb",
+        "email": "support@jddb.gov.ca",
+    },
+    license_info={
+        "name": "MIT License",
+        "url": "https://github.com/fortinpy85/jddb/blob/main/LICENSE",
+    },
+    servers=[
+        {"url": "http://localhost:8000", "description": "Development server"},
+        {
+            "url": "https://api.jddb.gov.ca",
+            "description": "Production server (placeholder)",
+        },
+    ],
 )
 
 # Add CORS middleware with production-ready configuration
@@ -100,10 +141,21 @@ app.include_router(health.router, prefix="/api/health", tags=["health"])
 async def root():
     """Root endpoint with basic API information."""
     return {
-        "name": "Job Description Ingestion Engine",
-        "version": "0.1.0",
-        "description": "API for processing government job description files",
+        "name": "JDDB - Government Job Description Database",
+        "version": "1.0.0",
+        "description": "Government of Canada Job Description Management System",
         "docs_url": "/api/docs",
+        "openapi_url": "/api/openapi.json",
+        "health_url": "/health",
+        "repository": "https://github.com/fortinpy85/jddb",
+        "features": [
+            "File Processing (.txt, .doc, .docx, .pdf)",
+            "Semantic Search with AI",
+            "Bilingual Support (EN/FR)",
+            "Content Analysis & Parsing",
+            "Quality Assurance",
+            "Analytics & Monitoring",
+        ],
     }
 
 
@@ -114,7 +166,7 @@ async def health_check(db: AsyncSession = Depends(get_async_session)):
         # Test database connection
         await db.execute("SELECT 1")
 
-        return {"status": "healthy", "database": "connected", "version": "0.1.0"}
+        return {"status": "healthy", "database": "connected", "version": "1.0.0"}
     except Exception as e:
         logger.error("Health check failed", error=str(e))
         raise HTTPException(status_code=503, detail="Service unavailable")

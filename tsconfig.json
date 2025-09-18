@@ -10,20 +10,18 @@
     "moduleResolution": "bundler",
     "module": "ESNext",
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
     "noEmit": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "useDefineForClassFields": true,
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "types": ["@testing-library/jest-dom"]
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "src/types/**/*"],
   "exclude": ["dist", "node_modules"]
 }

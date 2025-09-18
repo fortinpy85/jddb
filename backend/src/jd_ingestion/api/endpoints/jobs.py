@@ -32,8 +32,7 @@ router = APIRouter()
 
 @router.get("/")
 @handle_errors(
-    operation_name="list_jobs",
-    context={"endpoint": "/jobs/", "method": "GET"}
+    operation_name="list_jobs", context={"endpoint": "/jobs/", "method": "GET"}
 )
 @retry_on_failure(max_retries=2, base_delay=0.5)
 async def list_jobs(
@@ -58,7 +57,7 @@ async def list_jobs(
     elif page is not None or size is not None:
         raise HTTPException(
             status_code=400,
-            detail="Both 'page' and 'size' parameters must be provided together"
+            detail="Both 'page' and 'size' parameters must be provided together",
         )
 
     # Build base query
@@ -67,13 +66,11 @@ async def list_jobs(
     # Apply filters
     if search:
         base_query = base_query.where(
-            JobDescription.title.ilike(f"%{search}%") |
-            JobDescription.raw_content.ilike(f"%{search}%")
+            JobDescription.title.ilike(f"%{search}%")
+            | JobDescription.raw_content.ilike(f"%{search}%")
         )
     if classification:
-        base_query = base_query.where(
-            JobDescription.classification == classification
-        )
+        base_query = base_query.where(JobDescription.classification == classification)
     if language:
         base_query = base_query.where(JobDescription.language == language)
     if department:
@@ -136,15 +133,13 @@ async def list_jobs(
 @router.get("/status")
 @handle_errors(
     operation_name="get_processing_status",
-    context={"endpoint": "/jobs/status", "method": "GET"}
+    context={"endpoint": "/jobs/status", "method": "GET"},
 )
 @retry_on_failure(max_retries=2, base_delay=0.5)
 async def get_processing_status(db: AsyncSession = Depends(get_async_session)):
     """Get current processing status of all jobs."""
     # Get total job count
-    total_result = await db.execute(
-        select(func.count()).select_from(JobDescription)
-    )
+    total_result = await db.execute(select(func.count()).select_from(JobDescription))
     total_jobs = total_result.scalar_one()
 
     # Get jobs by classification
@@ -157,16 +152,12 @@ async def get_processing_status(db: AsyncSession = Depends(get_async_session)):
 
     # Get jobs by language
     language_result = await db.execute(
-        select(JobDescription.language, func.count()).group_by(
-            JobDescription.language
-        )
+        select(JobDescription.language, func.count()).group_by(JobDescription.language)
     )
     by_language = {row[0]: row[1] for row in language_result.fetchall()}
 
     # Get last updated time
-    last_updated_result = await db.execute(
-        select(func.max(JobDescription.updated_at))
-    )
+    last_updated_result = await db.execute(select(func.max(JobDescription.updated_at)))
     last_updated = last_updated_result.scalar_one_or_none()
 
     return {
@@ -186,8 +177,7 @@ async def get_processing_status(db: AsyncSession = Depends(get_async_session)):
 
 @router.get("/stats")
 @handle_errors(
-    operation_name="get_job_stats",
-    context={"endpoint": "/jobs/stats", "method": "GET"}
+    operation_name="get_job_stats", context={"endpoint": "/jobs/stats", "method": "GET"}
 )
 @retry_on_failure(max_retries=2, base_delay=0.5)
 async def get_job_stats(db: AsyncSession = Depends(get_async_session)):
@@ -199,8 +189,9 @@ async def get_job_stats(db: AsyncSession = Depends(get_async_session)):
 
         # Classification distribution
         classification_result = await db.execute(
-            select(JobDescription.classification, func.count(JobDescription.id))
-            .group_by(JobDescription.classification)
+            select(
+                JobDescription.classification, func.count(JobDescription.id)
+            ).group_by(JobDescription.classification)
         )
         classification_distribution = {
             row[0]: row[1] for row in classification_result.fetchall()
@@ -208,12 +199,11 @@ async def get_job_stats(db: AsyncSession = Depends(get_async_session)):
 
         # Language distribution
         language_result = await db.execute(
-            select(JobDescription.language, func.count(JobDescription.id))
-            .group_by(JobDescription.language)
+            select(JobDescription.language, func.count(JobDescription.id)).group_by(
+                JobDescription.language
+            )
         )
-        language_distribution = {
-            row[0]: row[1] for row in language_result.fetchall()
-        }
+        language_distribution = {row[0]: row[1] for row in language_result.fetchall()}
 
         return {
             "total_jobs": total_jobs,
@@ -229,7 +219,7 @@ async def get_job_stats(db: AsyncSession = Depends(get_async_session)):
 @router.get("/stats/comprehensive")
 @handle_errors(
     operation_name="get_comprehensive_stats",
-    context={"endpoint": "/jobs/stats/comprehensive", "method": "GET"}
+    context={"endpoint": "/jobs/stats/comprehensive", "method": "GET"},
 )
 @retry_on_failure(max_retries=2, base_delay=0.5)
 async def get_comprehensive_stats(db: AsyncSession = Depends(get_async_session)):

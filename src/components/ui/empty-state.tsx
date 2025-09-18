@@ -197,8 +197,10 @@ const emptyStateConfig = {
 };
 
 // Type guard to check if props have 'type' property (advanced mode)
-function isAdvancedEmptyState(props: CombinedEmptyStateProps): props is EmptyStateProps {
-  return 'type' in props;
+function isAdvancedEmptyState(
+  props: CombinedEmptyStateProps,
+): props is EmptyStateProps {
+  return "type" in props;
 }
 
 export function EmptyState(props: CombinedEmptyStateProps) {
@@ -257,7 +259,9 @@ export function EmptyState(props: CombinedEmptyStateProps) {
                   </div>
                 )}
                 <div className={`p-3 rounded-full bg-white shadow-sm`}>
-                  <IconComponent className={`w-8 h-8 ${finalConfig.iconColor}`} />
+                  <IconComponent
+                    className={`w-8 h-8 ${finalConfig.iconColor}`}
+                  />
                 </div>
               </div>
 

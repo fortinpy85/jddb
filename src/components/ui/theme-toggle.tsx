@@ -11,7 +11,10 @@ interface ThemeToggleProps {
   size?: "sm" | "md" | "lg";
 }
 
-export default function ThemeToggle({ className, size = "md" }: ThemeToggleProps) {
+export default function ThemeToggle({
+  className,
+  size = "md",
+}: ThemeToggleProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
 
   const toggleTheme = () => {
@@ -61,7 +64,7 @@ export default function ThemeToggle({ className, size = "md" }: ThemeToggleProps
         "hover:bg-slate-100/80 dark:hover:bg-slate-800/80",
         "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
         "dark:focus:ring-blue-400 dark:focus:ring-offset-slate-800",
-        className
+        className,
       )}
       title={getTitle()}
     >
@@ -86,7 +89,12 @@ export function ThemeToggleCompact({ className }: { className?: string }) {
   const { theme, setTheme, resolvedTheme } = useTheme();
 
   return (
-    <div className={cn("flex items-center gap-1 rounded-lg border p-1 bg-background/80 backdrop-blur-sm", className)}>
+    <div
+      className={cn(
+        "flex items-center gap-1 rounded-lg border p-1 bg-background/80 backdrop-blur-sm",
+        className,
+      )}
+    >
       <Button
         variant={theme === "light" ? "default" : "ghost"}
         size="sm"

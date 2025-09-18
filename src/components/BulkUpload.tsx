@@ -8,7 +8,11 @@
 import React, { useState, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress, ProgressIndicator, type ProgressStep } from "@/components/ui/progress";
+import {
+  Progress,
+  ProgressIndicator,
+  type ProgressStep,
+} from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import {
   Upload,

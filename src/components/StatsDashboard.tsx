@@ -681,19 +681,19 @@ function StatsDashboard() {
                         <div>
                           <span className="text-gray-600">Requests</span>
                           <div className="font-semibold">
-                            {breaker.total_requests}
+                            {breaker.failure_count || 0}
                           </div>
                         </div>
                         <div>
                           <span className="text-gray-600">Failures</span>
                           <div className="font-semibold text-red-600">
-                            {breaker.total_failures}
+                            {breaker.failure_count}
                           </div>
                         </div>
                         <div>
                           <span className="text-gray-600">Success Rate</span>
                           <div className="font-semibold">
-                            {((1 - breaker.failure_rate) * 100).toFixed(1)}%
+                            {breaker.failure_threshold > 0 ? ((1 - (breaker.failure_count / breaker.failure_threshold)) * 100).toFixed(1) : "100.0"}%
                           </div>
                         </div>
                         <div>
@@ -704,16 +704,16 @@ function StatsDashboard() {
                         </div>
                       </div>
 
-                      {breaker.failure_rate > 0 && (
+                      {breaker.failure_count > 0 && (
                         <div className="mt-3">
                           <div className="flex items-center justify-between text-sm mb-1">
                             <span>Failure Rate</span>
                             <span>
-                              {(breaker.failure_rate * 100).toFixed(1)}%
+                              {breaker.failure_threshold > 0 ? ((breaker.failure_count / breaker.failure_threshold) * 100).toFixed(1) : "0.0"}%
                             </span>
                           </div>
                           <Progress
-                            value={breaker.failure_rate * 100}
+                            value={breaker.failure_threshold > 0 ? (breaker.failure_count / breaker.failure_threshold) * 100 : 0}
                             className="h-2"
                           />
                         </div>

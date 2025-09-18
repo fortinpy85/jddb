@@ -519,20 +519,40 @@ async def get_error_metrics() -> Dict[str, Any]:
                 "breakdown": {
                     "by_category": {
                         "counts": by_category,
-                        "percentages": {k: round(v, 2) for k, v in category_percentages.items()}
+                        "percentages": {
+                            k: round(v, 2) for k, v in category_percentages.items()
+                        },
                     },
                     "by_severity": {
                         "counts": by_severity,
-                        "percentages": {k: round(v, 2) for k, v in severity_percentages.items()}
-                    }
+                        "percentages": {
+                            k: round(v, 2) for k, v in severity_percentages.items()
+                        },
+                    },
                 },
                 "health_indicators": {
-                    "error_rate_status": "healthy" if total_errors < 50 else "warning" if total_errors < 100 else "critical",
-                    "recovery_rate_status": "excellent" if recovery_rate > 80 else "good" if recovery_rate > 60 else "needs_attention",
-                    "most_common_category": max(by_category.items(), key=lambda x: x[1])[0] if by_category else None,
-                    "most_common_severity": max(by_severity.items(), key=lambda x: x[1])[0] if by_severity else None,
-                }
-            }
+                    "error_rate_status": (
+                        "healthy"
+                        if total_errors < 50
+                        else "warning" if total_errors < 100 else "critical"
+                    ),
+                    "recovery_rate_status": (
+                        "excellent"
+                        if recovery_rate > 80
+                        else "good" if recovery_rate > 60 else "needs_attention"
+                    ),
+                    "most_common_category": (
+                        max(by_category.items(), key=lambda x: x[1])[0]
+                        if by_category
+                        else None
+                    ),
+                    "most_common_severity": (
+                        max(by_severity.items(), key=lambda x: x[1])[0]
+                        if by_severity
+                        else None
+                    ),
+                },
+            },
         }
 
         logger.info("Error metrics retrieved successfully", total_errors=total_errors)
@@ -541,8 +561,7 @@ async def get_error_metrics() -> Dict[str, Any]:
     except Exception as e:
         logger.error("Failed to retrieve error metrics", error=str(e))
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve error metrics: {str(e)}"
+            status_code=500, detail=f"Failed to retrieve error metrics: {str(e)}"
         )
 
 
@@ -575,12 +594,11 @@ async def reset_error_metrics() -> Dict[str, Any]:
             "status": "success",
             "message": "Error metrics have been reset",
             "timestamp": datetime.utcnow().isoformat(),
-            "previous_stats": current_stats
+            "previous_stats": current_stats,
         }
 
     except Exception as e:
         logger.error("Failed to reset error metrics", error=str(e))
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to reset error metrics: {str(e)}"
+            status_code=500, detail=f"Failed to reset error metrics: {str(e)}"
         )

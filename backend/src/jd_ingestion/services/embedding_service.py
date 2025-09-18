@@ -454,7 +454,7 @@ class EmbeddingService:
                         output_tokens=0,  # Embedding requests don't have output tokens
                         cost_usd=estimated_cost,
                         success="success",
-                        request_metadata={
+                        metadata={
                             "duration": duration,
                             "job_id": job_id,
                             "cost_per_1k_tokens": cost_per_1k_tokens,
@@ -589,7 +589,9 @@ class EmbeddingService:
             logger.error("Failed to get performance stats", error=str(e))
             return {"error": str(e)}
 
-    def calculate_similarity(self, embedding1: List[float], embedding2: List[float]) -> float:
+    def calculate_similarity(
+        self, embedding1: List[float], embedding2: List[float]
+    ) -> float:
         """Calculate cosine similarity between two embeddings."""
         if not embedding1 or not embedding2:
             return 0.0
@@ -645,7 +647,9 @@ class EmbeddingService:
 
         return max(token_estimate_words, token_estimate_chars)
 
-    async def batch_generate_embeddings(self, texts: List[str]) -> List[Optional[List[float]]]:
+    async def batch_generate_embeddings(
+        self, texts: List[str]
+    ) -> List[Optional[List[float]]]:
         """Generate embeddings for multiple texts."""
         if not texts:
             return []
@@ -666,7 +670,7 @@ class EmbeddingService:
         job_id: int,
         db: AsyncSession,
         limit: int = 5,
-        similarity_threshold: float = 0.7
+        similarity_threshold: float = 0.7,
     ) -> List[Dict[str, Any]]:
         """Find jobs similar to the given job ID based on embedding similarity."""
         try:
@@ -689,21 +693,23 @@ class EmbeddingService:
                 db=db,
                 job_id_exclude=job_id,
                 limit=limit * 3,  # Get more chunks to group by job
-                similarity_threshold=similarity_threshold
+                similarity_threshold=similarity_threshold,
             )
 
             # Group by job and take the best match per job
             job_scores = {}
             for chunk in similar_chunks:
                 job_id_key = chunk["job_id"]
-                if job_id_key not in job_scores or chunk["similarity_score"] > job_scores[job_id_key]["similarity_score"]:
+                if (
+                    job_id_key not in job_scores
+                    or chunk["similarity_score"]
+                    > job_scores[job_id_key]["similarity_score"]
+                ):
                     job_scores[job_id_key] = chunk
 
             # Sort by similarity and limit results
             similar_jobs = sorted(
-                job_scores.values(),
-                key=lambda x: x["similarity_score"],
-                reverse=True
+                job_scores.values(), key=lambda x: x["similarity_score"], reverse=True
             )[:limit]
 
             return similar_jobs
@@ -737,9 +743,13 @@ class EmbeddingService:
                         chunk.embedding = embedding
                         success_count += 1
                     else:
-                        logger.warning(f"Failed to generate embedding for chunk {chunk.id}")
+                        logger.warning(
+                            f"Failed to generate embedding for chunk {chunk.id}"
+                        )
                 except Exception as e:
-                    logger.error(f"Error generating embedding for chunk {chunk.id}", error=str(e))
+                    logger.error(
+                        f"Error generating embedding for chunk {chunk.id}", error=str(e)
+                    )
 
             # Commit the changes
             await db.commit()
@@ -751,7 +761,9 @@ class EmbeddingService:
             return success_count > 0
 
         except Exception as e:
-            logger.error(f"Failed to generate embeddings for job {job_id}", error=str(e))
+            logger.error(
+                f"Failed to generate embeddings for job {job_id}", error=str(e)
+            )
             await db.rollback()
             return False
 
@@ -777,7 +789,9 @@ class EmbeddingService:
         except Exception:
             return False
 
-    def _create_chunks_for_embedding(self, text: str, chunk_size: int = 1000, overlap: int = 200) -> List[str]:
+    def _create_chunks_for_embedding(
+        self, text: str, chunk_size: int = 1000, overlap: int = 200
+    ) -> List[str]:
         """Split text into chunks suitable for embedding generation."""
         if not text:
             return []
@@ -794,7 +808,7 @@ class EmbeddingService:
             # Try to break at word boundaries
             if end < len(text):
                 # Find the last space before the chunk size limit
-                last_space = text.rfind(' ', start, end)
+                last_space = text.rfind(" ", start, end)
                 if last_space > start:
                     end = last_space
 

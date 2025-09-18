@@ -228,7 +228,7 @@ interface ContextualMenuProps {
   disabled?: boolean;
 }
 
-export function ContextualMenu({
+function ContextualMenu({
   trigger,
   groups,
   align = "end",
@@ -258,7 +258,7 @@ export function ContextualMenu({
       return (
         <Button
           variant="outline"
-          size={size}
+          size={size === "md" ? "default" : size}
           disabled={disabled}
           className={cn(triggerClassName)}
         >
@@ -346,7 +346,7 @@ export function ContextualMenu({
 }
 
 // Predefined action configurations for common use cases
-export const COMMON_ACTIONS = {
+const COMMON_ACTIONS = {
   view: (onClick: () => void): ContextualAction => ({
     id: "view",
     label: "View Details",
@@ -435,7 +435,7 @@ export const COMMON_ACTIONS = {
 };
 
 // Predefined menu configurations for different contexts
-export const MENU_CONFIGS = {
+const MENU_CONFIGS = {
   jobDescription: (
     onView: () => void,
     onDownload: () => void,

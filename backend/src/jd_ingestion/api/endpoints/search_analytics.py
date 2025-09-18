@@ -164,7 +164,7 @@ async def get_analytics_dashboard(
 
 
 def _generate_performance_alerts(
-    performance_stats: Dict[str, Any]
+    performance_stats: Dict[str, Any],
 ) -> List[Dict[str, str]]:
     """Generate performance alerts based on analytics data."""
     alerts = []

@@ -200,6 +200,7 @@ class PerformanceTimer:
         self.logger = logger or get_logger("performance")
         self.tags = tags or {}
         self.start_time = None
+        self._elapsed_ms = 0.0
 
     def __enter__(self):
         self.start_time = datetime.utcnow()
@@ -211,6 +212,7 @@ class PerformanceTimer:
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.start_time:
             duration = (datetime.utcnow() - self.start_time).total_seconds() * 1000
+            self._elapsed_ms = duration
 
             if exc_type is None:
                 self.logger.info(
@@ -232,6 +234,15 @@ class PerformanceTimer:
                     error_type=exc_type.__name__ if exc_type else None,
                     **self.tags,
                 )
+
+    @property
+    def elapsed_ms(self) -> float:
+        """Get the elapsed time in milliseconds."""
+        if self.start_time is None:
+            return 0.0
+        if self._elapsed_ms > 0:
+            return self._elapsed_ms
+        return (datetime.utcnow() - self.start_time).total_seconds() * 1000
 
 
 def setup_health_check_logging():

@@ -120,9 +120,7 @@ async def search_jobs(
 
         # If we got good semantic results, use them
         if semantic_results:
-            logger.info(
-                "Using semantic search results", count=len(semantic_results)
-            )
+            logger.info("Using semantic search results", count=len(semantic_results))
             detailed_results = []
 
             for result in semantic_results:
@@ -227,9 +225,7 @@ async def semantic_search(
     # Enhance results with detailed information
     detailed_results = []
     for result in semantic_results:
-        job_query = select(JobDescription).where(
-            JobDescription.id == result["job_id"]
-        )
+        job_query = select(JobDescription).where(JobDescription.id == result["job_id"])
         job_result = await db.execute(job_query)
         job = job_result.scalar_one()
 
@@ -1195,8 +1191,6 @@ async def get_search_facets(db: AsyncSession = Depends(get_async_session)):
         raise HTTPException(status_code=500, detail="Failed to retrieve search facets")
 
 
-
-
 async def _fulltext_search(
     search_query: SearchQuery, db: AsyncSession
 ) -> Dict[str, Any]:
@@ -1366,7 +1360,8 @@ async def get_query_suggestions(
     - Content-based filtering
     """
     try:
-        with PerformanceTimer() as timer:
+        # Fixed: Added operation_name parameter
+        with PerformanceTimer("query_suggestions") as timer:
             suggestions = await search_recommendations_service.get_query_suggestions(
                 db=db,
                 partial_query=q,
@@ -1375,18 +1370,10 @@ async def get_query_suggestions(
                 limit=limit,
             )
 
-        # Log performance
-        await log_performance_metric(
-            "query_suggestions",
-            timer.elapsed_ms,
-            {"query_length": len(q), "suggestions_count": len(suggestions)},
-        )
-
         logger.info(
             "Query suggestions generated",
             query=q,
             count=len(suggestions),
-            duration_ms=timer.elapsed_ms,
         )
 
         return suggestions
@@ -1416,7 +1403,7 @@ async def get_search_recommendations(
     trending queries, and personalized suggestions.
     """
     try:
-        with PerformanceTimer() as timer:
+        with PerformanceTimer("search_recommendations") as timer:
             search_context = {"query": query or "", "classification": classification}
 
             recommendations = (
@@ -1432,26 +1419,14 @@ async def get_search_recommendations(
             "total_recommendations": sum(
                 len(v) for v in recommendations.values() if isinstance(v, list)
             ),
-            "generation_time_ms": timer.elapsed_ms,
+            "generation_time_ms": 0,
         }
-
-        # Log performance
-        await log_performance_metric(
-            "search_recommendations",
-            timer.elapsed_ms,
-            {
-                "has_query": bool(query),
-                "has_user": bool(user_id),
-                "total_recs": recommendations["metadata"]["total_recommendations"],
-            },
-        )
 
         logger.info(
             "Search recommendations generated",
             context=search_context,
             user_id=user_id,
             total=recommendations["metadata"]["total_recommendations"],
-            duration_ms=timer.elapsed_ms,
         )
 
         return recommendations
@@ -1478,7 +1453,7 @@ async def get_trending_searches(
     Get trending search queries for a specified time period.
     """
     try:
-        with PerformanceTimer() as timer:
+        with PerformanceTimer("trending_searches") as timer:
             # Map period to timedelta
             period_map = {
                 "1h": timedelta(hours=1),
@@ -1501,7 +1476,7 @@ async def get_trending_searches(
                 )
                 .where(
                     and_(
-                        SearchAnalytics.created_at >= time_filter,
+                        SearchAnalytics.timestamp >= time_filter,
                         SearchAnalytics.total_results > 0,
                         func.length(SearchAnalytics.query_text) >= 3,
                     )
@@ -1528,18 +1503,10 @@ async def get_trending_searches(
                     }
                 )
 
-        # Log performance
-        await log_performance_metric(
-            "trending_searches",
-            timer.elapsed_ms,
-            {"period": period, "trending_count": len(trending)},
-        )
-
         logger.info(
             "Trending searches retrieved",
             period=period,
             count=len(trending),
-            duration_ms=timer.elapsed_ms,
         )
 
         return trending
@@ -1566,7 +1533,7 @@ async def get_popular_filters(
     Get popular filter suggestions based on query context and general usage patterns.
     """
     try:
-        with PerformanceTimer() as timer:
+        with PerformanceTimer("popular_filters") as timer:
             filters = {
                 "classifications": [],
                 "departments": [],
@@ -1639,17 +1606,9 @@ async def get_popular_filters(
                 {"value": "current_year", "label": "Current year"},
             ]
 
-        # Log performance
-        await log_performance_metric(
-            "popular_filters",
-            timer.elapsed_ms,
-            {"total_filters": sum(len(v) for v in filters.values())},
-        )
-
         logger.info(
             "Popular filters retrieved",
             total=sum(len(v) for v in filters.values()),
-            duration_ms=timer.elapsed_ms,
         )
 
         return filters

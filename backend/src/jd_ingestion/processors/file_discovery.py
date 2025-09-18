@@ -144,7 +144,11 @@ class FileDiscovery:
             match = pattern.match(filename)
             if match:
                 groups = match.groupdict()
-                metadata.classification = groups.get("classification").upper() if groups.get("classification") else None
+                metadata.classification = (
+                    groups.get("classification").upper()
+                    if groups.get("classification")
+                    else None
+                )
                 metadata.job_number = groups.get("job_number")
 
                 # Handle language code - default to English if not specified

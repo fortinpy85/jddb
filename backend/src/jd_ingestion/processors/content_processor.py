@@ -177,16 +177,23 @@ class ContentProcessor:
                     budget_value = float(budget_str)
 
                     # Check if it's in millions (M) or thousands (K)
-                    if re.search(r"Budget\s+(?:Responsibility|Authority):\s*\$?[\d,\.]+\s*M", self.raw_content, re.IGNORECASE):
+                    if re.search(
+                        r"Budget\s+(?:Responsibility|Authority):\s*\$?[\d,\.]+\s*M",
+                        self.raw_content,
+                        re.IGNORECASE,
+                    ):
                         budget_value = budget_value * 1_000_000
-                    elif re.search(r"Budget\s+(?:Responsibility|Authority):\s*\$?[\d,\.]+\s*K", self.raw_content, re.IGNORECASE):
+                    elif re.search(
+                        r"Budget\s+(?:Responsibility|Authority):\s*\$?[\d,\.]+\s*K",
+                        self.raw_content,
+                        re.IGNORECASE,
+                    ):
                         budget_value = budget_value * 1_000
 
                     structured_fields["salary_budget"] = budget_value
                     break
                 except ValueError:
                     continue
-
 
         return structured_fields
 

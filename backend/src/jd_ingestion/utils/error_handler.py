@@ -258,7 +258,9 @@ class ErrorHandler:
             if raise_on_error:
                 await self.handle_async_exception(e, operation_context)
             else:
-                await self.handle_async_exception(e, operation_context, raise_http=False)
+                await self.handle_async_exception(
+                    e, operation_context, raise_http=False
+                )
 
     @contextmanager
     def sync_error_context(
@@ -376,7 +378,9 @@ class RetryHandler:
                 error_handler.error_stats["recovery_attempts"] += 1
 
                 # Check if this exception type is retryable
-                if not any(isinstance(e, exc_type) for exc_type in retryable_exceptions):
+                if not any(
+                    isinstance(e, exc_type) for exc_type in retryable_exceptions
+                ):
                     logger.warning(
                         f"Non-retryable exception in {operation_name}: {type(e).__name__}",
                         error=str(e),
@@ -467,7 +471,9 @@ class RetryHandler:
                 error_handler.error_stats["recovery_attempts"] += 1
 
                 # Check if this exception type is retryable
-                if not any(isinstance(e, exc_type) for exc_type in retryable_exceptions):
+                if not any(
+                    isinstance(e, exc_type) for exc_type in retryable_exceptions
+                ):
                     logger.warning(
                         f"Non-retryable exception in {operation_name}: {type(e).__name__}",
                         error=str(e),
@@ -554,14 +560,20 @@ def retry_on_failure(
     """
 
     def decorator(func: F) -> F:
-        local_retry_handler = RetryHandler(max_retries=max_retries, base_delay=base_delay)
+        local_retry_handler = RetryHandler(
+            max_retries=max_retries, base_delay=base_delay
+        )
 
         if asyncio.iscoroutinefunction(func):
 
             @functools.wraps(func)
             async def async_wrapper(*args, **kwargs):
                 return await local_retry_handler.retry_async(
-                    func, *args, retryable_exceptions=retryable_exceptions, context=context, **kwargs
+                    func,
+                    *args,
+                    retryable_exceptions=retryable_exceptions,
+                    context=context,
+                    **kwargs,
                 )
 
             return async_wrapper
@@ -571,7 +583,11 @@ def retry_on_failure(
             @functools.wraps(func)
             def sync_wrapper(*args, **kwargs):
                 return local_retry_handler.retry_sync(
-                    func, *args, retryable_exceptions=retryable_exceptions, context=context, **kwargs
+                    func,
+                    *args,
+                    retryable_exceptions=retryable_exceptions,
+                    context=context,
+                    **kwargs,
                 )
 
             return sync_wrapper

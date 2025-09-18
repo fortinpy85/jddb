@@ -25,7 +25,7 @@ function Skeleton({
       className={cn(
         "animate-pulse rounded-md bg-gray-200",
         rounded && "rounded-full",
-        className
+        className,
       )}
       style={style}
       {...props}

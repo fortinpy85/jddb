@@ -32,12 +32,13 @@ if (typeof window === "undefined") {
 
 // Mock fetch for API calls
 if (!global.fetch) {
-  global.fetch = () =>
+  global.fetch = (() =>
     Promise.resolve({
       ok: true,
+      status: 200,
       json: () => Promise.resolve({}),
       text: () => Promise.resolve(""),
-    } as Response);
+    } as Response)) as typeof fetch;
 }
 
 // Mock window.matchMedia
@@ -57,10 +58,17 @@ if (typeof window !== "undefined" && !window.matchMedia) {
 // Mock IntersectionObserver
 if (typeof window !== "undefined" && !window.IntersectionObserver) {
   window.IntersectionObserver = class IntersectionObserver {
+    root: Element | null = null;
+    rootMargin: string = "0px";
+    thresholds: ReadonlyArray<number> = [0];
+
+    constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {}
+
     observe() {}
     unobserve() {}
     disconnect() {}
-  };
+    takeRecords(): IntersectionObserverEntry[] { return []; }
+  } as any;
 }
 
 // Mock ResizeObserver
