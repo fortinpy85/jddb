@@ -58,7 +58,7 @@ env/
 .env/
 
 # Poetry
-poetry.lock
+# poetry.lock - tracked for dependency security scanning
 
 # mypy
 .mypy_cache/
