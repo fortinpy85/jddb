@@ -129,7 +129,7 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
                         search_query=search_query,
                         search_filters=search_filters,
                         results_count=results_count,
-                        request_metadata={
+                        metadata={
                             "error": error,
                             "path_params": (
                                 dict(request.path_params)

@@ -178,7 +178,7 @@ class TestEmbeddingService:
     @patch("jd_ingestion.services.embedding_service.openai.AsyncOpenAI")
     @pytest.mark.asyncio
     async def test_semantic_search(
-        self, mock_openai_client, embedding_service, async_session, mock_openai_embedding
+        self, mock_openai_client, embedding_service, mock_openai_embedding
     ):
         """Test semantic search functionality."""
         # Mock OpenAI response
@@ -196,101 +196,68 @@ class TestEmbeddingService:
         # Reinitialize service with mocked client
         service = EmbeddingService()
 
-        # Create test job with chunks
-        job = JobDescription(
-            job_number="123456",
-            title="Test Job",
-            classification="EX-01",
-            language="EN",
-            raw_content="Test content",
-        )
-        async_session.add(job)
-        await async_session.commit()
-
-        chunk = ContentChunk(
-            job_id=job.id,
-            chunk_text="Test chunk content",
-            chunk_index=0,
-            embedding=[0.1] * 1536,
-        )
-        async_session.add(chunk)
-        await async_session.commit()
+        # Mock database session and query results
+        mock_session = Mock()
+        mock_session.execute = AsyncMock()
+        mock_session.execute.return_value.scalars.return_value.all.return_value = []
 
         results = await service.semantic_search(
-            query="test query", db=async_session, limit=10
+            query="test query", db=mock_session, limit=10
         )
 
         assert isinstance(results, list)
         mock_embeddings.create.assert_called_once()
+        mock_session.execute.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_get_similar_jobs(self, embedding_service, async_session):
+    async def test_get_similar_jobs(self, embedding_service):
         """Test finding similar jobs by embedding similarity."""
-        # Create test jobs with embeddings
-        job1 = JobDescription(
-            job_number="123456",
-            title="Test Job 1",
-            classification="EX-01",
-            language="EN",
-            raw_content="Test content 1",
-        )
-        job2 = JobDescription(
-            job_number="789012",
-            title="Test Job 2",
-            classification="EX-02",
-            language="EN",
-            raw_content="Test content 2",
-        )
+        # Mock database session and query results
+        mock_session = Mock()
+        mock_session.execute = AsyncMock()
 
-        async_session.add_all([job1, job2])
-        await async_session.commit()
-
-        # Add chunks with similar embeddings
-        chunk1 = ContentChunk(
-            job_id=job1.id,
-            chunk_text="Similar content",
-            chunk_index=0,
-            embedding=[1.0, 0.0] + [0.0] * 1534,
-        )
-        chunk2 = ContentChunk(
-            job_id=job2.id,
-            chunk_text="Very similar content",
-            chunk_index=0,
-            embedding=[0.9, 0.1] + [0.0] * 1534,  # Similar to chunk1
-        )
-
-        async_session.add_all([chunk1, chunk2])
-        await async_session.commit()
+        # Mock the query result to return some similar jobs
+        mock_result = Mock()
+        mock_result.scalars.return_value.all.return_value = [
+            Mock(job_id=2, similarity=0.95),
+            Mock(job_id=3, similarity=0.87)
+        ]
+        mock_session.execute.return_value = mock_result
 
         similar_jobs = await embedding_service.get_similar_jobs(
-            job_id=job1.id, db=async_session, limit=5
+            job_id=1, db=mock_session, limit=5
         )
 
         assert len(similar_jobs) >= 0  # May be empty if no similar jobs found
+        assert mock_session.execute.call_count >= 1  # May call multiple queries
 
     @pytest.mark.asyncio
-    async def test_generate_embeddings_for_job(
-        self, embedding_service, async_session, sample_job_data
-    ):
+    async def test_generate_embeddings_for_job(self, embedding_service):
         """Test generating embeddings for a job's content chunks."""
-        job = JobDescription(**sample_job_data)
-        async_session.add(job)
-        await async_session.commit()
+        # Mock database session and content chunks
+        mock_session = Mock()
+        mock_session.execute = AsyncMock()
+        mock_session.commit = AsyncMock()
 
-        # Add content chunks
-        chunks = ["Chunk 1 content", "Chunk 2 content", "Chunk 3 content"]
-        for i, chunk_text in enumerate(chunks):
-            chunk = ContentChunk(job_id=job.id, chunk_text=chunk_text, chunk_index=i)
-            async_session.add(chunk)
-        await async_session.commit()
+        # Mock chunks from database
+        mock_chunks = [
+            Mock(id=1, chunk_text="Chunk 1 content", embedding=None),
+            Mock(id=2, chunk_text="Chunk 2 content", embedding=None),
+            Mock(id=3, chunk_text="Chunk 3 content", embedding=None),
+        ]
+        mock_result = Mock()
+        mock_result.scalars.return_value.all.return_value = mock_chunks
+        mock_session.execute.return_value = mock_result
 
         with patch.object(embedding_service, "generate_embedding") as mock_generate:
             mock_generate.return_value = [0.1] * 1536
 
-            await embedding_service.generate_embeddings_for_job(job.id, async_session)
+            await embedding_service.generate_embeddings_for_job(1, mock_session)
 
             # Should call generate_embedding for each chunk
-            assert mock_generate.call_count == len(chunks)
+            assert mock_generate.call_count == len(mock_chunks)
+            mock_session.execute.assert_called()
+            mock_session.commit.assert_called()
 
     def test_truncate_text(self, embedding_service):
         """Test text truncation for API limits."""

@@ -205,7 +205,7 @@ export function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                       }
                     }}
                     onFocus={() => {
-                      if (suggestions && suggestions.suggestions.length > 0) {
+                      if (suggestions && suggestions.suggestions && suggestions.suggestions.length > 0) {
                         setShowSuggestions(true);
                       }
                     }}
@@ -215,6 +215,7 @@ export function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                   {/* Search Suggestions */}
                   {showSuggestions &&
                     suggestions &&
+                    suggestions.suggestions &&
                     suggestions.suggestions.length > 0 && (
                       <div className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
                         {suggestions.suggestions.map((suggestion, index) => (
