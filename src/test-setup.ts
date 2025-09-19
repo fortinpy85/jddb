@@ -38,7 +38,8 @@ if (!global.fetch) {
       status: 200,
       json: () => Promise.resolve({}),
       text: () => Promise.resolve(""),
-    } as Response)) as typeof fetch;
+      preconnect: () => Promise.resolve(),
+    } as unknown as Response)) as unknown as typeof fetch;
 }
 
 // Mock window.matchMedia

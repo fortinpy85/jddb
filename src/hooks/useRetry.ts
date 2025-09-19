@@ -37,7 +37,7 @@ export function useRetry(options: RetryOptions = {}) {
     nextRetryAt: null,
   });
 
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const calculateDelay = useCallback(
     (attempt: number) => {
@@ -140,7 +140,7 @@ export function useRetry(options: RetryOptions = {}) {
   const cancel = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
-      timeoutRef.current = undefined;
+      timeoutRef.current = null;
     }
     setRetryState((prev) => ({
       ...prev,

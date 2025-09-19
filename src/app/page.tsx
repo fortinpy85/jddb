@@ -155,150 +155,111 @@ export default function HomePage() {
       >
         <ToastProvider>
           <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900/20 transition-colors duration-300">
-            {/* Header - Mobile Optimized */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-lg border-b border-white/20 dark:border-slate-700/20 sticky top-0 z-40">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between min-h-[4rem] sm:h-16 py-2 sm:py-0">
-                  {/* Logo and Title - Mobile Responsive */}
-                  <div className="flex items-center group flex-shrink-0">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
-                      <Database className="relative w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mr-2 sm:mr-3 group-hover:scale-110 transition-transform duration-300" />
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+            {/* Fixed Top Banner - Header + Tabs */}
+            <div className="fixed top-0 left-0 right-0 z-50 h-28 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-white/20 dark:border-slate-700/20">
+              {/* Header Section */}
+              <div className="border-b border-slate-200/50 dark:border-slate-700/50 h-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+                  <div className="flex items-center justify-between h-full">
+                    {/* Logo and Title - Mobile Responsive */}
+                    <div className="flex items-center group flex-shrink-0">
+                      <div className="relative">
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
+                        <Database className="relative w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mr-2 sm:mr-3 group-hover:scale-110 transition-transform duration-300" />
+                      </div>
+                      <h1 className="text-sm sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-slate-100 dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300">
+                        <span className="hidden sm:inline">
+                          Job Description Database
+                        </span>
+                        <span className="sm:hidden">JDDB</span>
+                      </h1>
                     </div>
-                    <h1 className="text-sm sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-slate-100 dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300">
-                      <span className="hidden sm:inline">
-                        Job Description Database
-                      </span>
-                      <span className="sm:hidden">JDDB</span>
-                      <span className="hidden lg:inline"> (JDDB)</span>
-                    </h1>
-                  </div>
 
-                  {/* Stats and Theme Toggle - Mobile Responsive */}
-                  <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
-                    {/* Theme Toggle */}
-                    <ThemeToggle size="sm" className="flex-shrink-0" />
+                    {/* Stats and Theme Toggle - Mobile Responsive */}
+                    <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
+                      {/* Theme Toggle */}
+                      <ThemeToggle size="sm" className="flex-shrink-0" />
 
-                    {/* Stats */}
-                    <div className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100/50 dark:bg-slate-800/50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 truncate">
-                      <span className="font-semibold text-blue-600 dark:text-blue-400">
-                        {stats.total_jobs}
-                      </span>
-                      <span className="hidden xs:inline"> jobs</span>
-                      <span className="hidden sm:inline"> • Last updated:</span>
-                      <span className="hidden md:inline text-slate-500 dark:text-slate-400">
-                        {" "}
-                        {stats.last_updated
-                          ? new Date(stats.last_updated).toLocaleDateString()
-                          : "Never"}
-                      </span>
+                      {/* Stats */}
+                      <div className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100/50 dark:bg-slate-800/50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 truncate">
+                        <span className="font-semibold text-blue-600 dark:text-blue-400">
+                          {stats.total_jobs}
+                        </span>
+                        <span className="hidden xs:inline"> jobs</span>
+                        <span className="hidden sm:inline"> • Last updated:</span>
+                        <span className="hidden md:inline text-slate-500 dark:text-slate-400">
+                          {" "}
+                          {stats.last_updated
+                            ? new Date(stats.last_updated).toLocaleDateString()
+                            : "Never"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                {/* Tab Navigation - Mobile First Design */}
-                <div className="mb-6 sm:mb-8">
-                  {/* Mobile: Horizontal scroll tabs */}
-                  <div className="sm:hidden">
-                    <div className="overflow-x-auto scrollbar-hide">
-                      <TabsList className="flex w-max min-w-full gap-2 p-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-white/30 dark:border-slate-700/30 shadow-lg rounded-xl">
-                        <TabsTrigger
-                          value="dashboard"
-                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap rounded-lg transition-all duration-200 hover:scale-105"
-                        >
-                          <BarChart3 className="w-4 h-4" />
-                          Dashboard
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="jobs"
-                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap rounded-lg transition-all duration-200 hover:scale-105"
-                        >
-                          <FileText className="w-4 h-4" />
-                          Jobs
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="upload"
-                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap rounded-lg transition-all duration-200 hover:scale-105"
-                        >
-                          <Upload className="w-4 h-4" />
-                          Upload
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="search"
-                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap rounded-lg transition-all duration-200 hover:scale-105"
-                        >
-                          <Search className="w-4 h-4" />
-                          Search
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="compare"
-                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap rounded-lg transition-all duration-200 hover:scale-105"
-                        >
-                          <GitCompare className="w-4 h-4" />
-                          Compare
-                        </TabsTrigger>
-                        <TabsTrigger
-                          value="statistics"
-                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium whitespace-nowrap rounded-lg transition-all duration-200 hover:scale-105"
-                        >
-                          <Activity className="w-4 h-4" />
-                          Statistics
-                        </TabsTrigger>
-                      </TabsList>
-                    </div>
-                  </div>
-
-                  {/* Desktop/Tablet: Grid layout */}
-                  <TabsList className="hidden sm:grid w-full grid-cols-3 lg:grid-cols-6 gap-1 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 shadow-lg rounded-xl p-1">
+              {/* Tab Navigation Section */}
+              <div className="bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900/20 h-12">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
+                    <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 gap-1 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 shadow-lg rounded-xl p-1">
                     <TabsTrigger
                       value="dashboard"
                       className="flex items-center justify-center lg:justify-start gap-2 p-3 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105"
                     >
                       <BarChart3 className="w-4 h-4" />
-                      <span className="hidden lg:inline">Dashboard</span>
+                      <span className="hidden sm:inline">Dashboard</span>
                     </TabsTrigger>
                     <TabsTrigger
                       value="jobs"
                       className="flex items-center justify-center lg:justify-start gap-2 p-3 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105"
                     >
                       <FileText className="w-4 h-4" />
-                      <span className="hidden lg:inline">Jobs</span>
+                      <span className="hidden sm:inline">Jobs</span>
                     </TabsTrigger>
                     <TabsTrigger
                       value="upload"
                       className="flex items-center justify-center lg:justify-start gap-2 p-3 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105"
                     >
                       <Upload className="w-4 h-4" />
-                      <span className="hidden lg:inline">Upload</span>
+                      <span className="hidden sm:inline">Upload</span>
                     </TabsTrigger>
                     <TabsTrigger
                       value="search"
                       className="flex items-center justify-center lg:justify-start gap-2 p-3 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105"
                     >
                       <Search className="w-4 h-4" />
-                      <span className="hidden lg:inline">Search</span>
+                      <span className="hidden sm:inline">Search</span>
                     </TabsTrigger>
                     <TabsTrigger
                       value="compare"
                       className="flex items-center justify-center lg:justify-start gap-2 p-3 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105"
                     >
                       <GitCompare className="w-4 h-4" />
-                      <span className="hidden lg:inline">Compare</span>
+                      <span className="hidden sm:inline">Compare</span>
                     </TabsTrigger>
                     <TabsTrigger
                       value="statistics"
                       className="flex items-center justify-center lg:justify-start gap-2 p-3 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105"
                     >
                       <Activity className="w-4 h-4" />
-                      <span className="hidden lg:inline">Statistics</span>
+                      <span className="hidden sm:inline">Statistics</span>
                     </TabsTrigger>
-                  </TabsList>
+                    </TabsList>
                 </div>
+              </div>
+            </div>
+
+            {/* Main Content - Add top padding to account for fixed header */}
+            <div className="pt-28 flex">
+              {/* Left Panel - Narrow and Empty */}
+              <div className="w-16 sm:w-20 lg:w-24 flex-shrink-0 bg-slate-50/50 dark:bg-slate-900/50 border-r border-slate-200/50 dark:border-slate-700/50">
+                {/* Empty for now - can be used for navigation icons or other controls */}
+              </div>
+
+              {/* Main Content Area - Left Justified */}
+              <div className="flex-1 px-4 sm:px-6 lg:px-8 pt-8">
 
                 {/* Dashboard Tab */}
                 <TabsContent value="dashboard" className="space-y-6">
@@ -586,8 +547,9 @@ export default function HomePage() {
                     />
                   )}
                 </TabsContent>
-              </Tabs>
+              </div>
             </div>
+            </Tabs>
           </div>
         </ToastProvider>
       </ErrorBoundaryWrapper>

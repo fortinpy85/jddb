@@ -14,7 +14,24 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(git add:*)",
-      "mcp__playwright__browser_navigate"
+      "mcp__playwright__browser_navigate",
+      "Bash(bun test:*)",
+      "Bash(poetry check:*)",
+      "Bash(pip check)",
+      "Bash(npx tsc:*)",
+      "Bash(poetry run alembic:*)",
+      "Bash(poetry run:*)",
+      "Bash(PYTHONIOENCODING=utf-8 poetry run python test_phase2_integration.py)",
+      "Bash(make:*)",
+      "Bash(bun:*)",
+      "mcp__playwright__browser_press_key",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_wait_for"
     ]
   }
 }

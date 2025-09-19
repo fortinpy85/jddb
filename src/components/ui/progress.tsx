@@ -146,4 +146,3 @@ function ProgressIndicator({
 }
 
 export { Progress, ProgressIndicator };
-export type { ProgressStep };

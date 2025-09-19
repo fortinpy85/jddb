@@ -223,7 +223,7 @@ export function EmptyState(props: CombinedEmptyStateProps) {
 
     // Additional safety check - ensure we always have a valid config
     const finalConfig =
-      config && config.icon
+      config && typeof config.icon === 'function'
         ? config
         : {
             icon: FolderOpen,

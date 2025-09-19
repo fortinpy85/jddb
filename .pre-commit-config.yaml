@@ -75,7 +75,7 @@ repos:
     hooks:
       - id: check-migrations
         name: Check for pending database migrations
-        entry: bash -c 'cd backend && source venv/Scripts/activate && alembic check || echo "⚠️  Warning: Alembic check failed - ensure database is up to date"'
+        entry: bash -c 'cd backend && poetry run alembic check || true'
         language: system
         pass_filenames: false
         files: '^backend/alembic/versions/.*\.py$'

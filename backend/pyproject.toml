@@ -47,8 +47,8 @@ redis = "^6.4.0"
 pydantic-settings = "^2.10.1"
 structlog = "^25.4.0"
 python-dotenv = "^1.1.1"
-python-jose = {version = "3.5.0", extras = ["cryptography"]}
-passlib = {version = "1.7.4", extras = ["bcrypt"]}
+python-jose = {extras = ["cryptography"], version = "^3.5.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 
 # Development dependencies (moved from core dependencies)
 aiosqlite = "^0.21.0"

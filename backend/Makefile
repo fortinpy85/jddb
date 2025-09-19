@@ -15,6 +15,7 @@ help:
 	@echo "  db-init       Initialize database and create tables"
 	@echo "  db-migrate    Run database migrations"
 	@echo "  sample-data   Create sample data for testing"
+	@echo "  seed-phase2   Create Phase 2 sample data (users, translation, collaboration)"
 	@echo ""
 	@echo "Development:"
 	@echo "  server        Start development server with auto-reload"
@@ -53,6 +54,9 @@ db-migrate:
 
 sample-data: db-init
 	python scripts/sample_data.py
+
+seed-phase2: db-migrate
+	python scripts/seed_phase2_data.py
 
 # Development server
 server:

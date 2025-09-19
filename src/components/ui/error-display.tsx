@@ -239,7 +239,7 @@ User Agent: ${navigator.userAgent}
           {displaySolutions && displaySolutions.length > 0 && (
             <div className="space-y-4">
               <h3 className="font-semibold text-sm">How to fix this:</h3>
-              {displaySolutions.map((solution, index) => (
+              {displaySolutions.map((solution: ErrorSolution, index: number) => (
                 <div key={index} className="border rounded-lg p-4 bg-gray-50">
                   <h4 className="font-medium text-sm mb-2">{solution.title}</h4>
                   <p className="text-sm text-muted-foreground mb-3">
@@ -247,7 +247,7 @@ User Agent: ${navigator.userAgent}
                   </p>
                   {solution.actions && solution.actions.length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {solution.actions.map((action, actionIndex) => {
+                      {solution.actions.map((action: ErrorAction, actionIndex: number) => {
                         const ActionIcon = action.icon;
                         return (
                           <Button

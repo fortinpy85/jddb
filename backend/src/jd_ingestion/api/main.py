@@ -17,16 +17,19 @@ from ..utils.logging import configure_logging, get_logger
 from .endpoints import (
     analysis,
     analytics,
+    auth,
     health,
     ingestion,
     jobs,
     performance,
+    phase2_monitoring,
     quality,
     rate_limits,
     saved_searches,
     search,
     search_analytics,
     tasks,
+    websocket,
 )
 
 # Configure logging
@@ -135,6 +138,9 @@ app.include_router(
 )
 app.include_router(rate_limits.router, prefix="/api/rate-limits", tags=["rate-limits"])
 app.include_router(health.router, prefix="/api/health", tags=["health"])
+app.include_router(websocket.router, prefix="/api", tags=["websocket"])
+app.include_router(auth.router, prefix="/api", tags=["authentication"])
+app.include_router(phase2_monitoring.router, prefix="/api", tags=["phase2-monitoring"])
 
 
 @app.get("/")

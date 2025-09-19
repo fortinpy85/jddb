@@ -1,30 +1,28 @@
 /// <reference types="@testing-library/jest-dom" />
 
-declare global {
-  namespace Vi {
-    interface Assertion {
-      toBeInTheDocument(): void;
-      toHaveTextContent(text: string | RegExp): void;
-      toHaveClass(className: string): void;
-      toBeVisible(): void;
-      toBeDisabled(): void;
-      toBeEnabled(): void;
-      toHaveAttribute(attr: string, value?: string): void;
-      toHaveValue(value: string | number): void;
-      toBeChecked(): void;
-      toHaveFocus(): void;
-      toBeInvalid(): void;
-      toBeValid(): void;
-      toBeEmptyDOMElement(): void;
-      toContainElement(element: HTMLElement | null): void;
-      toContainHTML(htmlText: string): void;
-      toHaveDisplayValue(value: string | RegExp | (string | RegExp)[]): void;
-      toHaveFormValues(expectedValues: Record<string, any>): void;
-      toHaveStyle(css: string | Record<string, any>): void;
-      toHaveAccessibleDescription(expectedAccessibleDescription?: string | RegExp): void;
-      toHaveAccessibleName(expectedAccessibleName?: string | RegExp): void;
-      toHaveErrorMessage(expectedErrorMessage?: string | RegExp): void;
-    }
+declare module "bun:test" {
+  interface Matchers<T = unknown> {
+    toBeInTheDocument(): T;
+    toHaveTextContent(text: string | RegExp): T;
+    toHaveClass(className: string): T;
+    toBeVisible(): T;
+    toBeDisabled(): T;
+    toBeEnabled(): T;
+    toHaveAttribute(attr: string, value?: string): T;
+    toHaveValue(value: string | number): T;
+    toBeChecked(): T;
+    toHaveFocus(): T;
+    toBeInvalid(): T;
+    toBeValid(): T;
+    toBeEmptyDOMElement(): T;
+    toContainElement(element: HTMLElement | null): T;
+    toContainHTML(htmlText: string): T;
+    toHaveDisplayValue(value: string | RegExp | (string | RegExp)[]): T;
+    toHaveFormValues(expectedValues: Record<string, any>): T;
+    toHaveStyle(css: string | Record<string, any>): T;
+    toHaveAccessibleDescription(expectedAccessibleDescription?: string | RegExp): T;
+    toHaveAccessibleName(expectedAccessibleName?: string | RegExp): T;
+    toHaveErrorMessage(expectedErrorMessage?: string | RegExp): T;
   }
 }
 

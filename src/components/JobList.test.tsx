@@ -8,7 +8,7 @@ import {
   fireEvent,
   waitFor,
   cleanup,
-} from "@testing-library/react";
+} from "../test-utils";
 import { describe, test, expect, beforeEach, afterEach, mock } from "bun:test";
 import { JobList } from "./JobList";
 

@@ -341,7 +341,7 @@ export function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                   <label className="text-sm font-medium text-gray-600 mb-2 block">
                     Search in Sections
                   </label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 overflow-hidden max-w-full">
                     {facets.section_types.map((sectionType) => (
                       <Badge
                         key={sectionType.value}
@@ -350,7 +350,7 @@ export function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                             ? "default"
                             : "outline"
                         }
-                        className="cursor-pointer"
+                        className="cursor-pointer break-words max-w-full"
                         onClick={() =>
                           handleSectionTypeToggle(sectionType.value)
                         }
