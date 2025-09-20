@@ -31,7 +31,12 @@
       "mcp__playwright__browser_snapshot",
       "mcp__playwright__browser_take_screenshot",
       "mcp__playwright__browser_evaluate",
-      "mcp__playwright__browser_wait_for"
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_navigate_back",
+      "Bash(poetry show:*)",
+      "Bash(poetry add:*)",
+      "Bash(poetry update:*)",
+      "Bash(poetry remove:*)"
     ]
   }
 }

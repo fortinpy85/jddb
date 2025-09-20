@@ -7,7 +7,7 @@ authors = [
 ]
 license = "MIT"
 readme = "README.md"
-requires-python = ">=3.9,<3.14"
+requires-python = ">3.9.1,<3.14"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -24,9 +24,7 @@ dynamic = ["dependencies"]
 packages = [{include = "src/jd_ingestion"}]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.14" # Python version range
-spacy = "^3.8.7"
-spacy-transformers = "^1.3.9"
+python = ">3.9.1,<3.14" # Exclude Python 3.9.0 and 3.9.1 for cryptography compatibility
 psutil = "^7.1.0" # This seems like a core dependency
 sqlmodel = "^0.0.25"
 fastapi = "^0.116.2"
@@ -47,11 +45,13 @@ redis = "^6.4.0"
 pydantic-settings = "^2.10.1"
 structlog = "^25.4.0"
 python-dotenv = "^1.1.1"
-python-jose = {extras = ["cryptography"], version = "^3.5.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 
 # Development dependencies (moved from core dependencies)
 aiosqlite = "^0.21.0"
+transformers = "~4.56.2"
+cryptography = "~46.0"
+pyjwt = {extras = ["cryptography"], version = "^2.10.1"}
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.2" # Using the latest specified version
 pytest-asyncio = "^1.2.0"
