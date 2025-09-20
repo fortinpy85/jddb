@@ -36,7 +36,16 @@
       "Bash(poetry show:*)",
       "Bash(poetry add:*)",
       "Bash(poetry update:*)",
-      "Bash(poetry remove:*)"
+      "Bash(poetry remove:*)",
+      "mcp__playwright__browser_hover",
+      "Bash(gh repo view:*)",
+      "Bash(python -m pytest tests/ -v --tb=short --no-cov -m \"not benchmark\")",
+      "Bash(python -m pytest tests/ -v --tb=short --no-cov -m \"benchmark\" --benchmark-disable)",
+      "Bash(python -m pytest tests/ -v --tb=short --no-cov -m \"benchmark\")",
+      "Bash(python -m pytest tests/unit/test_content_processor.py::test_process_large_file_performance -v --tb=short --no-cov)",
+      "Bash(python:*)",
+      "Bash(find:*)",
+      "Bash(PYTHONPATH=src poetry run python scripts/check_schema.py)"
     ]
   }
 }

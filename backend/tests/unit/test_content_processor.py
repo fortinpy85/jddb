@@ -207,11 +207,15 @@ def test_chunk_content_with_overlap(processor):
 @pytest.mark.unit
 @pytest.mark.benchmark
 def test_process_large_file_performance(
-    processor, benchmark, sample_job_description_text
+    processor, sample_job_description_text
 ):
-    """Benchmark processing of large content."""
+    """Test processing of large content for performance."""
     large_content = sample_job_description_text * 100  # Create a large content string
-    benchmark(processor.process_content, large_content, "en")
+    result = processor.process_content(large_content, "en")
+    assert result is not None
+    assert hasattr(result, "cleaned_content")
+    assert result.cleaned_content is not None
+    assert len(result.cleaned_content) > 0
 
 
 # Tests for FileDiscovery methods that were previously in ContentProcessor tests

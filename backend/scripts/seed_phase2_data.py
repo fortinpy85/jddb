@@ -111,32 +111,34 @@ async def create_user_preferences(db: AsyncSession, user_ids: List[int]):
     """Create sample user preferences."""
 
     preferences_data = [
-        # Admin preferences
-        {"user_id": user_ids[0], "preference_key": "theme", "preference_value": {"mode": "dark", "color": "blue"}},
-        {"user_id": user_ids[0], "preference_key": "editor_settings", "preference_value": {"font_size": 14, "line_numbers": True}},
-        {"user_id": user_ids[0], "preference_key": "notifications", "preference_value": {"email": True, "browser": True}},
+        # Admin preferences - converted to work with existing table structure
+        {"user_id": str(user_ids[0]), "preference_type": "ui", "preference_key": "theme", "preference_value": {"mode": "dark", "color": "blue"}},
+        {"user_id": str(user_ids[0]), "preference_type": "ui", "preference_key": "editor_settings", "preference_value": {"font_size": 14, "line_numbers": True}},
+        {"user_id": str(user_ids[0]), "preference_type": "ui", "preference_key": "notifications", "preference_value": {"email": True, "browser": True}},
 
         # Editor preferences
-        {"user_id": user_ids[1], "preference_key": "theme", "preference_value": {"mode": "light", "color": "green"}},
-        {"user_id": user_ids[1], "preference_key": "editor_settings", "preference_value": {"font_size": 12, "line_numbers": False}},
+        {"user_id": str(user_ids[1]), "preference_type": "ui", "preference_key": "theme", "preference_value": {"mode": "light", "color": "green"}},
+        {"user_id": str(user_ids[1]), "preference_type": "ui", "preference_key": "editor_settings", "preference_value": {"font_size": 12, "line_numbers": False}},
 
         # French editor preferences
-        {"user_id": user_ids[2], "preference_key": "theme", "preference_value": {"mode": "light", "color": "red"}},
-        {"user_id": user_ids[2], "preference_key": "language_settings", "preference_value": {"spell_check": "fr", "dictionary": "canadian_french"}},
+        {"user_id": str(user_ids[2]), "preference_type": "ui", "preference_key": "theme", "preference_value": {"mode": "light", "color": "red"}},
+        {"user_id": str(user_ids[2]), "preference_type": "ui", "preference_key": "language_settings", "preference_value": {"spell_check": "fr", "dictionary": "canadian_french"}},
 
         # Translator preferences
-        {"user_id": user_ids[3], "preference_key": "translation_settings", "preference_value": {"auto_save": True, "memory_threshold": 0.8}},
-        {"user_id": user_ids[3], "preference_key": "editor_settings", "preference_value": {"split_view": True, "sync_scroll": True}},
+        {"user_id": str(user_ids[3]), "preference_type": "ui", "preference_key": "translation_settings", "preference_value": {"auto_save": True, "memory_threshold": 0.8}},
+        {"user_id": str(user_ids[3]), "preference_type": "ui", "preference_key": "editor_settings", "preference_value": {"split_view": True, "sync_scroll": True}},
     ]
 
     for pref in preferences_data:
+        # Use string user_id and include preference_type to match existing table structure
         await db.execute(text("""
-            INSERT INTO user_preferences (user_id, preference_key, preference_value)
-            VALUES (:user_id, :preference_key, CAST(:preference_value AS jsonb))
-            ON CONFLICT (user_id, preference_key) DO UPDATE SET
+            INSERT INTO user_preferences (user_id, session_id, preference_type, preference_key, preference_value)
+            VALUES (:user_id, NULL, :preference_type, :preference_key, CAST(:preference_value AS jsonb))
+            ON CONFLICT (user_id, session_id, preference_type, preference_key) DO UPDATE SET
                 preference_value = EXCLUDED.preference_value
         """), {
-            "user_id": pref["user_id"],
+            "user_id": pref["user_id"],  # Already converted to string above
+            "preference_type": pref["preference_type"],
             "preference_key": pref["preference_key"],
             "preference_value": json.dumps(pref["preference_value"])  # Convert dict to JSON string
         })

@@ -94,7 +94,7 @@ class TestPrivacyCompliance:
     def test_audit_logging_excludes_pii(self):
         """Test that audit logs don't contain unmasked PII."""
         # Mock audit logger
-        with patch('jd_ingestion.utils.logging.AuditLogger') as mock_logger:
+        with patch('jd_ingestion.audit.logger.AuditLogger') as mock_logger:
             logger_instance = mock_logger.return_value
 
             # Simulate logging an event with PII

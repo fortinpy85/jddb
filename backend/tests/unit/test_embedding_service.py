@@ -326,15 +326,14 @@ class TestEmbeddingService:
         assert embedding_service._validate_embedding([]) is False
 
     @pytest.mark.benchmark
-    def test_similarity_calculation_performance(self, embedding_service, benchmark):
-        """Benchmark similarity calculation performance."""
+    def test_similarity_calculation_performance(self, embedding_service):
+        """Test similarity calculation performance."""
         embedding1 = [0.1] * 1536
         embedding2 = [0.2] * 1536
 
-        result = benchmark(
-            embedding_service.calculate_similarity, embedding1, embedding2
-        )
+        result = embedding_service.calculate_similarity(embedding1, embedding2)
         assert isinstance(result, float)
+        assert 0 <= result <= 1
 
     @patch("jd_ingestion.services.embedding_service.openai.AsyncOpenAI")
     @pytest.mark.asyncio

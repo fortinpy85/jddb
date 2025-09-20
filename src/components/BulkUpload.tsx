@@ -347,13 +347,13 @@ export function BulkUpload({
           {/* Drag and Drop Area */}
           <div
             className={`
-              border-2 border-dashed rounded-lg p-8 text-center transition-colors
+              border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200
               ${
                 dragActive
-                  ? "border-blue-400 bg-blue-50"
-                  : "border-gray-300 hover:border-gray-400"
+                  ? "border-blue-500 bg-blue-50 border-solid shadow-lg scale-[1.02]"
+                  : "border-gray-400 hover:border-blue-400 hover:bg-gray-50"
               }
-              ${isUploading ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              ${isUploading ? "pointer-events-none opacity-50" : "cursor-pointer hover:shadow-md"}
             `}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
@@ -375,18 +375,21 @@ export function BulkUpload({
 
             {dragActive ? (
               <div className="text-blue-600">
-                <Upload className="w-12 h-12 mx-auto mb-4" />
-                <p className="text-lg font-semibold">Drop files here</p>
+                <Upload className="w-16 h-16 mx-auto mb-4 animate-bounce" />
+                <p className="text-xl font-semibold">Drop files here</p>
+                <p className="text-sm mt-2 opacity-75">Release to upload</p>
               </div>
             ) : (
-              <div className="text-gray-600">
-                <FolderOpen className="w-12 h-12 mx-auto mb-4" />
-                <p className="text-lg font-semibold mb-2">
+              <div className="text-gray-700">
+                <FolderOpen className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+                <p className="text-xl font-semibold mb-2">
                   Drag and drop files here, or click to select
                 </p>
-                <p className="text-sm">
-                  Supported formats: {acceptedFileTypes.join(", ")} • Max size:{" "}
-                  {maxFileSize}MB
+                <p className="text-sm text-gray-500 mb-3">
+                  Supported formats: {acceptedFileTypes.join(", ")}
+                </p>
+                <p className="text-xs text-gray-400">
+                  Max size: {maxFileSize}MB per file
                 </p>
               </div>
             )}

@@ -261,8 +261,11 @@ export default function HomePage() {
               {/* Main Content Area - Left Justified */}
               <div className="flex-1 px-4 sm:px-6 lg:px-8 pt-8">
 
-                {/* Dashboard Tab */}
-                <TabsContent value="dashboard" className="space-y-6">
+              </div>
+            </div>
+
+            {/* Dashboard Tab */}
+            <TabsContent value="dashboard" className="space-y-6 px-4 sm:px-6 lg:px-8 pt-8 ml-16 sm:ml-20 lg:ml-24">
                   {/* Stats Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {statsCards.map((card, index) => (
@@ -507,48 +510,46 @@ export default function HomePage() {
                       </div>
                     </CardContent>
                   </Card>
-                </TabsContent>
+            </TabsContent>
 
-                {/* Jobs Tab */}
-                <TabsContent value="jobs">
-                  <JobList onJobSelect={handleJobSelect} showFilters={true} />
-                </TabsContent>
+            {/* Jobs Tab */}
+            <TabsContent value="jobs" className="px-4 sm:px-6 lg:px-8 pt-8 ml-16 sm:ml-20 lg:ml-24">
+              <JobList onJobSelect={handleJobSelect} showFilters={true} />
+            </TabsContent>
 
-                {/* Upload Tab */}
-                <TabsContent value="upload">
-                  <BulkUpload
-                    onUploadComplete={handleUploadComplete}
-                    maxFileSize={50}
-                    acceptedFileTypes={[".txt", ".doc", ".docx", ".pdf"]}
-                  />
-                </TabsContent>
+            {/* Upload Tab */}
+            <TabsContent value="upload" className="px-4 sm:px-6 lg:px-8 pt-8 ml-16 sm:ml-20 lg:ml-24">
+              <BulkUpload
+                onUploadComplete={handleUploadComplete}
+                maxFileSize={50}
+                acceptedFileTypes={[".txt", ".doc", ".docx", ".pdf"]}
+              />
+            </TabsContent>
 
-                {/* Search Tab */}
-                <TabsContent value="search">
-                  <SearchInterface onJobSelect={handleJobSelect} />
-                </TabsContent>
+            {/* Search Tab */}
+            <TabsContent value="search" className="px-4 sm:px-6 lg:px-8 pt-8 ml-16 sm:ml-20 lg:ml-24">
+              <SearchInterface onJobSelect={handleJobSelect} />
+            </TabsContent>
 
-                {/* Compare Tab */}
-                <TabsContent value="compare">
-                  <JobComparison />
-                </TabsContent>
+            {/* Compare Tab */}
+            <TabsContent value="compare" className="px-4 sm:px-6 lg:px-8 pt-8 ml-16 sm:ml-20 lg:ml-24">
+              <JobComparison />
+            </TabsContent>
 
-                {/* Statistics Tab */}
-                <TabsContent value="statistics">
-                  <StatsDashboard />
-                </TabsContent>
+            {/* Statistics Tab */}
+            <TabsContent value="statistics" className="px-4 sm:px-6 lg:px-8 pt-8 ml-16 sm:ml-20 lg:ml-24">
+              <StatsDashboard />
+            </TabsContent>
 
-                {/* Job Details Tab (Hidden) */}
-                <TabsContent value="job-details">
-                  {selectedJob && (
-                    <JobDetails
-                      jobId={selectedJob.id}
-                      onBack={handleBackFromDetails}
-                    />
-                  )}
-                </TabsContent>
-              </div>
-            </div>
+            {/* Job Details Tab (Hidden) */}
+            <TabsContent value="job-details" className="px-4 sm:px-6 lg:px-8 pt-8 ml-16 sm:ml-20 lg:ml-24">
+              {selectedJob && (
+                <JobDetails
+                  jobId={selectedJob.id}
+                  onBack={handleBackFromDetails}
+                />
+              )}
+            </TabsContent>
             </Tabs>
           </div>
         </ToastProvider>

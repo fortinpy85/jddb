@@ -107,7 +107,8 @@ markers = [
     "slow: Slow tests",
     "api: API tests",
     "database: Database tests",
-    "external: Tests requiring external services"
+    "external: Tests requiring external services",
+    "benchmark: Performance benchmark tests"
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",

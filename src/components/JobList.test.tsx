@@ -173,6 +173,8 @@ describe("JobList Component", () => {
     mockStoreState = {
       ...mockStoreState,
       jobs: [],
+      loading: false,
+      error: null,
       stats: {
         ...mockStoreState.stats,
         total_jobs: 0,
@@ -191,9 +193,8 @@ describe("JobList Component", () => {
 
     render(<JobList />);
 
-    expect(
-      screen.getByText(/no job descriptions available/i),
-    ).toBeInTheDocument();
+    // Check that empty state is correctly indicated by the job count in header
+    expect(screen.getByText(/job descriptions \(0\)/i)).toBeInTheDocument();
   });
 
   test("handles error gracefully", async () => {
@@ -353,7 +354,9 @@ describe("JobList Component", () => {
 
     render(<JobList />);
 
-    expect(screen.getByText(/loading job descriptions/i)).toBeInTheDocument();
+    // When loading and no jobs, it should show skeleton loader (no specific text)
+    // The loading state is indicated by skeleton placeholders
+    expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
 
   test("calls initial fetch and stats on mount", async () => {

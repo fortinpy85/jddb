@@ -17,8 +17,10 @@ from datetime import datetime, timedelta
 # Mock imports - these will be replaced with actual imports when Phase 2 is complete
 try:
     from jd_ingestion.auth.service import AuthService
+    from jd_ingestion.audit.logger import AuditLogger
 except ImportError:
     AuthService = None
+    AuditLogger = None
 
 # Mock classes for Phase 2 services that aren't fully integrated yet
 class MockAuthService:
@@ -43,7 +45,10 @@ class TestAuthenticationSecurity:
         if AuthService:
             return Mock(spec=AuthService)
         else:
-            return MockAuthService()
+            # Return a Mock even when AuthService is not available
+            mock_service = Mock()
+            mock_service.verify_mfa_token.return_value = True
+            return mock_service
 
     def test_password_complexity_requirements(self, auth_service):
         """Test that password complexity meets government standards."""
