@@ -7,14 +7,12 @@ and automatic error recovery mechanisms for the JDDB application.
 
 import asyncio
 import functools
-import traceback
 from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
 
-from fastapi import HTTPException, Request
+from fastapi import Request
 from sqlalchemy.exc import (
-    DatabaseError,
     DisconnectionError,
     IntegrityError,
     OperationalError,
@@ -22,8 +20,6 @@ from sqlalchemy.exc import (
 )
 
 from .exceptions import (
-    BusinessLogicException,
-    ConfigurationException,
     DatabaseConnectionException,
     DatabaseException,
     DatabaseQueryException,
@@ -31,7 +27,6 @@ from .exceptions import (
     FileProcessingException,
     JDDBBaseException,
     MemoryException,
-    OpenAIAPIException,
     RateLimitExceededException,
     SystemResourceException,
     ValidationException,

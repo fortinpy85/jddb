@@ -5,14 +5,12 @@ Handles tracking, recording, and analyzing search query performance metrics.
 Provides insights into query patterns, result relevance, and system performance.
 """
 
-import time
 import hashlib
 import uuid
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc, and_
-from sqlalchemy.sql import text
+from sqlalchemy import select, func, desc
 
 from ..database.models import SearchAnalytics
 from ..utils.logging import get_logger

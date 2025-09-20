@@ -2,7 +2,7 @@
 API endpoints for usage analytics and system metrics.
 """
 
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession

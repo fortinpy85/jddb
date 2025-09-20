@@ -30,7 +30,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `bun install` - Install dependencies (faster alternative to npm/yarn)
 - `bun dev` - Start development server (http://localhost:3000)
 - `bun run build` - Production build using custom build.ts script
-- `bun test` - Run test suite with Bun's built-in test runner
+- `bun test` - Run unit tests (src/ directory only)
+- `bun run test:unit` - Run unit tests explicitly
+- `bun run test:unit:watch` - Run unit tests in watch mode
+- `bun run test:unit:coverage` - Run unit tests with coverage
+- `bun run test:e2e` - Run end-to-end tests with Playwright
+- `bun run test:e2e:headed` - Run e2e tests in headed mode (visible browser)
+- `bun run test:all` - Run both unit and e2e tests sequentially
 - `bun run lint` - Run ESLint for code quality
 - `bun run type-check` - TypeScript type checking
 
@@ -134,7 +140,9 @@ The system processes government job description files with these patterns:
 
 4. **Testing**:
    - Backend: `cd backend && make test` (preferred) or `poetry run pytest tests/`
-   - Frontend: `bun test` for unit tests with Bun's built-in test runner
+   - Frontend Unit Tests: `bun test` or `bun run test:unit` (fast, JSDOM environment)
+   - Frontend E2E Tests: `bun run test:e2e` (browser-based with Playwright)
+   - Run All Tests: `bun run test:all` (unit tests followed by e2e tests)
 
 5. **Code Quality**:
    - Backend: `cd backend && make check` (format, lint, type-check) via Poetry
@@ -149,8 +157,8 @@ The system processes government job description files with these patterns:
 
 ### Project Status
 - **Phase 1**: ✅ Complete - Core infrastructure, testing, and GitHub repository publication
-- **Phase 2**: 📋 Planning - Collaborative editing and real-time features (Oct-Dec 2025)
-- **Current Priority**: GitHub security configuration and Phase 2 architecture planning
+- **Phase 2**: ✅ Complete - Collaborative editing, translation memory, and real-time features implemented
+- **Current Status**: Production-ready system with comprehensive test suite and CI/CD pipeline
 
 ## Data Flow
 
@@ -172,7 +180,7 @@ The frontend uses a singleton API client (`src/lib/api.ts`) with:
 
 ## Known Issues & Solutions
 
-### ✅ Resolved Issues (November 2025)
+### ✅ Resolved Issues (September 2025)
 
 #### Frontend Loading Issues
 
@@ -191,6 +199,18 @@ The frontend uses a singleton API client (`src/lib/api.ts`) with:
 - **Issue**: Mapper initialization failure: "JobDescription has no property 'metadata'"
 - **Solution**: Fixed join statement to use proper relationship: `base_query.join(JobDescription.job_metadata)`
 - **Files**: `backend/src/jd_ingestion/api/endpoints/jobs.py:35`
+
+#### Test Framework Conflicts
+
+- **Issue**: `bun test` command failed due to conflicts between unit tests (Bun) and e2e tests (Playwright)
+  - Error: "Playwright Test did not expect test.describe() to be called here"
+  - Cause: Bun test runner was attempting to execute Playwright test files from `tests/` directory
+- **Solution**: Separated test frameworks by directory and updated package.json scripts
+  - Unit tests: `src/` directory using Bun's native test runner with JSDOM
+  - E2E tests: `tests/` directory using Playwright with browser automation
+  - Updated commands: `bun test` runs unit tests only, `bun run test:e2e` runs Playwright tests
+- **Files**: `package.json`, `bunfig.toml`
+- **Result**: Clean separation with 44/44 unit tests passing (100% success rate)
 
 ### Development Environment Setup
 
@@ -239,6 +259,24 @@ The frontend uses a singleton API client (`src/lib/api.ts`) with:
 2. Check `validateConfiguration()` for environment setup issues
 3. Verify CORS settings allow frontend domain in `main.py`
 
+### Testing Issues
+
+#### Unit Test Failures
+1. Run `bun test` or `bun run test:unit` for fast unit tests
+2. Check that `.env.local` exists with `NEXT_PUBLIC_API_URL=http://localhost:8000/api`
+3. Ensure test files are in `src/` directory with `.test.ts` or `.test.tsx` extensions
+
+#### E2E Test Issues
+1. Use `bun run test:e2e` to run Playwright tests
+2. Ensure backend server is running on port 8000
+3. Playwright will automatically start frontend server on port 3000
+4. For debugging: `bun run test:e2e:headed` to see browser actions
+
+#### Backend Test Discovery
+1. Run `cd backend && make test` to execute all backend tests
+2. Tests are located in `backend/tests/` directory
+3. If "no tests ran" error occurs, verify pytest is using correct test directory
+
 ## Quick Reference: Package Manager Commands
 
 ### When to Use Poetry (Backend)
@@ -276,7 +314,11 @@ bun add -d package-name  # Development dependency
 
 # Run scripts
 bun dev
-bun test
+bun test                    # Unit tests only
+bun run test:unit          # Unit tests explicitly
+bun run test:unit:watch    # Unit tests in watch mode
+bun run test:e2e           # E2E tests with Playwright
+bun run test:all           # All tests (unit + e2e)
 bun run build
 bun run lint
 

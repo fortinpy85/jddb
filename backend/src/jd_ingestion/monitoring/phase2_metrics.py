@@ -15,7 +15,6 @@ from dataclasses import dataclass, field
 import psutil
 import json
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from ..database.connection import get_async_session
 from ..utils.logging import get_logger

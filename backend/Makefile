@@ -64,10 +64,10 @@ server:
 
 # Testing
 test:
-	pytest src/jd_ingestion/tests/ -v --tb=short
+	pytest tests/ -v --tb=short --no-cov --dist=no
 
 test-coverage:
-	pytest src/jd_ingestion/tests/ --cov=jd_ingestion --cov-report=html --cov-report=term
+	pytest tests/ --cov=src --cov-report=html --cov-report=term
 
 # Code quality
 format:

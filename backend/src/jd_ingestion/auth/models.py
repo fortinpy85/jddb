@@ -6,7 +6,7 @@ The actual database tables are created via Alembic migrations.
 """
 
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from typing import Optional, Any
 from passlib.context import CryptContext
 from pydantic import BaseModel
 import secrets

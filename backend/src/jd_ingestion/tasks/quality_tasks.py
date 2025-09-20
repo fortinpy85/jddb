@@ -4,7 +4,6 @@ Celery tasks for data quality metrics calculation.
 
 import asyncio
 from typing import Dict, Any, Optional, List
-from celery import current_task
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
@@ -143,7 +142,7 @@ async def _calculate_quality_metrics_async(job_id: int, task) -> Dict[str, Any]:
                 },
             }
 
-        except Exception as e:
+        except Exception:
             await db.rollback()
             raise
 
@@ -223,7 +222,7 @@ async def _batch_calculate_quality_metrics_async(
                 "errors": result["errors"],
             }
 
-        except Exception as e:
+        except Exception:
             await db.rollback()
             raise
 
@@ -296,7 +295,7 @@ async def _generate_quality_report_async(job_id: Optional[int], task) -> Dict[st
                 "report": report,
             }
 
-        except Exception as e:
+        except Exception:
             await db.rollback()
             raise
 
@@ -379,7 +378,7 @@ async def _validate_job_content_async(job_id: int, task) -> Dict[str, Any]:
                 "content_issues": quality_flags.get("content_issues", False),
             }
 
-        except Exception as e:
+        except Exception:
             await db.rollback()
             raise
 

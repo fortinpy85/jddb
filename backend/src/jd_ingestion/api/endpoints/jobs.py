@@ -3,7 +3,7 @@ import csv
 import io
 import json
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 # Third-party imports
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -20,7 +20,6 @@ from ...database.models import (
     JobDescription,
     JobMetadata,
     JobSection,
-    SystemMetrics,
     UsageAnalytics,
 )
 from ...utils.error_handler import handle_errors, retry_on_failure

@@ -319,12 +319,12 @@ export interface Audits {}
 export interface Checks {}
 export interface Tests {}
 export interface Verifications {}
-export interface Validations {}
+// export interface Validations {} // Duplicate - already defined at line 208
 export interface Confirmations {}
 export interface Approvals {}
 export interface Rejections {}
 export interface Denials {}
-export interface Permissions {}
+// export interface Permissions {} // Duplicate - already defined at line 160
 export interface Grants {}
 export interface Rights {}
 export interface Privileges {}
@@ -495,11 +495,11 @@ export interface Relation {}
 export interface Association {}
 export interface Correlation {}
 export interface Dependency {}
-export interface Requirement {}
+// export interface Requirement {} // Duplicate - already defined at line 440
 export interface Prerequisite {}
-export interface Condition {}
+// export interface Condition {} // Duplicate - already defined at line 412
 export interface Criteria {}
-export interface Standard {}
+// export interface Standard {} // Duplicate - already defined at line 438
 export interface Benchmark {}
 export interface Baseline {}
 export interface Reference {}
@@ -508,8 +508,8 @@ export interface Manual {}
 export interface Documentation {}
 export interface Instructions {}
 export interface Directions {}
-export interface Steps {}
-export interface Procedures {}
+// export interface Steps {} // Duplicate - already defined at line 250
+// export interface Procedures {} // Duplicate - already defined at line 306
 export interface Process {}
 export interface Method {}
 export interface Approach {}
@@ -523,8 +523,8 @@ export interface Pattern {}
 export interface Template {}
 export interface Model {}
 export interface Prototype {}
-export interface Example {}
-export interface Sample {}
+// export interface Example {} // Duplicate - already defined at line 416
+// export interface Sample {} // Duplicate - already defined at line 417
 export interface Demo {}
 export interface Preview {}
 export interface Snapshot {}
@@ -534,28 +534,28 @@ export interface Photo {}
 export interface Illustration {}
 export interface Diagram {}
 export interface Chart {}
-export interface Graph {}
+// export interface Graph {} // Duplicate - already defined at line 391
 export interface Table {}
-export interface List {}
+// export interface List {} // Duplicate - already defined at line 385
 export interface Menu {}
-export interface Options {}
+// export interface Options {} // Duplicate - already defined at line 215
 export interface Choices {}
 export interface Alternatives {}
 export interface Selections {}
 export interface Picks {}
-export interface Preferences {}
-export interface Settings {}
-export interface Configurations {}
+// export interface Preferences {} // Duplicate - already defined at line 158
+// export interface Settings {} // Duplicate - already defined at line 157
+// export interface Configurations {} // Duplicate - already defined at line 214
 export interface Properties {}
 export interface Attributes {}
 export interface Characteristics {}
-export interface Features {}
+// export interface Features {} // Duplicate - already defined at line 302
 export interface Qualities {}
 export interface Traits {}
 export interface Aspects {}
 export interface Facets {}
 export interface Dimensions {}
-export interface Parameters {}
+// export interface Parameters {} // Duplicate - already defined at line 216
 export interface Variables {}
 export interface Values {}
 export interface Constants {}
@@ -570,4 +570,4 @@ export interface Clarifications {}
 export interface Details {}
 export interface Specifics {}
 export interface Particulars {}
-export interface Information {}
+// export interface Information {} // Duplicate - already defined at line 378

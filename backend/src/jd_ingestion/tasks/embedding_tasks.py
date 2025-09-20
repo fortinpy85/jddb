@@ -4,14 +4,13 @@ Celery tasks for embedding generation.
 
 import asyncio
 from typing import List, Dict, Any, Optional
-from celery import current_task
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
 
 from .celery_app import celery_app
 from ..config.settings import settings
-from ..database.models import ContentChunk, JobDescription
+from ..database.models import ContentChunk
 from ..services.embedding_service import embedding_service
 from ..utils.logging import get_logger
 
@@ -200,7 +199,7 @@ async def _generate_embeddings_for_job_async(job_id: int, task) -> Dict[str, Any
 
             return result
 
-        except Exception as e:
+        except Exception:
             await db.rollback()
             raise
 
@@ -315,7 +314,7 @@ async def _batch_generate_embeddings_async(job_ids: List[int], task) -> Dict[str
 
             return result
 
-        except Exception as e:
+        except Exception:
             await db.rollback()
             raise
 
@@ -447,7 +446,7 @@ async def _generate_missing_embeddings_async(
 
             return result
 
-        except Exception as e:
+        except Exception:
             await db.rollback()
             raise
 

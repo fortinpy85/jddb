@@ -68,6 +68,7 @@ pytest-benchmark = "5.1.0"
 respx = "^0.22.0"
 
 # Build system is managed by Poetry, no need for the setuptools one
+ruff = "^0.13.1"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

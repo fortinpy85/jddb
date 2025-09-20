@@ -5,25 +5,20 @@ This service provides comprehensive job comparison, skill gap analysis,
 and career path recommendations using semantic embeddings and NLP.
 """
 
-import asyncio
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
 from sqlalchemy.orm import selectinload
 import openai
 import json
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from ..database.models import (
     JobDescription,
-    JobSection,
     ContentChunk,
-    JobMetadata,
     JobComparison,
     JobSkill,
-    CareerPath,
-    ClassificationBenchmark,
 )
 from ..config import settings
 from ..utils.logging import get_logger

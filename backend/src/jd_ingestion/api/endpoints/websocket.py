@@ -9,17 +9,15 @@ This module provides WebSocket connections for:
 """
 
 import json
-import logging
-from typing import Dict, List, Set
+from typing import Dict, List
 from fastapi import WebSocket, WebSocketDisconnect, Depends, HTTPException
 from fastapi.routing import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from datetime import datetime, timedelta
+from datetime import datetime
 import uuid
 
 from ...database.connection import get_async_session
-from ...database.models import JobDescription
 from ...utils.logging import get_logger
 
 logger = get_logger(__name__)

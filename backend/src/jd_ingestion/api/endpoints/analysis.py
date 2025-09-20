@@ -6,7 +6,7 @@ Provides advanced job comparison, skill gap analysis, and career path recommenda
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from ...database.connection import get_async_session

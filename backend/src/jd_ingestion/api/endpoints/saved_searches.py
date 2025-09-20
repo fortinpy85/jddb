@@ -2,8 +2,7 @@
 API endpoints for saved searches and user preferences.
 """
 
-from typing import Dict, List, Any, Optional
-from datetime import datetime
+from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_, desc
