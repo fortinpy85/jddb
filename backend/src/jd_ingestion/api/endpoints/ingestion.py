@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 
 # Third-party imports
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile
-from sqlalchemy import and_, func, or_, select, text, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Local imports
@@ -807,7 +807,6 @@ async def generate_embeddings_for_existing_jobs(
 ):
     """Generate embeddings for existing jobs that don't have embeddings."""
     try:
-        from ...services.embedding_service import embedding_service
 
         # Build query to find chunks without embeddings
         query = select(ContentChunk)

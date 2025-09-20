@@ -10,20 +10,15 @@ ML-powered query suggestions and search recommendations based on:
 
 import re
 import asyncio
-import numpy as np
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, desc, and_, text
-from collections import Counter, defaultdict
 
 from ..database.models import (
     SearchAnalytics,
     JobDescription,
-    JobSection,
-    ContentChunk,
     JobMetadata,
-    SavedSearch,
 )
 from ..services.embedding_service import embedding_service
 from ..utils.logging import get_logger

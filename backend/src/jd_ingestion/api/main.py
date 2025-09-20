@@ -1,10 +1,9 @@
 # Standard library imports
 from contextlib import asynccontextmanager
-from typing import Any, Dict, List, Optional
 
 # Third-party imports
 import uvicorn
-from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,6 +28,7 @@ from .endpoints import (
     search,
     search_analytics,
     tasks,
+    translation_memory,
     websocket,
 )
 
@@ -141,6 +141,7 @@ app.include_router(health.router, prefix="/api/health", tags=["health"])
 app.include_router(websocket.router, prefix="/api", tags=["websocket"])
 app.include_router(auth.router, prefix="/api", tags=["authentication"])
 app.include_router(phase2_monitoring.router, prefix="/api", tags=["phase2-monitoring"])
+app.include_router(translation_memory.router, prefix="/api", tags=["translation-memory"])
 
 
 @app.get("/")

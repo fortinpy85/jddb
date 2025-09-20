@@ -27,8 +27,11 @@ export default tseslint.config(
       ...eslint.configs.recommended.rules,
       ...tseslint.configs.recommended.rules,
       "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": "warn",
-      "no-console": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }],
+      "no-console": "off", // Allow console statements in development
     },
   },
 );

@@ -3,7 +3,7 @@ Data quality assessment and metrics calculation service.
 """
 
 import re
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 from decimal import Decimal
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,9 +12,6 @@ from sqlalchemy import select, func
 
 from ..database.models import (
     JobDescription,
-    JobSection,
-    JobMetadata,
-    ContentChunk,
     DataQualityMetrics,
 )
 from ..utils.logging import get_logger

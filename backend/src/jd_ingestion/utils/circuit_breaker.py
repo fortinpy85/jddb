@@ -5,7 +5,7 @@ Circuit Breaker Pattern Implementation for Enhanced Resilience
 import asyncio
 import time
 from enum import Enum
-from typing import Callable, Any, Optional, Dict, List
+from typing import Any, Optional, Dict, List
 from dataclasses import dataclass, field
 from contextlib import asynccontextmanager
 import threading

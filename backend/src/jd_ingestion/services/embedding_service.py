@@ -6,13 +6,13 @@ Consolidates functionality from both original and optimized embedding services.
 import asyncio
 import math
 import openai
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text, select
 from datetime import datetime
 
 from ..config.settings import settings
-from ..database.models import ContentChunk, JobDescription
+from ..database.models import ContentChunk
 from ..utils.logging import get_logger
 from ..utils.circuit_breaker import (
     get_openai_circuit_breaker,
@@ -660,7 +660,7 @@ class EmbeddingService:
                 embedding = await self.generate_embedding(text)
                 embeddings.append(embedding)
             except Exception as e:
-                logger.error(f"Failed to generate embedding for text", error=str(e))
+                logger.error("Failed to generate embedding for text", error=str(e))
                 embeddings.append(None)
 
         return embeddings

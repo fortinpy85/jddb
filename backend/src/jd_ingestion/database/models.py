@@ -12,6 +12,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects import postgresql
 from pgvector.sqlalchemy import VECTOR
 
 Base = declarative_base()
@@ -393,3 +394,62 @@ class SearchAnalytics(Base):
     error_occurred = Column(String(10), default="no")  # 'yes', 'no'
     error_type = Column(String(50))  # Type of error if any
     error_message = Column(Text)  # Error details
+
+
+# Phase 2 Models: Translation Memory System
+class TranslationProject(Base):
+    __tablename__ = "translation_projects"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    source_language = Column(String(5), nullable=False)
+    target_language = Column(String(5), nullable=False)
+    project_type = Column(String(50), default='job_descriptions')
+    status = Column(String(20), default='active')
+    created_by = Column(Integer)  # References users table when implemented
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    # Relationships
+    translation_memories = relationship("TranslationMemory", back_populates="project")
+
+
+class TranslationMemory(Base):
+    __tablename__ = "translation_memory"
+
+    id = Column(Integer, primary_key=True)
+    project_id = Column(Integer, ForeignKey('translation_projects.id', ondelete='CASCADE'))
+    source_text = Column(Text, nullable=False)
+    target_text = Column(Text, nullable=False)
+    source_language = Column(String(5), nullable=False)
+    target_language = Column(String(5), nullable=False)
+    domain = Column(String(50))  # 'government', 'hr', 'technical'
+    subdomain = Column(String(50))  # 'job_descriptions', 'policies'
+    quality_score = Column(DECIMAL(3, 2))
+    confidence_score = Column(DECIMAL(3, 2))
+    usage_count = Column(Integer, default=0)
+    context_hash = Column(String(64))
+    tm_metadata = Column(JSONB, default=dict)
+    created_by = Column(Integer)  # References users table
+    validated_by = Column(Integer)  # References users table
+    created_at = Column(DateTime, default=func.now())
+    last_used = Column(DateTime)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    # Relationships
+    project = relationship("TranslationProject", back_populates="translation_memories")
+    embeddings = relationship("TranslationEmbedding", back_populates="memory")
+
+
+class TranslationEmbedding(Base):
+    __tablename__ = "translation_embeddings"
+
+    id = Column(Integer, primary_key=True)
+    memory_id = Column(Integer, ForeignKey('translation_memory.id', ondelete='CASCADE'))
+    embedding = Column(postgresql.ARRAY(postgresql.REAL))  # pgvector will handle this
+    text_hash = Column(String(64), nullable=False)
+    created_at = Column(DateTime, default=func.now())
+
+    # Relationships
+    memory = relationship("TranslationMemory", back_populates="embeddings")

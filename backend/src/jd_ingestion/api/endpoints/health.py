@@ -2,10 +2,9 @@
 Health check endpoints for monitoring and observability.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from typing import Dict, Any, List, Optional
+from fastapi import APIRouter, HTTPException, BackgroundTasks
+from typing import Dict, Any, List
 from datetime import datetime
-import asyncio
 
 from ...utils.monitoring import get_health_status, check_system_alerts, system_monitor
 from ...utils.logging import get_logger, log_business_metric, PerformanceTimer

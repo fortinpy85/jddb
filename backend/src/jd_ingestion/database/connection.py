@@ -42,7 +42,7 @@ def configure_mappers():
         from sqlalchemy.orm import configure_mappers
 
         configure_mappers()
-    except Exception as e:
+    except Exception:
         # If configure_mappers fails, it's likely already configured
         pass
 
@@ -67,3 +67,12 @@ def get_sync_session() -> Session:
         return session
     finally:
         session.close()
+
+
+def get_db() -> Session:
+    """Dependency to get database session for FastAPI."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

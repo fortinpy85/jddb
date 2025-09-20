@@ -4,9 +4,8 @@ Production monitoring and health check utilities.
 
 import psutil
 import redis
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 from datetime import datetime, timedelta
-import asyncio
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 import openai

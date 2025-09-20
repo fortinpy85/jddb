@@ -2,14 +2,12 @@
 Usage analytics and tracking service for JDDB system.
 """
 
-import asyncio
 import uuid
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, Any, Optional
 from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_, desc
-from sqlalchemy.sql import text
+from sqlalchemy import select, func, and_, desc
 
 from ..database.models import (
     UsageAnalytics,

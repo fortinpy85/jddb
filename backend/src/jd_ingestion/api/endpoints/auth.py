@@ -6,19 +6,17 @@ registration, session management, and user profile operations.
 """
 
 from datetime import timedelta
-from typing import Optional, Dict, Any
+from typing import Optional, Any
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...auth.dependencies import (
     get_user_service, get_session_service, get_preference_service,
-    get_current_user, get_active_user, CurrentUser, OptionalCurrentUser
+    CurrentUser, OptionalCurrentUser
 )
 from ...auth.service import UserService, SessionService, PreferenceService, create_access_token
 from ...auth.models import User
-from ...database.connection import get_async_session
 from ...utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -172,7 +170,7 @@ async def login_user(
     ip_address = getattr(request.client, 'host', None) if request else None
     user_agent = request.headers.get('user-agent') if request else None
 
-    session = await session_service.create_session(
+    _ = await session_service.create_session(
         user_id=user.id,
         ip_address=ip_address,
         user_agent=user_agent

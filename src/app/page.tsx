@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import JobList from "@/components/JobList";
 import BulkUpload from "@/components/BulkUpload";
@@ -10,6 +11,10 @@ import JobDetails from "@/components/JobDetails";
 import SearchInterface from "@/components/SearchInterface";
 import JobComparison from "@/components/JobComparison";
 import StatsDashboard from "@/components/StatsDashboard";
+import { EditingWorkspace } from "@/components/editing/EditingWorkspace";
+import { EnhancedDualPaneEditor } from "@/components/editing/EnhancedDualPaneEditor";
+import { EnhancedJobComparison } from "@/components/comparison/EnhancedJobComparison";
+import { ModernDashboard } from "@/components/layout/ModernDashboard";
 import type { JobDescription } from "@/lib/types";
 import { getClassificationLevel } from "@/lib/utils";
 import { useStore } from "@/lib/store";
@@ -26,6 +31,9 @@ import {
   TrendingUp,
   Activity,
   GitCompare,
+  Edit3,
+  Palette,
+  Layers,
 } from "lucide-react";
 import EmptyState from "@/components/ui/empty-state";
 import { AnimatedCounter } from "@/components/ui/animated-counter";
@@ -48,6 +56,7 @@ export default function HomePage() {
     "jobs",
     "upload",
     "search",
+    "editing",
     "compare",
     "statistics",
   ];
@@ -155,6 +164,9 @@ export default function HomePage() {
       >
         <ToastProvider>
           <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900/20 transition-colors duration-300">
+            <div className="fixed top-4 right-4 z-50">
+              {/* Theme switch removed - component needs to be created */}
+            </div>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
             {/* Fixed Top Banner - Header + Tabs */}
             <div className="fixed top-0 left-0 right-0 z-50 h-28 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-white/20 dark:border-slate-700/20">
@@ -203,7 +215,7 @@ export default function HomePage() {
               {/* Tab Navigation Section */}
               <div className="bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900/20 h-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
-                    <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 gap-1 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 shadow-lg rounded-xl p-1">
+                    <TabsList className="grid w-full grid-cols-3 lg:grid-cols-8 gap-1 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 shadow-lg rounded-xl p-1">
                     <TabsTrigger
                       value="dashboard"
                       className="flex items-center justify-center lg:justify-start gap-2 p-3 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105"
@@ -233,6 +245,13 @@ export default function HomePage() {
                       <span className="hidden sm:inline">Search</span>
                     </TabsTrigger>
                     <TabsTrigger
+                      value="editing"
+                      className="flex items-center justify-center lg:justify-start gap-2 p-3 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      <span className="hidden sm:inline">Editing</span>
+                    </TabsTrigger>
+                    <TabsTrigger
                       value="compare"
                       className="flex items-center justify-center lg:justify-start gap-2 p-3 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105"
                     >
@@ -245,6 +264,13 @@ export default function HomePage() {
                     >
                       <Activity className="w-4 h-4" />
                       <span className="hidden sm:inline">Statistics</span>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="modern"
+                      className="flex items-center justify-center lg:justify-start gap-2 p-3 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105"
+                    >
+                      <Palette className="w-4 h-4" />
+                      <span className="hidden sm:inline">Modern UI</span>
                     </TabsTrigger>
                     </TabsList>
                 </div>
@@ -531,6 +557,11 @@ export default function HomePage() {
               <SearchInterface onJobSelect={handleJobSelect} />
             </TabsContent>
 
+            {/* Editing Tab */}
+            <TabsContent value="editing" className="px-4 sm:px-6 lg:px-8 pt-8 ml-16 sm:ml-20 lg:ml-24">
+              <EditingWorkspace />
+            </TabsContent>
+
             {/* Compare Tab */}
             <TabsContent value="compare" className="px-4 sm:px-6 lg:px-8 pt-8 ml-16 sm:ml-20 lg:ml-24">
               <JobComparison />
@@ -539,6 +570,74 @@ export default function HomePage() {
             {/* Statistics Tab */}
             <TabsContent value="statistics" className="px-4 sm:px-6 lg:px-8 pt-8 ml-16 sm:ml-20 lg:ml-24">
               <StatsDashboard />
+            </TabsContent>
+
+            {/* Modern UI Tab */}
+            <TabsContent value="modern" className="p-0">
+              <div className="space-y-8">
+                {/* Modern Dashboard */}
+                <div className="mb-8">
+                  <ModernDashboard />
+                </div>
+
+                {/* Enhanced Components Showcase */}
+                <div className="px-4 sm:px-6 lg:px-8 space-y-8">
+                  <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+                      Enhanced UI Components
+                    </h2>
+                    <p className="text-lg text-gray-600 dark:text-gray-400">
+                      Modern interfaces inspired by professional job description management systems
+                    </p>
+                  </div>
+
+                  {/* Enhanced Translation Editor */}
+                  <Card className="overflow-hidden">
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <Layers className="w-5 h-5" />
+                        <span>Enhanced Dual-Pane Editor</span>
+                        <Badge variant="secondary">DeepL-inspired</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="h-[600px]">
+                        <EnhancedDualPaneEditor
+                          mode="translation"
+                          initialLeftContent="The Business Development Representative supports sales activities through qualifying leads generated from other teams, and committing to developing those leads into new business."
+                          initialRightContent="Le représentant du développement commercial soutient les activités de vente en qualifiant les prospects générés par d'autres équipes et en s'engageant à développer ces prospects en nouvelles affaires."
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Enhanced Job Comparison */}
+                  <Card className="overflow-hidden">
+                    <CardHeader>
+                      <CardTitle className="flex items-center space-x-2">
+                        <GitCompare className="w-5 h-5" />
+                        <span>Enhanced Job Comparison</span>
+                        <Badge variant="secondary">Professional Layout</Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="h-[500px] bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+                        <Button
+                          onClick={() => {
+                            // Show the enhanced comparison modal
+                            const modal = document.createElement('div');
+                            modal.innerHTML = '<div id="enhanced-comparison-modal"></div>';
+                            document.body.appendChild(modal);
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          Open Enhanced Job Comparison
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
             </TabsContent>
 
             {/* Job Details Tab (Hidden) */}

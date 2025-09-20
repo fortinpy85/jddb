@@ -45,7 +45,20 @@
       "Bash(python -m pytest tests/unit/test_content_processor.py::test_process_large_file_performance -v --tb=short --no-cov)",
       "Bash(python:*)",
       "Bash(find:*)",
-      "Bash(PYTHONPATH=src poetry run python scripts/check_schema.py)"
+      "Bash(PYTHONPATH=src poetry run python scripts/check_schema.py)",
+      "Bash(gh workflow view:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh api:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh repo edit:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(tasklist)",
+      "Bash(cmd /c:*)",
+      "Bash(PYTHONPATH=src poetry run uvicorn jd_ingestion.api.main:app --reload --host 0.0.0.0 --port 8000)",
+      "Bash(bunx playwright test:*)",
+      "Bash(curl:*)"
     ]
   }
 }

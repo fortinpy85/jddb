@@ -11,7 +11,6 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List
 from enum import Enum
 from dataclasses import dataclass, asdict
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from ..database.connection import get_async_session

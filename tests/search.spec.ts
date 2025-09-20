@@ -113,7 +113,7 @@ test.describe("Advanced Search Functionality", () => {
     if ((await classificationFilter.count()) > 0) {
       if ((await classificationFilter.getAttribute("type")) === "checkbox") {
         await classificationFilter.check();
-      } else if ((await classificationFilter.tagName()) === "SELECT") {
+      } else if ((await classificationFilter.evaluate(el => el.tagName)) === "SELECT") {
         const options = await classificationFilter.locator("option").count();
         if (options > 1) {
           await classificationFilter.selectOption({ index: 1 });
@@ -147,7 +147,7 @@ test.describe("Advanced Search Functionality", () => {
     if ((await languageFilter.count()) > 0) {
       if ((await languageFilter.getAttribute("type")) === "radio") {
         await languageFilter.check();
-      } else if ((await languageFilter.tagName()) === "SELECT") {
+      } else if ((await languageFilter.evaluate(el => el.tagName)) === "SELECT") {
         await languageFilter.selectOption("en");
       } else {
         await languageFilter.click();

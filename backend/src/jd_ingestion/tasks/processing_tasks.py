@@ -4,8 +4,7 @@ Celery tasks for job description processing.
 
 import asyncio
 from pathlib import Path
-from typing import List, Optional, Dict, Any
-from celery import current_task
+from typing import Optional, Dict, Any
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
@@ -299,7 +298,7 @@ async def _process_single_file_async(
                 await db.rollback()
                 raise
 
-        except Exception as e:
+        except Exception:
             await db.rollback()
             raise
 

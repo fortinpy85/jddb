@@ -5,17 +5,17 @@ This module provides REST API endpoints for monitoring Phase 2 features
 including WebSocket connections, collaborative editing, and system performance.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from datetime import datetime, timedelta
 
 from ...monitoring.phase2_metrics import (
-    metrics_collector, get_metrics_summary, get_performance_report,
-    record_websocket_event, record_collaboration_event, record_translation_event
+    get_metrics_summary, get_performance_report,
+    record_websocket_event, record_collaboration_event
 )
-from ...auth.dependencies import require_roles, require_role, AdminUser, OptionalCurrentUser
+from ...auth.dependencies import AdminUser, OptionalCurrentUser
 from ...database.connection import get_async_session
 from ...utils.logging import get_logger
 

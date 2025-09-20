@@ -7,7 +7,8 @@ This module provides authentication, authorization, and user management services
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
+from sqlalchemy import select, or_, and_
+from sqlalchemy.orm import selectinload
 import secrets
 from passlib.context import CryptContext
 
@@ -16,7 +17,7 @@ try:
 except ImportError:
     jwt = None  # Will handle this gracefully in production
 
-from .models import User, UserSession, UserPreference, UserPermission, hash_password, verify_password
+from .models import User, UserSession, UserPreference, UserPermission
 from ..config.settings import settings
 from ..utils.logging import get_logger
 

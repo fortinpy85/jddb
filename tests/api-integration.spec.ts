@@ -56,7 +56,7 @@ test.describe("API Integration", () => {
     page,
   }) => {
     let searchApiCalled = false;
-    let searchParams: URLSearchParams | null = null;
+    let searchParams: URLSearchParams | undefined;
 
     await page.route("**/api/search**", (route) => {
       searchApiCalled = true;
@@ -77,9 +77,9 @@ test.describe("API Integration", () => {
       // Verify search API was called with correct parameters
       expect(searchApiCalled).toBe(true);
       if (searchParams) {
-        expect(searchParams.get("q") || searchParams.get("query")).toContain(
-          "manager",
-        );
+        const qParam = searchParams.get("q");
+        const queryParam = searchParams.get("query");
+        expect(qParam || queryParam).toContain("manager");
       }
     }
   });

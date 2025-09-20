@@ -4,9 +4,8 @@ Task management API endpoints for Celery-based background processing.
 
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional, Dict, Any, List
+from typing import Optional, List
 from pathlib import Path
-import tempfile
 
 from ...database.connection import get_async_session
 from ...tasks.processing_tasks import process_single_file_task, batch_process_files_task

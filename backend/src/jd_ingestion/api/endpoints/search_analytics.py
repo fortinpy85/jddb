@@ -7,7 +7,6 @@ Provides endpoints for retrieving search performance metrics, trends, and analyt
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Any, List, Optional
-from datetime import datetime
 
 from ...database.connection import get_async_session
 from ...services.search_analytics_service import search_analytics_service
