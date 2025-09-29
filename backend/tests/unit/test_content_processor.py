@@ -3,9 +3,8 @@ from pathlib import Path
 from jd_ingestion.processors.content_processor import (
     ContentProcessor,
     ProcessedContent,
-    StructuredFields,
 )
-from jd_ingestion.processors.file_discovery import (
+from jd_ingestion.core.file_discovery import (
     FileDiscovery,
     FileMetadata,
 )  # Import FileDiscovery for relevant tests
@@ -206,9 +205,7 @@ def test_chunk_content_with_overlap(processor):
 
 @pytest.mark.unit
 @pytest.mark.benchmark
-def test_process_large_file_performance(
-    processor, sample_job_description_text
-):
+def test_process_large_file_performance(processor, sample_job_description_text):
     """Test processing of large content for performance."""
     large_content = sample_job_description_text * 100  # Create a large content string
     result = processor.process_content(large_content, "en")

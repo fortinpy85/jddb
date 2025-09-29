@@ -2,6 +2,7 @@
 """
 This script creates the database tables and required extensions.
 """
+
 import sys
 from pathlib import Path
 from sqlalchemy import create_engine, text
@@ -10,7 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from jd_ingestion.database.models import *  # Import all models
+from jd_ingestion.database.models import *  # Import all models  # noqa: F403
 from jd_ingestion.database.connection import Base
 from jd_ingestion.config import settings
 from jd_ingestion.utils.logging import configure_logging, get_logger

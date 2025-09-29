@@ -21,6 +21,7 @@ logger = get_logger(__name__)
 
 class AuditEventType(Enum):
     """Types of events that can be audited."""
+
     # User authentication events
     USER_LOGIN = "user_login"
     USER_LOGOUT = "user_logout"
@@ -73,6 +74,7 @@ class AuditEventType(Enum):
 
 class AuditSeverity(Enum):
     """Severity levels for audit events."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -82,6 +84,7 @@ class AuditSeverity(Enum):
 @dataclass
 class AuditEvent:
     """Represents a single audit event."""
+
     event_type: AuditEventType
     severity: AuditSeverity
     user_id: Optional[int]
@@ -103,22 +106,22 @@ class AuditEvent:
     def to_dict(self) -> Dict[str, Any]:
         """Convert audit event to dictionary for storage."""
         data = asdict(self)
-        data['event_type'] = self.event_type.value
-        data['severity'] = self.severity.value
-        data['timestamp'] = self.timestamp.isoformat()
+        data["event_type"] = self.event_type.value
+        data["severity"] = self.severity.value
+        data["timestamp"] = self.timestamp.isoformat()
         return data
 
     def generate_hash(self) -> str:
         """Generate a hash of the audit event for integrity verification."""
         # Create a canonical representation for hashing
         hash_data = {
-            'event_type': self.event_type.value,
-            'user_id': self.user_id,
-            'timestamp': self.timestamp.isoformat(),
-            'resource_type': self.resource_type,
-            'resource_id': self.resource_id,
-            'action': self.action,
-            'details': json.dumps(self.details, sort_keys=True)
+            "event_type": self.event_type.value,
+            "user_id": self.user_id,
+            "timestamp": self.timestamp.isoformat(),
+            "resource_type": self.resource_type,
+            "resource_id": self.resource_id,
+            "action": self.action,
+            "details": json.dumps(self.details, sort_keys=True),
         }
 
         hash_string = json.dumps(hash_data, sort_keys=True)
@@ -144,7 +147,9 @@ class AuditLogger:
 
             # Store in database
             async for db in get_async_session():
-                await db.execute(text("""
+                await db.execute(
+                    text(
+                        """
                     INSERT INTO audit_log (
                         event_type, severity, user_id, username, timestamp,
                         resource_type, resource_id, action, description,
@@ -158,26 +163,35 @@ class AuditLogger:
                         :before_state, :after_state, :success, :error_message,
                         :event_hash
                     )
-                """), {
-                    'event_type': event.event_type.value,
-                    'severity': event.severity.value,
-                    'user_id': event.user_id,
-                    'username': event.username,
-                    'timestamp': event.timestamp,
-                    'resource_type': event.resource_type,
-                    'resource_id': event.resource_id,
-                    'action': event.action,
-                    'description': event.description,
-                    'ip_address': event.ip_address,
-                    'user_agent': event.user_agent,
-                    'session_id': event.session_id,
-                    'details': json.dumps(event.details),
-                    'before_state': json.dumps(event.before_state) if event.before_state else None,
-                    'after_state': json.dumps(event.after_state) if event.after_state else None,
-                    'success': event.success,
-                    'error_message': event.error_message,
-                    'event_hash': event_hash
-                })
+                """
+                    ),
+                    {
+                        "event_type": event.event_type.value,
+                        "severity": event.severity.value,
+                        "user_id": event.user_id,
+                        "username": event.username,
+                        "timestamp": event.timestamp,
+                        "resource_type": event.resource_type,
+                        "resource_id": event.resource_id,
+                        "action": event.action,
+                        "description": event.description,
+                        "ip_address": event.ip_address,
+                        "user_agent": event.user_agent,
+                        "session_id": event.session_id,
+                        "details": json.dumps(event.details),
+                        "before_state": (
+                            json.dumps(event.before_state)
+                            if event.before_state
+                            else None
+                        ),
+                        "after_state": (
+                            json.dumps(event.after_state) if event.after_state else None
+                        ),
+                        "success": event.success,
+                        "error_message": event.error_message,
+                        "event_hash": event_hash,
+                    },
+                )
 
                 await db.commit()
                 break
@@ -205,16 +219,22 @@ class AuditLogger:
             logger.error(f"Failed to log audit event: {e}")
             return False
 
-    async def log_user_authentication(self, user_id: int, username: str,
-                                    action: str, success: bool = True,
-                                    ip_address: str = None, user_agent: str = None,
-                                    details: Dict[str, Any] = None) -> bool:
+    async def log_user_authentication(
+        self,
+        user_id: int,
+        username: str,
+        action: str,
+        success: bool = True,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         """Log user authentication events."""
         event_type_map = {
-            'login': AuditEventType.USER_LOGIN,
-            'logout': AuditEventType.USER_LOGOUT,
-            'register': AuditEventType.USER_REGISTRATION,
-            'password_change': AuditEventType.PASSWORD_CHANGE
+            "login": AuditEventType.USER_LOGIN,
+            "logout": AuditEventType.USER_LOGOUT,
+            "register": AuditEventType.USER_REGISTRATION,
+            "password_change": AuditEventType.PASSWORD_CHANGE,
         }
 
         event = AuditEvent(
@@ -223,7 +243,7 @@ class AuditLogger:
             user_id=user_id,
             username=username,
             timestamp=datetime.utcnow(),
-            resource_type='user_account',
+            resource_type="user_account",
             resource_id=user_id,
             action=action,
             description=f"User {action} {'successful' if success else 'failed'}",
@@ -231,21 +251,27 @@ class AuditLogger:
             user_agent=user_agent,
             session_id=None,
             details=details or {},
-            success=success
+            success=success,
         )
 
         return await self.log_event(event)
 
-    async def log_document_access(self, user_id: int, username: str,
-                                job_id: int, action: str,
-                                ip_address: str = None, session_id: str = None,
-                                details: Dict[str, Any] = None) -> bool:
+    async def log_document_access(
+        self,
+        user_id: int,
+        username: str,
+        job_id: int,
+        action: str,
+        ip_address: Optional[str] = None,
+        session_id: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         """Log document access events."""
         event_type_map = {
-            'view': AuditEventType.DOCUMENT_VIEW,
-            'open': AuditEventType.DOCUMENT_OPEN,
-            'close': AuditEventType.DOCUMENT_CLOSE,
-            'download': AuditEventType.DOCUMENT_DOWNLOAD
+            "view": AuditEventType.DOCUMENT_VIEW,
+            "open": AuditEventType.DOCUMENT_OPEN,
+            "close": AuditEventType.DOCUMENT_CLOSE,
+            "download": AuditEventType.DOCUMENT_DOWNLOAD,
         }
 
         event = AuditEvent(
@@ -254,33 +280,39 @@ class AuditLogger:
             user_id=user_id,
             username=username,
             timestamp=datetime.utcnow(),
-            resource_type='job_description',
+            resource_type="job_description",
             resource_id=job_id,
             action=action,
             description=f"Document {action} by user {username}",
             ip_address=ip_address,
             user_agent=None,
             session_id=session_id,
-            details=details or {}
+            details=details or {},
         )
 
         return await self.log_event(event)
 
-    async def log_editing_session(self, user_id: int, username: str,
-                                session_id: str, job_id: int, action: str,
-                                participants: List[str] = None,
-                                details: Dict[str, Any] = None) -> bool:
+    async def log_editing_session(
+        self,
+        user_id: int,
+        username: str,
+        session_id: str,
+        job_id: int,
+        action: str,
+        participants: Optional[List[str]] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         """Log collaborative editing session events."""
         event_type_map = {
-            'start': AuditEventType.EDITING_SESSION_START,
-            'join': AuditEventType.EDITING_SESSION_JOIN,
-            'leave': AuditEventType.EDITING_SESSION_LEAVE,
-            'end': AuditEventType.EDITING_SESSION_END
+            "start": AuditEventType.EDITING_SESSION_START,
+            "join": AuditEventType.EDITING_SESSION_JOIN,
+            "leave": AuditEventType.EDITING_SESSION_LEAVE,
+            "end": AuditEventType.EDITING_SESSION_END,
         }
 
         event_details = details or {}
         if participants:
-            event_details['participants'] = participants
+            event_details["participants"] = participants
 
         event = AuditEvent(
             event_type=event_type_map.get(action, AuditEventType.EDITING_SESSION_START),
@@ -288,39 +320,47 @@ class AuditLogger:
             user_id=user_id,
             username=username,
             timestamp=datetime.utcnow(),
-            resource_type='editing_session',
+            resource_type="editing_session",
             resource_id=None,
             action=action,
             description=f"Editing session {action} by {username}",
             ip_address=None,
             user_agent=None,
             session_id=session_id,
-            details=event_details
+            details=event_details,
         )
 
         return await self.log_event(event)
 
-    async def log_document_change(self, user_id: int, username: str,
-                                job_id: int, session_id: str, change_type: str,
-                                before_content: str = None, after_content: str = None,
-                                position: int = None, length: int = None,
-                                details: Dict[str, Any] = None) -> bool:
+    async def log_document_change(
+        self,
+        user_id: int,
+        username: str,
+        job_id: int,
+        session_id: str,
+        change_type: str,
+        before_content: Optional[str] = None,
+        after_content: Optional[str] = None,
+        position: Optional[int] = None,
+        length: Optional[int] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         """Log document modification events."""
         event_type_map = {
-            'insert': AuditEventType.DOCUMENT_INSERT,
-            'delete': AuditEventType.DOCUMENT_DELETE,
-            'modify': AuditEventType.DOCUMENT_MODIFY,
-            'save': AuditEventType.DOCUMENT_SAVE
+            "insert": AuditEventType.DOCUMENT_INSERT,
+            "delete": AuditEventType.DOCUMENT_DELETE,
+            "modify": AuditEventType.DOCUMENT_MODIFY,
+            "save": AuditEventType.DOCUMENT_SAVE,
         }
 
         event_details = details or {}
         if position is not None:
-            event_details['position'] = position
+            event_details["position"] = position
         if length is not None:
-            event_details['length'] = length
+            event_details["length"] = length
 
-        before_state = {'content': before_content} if before_content else None
-        after_state = {'content': after_content} if after_content else None
+        before_state = {"content": before_content} if before_content else None
+        after_state = {"content": after_content} if after_content else None
 
         event = AuditEvent(
             event_type=event_type_map.get(change_type, AuditEventType.DOCUMENT_MODIFY),
@@ -328,7 +368,7 @@ class AuditLogger:
             user_id=user_id,
             username=username,
             timestamp=datetime.utcnow(),
-            resource_type='job_description',
+            resource_type="job_description",
             resource_id=job_id,
             action=change_type,
             description=f"Document {change_type} operation by {username}",
@@ -337,29 +377,38 @@ class AuditLogger:
             session_id=session_id,
             details=event_details,
             before_state=before_state,
-            after_state=after_state
+            after_state=after_state,
         )
 
         return await self.log_event(event)
 
-    async def log_permission_change(self, admin_user_id: int, admin_username: str,
-                                  target_user_id: int, target_username: str,
-                                  action: str, resource_type: str = None,
-                                  resource_id: int = None, permission_type: str = None,
-                                  details: Dict[str, Any] = None) -> bool:
+    async def log_permission_change(
+        self,
+        admin_user_id: int,
+        admin_username: str,
+        target_user_id: int,
+        target_username: str,
+        action: str,
+        resource_type: Optional[str] = None,
+        resource_id: Optional[int] = None,
+        permission_type: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         """Log permission and access control changes."""
         event_type_map = {
-            'grant': AuditEventType.PERMISSION_GRANT,
-            'revoke': AuditEventType.PERMISSION_REVOKE,
-            'denied': AuditEventType.ACCESS_DENIED
+            "grant": AuditEventType.PERMISSION_GRANT,
+            "revoke": AuditEventType.PERMISSION_REVOKE,
+            "denied": AuditEventType.ACCESS_DENIED,
         }
 
         event_details = details or {}
-        event_details.update({
-            'target_user_id': target_user_id,
-            'target_username': target_username,
-            'permission_type': permission_type
-        })
+        event_details.update(
+            {
+                "target_user_id": target_user_id,
+                "target_username": target_username,
+                "permission_type": permission_type,
+            }
+        )
 
         event = AuditEvent(
             event_type=event_type_map.get(action, AuditEventType.PERMISSION_GRANT),
@@ -367,21 +416,27 @@ class AuditLogger:
             user_id=admin_user_id,
             username=admin_username,
             timestamp=datetime.utcnow(),
-            resource_type=resource_type or 'system',
+            resource_type=resource_type or "system",
             resource_id=resource_id,
             action=action,
             description=f"Permission {action} for {target_username} by {admin_username}",
             ip_address=None,
             user_agent=None,
             session_id=None,
-            details=event_details
+            details=event_details,
         )
 
         return await self.log_event(event)
 
-    async def log_security_event(self, event_description: str, severity: AuditSeverity,
-                               user_id: int = None, username: str = None,
-                               ip_address: str = None, details: Dict[str, Any] = None) -> bool:
+    async def log_security_event(
+        self,
+        event_description: str,
+        severity: AuditSeverity,
+        user_id: Optional[int] = None,
+        username: Optional[str] = None,
+        ip_address: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         """Log security-related events."""
         event = AuditEvent(
             event_type=AuditEventType.SECURITY_EVENT,
@@ -389,38 +444,41 @@ class AuditLogger:
             user_id=user_id,
             username=username,
             timestamp=datetime.utcnow(),
-            resource_type='system',
+            resource_type="system",
             resource_id=None,
-            action='security_event',
+            action="security_event",
             description=event_description,
             ip_address=ip_address,
             user_agent=None,
             session_id=None,
-            details=details or {}
+            details=details or {},
         )
 
         return await self.log_event(event)
 
-    async def get_recent_events(self, limit: int = 50,
-                              user_id: int = None,
-                              event_type: AuditEventType = None,
-                              severity: AuditSeverity = None) -> List[Dict[str, Any]]:
+    async def get_recent_events(
+        self,
+        limit: int = 50,
+        user_id: Optional[int] = None,
+        event_type: Optional[AuditEventType] = None,
+        severity: Optional[AuditSeverity] = None,
+    ) -> List[Dict[str, Any]]:
         """Retrieve recent audit events with optional filtering."""
         try:
             conditions = []
-            params = {'limit': limit}
+            params: Dict[str, Any] = {"limit": limit}
 
             if user_id:
                 conditions.append("user_id = :user_id")
-                params['user_id'] = user_id
+                params["user_id"] = user_id
 
             if event_type:
                 conditions.append("event_type = :event_type")
-                params['event_type'] = event_type.value
+                params["event_type"] = event_type.value
 
             if severity:
                 conditions.append("severity = :severity")
-                params['severity'] = severity.value
+                params["severity"] = severity.value
 
             where_clause = " AND ".join(conditions)
             if where_clause:
@@ -439,22 +497,26 @@ class AuditLogger:
 
                 events = []
                 for row in rows:
-                    events.append({
-                        'id': row[0],
-                        'event_type': row[1],
-                        'severity': row[2],
-                        'user_id': row[3],
-                        'username': row[4],
-                        'timestamp': row[5].isoformat(),
-                        'resource_type': row[6],
-                        'resource_id': row[7],
-                        'action': row[8],
-                        'description': row[9],
-                        'ip_address': row[10],
-                        'details': json.loads(row[13]) if row[13] else {}
-                    })
+                    events.append(
+                        {
+                            "id": row[0],
+                            "event_type": row[1],
+                            "severity": row[2],
+                            "user_id": row[3],
+                            "username": row[4],
+                            "timestamp": row[5].isoformat(),
+                            "resource_type": row[6],
+                            "resource_id": row[7],
+                            "action": row[8],
+                            "description": row[9],
+                            "ip_address": row[10],
+                            "details": json.loads(row[13]) if row[13] else {},
+                        }
+                    )
 
                 return events
+
+            return []
 
         except Exception as e:
             logger.error(f"Failed to retrieve audit events: {e}")
@@ -466,31 +528,44 @@ audit_logger = AuditLogger()
 
 
 # Convenience functions for common audit operations
-async def log_user_login(user_id: int, username: str, success: bool = True,
-                        ip_address: str = None, user_agent: str = None):
+async def log_user_login(
+    user_id: int,
+    username: str,
+    success: bool = True,
+    ip_address: Optional[str] = None,
+    user_agent: Optional[str] = None,
+):
     """Log user login event."""
     return await audit_logger.log_user_authentication(
-        user_id, username, 'login', success, ip_address, user_agent
+        user_id, username, "login", success, ip_address, user_agent
     )
 
 
-async def log_document_edit(user_id: int, username: str, job_id: int,
-                          session_id: str, change_type: str, **kwargs):
+async def log_document_edit(
+    user_id: int,
+    username: str,
+    job_id: int,
+    session_id: str,
+    change_type: str,
+    **kwargs,
+):
     """Log document editing event."""
     return await audit_logger.log_document_change(
         user_id, username, job_id, session_id, change_type, **kwargs
     )
 
 
-async def log_session_event(user_id: int, username: str, session_id: str,
-                          job_id: int, action: str, **kwargs):
+async def log_session_event(
+    user_id: int, username: str, session_id: str, job_id: int, action: str, **kwargs
+):
     """Log editing session event."""
     return await audit_logger.log_editing_session(
         user_id, username, session_id, job_id, action, **kwargs
     )
 
 
-async def log_security_incident(description: str, severity: AuditSeverity = AuditSeverity.HIGH,
-                              **kwargs):
+async def log_security_incident(
+    description: str, severity: AuditSeverity = AuditSeverity.HIGH, **kwargs
+):
     """Log security incident."""
     return await audit_logger.log_security_event(description, severity, **kwargs)

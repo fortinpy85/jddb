@@ -25,6 +25,7 @@ import {
   Trash2,
   Upload,
   Calendar,
+  Database,
 } from "lucide-react";
 import EmptyState from "@/components/ui/empty-state";
 import SkeletonLoader from "@/components/ui/skeleton";
@@ -44,36 +45,73 @@ export function JobList({
   showFilters = true,
   initialFilters = {},
 }: JobListProps) {
-  const {
-    jobs,
-    loading,
-    error,
-    pagination,
-    stats,
-    filters,
-    fetchJobs,
-    fetchStats,
-    setFilters,
-    searchJobs,
-  } = useStore();
+  // Separate selectors for data and actions to prevent re-renders
+  const { jobs, loading, error, pagination, stats, filters } = useStore(
+    (state) => ({
+      jobs: state.jobs,
+      loading: state.loading,
+      error: state.error,
+      pagination: state.pagination,
+      stats: state.stats,
+      filters: state.filters,
+    }),
+  );
+
+  const fetchJobs = useStore((state) => state.fetchJobs);
+  const fetchStats = useStore((state) => state.fetchStats);
+  const setFilters = useStore((state) => state.setFilters);
+  const searchJobs = useStore((state) => state.searchJobs);
+
   const [searchQuery, setSearchQuery] = useState("");
   const { addToast } = useToast();
 
-  useEffect(() => {
-    setFilters(initialFilters);
-    fetchJobs(true);
-    fetchStats();
-  }, []);
+  // Manual initialization only - prevent any automatic loading
+  const [initialized, setInitialized] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
+
+  const initializeData = async () => {
+    console.log(
+      "🚀 initializeData called, current initialized state:",
+      initialized,
+      "isInitializing:",
+      isInitializing,
+    );
+    if (initialized || isInitializing) {
+      console.log("⚠️ Already initialized or initializing, returning early");
+      return;
+    }
+
+    try {
+      console.log("Initializing job data...");
+      console.log("🔄 Setting isInitializing to true");
+      setIsInitializing(true);
+      setFilters(initialFilters);
+      console.log("Fetching jobs...");
+      await fetchJobs(true);
+      console.log("Fetching stats...");
+      await fetchStats();
+      console.log("✅ API calls completed, setting initialized to true");
+      setInitialized(true);
+      setIsInitializing(false);
+      console.log("✅ initializeData completed successfully");
+    } catch (error) {
+      console.error("Failed to initialize data:", error);
+      console.log("❌ Setting isInitializing back to false due to error");
+      setIsInitializing(false);
+    }
+  };
 
   const handleSearch = () => {
     searchJobs(searchQuery);
   };
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters({
+    const newFilters = {
       ...filters,
       [key]: value || undefined,
-    });
+    };
+    setFilters(newFilters);
+    fetchJobs(true); // Explicitly trigger fetch with new filters
   };
 
   const handleJobView = (job: JobDescription) => {
@@ -204,6 +242,52 @@ ${Object.entries(fullJob.metadata)
       {status}
     </Badge>
   );
+
+  console.log(
+    "🎯 JobList render - initialized:",
+    initialized,
+    "isInitializing:",
+    isInitializing,
+    "loading:",
+    loading,
+    "jobs.length:",
+    jobs.length,
+  );
+
+  // Show initialization UI if not initialized AND no jobs data available
+  const hasJobData = jobs.length > 0;
+  const shouldShowInitUI = !initialized && !hasJobData;
+
+  if (shouldShowInitUI) {
+    console.log(
+      "🔄 Rendering initialization UI (not initialized and no job data)",
+    );
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <h3 className="text-lg font-semibold mb-4">Job Descriptions</h3>
+            <p className="text-gray-600 mb-4">
+              Click the button below to load job data
+            </p>
+            <Button
+              onClick={initializeData}
+              disabled={loading || isInitializing}
+            >
+              <Database className="w-4 h-4 mr-2" />
+              {isInitializing
+                ? "Initializing..."
+                : loading
+                  ? "Loading..."
+                  : "Load Job Data"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  console.log("✅ Rendering main job list UI (has job data or initialized)");
 
   return (
     <div className="space-y-6">

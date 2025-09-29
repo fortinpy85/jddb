@@ -2,9 +2,9 @@
 """
 This script generates embeddings for existing job descriptions in the database.
 """
+
 import asyncio
 import argparse
-import logging
 import sys
 from pathlib import Path
 from typing import Dict, Any

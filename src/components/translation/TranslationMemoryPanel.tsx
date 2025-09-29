@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
   Search,
   BookOpen,
@@ -15,8 +15,8 @@ import {
   TrendingUp,
   Languages,
   Zap,
-  Clock
-} from 'lucide-react';
+  Clock,
+} from "lucide-react";
 
 interface TranslationMatch {
   id: number;
@@ -28,7 +28,7 @@ interface TranslationMatch {
   usage_count: number;
   domain?: string;
   subdomain?: string;
-  match_type: 'exact' | 'fuzzy';
+  match_type: "exact" | "fuzzy";
   confidence: number;
   last_used?: string;
   created_at: string;
@@ -46,17 +46,18 @@ const mockMatches: TranslationMatch[] = [
   {
     id: 1,
     source_text: "Responsible for strategic planning and policy development",
-    target_text: "Responsable de la planification stratégique et de l'élaboration des politiques",
+    target_text:
+      "Responsable de la planification stratégique et de l'élaboration des politiques",
     similarity_score: 0.95,
     quality_score: 0.92,
     confidence_score: 0.89,
     usage_count: 15,
-    domain: 'government',
-    subdomain: 'job_descriptions',
-    match_type: 'exact',
+    domain: "government",
+    subdomain: "job_descriptions",
+    match_type: "exact",
     confidence: 1.0,
-    last_used: '2025-09-19T14:30:00Z',
-    created_at: '2025-01-15T10:00:00Z'
+    last_used: "2025-09-19T14:30:00Z",
+    created_at: "2025-01-15T10:00:00Z",
   },
   {
     id: 2,
@@ -66,12 +67,12 @@ const mockMatches: TranslationMatch[] = [
     quality_score: 0.85,
     confidence_score: 0.82,
     usage_count: 8,
-    domain: 'government',
-    subdomain: 'job_descriptions',
-    match_type: 'fuzzy',
+    domain: "government",
+    subdomain: "job_descriptions",
+    match_type: "fuzzy",
     confidence: 0.87,
-    last_used: '2025-09-18T16:45:00Z',
-    created_at: '2025-02-03T09:30:00Z'
+    last_used: "2025-09-18T16:45:00Z",
+    created_at: "2025-02-03T09:30:00Z",
   },
   {
     id: 3,
@@ -81,29 +82,30 @@ const mockMatches: TranslationMatch[] = [
     quality_score: 0.88,
     confidence_score: 0.85,
     usage_count: 12,
-    domain: 'government',
-    subdomain: 'job_descriptions',
-    match_type: 'fuzzy',
+    domain: "government",
+    subdomain: "job_descriptions",
+    match_type: "fuzzy",
     confidence: 0.82,
-    last_used: '2025-09-17T11:20:00Z',
-    created_at: '2025-01-28T14:15:00Z'
-  }
+    last_used: "2025-09-17T11:20:00Z",
+    created_at: "2025-01-28T14:15:00Z",
+  },
 ];
 
 export const TranslationMemoryPanel: React.FC<TranslationMemoryPanelProps> = ({
   sourceLanguage,
   targetLanguage,
   onMatchSelect,
-  className
+  className,
 }) => {
   const [matches, setMatches] = useState<TranslationMatch[]>(mockMatches);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<number | null>(null);
 
-  const filteredMatches = matches.filter(match =>
-    match.source_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    match.target_text.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredMatches = matches.filter(
+    (match) =>
+      match.source_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      match.target_text.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleMatchSelect = (match: TranslationMatch) => {
@@ -113,7 +115,7 @@ export const TranslationMemoryPanel: React.FC<TranslationMemoryPanelProps> = ({
 
   const handleApproval = (matchId: number, approved: boolean) => {
     // Update match with user feedback
-    console.log(`Match ${matchId} ${approved ? 'approved' : 'rejected'}`);
+    console.log(`Match ${matchId} ${approved ? "approved" : "rejected"}`);
   };
 
   const handleCopyTranslation = (text: string) => {
@@ -121,23 +123,23 @@ export const TranslationMemoryPanel: React.FC<TranslationMemoryPanelProps> = ({
   };
 
   const formatLastUsed = (dateString?: string) => {
-    if (!dateString) return 'Never used';
+    if (!dateString) return "Never used";
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
     if (diffDays < 7) return `${diffDays} days ago`;
     return date.toLocaleDateString();
   };
 
   const getMatchTypeColor = (matchType: string, confidence: number) => {
-    if (matchType === 'exact') return 'bg-green-500';
-    if (confidence > 0.9) return 'bg-blue-500';
-    if (confidence > 0.8) return 'bg-yellow-500';
-    return 'bg-gray-500';
+    if (matchType === "exact") return "bg-green-500";
+    if (confidence > 0.9) return "bg-blue-500";
+    if (confidence > 0.8) return "bg-yellow-500";
+    return "bg-gray-500";
   };
 
   const getQualityStars = (score?: number) => {
@@ -149,7 +151,7 @@ export const TranslationMemoryPanel: React.FC<TranslationMemoryPanelProps> = ({
           <Star
             key={i}
             className={`w-3 h-3 ${
-              i < stars ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+              i < stars ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
             }`}
           />
         ))}
@@ -187,11 +189,16 @@ export const TranslationMemoryPanel: React.FC<TranslationMemoryPanelProps> = ({
           </div>
           <div className="flex items-center gap-1">
             <Languages className="w-3 h-3" />
-            {matches.filter(m => m.match_type === 'exact').length} exact
+            {matches.filter((m) => m.match_type === "exact").length} exact
           </div>
           <div className="flex items-center gap-1">
             <Zap className="w-3 h-3" />
-            {Math.round(matches.reduce((sum, m) => sum + (m.quality_score || 0), 0) / matches.length * 100)}% avg
+            {Math.round(
+              (matches.reduce((sum, m) => sum + (m.quality_score || 0), 0) /
+                matches.length) *
+                100,
+            )}
+            % avg
           </div>
         </div>
       </CardHeader>
@@ -263,11 +270,11 @@ const TranslationMatchCard: React.FC<{
   onCopy,
   formatLastUsed,
   getMatchTypeColor,
-  getQualityStars
+  getQualityStars,
 }) => (
   <div
     className={`border rounded-lg p-3 space-y-2 cursor-pointer transition-all hover:shadow-md ${
-      isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'
+      isSelected ? "ring-2 ring-blue-500 bg-blue-50" : "hover:bg-gray-50"
     }`}
     onClick={onSelect}
   >
@@ -277,8 +284,13 @@ const TranslationMatchCard: React.FC<{
         <div
           className={`w-2 h-2 rounded-full ${getMatchTypeColor(match.match_type, match.confidence)}`}
         />
-        <Badge variant={match.match_type === 'exact' ? 'default' : 'secondary'} className="text-xs">
-          {match.match_type === 'exact' ? 'Exact' : `${Math.round(match.confidence * 100)}%`}
+        <Badge
+          variant={match.match_type === "exact" ? "default" : "secondary"}
+          className="text-xs"
+        >
+          {match.match_type === "exact"
+            ? "Exact"
+            : `${Math.round(match.confidence * 100)}%`}
         </Badge>
         {match.domain && (
           <Badge variant="outline" className="text-xs">

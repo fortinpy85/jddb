@@ -1,12 +1,12 @@
 repos:
   # Python code formatting and linting
-  - repo: https://github.com/psf/black
-    rev: 24.8.0
-    hooks:
-      - id: black
-        name: Format Python code with Black
-        files: '^backend/.*\.py$'
-        args: ['--line-length=88']
+#  - repo: https://github.com/psf/black
+#    rev: 24.8.0
+#    hooks:
+#      - id: black
+#        name: Format Python code with Black
+#        files: '^backend/.*\.py$'
+#        args: ['--line-length=88']
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.9
@@ -25,7 +25,12 @@ repos:
       - id: mypy
         name: Type check Python code with MyPy
         files: '^backend/src/.*\.py$'
-        additional_dependencies: [types-all]
+        additional_dependencies:
+          - types-requests
+          - types-redis
+          - types-psycopg2
+          - types-PyYAML
+          - types-setuptools
 
   # JavaScript/TypeScript formatting and linting
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -90,4 +95,3 @@ repos:
         pass_filenames: false
         files: '^(src/|package\.json|tsconfig\.json|\.env\.local).*$'
         stages: [manual]  # Only run when explicitly requested
-

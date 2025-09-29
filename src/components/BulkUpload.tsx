@@ -27,6 +27,7 @@ import {
 import { apiClient } from "@/lib/api";
 import { formatFileSize, getStatusColor } from "@/lib/utils";
 import { useToast } from "@/components/ui/toast";
+import { useProgressUtils, ProgressController } from "@/hooks/useProgressToast";
 
 interface FileUploadStatus {
   file: File;
@@ -60,6 +61,7 @@ export function BulkUpload({
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToast } = useToast();
+  const { createUploadProgress, createBatchProgress } = useProgressUtils();
 
   // Handle file selection
   const handleFileSelect = useCallback(
@@ -146,8 +148,16 @@ export function BulkUpload({
   // Upload single file
   const uploadSingleFile = async (
     fileStatus: FileUploadStatus,
+    batchProgress?: ProgressController,
   ): Promise<FileUploadStatus> => {
+    let fileProgress: ProgressController | undefined;
+
     try {
+      // Create individual file progress toast if not part of batch
+      if (!batchProgress) {
+        fileProgress = createUploadProgress(fileStatus.file.name);
+      }
+
       // Update status to uploading
       const updatedFile = {
         ...fileStatus,
@@ -156,12 +166,25 @@ export function BulkUpload({
       };
       updateFileStatus(fileStatus.file, updatedFile);
 
-      // Simulate upload progress
+      // Simulate upload progress with enhanced feedback
       const progressInterval = setInterval(() => {
-        updateFileStatus(fileStatus.file, (prev) => ({
-          ...prev,
-          progress: Math.min(prev.progress + 10, 90),
-        }));
+        updateFileStatus(fileStatus.file, (prev) => {
+          const newProgress = Math.min(prev.progress + 10, 90);
+
+          // Update individual file progress toast
+          if (fileProgress) {
+            if (newProgress < 50) {
+              fileProgress.updateProgress(newProgress, "Uploading file...");
+            } else if (newProgress < 90) {
+              fileProgress.updateProgress(newProgress, "Processing content...");
+            }
+          }
+
+          return {
+            ...prev,
+            progress: newProgress,
+          };
+        });
       }, 200);
 
       // Upload file
@@ -171,11 +194,14 @@ export function BulkUpload({
 
       // Determine final status based on result
       let finalStatus: FileUploadStatus["status"] = "completed";
+      let statusMessage = "File uploaded successfully";
+
       if (
         result.processing_result.processed_content?.processing_errors?.length >
         0
       ) {
         finalStatus = "needs_review";
+        statusMessage = `Uploaded but needs review (${result.processing_result.processed_content.processing_errors.length} issues)`;
       }
 
       const completedFile = {
@@ -186,16 +212,36 @@ export function BulkUpload({
       };
 
       updateFileStatus(fileStatus.file, completedFile);
+
+      // Complete individual file progress toast
+      if (fileProgress) {
+        if (finalStatus === "completed") {
+          fileProgress.complete(statusMessage);
+        } else {
+          fileProgress.updateProgress(100, statusMessage);
+          setTimeout(() => fileProgress?.complete(), 2000);
+        }
+      }
+
       return completedFile;
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Upload failed";
+
       const failedFile = {
         ...fileStatus,
         status: "failed" as const,
         progress: 0,
-        error: error instanceof Error ? error.message : "Upload failed",
+        error: errorMessage,
       };
 
       updateFileStatus(fileStatus.file, failedFile);
+
+      // Show error in individual file progress toast
+      if (fileProgress) {
+        fileProgress.error(errorMessage);
+      }
+
       return failedFile;
     }
   };
@@ -223,46 +269,80 @@ export function BulkUpload({
 
     setIsUploading(true);
 
-    try {
-      const pendingFiles = files.filter(
-        (f) => f.status === "pending" || f.status === "failed",
-      );
+    const pendingFiles = files.filter(
+      (f) => f.status === "pending" || f.status === "failed",
+    );
 
+    // Create batch progress toast
+    const batchProgress = createBatchProgress(
+      "Bulk Upload",
+      pendingFiles.length,
+    );
+
+    try {
       // Upload files concurrently (max 3 at a time)
       const concurrencyLimit = 3;
       const results: FileUploadStatus[] = [];
+      let completedCount = 0;
 
       for (let i = 0; i < pendingFiles.length; i += concurrencyLimit) {
         const batch = pendingFiles.slice(i, i + concurrencyLimit);
-        const batchPromises = batch.map((file) => uploadSingleFile(file));
+
+        // Update batch progress for current batch
+        const batchStartProgress = (completedCount / pendingFiles.length) * 100;
+        batchProgress.updateProgress(
+          batchStartProgress,
+          `Processing batch ${Math.floor(i / concurrencyLimit) + 1} of ${Math.ceil(pendingFiles.length / concurrencyLimit)} (${batch.length} files)`,
+        );
+
+        const batchPromises = batch.map((file) =>
+          uploadSingleFile(file, batchProgress),
+        );
         const batchResults = await Promise.all(batchPromises);
+
         results.push(...batchResults);
+        completedCount += batch.length;
+
+        // Update progress after batch completion
+        const progressPercent = (completedCount / pendingFiles.length) * 100;
+        batchProgress.updateProgress(
+          progressPercent,
+          `Completed ${completedCount} of ${pendingFiles.length} files`,
+        );
       }
 
-      // Show completion notification
+      // Calculate final statistics
       const completed = results.filter((r) => r.status === "completed").length;
       const failed = results.filter((r) => r.status === "failed").length;
       const needsReview = results.filter(
         (r) => r.status === "needs_review",
       ).length;
 
+      // Complete batch progress with summary
+      let summaryMessage = `${completed} file(s) uploaded successfully`;
+      if (failed > 0) summaryMessage += `, ${failed} failed`;
+      if (needsReview > 0) summaryMessage += `, ${needsReview} need review`;
+
       if (completed > 0) {
-        addToast({
-          title: "Upload Complete",
-          description: `${completed} file(s) uploaded successfully${failed > 0 ? `, ${failed} failed` : ""}${needsReview > 0 ? `, ${needsReview} need review` : ""}`,
-          type: completed === results.length ? "success" : "warning",
-        });
+        batchProgress.complete(summaryMessage);
+      } else {
+        batchProgress.error("All uploads failed");
       }
 
       onUploadComplete?.(files);
     } catch (error) {
       console.error("Bulk upload error:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred during upload";
+
+      batchProgress.error(errorMessage);
+
+      // Show additional error toast with retry action
       addToast({
         title: "Bulk Upload Failed",
-        description:
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred during upload",
+        description: errorMessage,
         type: "error",
         action: {
           label: "Retry Upload",

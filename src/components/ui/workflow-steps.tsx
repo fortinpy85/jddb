@@ -27,10 +27,13 @@ export function WorkflowSteps({ steps, className }: WorkflowStepsProps) {
               className={cn(
                 "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-200",
                 {
-                  "bg-green-500 border-green-500 text-white": step.status === "completed",
-                  "bg-blue-500 border-blue-500 text-white": step.status === "current",
-                  "bg-gray-100 border-gray-300 text-gray-400": step.status === "upcoming",
-                }
+                  "bg-green-500 border-green-500 text-white":
+                    step.status === "completed",
+                  "bg-blue-500 border-blue-500 text-white":
+                    step.status === "current",
+                  "bg-gray-100 border-gray-300 text-gray-400":
+                    step.status === "upcoming",
+                },
               )}
             >
               {step.status === "completed" ? (
@@ -45,14 +48,11 @@ export function WorkflowSteps({ steps, className }: WorkflowStepsProps) {
             {/* Step Title */}
             <div className="mt-2 max-w-24">
               <p
-                className={cn(
-                  "text-xs font-medium leading-tight",
-                  {
-                    "text-green-600": step.status === "completed",
-                    "text-blue-600": step.status === "current",
-                    "text-gray-500": step.status === "upcoming",
-                  }
-                )}
+                className={cn("text-xs font-medium leading-tight", {
+                  "text-green-600": step.status === "completed",
+                  "text-blue-600": step.status === "current",
+                  "text-gray-500": step.status === "upcoming",
+                })}
               >
                 {step.title}
               </p>
@@ -66,13 +66,10 @@ export function WorkflowSteps({ steps, className }: WorkflowStepsProps) {
           {index < steps.length - 1 && (
             <div className="flex-1 mx-4">
               <div
-                className={cn(
-                  "h-0.5 bg-gray-200 transition-all duration-200",
-                  {
-                    "bg-green-400": steps[index + 1].status === "completed",
-                    "bg-blue-300": steps[index + 1].status === "current",
-                  }
-                )}
+                className={cn("h-0.5 bg-gray-200 transition-all duration-200", {
+                  "bg-green-400": steps[index + 1].status === "completed",
+                  "bg-blue-300": steps[index + 1].status === "current",
+                })}
               />
             </div>
           )}

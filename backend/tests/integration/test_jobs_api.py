@@ -4,10 +4,6 @@ Integration tests for Jobs API endpoints.
 
 import pytest
 from fastapi.testclient import TestClient
-import json
-from pathlib import Path
-
-from jd_ingestion.database.models import JobDescription, JobSection, JobMetadata
 
 
 @pytest.mark.integration

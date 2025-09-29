@@ -10,12 +10,23 @@ from ...utils.monitoring import get_health_status, check_system_alerts, system_m
 from ...utils.logging import get_logger, log_business_metric, PerformanceTimer
 
 logger = get_logger(__name__)
-router = APIRouter(prefix="/health", tags=["health"])
+router = APIRouter(tags=["health"])
 
 
 @router.get("/", response_model=Dict[str, Any])
 async def basic_health_check():
     """Basic health check endpoint for load balancers."""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "service": "jd-ingestion",
+        "version": "1.0.0",
+    }
+
+
+@router.get("/status", response_model=Dict[str, Any])
+async def status_check():
+    """Health status endpoint for service monitoring."""
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),

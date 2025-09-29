@@ -36,7 +36,9 @@ class ConnectionManager:
         # Document editing sessions
         self.editing_sessions: Dict[str, Dict] = {}
 
-    async def connect(self, websocket: WebSocket, session_id: str, user_id: int, job_id: int):
+    async def connect(
+        self, websocket: WebSocket, session_id: str, user_id: int, job_id: int
+    ):
         """Accept a new WebSocket connection and add to session."""
         await websocket.accept()
 
@@ -48,7 +50,7 @@ class ConnectionManager:
                 "created_at": datetime.utcnow(),
                 "participants": set(),
                 "document_state": "",
-                "operation_count": 0
+                "operation_count": 0,
             }
 
         # Add connection to session
@@ -57,7 +59,7 @@ class ConnectionManager:
             "user_id": user_id,
             "session_id": session_id,
             "joined_at": datetime.utcnow(),
-            "cursor_position": None
+            "cursor_position": None,
         }
 
         # Add user to session participants
@@ -66,12 +68,16 @@ class ConnectionManager:
         logger.info(f"User {user_id} connected to session {session_id}")
 
         # Notify other participants about new user
-        await self.broadcast_to_session(session_id, {
-            "type": "user_joined",
-            "user_id": user_id,
-            "timestamp": datetime.utcnow().isoformat(),
-            "participants": list(self.editing_sessions[session_id]["participants"])
-        }, exclude=websocket)
+        await self.broadcast_to_session(
+            session_id,
+            {
+                "type": "user_joined",
+                "user_id": user_id,
+                "timestamp": datetime.utcnow().isoformat(),
+                "participants": list(self.editing_sessions[session_id]["participants"]),
+            },
+            exclude=websocket,
+        )
 
     def disconnect(self, websocket: WebSocket):
         """Remove a WebSocket connection."""
@@ -107,7 +113,9 @@ class ConnectionManager:
         except Exception as e:
             logger.error(f"Error sending message to websocket: {e}")
 
-    async def broadcast_to_session(self, session_id: str, message: dict, exclude: WebSocket = None):
+    async def broadcast_to_session(
+        self, session_id: str, message: dict, exclude: WebSocket = None
+    ):
         """Broadcast a message to all connections in a session."""
         if session_id not in self.active_connections:
             return
@@ -127,7 +135,9 @@ class ConnectionManager:
         for connection in disconnected:
             self.disconnect(connection)
 
-    async def apply_operation(self, session_id: str, operation: dict, websocket: WebSocket):
+    async def apply_operation(
+        self, session_id: str, operation: dict, websocket: WebSocket
+    ):
         """Apply an operational transformation and broadcast to other participants."""
         if session_id not in self.editing_sessions:
             logger.error(f"Session {session_id} not found for operation")
@@ -147,7 +157,7 @@ class ConnectionManager:
             "operation_id": operation_id,
             "user_id": user_id,
             "timestamp": datetime.utcnow().isoformat(),
-            "sequence_number": session["operation_count"]
+            "sequence_number": session["operation_count"],
         }
 
         # Apply simple document state update (basic implementation)
@@ -164,17 +174,21 @@ class ConnectionManager:
         logger.info(f"Applied operation {operation_id} in session {session_id}")
 
         # Broadcast operation to other participants
-        await self.broadcast_to_session(session_id, {
-            "type": "operation",
-            "operation": enhanced_operation
-        }, exclude=websocket)
+        await self.broadcast_to_session(
+            session_id,
+            {"type": "operation", "operation": enhanced_operation},
+            exclude=websocket,
+        )
 
         # Acknowledge operation to sender
-        await self.send_personal_message({
-            "type": "operation_ack",
-            "operation_id": operation_id,
-            "sequence_number": session["operation_count"]
-        }, websocket)
+        await self.send_personal_message(
+            {
+                "type": "operation_ack",
+                "operation_id": operation_id,
+                "sequence_number": session["operation_count"],
+            },
+            websocket,
+        )
 
     def _apply_insert_operation(self, document: str, operation: dict) -> str:
         """Apply an insert operation to the document state."""
@@ -205,7 +219,7 @@ async def websocket_edit_session(
     session_id: str,
     user_id: int,
     job_id: int,
-    db: AsyncSession = Depends(get_async_session)
+    db: AsyncSession = Depends(get_async_session),
 ):
     """
     WebSocket endpoint for collaborative editing sessions.
@@ -218,8 +232,7 @@ async def websocket_edit_session(
 
     # Verify job exists
     result = await db.execute(
-        text("SELECT id FROM job_descriptions WHERE id = :job_id"),
-        {"job_id": job_id}
+        text("SELECT id FROM job_descriptions WHERE id = :job_id"), {"job_id": job_id}
     )
     job = result.fetchone()
     if not job:
@@ -230,14 +243,23 @@ async def websocket_edit_session(
         await manager.connect(websocket, session_id, user_id, job_id)
 
         # Send initial session state
-        await manager.send_personal_message({
-            "type": "session_state",
-            "session_id": session_id,
-            "job_id": job_id,
-            "document_state": manager.editing_sessions[session_id]["document_state"],
-            "participants": list(manager.editing_sessions[session_id]["participants"]),
-            "operation_count": manager.editing_sessions[session_id]["operation_count"]
-        }, websocket)
+        await manager.send_personal_message(
+            {
+                "type": "session_state",
+                "session_id": session_id,
+                "job_id": job_id,
+                "document_state": manager.editing_sessions[session_id][
+                    "document_state"
+                ],
+                "participants": list(
+                    manager.editing_sessions[session_id]["participants"]
+                ),
+                "operation_count": manager.editing_sessions[session_id][
+                    "operation_count"
+                ],
+            },
+            websocket,
+        )
 
         # Main message loop
         while True:
@@ -257,18 +279,22 @@ async def websocket_edit_session(
                 if websocket in manager.user_sessions:
                     manager.user_sessions[websocket]["cursor_position"] = position
 
-                await manager.broadcast_to_session(session_id, {
-                    "type": "cursor_update",
-                    "user_id": manager.user_sessions[websocket]["user_id"],
-                    "position": position
-                }, exclude=websocket)
+                await manager.broadcast_to_session(
+                    session_id,
+                    {
+                        "type": "cursor_update",
+                        "user_id": manager.user_sessions[websocket]["user_id"],
+                        "position": position,
+                    },
+                    exclude=websocket,
+                )
 
             elif message_type == "ping":
                 # Handle keep-alive pings
-                await manager.send_personal_message({
-                    "type": "pong",
-                    "timestamp": datetime.utcnow().isoformat()
-                }, websocket)
+                await manager.send_personal_message(
+                    {"type": "pong", "timestamp": datetime.utcnow().isoformat()},
+                    websocket,
+                )
 
             else:
                 logger.warning(f"Unknown message type: {message_type}")
@@ -286,14 +312,16 @@ async def get_active_sessions():
     """Get information about currently active editing sessions."""
     sessions = []
     for session_id, session_info in manager.editing_sessions.items():
-        sessions.append({
-            "session_id": session_id,
-            "job_id": session_info["job_id"],
-            "participant_count": len(session_info["participants"]),
-            "participants": list(session_info["participants"]),
-            "created_at": session_info["created_at"].isoformat(),
-            "operation_count": session_info["operation_count"]
-        })
+        sessions.append(
+            {
+                "session_id": session_id,
+                "job_id": session_info["job_id"],
+                "participant_count": len(session_info["participants"]),
+                "participants": list(session_info["participants"]),
+                "created_at": session_info["created_at"].isoformat(),
+                "operation_count": session_info["operation_count"],
+            }
+        )
 
     return {"active_sessions": sessions}
 
@@ -311,5 +339,5 @@ async def get_session_state(session_id: str):
         "document_state": session["document_state"],
         "participants": list(session["participants"]),
         "operation_count": session["operation_count"],
-        "created_at": session["created_at"].isoformat()
+        "created_at": session["created_at"].isoformat(),
     }

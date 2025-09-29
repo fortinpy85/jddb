@@ -5,13 +5,12 @@ Revises: 352152d04764
 Create Date: 2025-09-19 07:15:00.000000
 
 """
+
 from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '6375fbf9a927'
-down_revision = '352152d04764'
+revision = "6375fbf9a927"
+down_revision = "352152d04764"
 branch_labels = None
 depends_on = None
 
@@ -19,7 +18,8 @@ depends_on = None
 def upgrade() -> None:
     """Add audit log table for comprehensive activity tracking."""
 
-    op.execute("""
+    op.execute(
+        """
         CREATE TABLE IF NOT EXISTS audit_log (
             id SERIAL PRIMARY KEY,
             event_type VARCHAR(50) NOT NULL,
@@ -42,10 +42,12 @@ def upgrade() -> None:
             event_hash VARCHAR(64),
             created_at TIMESTAMP DEFAULT now()
         );
-    """)
+    """
+    )
 
     # Create indexes for efficient querying
-    op.execute("""
+    op.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_audit_log_event_type ON audit_log(event_type);
         CREATE INDEX IF NOT EXISTS idx_audit_log_user_id ON audit_log(user_id);
         CREATE INDEX IF NOT EXISTS idx_audit_log_timestamp ON audit_log(timestamp);
@@ -53,14 +55,17 @@ def upgrade() -> None:
         CREATE INDEX IF NOT EXISTS idx_audit_log_severity ON audit_log(severity);
         CREATE INDEX IF NOT EXISTS idx_audit_log_session_id ON audit_log(session_id);
         CREATE INDEX IF NOT EXISTS idx_audit_log_success ON audit_log(success);
-    """)
+    """
+    )
 
     # Create a partial index for failed events (security monitoring)
-    op.execute("""
+    op.execute(
+        """
         CREATE INDEX IF NOT EXISTS idx_audit_log_failures
         ON audit_log(timestamp, event_type, user_id)
         WHERE success = false;
-    """)
+    """
+    )
 
 
 def downgrade() -> None:
@@ -77,4 +82,4 @@ def downgrade() -> None:
     op.execute("DROP INDEX IF EXISTS idx_audit_log_event_type;")
 
     # Drop table
-    op.drop_table('audit_log')
+    op.drop_table("audit_log")

@@ -2,8 +2,20 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.orm import declarative_base
+from typing import AsyncIterator, Iterator
 
 from ..config import settings
+
+__all__ = [
+    "async_engine",
+    "AsyncSessionLocal",
+    "sync_engine",
+    "SessionLocal",
+    "Base",
+    "configure_mappers",
+    "get_async_session",
+    "get_db",
+]
 
 # Async database setup
 async_engine = create_async_engine(
@@ -36,7 +48,7 @@ Base = declarative_base()
 
 
 # Configure the registry to ensure all models are properly mapped
-def configure_mappers():
+def configure_mappers() -> None:
     """Ensure all model mappers are properly configured."""
     try:
         from sqlalchemy.orm import configure_mappers
@@ -47,7 +59,7 @@ def configure_mappers():
         pass
 
 
-async def get_async_session() -> AsyncSession:
+async def get_async_session() -> AsyncIterator[AsyncSession]:
     """Dependency to get async database session."""
     async with AsyncSessionLocal() as session:
         try:
@@ -60,16 +72,7 @@ async def get_async_session() -> AsyncSession:
             await session.close()
 
 
-def get_sync_session() -> Session:
-    """Get synchronous database session."""
-    session = SessionLocal()
-    try:
-        return session
-    finally:
-        session.close()
-
-
-def get_db() -> Session:
+def get_db() -> Iterator[Session]:
     """Dependency to get database session for FastAPI."""
     db = SessionLocal()
     try:

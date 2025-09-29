@@ -9,7 +9,7 @@ import asyncio
 import functools
 from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Type, TypeVar
 
 from fastapi import Request
 from sqlalchemy.exc import (
@@ -31,6 +31,7 @@ from .exceptions import (
     SystemResourceException,
     ValidationException,
 )
+from ..config import settings
 from .logging import get_logger
 
 logger = get_logger(__name__)
@@ -310,7 +311,7 @@ class RetryHandler:
 
     async def retry_async(
         self,
-        func: Callable[..., T],
+        func: Callable[..., Awaitable[T]],
         *args,
         retryable_exceptions: Optional[List[Type[Exception]]] = None,
         context: Optional[Dict[str, Any]] = None,
@@ -398,6 +399,8 @@ class RetryHandler:
         # All retries exhausted, raise the last exception
         if last_exception:
             raise last_exception
+        # This should not be reached but is needed for type checking
+        raise RuntimeError("Unexpected state in retry_async")
 
     def retry_sync(
         self,
@@ -491,6 +494,8 @@ class RetryHandler:
         # All retries exhausted, raise the last exception
         if last_exception:
             raise last_exception
+        # This should not be reached but is needed for type checking
+        raise RuntimeError("Unexpected state in retry_sync")
 
 
 # Global instances
@@ -524,7 +529,7 @@ def handle_errors(
                 ):
                     return await func(*args, **kwargs)
 
-            return async_wrapper
+            return async_wrapper  # type: ignore
 
         else:
 
@@ -533,14 +538,14 @@ def handle_errors(
                 with error_handler.sync_error_context(op_name, context, raise_on_error):
                     return func(*args, **kwargs)
 
-            return sync_wrapper
+            return sync_wrapper  # type: ignore
 
     return decorator
 
 
 def retry_on_failure(
-    max_retries: int = 3,
-    base_delay: float = 1.0,
+    max_retries: int = settings.RETRY_MAX_RETRIES,
+    base_delay: float = settings.RETRY_BASE_DELAY,
     retryable_exceptions: Optional[List[Type[Exception]]] = None,
     context: Optional[Dict[str, Any]] = None,
 ):
@@ -571,7 +576,7 @@ def retry_on_failure(
                     **kwargs,
                 )
 
-            return async_wrapper
+            return async_wrapper  # type: ignore
 
         else:
 
@@ -585,7 +590,7 @@ def retry_on_failure(
                     **kwargs,
                 )
 
-            return sync_wrapper
+            return sync_wrapper  # type: ignore
 
     return decorator
 

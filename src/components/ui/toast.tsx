@@ -13,11 +13,17 @@ export interface Toast {
     label: string;
     onClick: () => void;
   };
+  progress?: {
+    value: number; // 0-100
+    showPercentage?: boolean;
+    estimatedTimeRemaining?: string;
+  };
 }
 
 interface ToastContextType {
   toasts: Toast[];
   addToast: (toast: Omit<Toast, "id">) => void;
+  updateToast: (id: string, updates: Partial<Omit<Toast, "id">>) => void;
   removeToast: (id: string) => void;
 }
 
@@ -48,12 +54,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateToast = (id: string, updates: Partial<Omit<Toast, "id">>) => {
+    setToasts((prev) =>
+      prev.map((toast) => (toast.id === id ? { ...toast, ...updates } : toast)),
+    );
+  };
+
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
   return (
-    <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
+    <ToastContext.Provider
+      value={{ toasts, addToast, updateToast, removeToast }}
+    >
       {children}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ToastContext.Provider>
@@ -139,6 +153,27 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
           <p className="text-sm font-semibold text-gray-900">{toast.title}</p>
           {toast.description && (
             <p className="text-sm text-gray-600 mt-1">{toast.description}</p>
+          )}
+
+          {toast.progress && (
+            <div className="mt-2 space-y-1">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${Math.min(100, Math.max(0, toast.progress.value))}%`,
+                  }}
+                ></div>
+              </div>
+              <div className="flex justify-between text-xs text-gray-500">
+                {toast.progress.showPercentage && (
+                  <span>{Math.round(toast.progress.value)}%</span>
+                )}
+                {toast.progress.estimatedTimeRemaining && (
+                  <span>{toast.progress.estimatedTimeRemaining}</span>
+                )}
+              </div>
+            </div>
           )}
 
           {toast.action && (

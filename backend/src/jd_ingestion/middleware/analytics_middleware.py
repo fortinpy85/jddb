@@ -4,7 +4,7 @@ Middleware for automatic analytics tracking.
 
 import time
 import asyncio
-from typing import Callable
+from typing import Callable, Optional
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -78,8 +78,8 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
         request: Request,
         response: Response = None,
         response_time_ms: int = 0,
-        session_id: str = None,
-        error: str = None,
+        session_id: Optional[str] = None,
+        error: Optional[str] = None,
     ):
         """Track request analytics in background."""
         try:
@@ -180,7 +180,7 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
         else:
             return "api_call"
 
-    def _extract_resource_id(self, path: str) -> str:
+    def _extract_resource_id(self, path: str) -> Optional[str]:
         """Extract resource ID from URL path."""
 
         # Common patterns for extracting IDs

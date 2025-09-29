@@ -63,12 +63,17 @@ if (typeof window !== "undefined" && !window.IntersectionObserver) {
     rootMargin: string = "0px";
     thresholds: ReadonlyArray<number> = [0];
 
-    constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {}
+    constructor(
+      callback: IntersectionObserverCallback,
+      options?: IntersectionObserverInit,
+    ) {}
 
     observe() {}
     unobserve() {}
     disconnect() {}
-    takeRecords(): IntersectionObserverEntry[] { return []; }
+    takeRecords(): IntersectionObserverEntry[] {
+      return [];
+    }
   } as any;
 }
 

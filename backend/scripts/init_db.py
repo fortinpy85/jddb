@@ -3,8 +3,8 @@
 This script initializes the database, creating the database if it doesn't exist,
 creating the required extensions, creating the tables, and verifying the connection.
 """
+
 import asyncio
-import logging
 import sys
 from pathlib import Path
 
@@ -13,9 +13,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.asyncio import create_async_engine
 from jd_ingestion.database.connection import Base, sync_engine, async_engine
-from jd_ingestion.database.models import *
+from jd_ingestion.database.models import *  # noqa: F403
 from jd_ingestion.config import settings
 from jd_ingestion.utils.logging import configure_logging, get_logger
 
@@ -66,14 +65,30 @@ def create_extensions() -> None:
 
 def create_tables() -> None:
     """
-    Creates all database tables.
+    Creates all database tables by running alembic migrations.
     """
     try:
-        logger.info("Creating database tables...")
-        Base.metadata.create_all(bind=sync_engine)
-        logger.info("Database tables created successfully.")
-    except SQLAlchemyError as e:
-        logger.error(f"Failed to create tables: {e}")
+        logger.info("Dropping all tables...")
+        # Drop tables in reverse order of creation to avoid foreign key constraint violations
+        Base.metadata.drop_all(
+            bind=sync_engine,
+            tables=[
+                UserAnalytics.__table__,  # noqa: F405
+                UserSession.__table__,  # noqa: F405
+                UserPermission.__table__,  # noqa: F405
+                UserPreference.__table__,  # noqa: F405
+                User.__table__,  # noqa: F405
+            ],
+        )
+        logger.info("Running database migrations...")
+        from alembic.config import Config
+        from alembic import command
+
+        alembic_cfg = Config("alembic.ini")
+        command.upgrade(alembic_cfg, "head")
+        logger.info("Database migrations ran successfully.")
+    except Exception as e:
+        logger.error(f"Failed to run database migrations: {e}")
         raise
 
 

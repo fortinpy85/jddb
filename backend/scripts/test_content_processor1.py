@@ -4,6 +4,7 @@ This script tests the ContentProcessor by reading a sample file,
 extracting metadata, and then using the ContentProcessor to extract
 sections and structured fields.
 """
+
 import logging
 import sys
 from pathlib import Path
@@ -11,7 +12,7 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from jd_ingestion.processors.file_discovery import FileDiscovery
+from jd_ingestion.core.file_discovery import FileDiscovery
 from jd_ingestion.processors.content_processor import ContentProcessor
 
 logging.basicConfig(

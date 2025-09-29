@@ -141,7 +141,6 @@ class CircuitBreaker:
                     and current_time - self.metrics.last_failure_time
                     >= self.config.recovery_timeout
                 ):
-
                     self._transition_to_half_open()
                     return True
                 return False

@@ -6,7 +6,7 @@ protected according to federal privacy legislation.
 """
 
 import pytest
-from typing import Dict, Any, List
+from typing import Dict, Any
 import re
 from unittest.mock import Mock, patch
 
@@ -15,6 +15,7 @@ try:
     from jd_ingestion.processors.content_processor import ContentProcessor
 except ImportError:
     ContentProcessor = None
+
 
 # For now, use mock audit logger until Phase 2 audit system is integrated
 class MockAuditLogger:
@@ -55,23 +56,27 @@ class TestPrivacyCompliance:
         else:
             # Return mock processor for testing
             mock_processor = Mock()
-            mock_processor.process_content = Mock(return_value={"sections": [], "metadata": {}})
+            mock_processor.process_content = Mock(
+                return_value={"sections": [], "metadata": {}}
+            )
             return mock_processor
 
-    def test_pii_detection_in_job_descriptions(self, content_processor, sample_job_description_with_pii):
+    def test_pii_detection_in_job_descriptions(
+        self, content_processor, sample_job_description_with_pii
+    ):
         """Test that PII is properly detected in job descriptions."""
         # Test email detection
-        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        email_pattern = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
         emails = re.findall(email_pattern, sample_job_description_with_pii)
         assert len(emails) > 0, "Should detect email addresses in job descriptions"
 
         # Test phone number detection
-        phone_pattern = r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}'
+        phone_pattern = r"\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}"
         phones = re.findall(phone_pattern, sample_job_description_with_pii)
         assert len(phones) > 0, "Should detect phone numbers in job descriptions"
 
         # Test name detection (basic pattern)
-        name_pattern = r'\b[A-Z][a-z]+ [A-Z][a-z]+\b'
+        name_pattern = r"\b[A-Z][a-z]+ [A-Z][a-z]+\b"
         names = re.findall(name_pattern, sample_job_description_with_pii)
         assert len(names) > 0, "Should detect potential names in job descriptions"
 
@@ -80,28 +85,32 @@ class TestPrivacyCompliance:
         sensitive_text = "Contact John Doe at john.doe@gc.ca or (613) 555-1234"
 
         # Email masking
-        masked_email = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-                             '[EMAIL_REDACTED]', sensitive_text)
-        assert '[EMAIL_REDACTED]' in masked_email
-        assert 'john.doe@gc.ca' not in masked_email
+        masked_email = re.sub(
+            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+            "[EMAIL_REDACTED]",
+            sensitive_text,
+        )
+        assert "[EMAIL_REDACTED]" in masked_email
+        assert "john.doe@gc.ca" not in masked_email
 
         # Phone masking
-        masked_phone = re.sub(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}',
-                             '[PHONE_REDACTED]', masked_email)
-        assert '[PHONE_REDACTED]' in masked_phone
-        assert '613' not in masked_phone
+        masked_phone = re.sub(
+            r"\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}", "[PHONE_REDACTED]", masked_email
+        )
+        assert "[PHONE_REDACTED]" in masked_phone
+        assert "613" not in masked_phone
 
     def test_audit_logging_excludes_pii(self):
         """Test that audit logs don't contain unmasked PII."""
         # Mock audit logger
-        with patch('jd_ingestion.audit.logger.AuditLogger') as mock_logger:
+        with patch("jd_ingestion.audit.logger.AuditLogger") as mock_logger:
             logger_instance = mock_logger.return_value
 
             # Simulate logging an event with PII
             sensitive_data = {
                 "user_email": "user@example.com",
                 "phone": "(613) 555-1234",
-                "action": "document_access"
+                "action": "document_access",
             }
 
             # The audit logger should mask PII before logging
@@ -123,7 +132,7 @@ class TestPrivacyCompliance:
         retention_policy = {
             "audit_logs": "7_years",
             "user_sessions": "30_days",
-            "personal_data": "as_required_by_law"
+            "personal_data": "as_required_by_law",
         }
 
         assert retention_policy["audit_logs"] == "7_years"
@@ -153,7 +162,7 @@ class TestPrivacyCompliance:
             "consent_given": True,
             "consent_date": "2025-09-19",
             "consent_type": "data_processing",
-            "can_withdraw": True
+            "can_withdraw": True,
         }
 
         assert consent_data["consent_given"] is True
@@ -171,7 +180,7 @@ class TestPrivacyCompliance:
             "correction": True,
             "deletion": True,
             "portability": True,
-            "notification": True
+            "notification": True,
         }
 
         for right, supported in data_rights.items():
@@ -184,11 +193,15 @@ class TestPrivacyCompliance:
         for key, value in masked_data.items():
             if isinstance(value, str):
                 # Mask emails
-                value = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-                              '[EMAIL_REDACTED]', value)
+                value = re.sub(
+                    r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+                    "[EMAIL_REDACTED]",
+                    value,
+                )
                 # Mask phones
-                value = re.sub(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}',
-                              '[PHONE_REDACTED]', value)
+                value = re.sub(
+                    r"\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}", "[PHONE_REDACTED]", value
+                )
                 masked_data[key] = value
 
         return masked_data
@@ -206,7 +219,7 @@ class TestSecurityClassificationCompliance:
             "PROTECTED_C",
             "CONFIDENTIAL",
             "SECRET",
-            "TOP_SECRET"
+            "TOP_SECRET",
         ]
 
         # Test that only valid clearance levels are accepted
@@ -219,10 +232,14 @@ class TestSecurityClassificationCompliance:
             "classification": "PROTECTED_B",
             "handling_instructions": "GOVERNMENT_OF_CANADA_ONLY",
             "retention_period": "7_YEARS",
-            "access_controls": ["HR_STAFF", "MANAGERS"]
+            "access_controls": ["HR_STAFF", "MANAGERS"],
         }
 
-        assert document_metadata["classification"] in ["PROTECTED_A", "PROTECTED_B", "PROTECTED_C"]
+        assert document_metadata["classification"] in [
+            "PROTECTED_A",
+            "PROTECTED_B",
+            "PROTECTED_C",
+        ]
         assert document_metadata["handling_instructions"] is not None
         assert document_metadata["access_controls"] is not None
 
@@ -233,7 +250,9 @@ class TestSecurityClassificationCompliance:
         document_classification = "PROTECTED_B"
 
         # User should have access to documents at or below their clearance
-        access_granted = self._check_clearance_access(user_clearance, document_classification)
+        access_granted = self._check_clearance_access(
+            user_clearance, document_classification
+        )
         assert access_granted is True
 
         # User should not have access to documents above their clearance
@@ -241,7 +260,9 @@ class TestSecurityClassificationCompliance:
         access_denied = self._check_clearance_access(user_clearance, higher_document)
         assert access_denied is False
 
-    def _check_clearance_access(self, user_clearance: str, document_classification: str) -> bool:
+    def _check_clearance_access(
+        self, user_clearance: str, document_classification: str
+    ) -> bool:
         """Helper method to check clearance-based access."""
         clearance_hierarchy = {
             "UNCLASSIFIED": 0,
@@ -250,7 +271,7 @@ class TestSecurityClassificationCompliance:
             "PROTECTED_C": 3,
             "CONFIDENTIAL": 4,
             "SECRET": 5,
-            "TOP_SECRET": 6
+            "TOP_SECRET": 6,
         }
 
         user_level = clearance_hierarchy.get(user_clearance, 0)
@@ -273,7 +294,7 @@ class TestITSG33Compliance:
             "data_at_rest": "AES-256",
             "data_in_transit": "TLS_1_3",
             "key_management": "HSM_OR_EQUIVALENT",
-            "hashing": "SHA-256_OR_STRONGER"
+            "hashing": "SHA-256_OR_STRONGER",
         }
 
         # These would be tested against actual implementation
@@ -287,11 +308,13 @@ class TestITSG33Compliance:
             "password_complexity": True,
             "account_lockout": True,
             "session_timeout": True,
-            "privileged_access_management": True
+            "privileged_access_management": True,
         }
 
         for requirement, enabled in auth_requirements.items():
-            assert enabled, f"Authentication requirement '{requirement}' must be enabled"
+            assert (
+                enabled
+            ), f"Authentication requirement '{requirement}' must be enabled"
 
     def test_audit_logging_requirements(self):
         """Test that audit logging meets ITSG-33 requirements."""
@@ -302,7 +325,7 @@ class TestITSG33Compliance:
             "security_events": True,
             "log_integrity": True,
             "log_retention": True,
-            "log_monitoring": True
+            "log_monitoring": True,
         }
 
         for requirement, implemented in audit_requirements.items():

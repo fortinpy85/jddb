@@ -1,14 +1,13 @@
 """Create initial job description tables
 
 Revision ID: fba902742fb7
-Revises: 
+Revises:
 Create Date: 2025-09-12 10:39:21.560897
 
 """
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 from pgvector.sqlalchemy import VECTOR
 
 # revision identifiers, used by Alembic.

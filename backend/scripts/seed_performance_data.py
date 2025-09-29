@@ -5,7 +5,7 @@ Performance Test Data Seeding Script
 Seeds the database with a large dataset to test performance under load.
 Creates realistic job descriptions, search analytics, and translation memory data.
 """
-import asyncio
+
 import logging
 import random
 from datetime import datetime, timedelta
@@ -22,7 +22,7 @@ from src.jd_ingestion.database.models import (
     SearchAnalytics,
     TranslationProject,
     TranslationMemory,
-    AIUsageTracking
+    AIUsageTracking,
 )
 
 # Configure logging
@@ -31,21 +31,69 @@ logger = logging.getLogger(__name__)
 
 # Sample data for generating realistic content
 JOB_TITLES = [
-    "Senior Software Engineer", "Product Manager", "Data Scientist", "DevOps Engineer",
-    "UX Designer", "Business Analyst", "Technical Writer", "Project Manager",
-    "Database Administrator", "Security Analyst", "Frontend Developer", "Backend Developer",
-    "Full Stack Developer", "Solutions Architect", "System Administrator", "Quality Assurance Engineer",
-    "Marketing Manager", "Sales Representative", "HR Specialist", "Financial Analyst",
-    "Operations Manager", "Customer Success Manager", "Content Manager", "Social Media Specialist"
+    "Senior Software Engineer",
+    "Product Manager",
+    "Data Scientist",
+    "DevOps Engineer",
+    "UX Designer",
+    "Business Analyst",
+    "Technical Writer",
+    "Project Manager",
+    "Database Administrator",
+    "Security Analyst",
+    "Frontend Developer",
+    "Backend Developer",
+    "Full Stack Developer",
+    "Solutions Architect",
+    "System Administrator",
+    "Quality Assurance Engineer",
+    "Marketing Manager",
+    "Sales Representative",
+    "HR Specialist",
+    "Financial Analyst",
+    "Operations Manager",
+    "Customer Success Manager",
+    "Content Manager",
+    "Social Media Specialist",
 ]
 
 DEPARTMENTS = [
-    "Information Technology", "Engineering", "Product Development", "Marketing",
-    "Sales", "Human Resources", "Finance", "Operations", "Customer Support",
-    "Legal", "Research and Development", "Quality Assurance", "Security"
+    "Information Technology",
+    "Engineering",
+    "Product Development",
+    "Marketing",
+    "Sales",
+    "Human Resources",
+    "Finance",
+    "Operations",
+    "Customer Support",
+    "Legal",
+    "Research and Development",
+    "Quality Assurance",
+    "Security",
 ]
 
-CLASSIFICATIONS = ["AS-01", "AS-02", "AS-03", "AS-04", "AS-05", "AS-06", "AS-07", "EX-01", "EX-02", "PM-01", "PM-02", "PM-03", "PM-04", "PM-05", "CS-01", "CS-02", "CS-03", "CS-04", "CS-05"]
+CLASSIFICATIONS = [
+    "AS-01",
+    "AS-02",
+    "AS-03",
+    "AS-04",
+    "AS-05",
+    "AS-06",
+    "AS-07",
+    "EX-01",
+    "EX-02",
+    "PM-01",
+    "PM-02",
+    "PM-03",
+    "PM-04",
+    "PM-05",
+    "CS-01",
+    "CS-02",
+    "CS-03",
+    "CS-04",
+    "CS-05",
+]
 
 SAMPLE_CONTENT_TEMPLATES = [
     """The {title} position is responsible for {primary_responsibility}.
@@ -63,7 +111,6 @@ Qualifications:
 - {years} years of experience in {area}
 - Experience with {tool_1}, {tool_2}, and {tool_3}
 - Strong communication and problem-solving skills""",
-
     """We are seeking a {title} to join our dynamic {department} department.
 This position offers an exciting opportunity to {opportunity} and contribute to {contribution}.
 
@@ -79,17 +126,47 @@ Responsibilities include:
 - {duty_3}
 - {duty_4}
 
-This role reports to the {reports_to} and requires {requirement}."""
+This role reports to the {reports_to} and requires {requirement}.""",
 ]
+
 
 def generate_realistic_content(title: str, department: str, classification: str) -> str:
     """Generate realistic job description content."""
     template = random.choice(SAMPLE_CONTENT_TEMPLATES)
 
     # Technology and skills pools
-    technologies = ["Python", "JavaScript", "Java", "C++", "React", "Node.js", "PostgreSQL", "MongoDB", "AWS", "Docker", "Kubernetes"]
-    skills = ["communication", "leadership", "analytical", "project management", "teamwork", "problem-solving"]
-    tools = ["Git", "Jira", "Confluence", "Slack", "Microsoft Office", "Tableau", "Power BI", "Jenkins", "Terraform"]
+    technologies = [
+        "Python",
+        "JavaScript",
+        "Java",
+        "C++",
+        "React",
+        "Node.js",
+        "PostgreSQL",
+        "MongoDB",
+        "AWS",
+        "Docker",
+        "Kubernetes",
+    ]
+    skills = [
+        "communication",
+        "leadership",
+        "analytical",
+        "project management",
+        "teamwork",
+        "problem-solving",
+    ]
+    tools = [
+        "Git",
+        "Jira",
+        "Confluence",
+        "Slack",
+        "Microsoft Office",
+        "Tableau",
+        "Power BI",
+        "Jenkins",
+        "Terraform",
+    ]
 
     content = template.format(
         title=title,
@@ -101,9 +178,9 @@ def generate_realistic_content(title: str, department: str, classification: str)
         technology=random.choice(technologies),
         team=department.lower(),
         responsibility_1=f"Develop and implement {department.lower()} strategies",
-        responsibility_2=f"Collaborate with cross-functional teams",
+        responsibility_2="Collaborate with cross-functional teams",
         responsibility_3=f"Monitor and improve {department.lower()} processes",
-        responsibility_4=f"Provide technical guidance and mentorship",
+        responsibility_4="Provide technical guidance and mentorship",
         field=department.replace(" ", " "),
         years=random.randint(3, 8),
         area=department.lower(),
@@ -122,10 +199,11 @@ def generate_realistic_content(title: str, department: str, classification: str)
         duty_3=f"Ensure compliance with {department.lower()} standards",
         duty_4=f"Document {department.lower()} processes and procedures",
         reports_to=f"Director of {department}",
-        requirement="strong attention to detail"
+        requirement="strong attention to detail",
     )
 
     return content
+
 
 def create_sample_job_descriptions(session, count: int = 1000) -> List[JobDescription]:
     """Create sample job descriptions for performance testing."""
@@ -141,14 +219,14 @@ def create_sample_job_descriptions(session, count: int = 1000) -> List[JobDescri
         content = generate_realistic_content(title, department, classification)
 
         job = JobDescription(
-            title=f"{title} - {i+1:04d}",
+            title=f"{title} - {i + 1:04d}",
             content=content,
-            filename=f"job_{i+1:04d}_{title.lower().replace(' ', '_')}.txt",
+            filename=f"job_{i + 1:04d}_{title.lower().replace(' ', '_')}.txt",
             language="en",
             status="completed",
             processing_time=random.uniform(1.0, 5.0),
             word_count=len(content.split()),
-            created_at=datetime.utcnow() - timedelta(days=random.randint(0, 365))
+            created_at=datetime.utcnow() - timedelta(days=random.randint(0, 365)),
         )
 
         session.add(job)
@@ -156,11 +234,12 @@ def create_sample_job_descriptions(session, count: int = 1000) -> List[JobDescri
 
         if i % 100 == 0:
             session.commit()
-            logger.info(f"Created {i+1} job descriptions...")
+            logger.info(f"Created {i + 1} job descriptions...")
 
     session.commit()
     logger.info(f"Successfully created {count} job descriptions")
     return jobs
+
 
 def create_sample_metadata(session, jobs: List[JobDescription]):
     """Create sample metadata for job descriptions."""
@@ -178,18 +257,24 @@ def create_sample_metadata(session, jobs: List[JobDescription]):
             reports_to=f"Director of {random.choice(DEPARTMENTS)}",
             team_size=random.randint(3, 15),
             travel_required=random.choice([True, False]),
-            security_clearance=random.choice(["None", "Reliability", "Secret", "Top Secret"]),
+            security_clearance=random.choice(
+                ["None", "Reliability", "Secret", "Top Secret"]
+            ),
             bilingual_required=random.choice([True, False]),
             metadata={
-                "posting_date": (datetime.utcnow() - timedelta(days=random.randint(0, 90))).isoformat(),
-                "application_deadline": (datetime.utcnow() + timedelta(days=random.randint(1, 30))).isoformat(),
+                "posting_date": (
+                    datetime.utcnow() - timedelta(days=random.randint(0, 90))
+                ).isoformat(),
+                "application_deadline": (
+                    datetime.utcnow() + timedelta(days=random.randint(1, 30))
+                ).isoformat(),
                 "budget_responsibility": random.randint(100000, 5000000),
                 "performance_indicators": [
                     "Project delivery on time",
                     "Team satisfaction scores",
-                    "Quality metrics achievement"
-                ]
-            }
+                    "Quality metrics achievement",
+                ],
+            },
         )
         session.add(metadata)
 
@@ -198,6 +283,7 @@ def create_sample_metadata(session, jobs: List[JobDescription]):
 
     session.commit()
     logger.info("Successfully created job metadata")
+
 
 def create_sample_content_chunks(session, jobs: List[JobDescription]):
     """Create sample content chunks for vector search testing."""
@@ -209,7 +295,7 @@ def create_sample_content_chunks(session, jobs: List[JobDescription]):
         chunk_size = 150
 
         for j in range(0, len(words), chunk_size):
-            chunk_words = words[j:j + chunk_size]
+            chunk_words = words[j : j + chunk_size]
             chunk_text = " ".join(chunk_words)
 
             chunk = ContentChunks(
@@ -218,7 +304,9 @@ def create_sample_content_chunks(session, jobs: List[JobDescription]):
                 chunk_text=chunk_text,
                 chunk_type="body",
                 word_count=len(chunk_words),
-                embedding=[random.uniform(-1, 1) for _ in range(1536)]  # Mock embedding
+                embedding=[
+                    random.uniform(-1, 1) for _ in range(1536)
+                ],  # Mock embedding
             )
             session.add(chunk)
 
@@ -228,21 +316,35 @@ def create_sample_content_chunks(session, jobs: List[JobDescription]):
     session.commit()
     logger.info("Successfully created content chunks")
 
+
 def create_sample_search_analytics(session, count: int = 5000):
     """Create sample search analytics data."""
     logger.info(f"Creating {count} search analytics records...")
 
     search_queries = [
-        "software engineer", "project manager", "data scientist", "developer",
-        "analyst", "manager", "coordinator", "specialist", "director", "senior",
-        "python", "javascript", "aws", "agile", "leadership", "communication"
+        "software engineer",
+        "project manager",
+        "data scientist",
+        "developer",
+        "analyst",
+        "manager",
+        "coordinator",
+        "specialist",
+        "director",
+        "senior",
+        "python",
+        "javascript",
+        "aws",
+        "agile",
+        "leadership",
+        "communication",
     ]
 
     for i in range(count):
         query = random.choice(search_queries)
 
         analytics = SearchAnalytics(
-            search_id=f"search_{i+1:06d}",
+            search_id=f"search_{i + 1:06d}",
             user_id=f"user_{random.randint(1, 100):03d}",
             session_id=f"session_{random.randint(1, 1000):04d}",
             ip_address=f"192.168.{random.randint(1, 255)}.{random.randint(1, 255)}",
@@ -250,8 +352,12 @@ def create_sample_search_analytics(session, count: int = 5000):
             query_hash=f"hash_{hash(query) % 1000000:06d}",
             search_type=random.choice(["semantic", "fulltext", "hybrid"]),
             filters_applied={
-                "department": random.choice(DEPARTMENTS) if random.random() > 0.7 else None,
-                "classification": random.choice(CLASSIFICATIONS) if random.random() > 0.8 else None
+                "department": (
+                    random.choice(DEPARTMENTS) if random.random() > 0.7 else None
+                ),
+                "classification": (
+                    random.choice(CLASSIFICATIONS) if random.random() > 0.8 else None
+                ),
             },
             execution_time_ms=random.randint(50, 500),
             total_response_time_ms=random.randint(100, 800),
@@ -261,16 +367,17 @@ def create_sample_search_analytics(session, count: int = 5000):
             has_results="yes" if random.random() > 0.1 else "no",
             timestamp=datetime.utcnow() - timedelta(days=random.randint(0, 30)),
             api_version="1.0.0",
-            client_type=random.choice(["web", "api", "mobile"])
+            client_type=random.choice(["web", "api", "mobile"]),
         )
         session.add(analytics)
 
         if i % 500 == 0:
             session.commit()
-            logger.info(f"Created {i+1} search analytics records...")
+            logger.info(f"Created {i + 1} search analytics records...")
 
     session.commit()
     logger.info(f"Successfully created {count} search analytics records")
+
 
 def create_sample_translation_data(session):
     """Create sample translation memory data."""
@@ -282,30 +389,36 @@ def create_sample_translation_data(session):
         description="Translation project for government job descriptions",
         source_language="en",
         target_language="fr",
-        project_type="job_descriptions"
+        project_type="job_descriptions",
     )
     session.add(project)
     session.commit()
 
     # Sample translation pairs
     translation_pairs = [
-        ("Responsible for strategic planning", "Responsable de la planification stratégique"),
+        (
+            "Responsible for strategic planning",
+            "Responsable de la planification stratégique",
+        ),
         ("Manage team of professionals", "Gérer une équipe de professionnels"),
-        ("Develop and implement policies", "Élaborer et mettre en œuvre des politiques"),
+        (
+            "Develop and implement policies",
+            "Élaborer et mettre en œuvre des politiques",
+        ),
         ("Coordinate with stakeholders", "Coordonner avec les parties prenantes"),
         ("Analyze business requirements", "Analyser les exigences commerciales"),
         ("Provide technical guidance", "Fournir des conseils techniques"),
         ("Ensure quality standards", "Assurer les normes de qualité"),
         ("Monitor project progress", "Surveiller les progrès du projet"),
         ("Facilitate team meetings", "Faciliter les réunions d'équipe"),
-        ("Prepare detailed reports", "Préparer des rapports détaillés")
+        ("Prepare detailed reports", "Préparer des rapports détaillés"),
     ]
 
     for i, (source, target) in enumerate(translation_pairs * 20):  # Create 200 entries
         tm_entry = TranslationMemory(
             project_id=project.id,
-            source_text=f"{source} - Context {i//10 + 1}",
-            target_text=f"{target} - Contexte {i//10 + 1}",
+            source_text=f"{source} - Context {i // 10 + 1}",
+            target_text=f"{target} - Contexte {i // 10 + 1}",
             source_language="en",
             target_language="fr",
             domain="government",
@@ -317,13 +430,14 @@ def create_sample_translation_data(session):
             tm_metadata={
                 "translator": f"translator_{random.randint(1, 5)}",
                 "reviewed": random.choice([True, False]),
-                "domain_specific": True
-            }
+                "domain_specific": True,
+            },
         )
         session.add(tm_entry)
 
     session.commit()
     logger.info("Successfully created translation memory data")
+
 
 def create_sample_ai_usage_tracking(session, count: int = 1000):
     """Create sample AI usage tracking data."""
@@ -331,15 +445,17 @@ def create_sample_ai_usage_tracking(session, count: int = 1000):
 
     for i in range(count):
         tracking = AIUsageTracking(
-            request_id=f"req_{i+1:06d}",
+            request_id=f"req_{i + 1:06d}",
             user_id=f"user_{random.randint(1, 100):03d}",
             endpoint=random.choice(["/search", "/translate", "/analyze", "/enhance"]),
-            model_used=random.choice(["gpt-4", "gpt-3.5-turbo", "text-embedding-ada-002"]),
+            model_used=random.choice(
+                ["gpt-4", "gpt-3.5-turbo", "text-embedding-ada-002"]
+            ),
             tokens_used=random.randint(100, 2000),
             cost_usd=random.uniform(0.001, 0.1),
             response_time_ms=random.randint(500, 3000),
             success=random.choice([True, False]) if random.random() > 0.95 else True,
-            timestamp=datetime.utcnow() - timedelta(days=random.randint(0, 60))
+            timestamp=datetime.utcnow() - timedelta(days=random.randint(0, 60)),
         )
         session.add(tracking)
 
@@ -348,6 +464,7 @@ def create_sample_ai_usage_tracking(session, count: int = 1000):
 
     session.commit()
     logger.info(f"Successfully created {count} AI usage tracking records")
+
 
 def main():
     """Main seeding function."""
@@ -375,6 +492,7 @@ def main():
         raise
     finally:
         session.close()
+
 
 if __name__ == "__main__":
     main()

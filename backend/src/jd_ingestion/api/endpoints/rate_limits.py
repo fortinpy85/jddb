@@ -15,7 +15,7 @@ from ...services.rate_limiting_service import (
     RateLimitType,
     RateLimit,
 )
-from ...utils.logging import get_logger, PerformanceTimer, log_performance_metric
+from ...utils.logging import get_logger, PerformanceTimer
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -62,8 +62,8 @@ async def get_rate_limit_status(
             }
 
         # Log performance
-        await log_performance_metric(
-            "rate_limit_status", timer.elapsed_ms, {"service": service}
+        logger.debug(
+            f"Rate limit status check took {timer.elapsed_ms}ms for service {service}"
         )
 
         logger.info(
@@ -94,7 +94,7 @@ async def check_rate_limit(
     Check if a request would be within rate limits.
     """
     try:
-        with PerformanceTimer() as timer:
+        with PerformanceTimer("rate_limit_check") as timer:
             is_allowed, statuses = await rate_limiting_service.check_rate_limit(
                 service=service,
                 operation_type=operation_type,
@@ -136,15 +136,8 @@ async def check_rate_limit(
             }
 
         # Log performance
-        await log_performance_metric(
-            "rate_limit_check",
-            timer.elapsed_ms,
-            {
-                "service": service,
-                "operation_type": operation_type,
-                "is_allowed": is_allowed,
-                "estimated_tokens": estimated_tokens,
-            },
+        logger.debug(
+            f"Rate limit check took {timer.elapsed_ms}ms for service {service}"
         )
 
         logger.info(
@@ -180,7 +173,7 @@ async def record_usage(
     Record actual API usage for rate limiting.
     """
     try:
-        with PerformanceTimer() as timer:
+        with PerformanceTimer("record_usage") as timer:
             await rate_limiting_service.record_usage(
                 service=service,
                 operation_type=operation_type,
@@ -190,16 +183,7 @@ async def record_usage(
             )
 
         # Log performance
-        await log_performance_metric(
-            "record_usage",
-            timer.elapsed_ms,
-            {
-                "service": service,
-                "operation_type": operation_type,
-                "tokens_used": tokens_used,
-                "cost": cost,
-            },
-        )
+        logger.debug(f"Record usage took {timer.elapsed_ms}ms for service {service}")
 
         logger.info(
             "Usage recorded",
@@ -241,16 +225,14 @@ async def get_usage_statistics(
     Get detailed usage statistics for a service.
     """
     try:
-        with PerformanceTimer() as timer:
+        with PerformanceTimer("get_usage_statistics") as timer:
             stats = await rate_limiting_service.get_usage_stats(
                 db, service, period_hours
             )
 
         # Log performance
-        await log_performance_metric(
-            "usage_statistics",
-            timer.elapsed_ms,
-            {"service": service, "period_hours": period_hours},
+        logger.debug(
+            f"Usage statistics took {timer.elapsed_ms}ms for service {service}"
         )
 
         logger.info(
@@ -275,7 +257,7 @@ async def get_cost_optimization_recommendations(
     Get cost optimization recommendations based on usage patterns.
     """
     try:
-        with PerformanceTimer() as timer:
+        with PerformanceTimer("get_cost_optimization") as timer:
             recommendations = (
                 await rate_limiting_service.get_cost_optimization_recommendations(
                     db, service
@@ -283,10 +265,8 @@ async def get_cost_optimization_recommendations(
             )
 
         # Log performance
-        await log_performance_metric(
-            "cost_optimization",
-            timer.elapsed_ms,
-            {"service": service, "recommendations_count": len(recommendations)},
+        logger.debug(
+            f"Cost optimization took {timer.elapsed_ms}ms for service {service}"
         )
 
         logger.info(
@@ -325,7 +305,7 @@ async def update_rate_limits(
     }
     """
     try:
-        with PerformanceTimer() as timer:
+        with PerformanceTimer("update_rate_limits") as timer:
             # Convert input to RateLimit objects
             new_limits = {}
             for limit_type_str, limit_data in limits.items():
@@ -356,10 +336,8 @@ async def update_rate_limits(
                 )
 
         # Log performance
-        await log_performance_metric(
-            "update_rate_limits",
-            timer.elapsed_ms,
-            {"service": service, "limits_count": len(new_limits)},
+        logger.debug(
+            f"Update rate limits took {timer.elapsed_ms}ms for service {service}"
         )
 
         logger.info(
@@ -391,7 +369,7 @@ async def list_services() -> List[Dict[str, Any]]:
     try:
         services = []
         for service_name, limits in rate_limiting_service.rate_limits.items():
-            service_info = {"name": service_name, "rate_limits": {}}
+            service_info: Dict[str, Any] = {"name": service_name, "rate_limits": {}}
 
             for limit_type, rate_limit in limits.items():
                 service_info["rate_limits"][limit_type.value] = {

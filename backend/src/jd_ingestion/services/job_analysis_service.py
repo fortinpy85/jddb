@@ -5,7 +5,7 @@ This service provides comprehensive job comparison, skill gap analysis,
 and career path recommendations using semantic embeddings and NLP.
 """
 
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
 from sqlalchemy.orm import selectinload
@@ -37,7 +37,7 @@ class JobAnalysisService:
         db: AsyncSession,
         job_a_id: int,
         job_b_id: int,
-        comparison_types: List[str] = None,
+        comparison_types: Optional[List[str]] = None,
         include_details: bool = True,
     ) -> Dict[str, Any]:
         """
@@ -75,7 +75,7 @@ class JobAnalysisService:
 
         job_a, job_b = jobs[job_a_id], jobs[job_b_id]
 
-        comparison_result = {
+        comparison_result: Dict[str, Any] = {
             "job_a": {
                 "id": job_a_id,
                 "title": job_a.title,
@@ -143,7 +143,7 @@ class JobAnalysisService:
         )
 
         # Generate key differences using GPT
-        key_differences = []
+        key_differences: list[str] = []
         recommendation = ""
 
         if include_details:
@@ -284,16 +284,16 @@ class JobAnalysisService:
 
         prompt = f"""
         Extract specific skills from this job description section. Be precise and avoid generic terms.
-        
+
         Section Type: {section_type}
         Content: {text[:2000]}
-        
+
         For each skill found, provide:
         1. Skill name (be specific, e.g. "Python Programming" not just "Programming")
         2. Category: technical, leadership, communication, analytical, domain, or interpersonal
         3. Level: required, preferred, or asset (infer from context like "must have", "nice to have")
         4. Confidence score: 0.0-1.0 based on how clearly the skill is stated
-        
+
         Return as JSON array:
         [
             {{
@@ -303,7 +303,7 @@ class JobAnalysisService:
                 "confidence": 0.9
             }}
         ]
-        
+
         Focus on concrete skills and qualifications. Avoid soft descriptions.
         """
 
@@ -409,8 +409,8 @@ class JobAnalysisService:
         return section_similarities
 
     def _calculate_text_similarity(self, text_a: str, text_b: str) -> float:
-        """Calculate similarity between two text strings."""
-        # Simple implementation - deprecated, use _calculate_embedding_text_similarity instead
+        """Calculate similarity between two text strings using word overlap (fallback method)."""
+        # Simple word-overlap implementation used as fallback when embeddings fail
         words_a = set(text_a.lower().split())
         words_b = set(text_b.lower().split())
 
@@ -498,7 +498,6 @@ class JobAnalysisService:
 
         matching = skills_a_names & skills_b_names
         missing_from_a = skills_b_names - skills_a_names
-        missing_from_b = skills_a_names - skills_b_names
 
         # Calculate skill level gaps for matching skills
         skill_level_gaps = {}
@@ -534,16 +533,16 @@ class JobAnalysisService:
 
         prompt = f"""
         Compare these two government job positions and provide insights:
-        
+
         Job A: {job_a.title} ({job_a.classification})
         Job B: {job_b.title} ({job_b.classification})
-        
+
         Similarity Score: {similarity:.3f}
-        
+
         Provide:
         1. Top 3 key differences between the roles
         2. A recommendation for career transition feasibility
-        
+
         Format as JSON:
         {{
             "key_differences": ["difference 1", "difference 2", "difference 3"],
@@ -647,6 +646,284 @@ class JobAnalysisService:
             return "Poor Match"
         else:
             return "No Match"
+
+    async def _extract_requirements(self, job: JobDescription) -> Dict[str, Any]:
+        """Extract structured requirements from job description."""
+        requirements: Dict[str, list[str]] = {
+            "education": [],
+            "experience": [],
+            "technical_skills": [],
+            "soft_skills": [],
+            "certifications": [],
+            "languages": [],
+        }
+
+        try:
+            # Get relevant sections for requirements extraction
+            sections = await job.awaitable_attrs.job_sections
+
+            # Extract from specific accountabilities and qualifications sections
+            accountability_text = ""
+            qualifications_text = ""
+
+            for section in sections:
+                if section.section_type in [
+                    "specific_accountabilities",
+                    "knowledge_skills",
+                    "nature_and_scope",
+                ]:
+                    section_content = section.content or ""
+
+                    if section.section_type == "specific_accountabilities":
+                        accountability_text += section_content + "\n"
+                    elif section.section_type == "knowledge_skills":
+                        qualifications_text += section_content + "\n"
+
+            # Use OpenAI to extract structured requirements
+            prompt = f"""
+            Extract structured job requirements from this government job description:
+
+            ACCOUNTABILITIES:
+            {accountability_text}
+
+            QUALIFICATIONS:
+            {qualifications_text}
+
+            Extract and return as JSON:
+            {{
+                "education": ["requirement1", "requirement2"],
+                "experience": ["years and type of experience"],
+                "technical_skills": ["skill1", "skill2"],
+                "soft_skills": ["skill1", "skill2"],
+                "certifications": ["cert1", "cert2"],
+                "languages": ["language requirements"]
+            }}
+            """
+
+            response = await self.openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert at extracting structured job requirements. Return only valid JSON.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.1,
+                max_tokens=800,
+            )
+
+            extracted = json.loads(response.choices[0].message.content)
+            requirements.update(extracted)
+
+        except Exception as e:
+            logger.error(f"Error extracting requirements for job {job.id}: {str(e)}")
+            # Fallback: extract basic requirements from text
+            full_text = job.original_content or ""
+            if "degree" in full_text.lower() or "bachelor" in full_text.lower():
+                requirements["education"].append("Bachelor's degree")
+            if "experience" in full_text.lower():
+                requirements["experience"].append("Professional experience required")
+
+        return requirements
+
+    async def _calculate_requirement_matches(
+        self, requirements_a: Dict[str, Any], requirements_b: Dict[str, Any]
+    ) -> Dict[str, float]:
+        """Calculate how well requirements match between two jobs."""
+        matches = {
+            "overall_score": 0.0,
+            "education": 0.0,
+            "experience": 0.0,
+            "technical": 0.0,
+            "soft_skills": 0.0,
+            "certifications": 0.0,
+            "languages": 0.0,
+        }
+
+        try:
+            category_scores = []
+
+            for category in [
+                "education",
+                "experience",
+                "technical_skills",
+                "soft_skills",
+                "certifications",
+                "languages",
+            ]:
+                reqs_a = requirements_a.get(category, [])
+                reqs_b = requirements_b.get(category, [])
+
+                if not reqs_a and not reqs_b:
+                    score = 1.0  # Both empty, perfect match
+                elif not reqs_a or not reqs_b:
+                    score = 0.0  # One empty, no match
+                else:
+                    # Calculate semantic similarity using embeddings
+                    text_a = " ".join(reqs_a)
+                    text_b = " ".join(reqs_b)
+                    score = await self._calculate_embedding_text_similarity(
+                        text_a, text_b
+                    )
+
+                # Map category names for the result
+                result_key = (
+                    category
+                    if category not in ["technical_skills", "soft_skills"]
+                    else category.replace("_skills", "")
+                )
+                matches[result_key] = round(score, 3)
+                category_scores.append(score)
+
+            # Calculate overall score as weighted average
+            matches["overall_score"] = round(
+                sum(category_scores) / len(category_scores), 3
+            )
+
+        except Exception as e:
+            logger.error(f"Error calculating requirement matches: {str(e)}")
+
+        return matches
+
+    async def _generate_requirement_insights(
+        self, requirement_matches: Dict[str, float]
+    ) -> List[str]:
+        """Generate human-readable insights about requirement matching."""
+        insights = []
+
+        try:
+            overall_score = requirement_matches.get("overall_score", 0.0)
+
+            # Overall assessment
+            if overall_score >= 0.8:
+                insights.append(
+                    "Excellent overall requirement match - candidate would be well-suited for this transition"
+                )
+            elif overall_score >= 0.6:
+                insights.append(
+                    "Good requirement match - some upskilling may be beneficial"
+                )
+            elif overall_score >= 0.4:
+                insights.append(
+                    "Moderate requirement match - significant training would be needed"
+                )
+            else:
+                insights.append(
+                    "Poor requirement match - major skill development required"
+                )
+
+            # Specific category insights
+            for category, score in requirement_matches.items():
+                if category == "overall_score":
+                    continue
+
+                if score < 0.3:
+                    insights.append(
+                        f"Significant gap in {category.replace('_', ' ')} requirements"
+                    )
+                elif score >= 0.8:
+                    insights.append(
+                        f"Strong match in {category.replace('_', ' ')} requirements"
+                    )
+
+            # Generate specific recommendations
+            weak_areas = [
+                cat.replace("_", " ")
+                for cat, score in requirement_matches.items()
+                if cat != "overall_score" and score < 0.5
+            ]
+
+            if weak_areas:
+                insights.append(f"Focus development on: {', '.join(weak_areas)}")
+
+        except Exception as e:
+            logger.error(f"Error generating requirement insights: {str(e)}")
+            insights.append("Unable to generate detailed insights")
+
+        return insights
+
+    async def _generate_skill_development_recommendations(
+        self, missing_skills: List[str], skill_level_gaps: Dict[str, Any]
+    ) -> List[str]:
+        """Generate skill development recommendations based on gaps."""
+        recommendations = []
+
+        try:
+            # Recommendations for missing skills
+            if missing_skills:
+                high_priority_skills = missing_skills[:5]  # Focus on top 5
+                if len(high_priority_skills) <= 2:
+                    recommendations.append(
+                        f"Develop expertise in: {', '.join(high_priority_skills)}"
+                    )
+                else:
+                    recommendations.append(
+                        f"Priority skills to develop: {', '.join(high_priority_skills[:3])}"
+                    )
+                    if len(high_priority_skills) > 3:
+                        recommendations.append(
+                            f"Additional skills: {', '.join(high_priority_skills[3:])}"
+                        )
+
+            # Recommendations for skill level gaps
+            if skill_level_gaps:
+                upgrade_skills = []
+                for skill, gap_info in skill_level_gaps.items():
+                    current_level = gap_info.get("job_a_level", "")
+                    required_level = gap_info.get("job_b_level", "")
+                    if current_level and required_level:
+                        upgrade_skills.append(
+                            f"{skill} (from {current_level} to {required_level})"
+                        )
+
+                if upgrade_skills:
+                    if len(upgrade_skills) <= 3:
+                        recommendations.append(
+                            f"Upgrade skill levels: {', '.join(upgrade_skills)}"
+                        )
+                    else:
+                        recommendations.append(
+                            f"Focus on upgrading: {', '.join(upgrade_skills[:3])}"
+                        )
+
+            # General development advice
+            total_gaps = len(missing_skills) + len(skill_level_gaps)
+            if total_gaps == 0:
+                recommendations.append(
+                    "Excellent skill alignment - minimal additional development needed"
+                )
+            elif total_gaps <= 3:
+                recommendations.append(
+                    "Consider targeted professional development in identified areas"
+                )
+            elif total_gaps <= 6:
+                recommendations.append(
+                    "Structured learning plan recommended to address skill gaps"
+                )
+            else:
+                recommendations.append(
+                    "Comprehensive skill development program would be beneficial"
+                )
+
+            # Always include a timeline suggestion
+            if missing_skills or skill_level_gaps:
+                if total_gaps <= 2:
+                    recommendations.append("Estimated development time: 3-6 months")
+                elif total_gaps <= 5:
+                    recommendations.append("Estimated development time: 6-12 months")
+                else:
+                    recommendations.append("Estimated development time: 12+ months")
+
+        except Exception as e:
+            logger.error(
+                f"Error generating skill development recommendations: {str(e)}"
+            )
+            recommendations.append(
+                "Consider professional development opportunities to bridge skill gaps"
+            )
+
+        return recommendations
 
 
 # Global service instance

@@ -43,7 +43,7 @@ class SystemMonitor:
 
     async def get_system_health(self) -> Dict[str, Any]:
         """Get comprehensive system health status."""
-        health_data = {
+        health_data: Dict[str, Any] = {
             "timestamp": datetime.utcnow().isoformat(),
             "status": "healthy",
             "components": {},
@@ -88,7 +88,7 @@ class SystemMonitor:
         """Check database connectivity and performance."""
         try:
             with PerformanceTimer("database_health_check"):
-                async with get_async_session() as session:
+                async for session in get_async_session():
                     # Basic connectivity test
                     await session.execute(text("SELECT 1"))
 
@@ -116,6 +116,13 @@ class SystemMonitor:
                         "job_count": job_count,
                         "last_check": datetime.utcnow().isoformat(),
                     }
+
+            # Fallback if no session is available
+            return {
+                "status": "critical",
+                "error": "No database session available",
+                "last_check": datetime.utcnow().isoformat(),
+            }
         except OperationalError as e:
             logger.error("Database health check failed", error=str(e))
             return {
@@ -277,7 +284,7 @@ class SystemMonitor:
             metrics = {}
 
             # Database metrics
-            async with get_async_session() as session:
+            async for session in get_async_session():
                 # Job counts by status
                 result = await session.execute(
                     text(
@@ -361,7 +368,7 @@ class AlertManager:
             "database_response_time": 1000,  # ms
             "redis_response_time": 100,  # ms
         }
-        self.alert_history = []
+        self.alert_history: List[Dict[str, Any]] = []
 
     async def check_alerts(self) -> List[Dict[str, Any]]:
         """Check for alert conditions and return active alerts."""

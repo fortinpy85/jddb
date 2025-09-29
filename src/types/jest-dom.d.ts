@@ -20,7 +20,9 @@ declare module "bun:test" {
     toHaveDisplayValue(value: string | RegExp | (string | RegExp)[]): T;
     toHaveFormValues(expectedValues: Record<string, any>): T;
     toHaveStyle(css: string | Record<string, any>): T;
-    toHaveAccessibleDescription(expectedAccessibleDescription?: string | RegExp): T;
+    toHaveAccessibleDescription(
+      expectedAccessibleDescription?: string | RegExp,
+    ): T;
     toHaveAccessibleName(expectedAccessibleName?: string | RegExp): T;
     toHaveErrorMessage(expectedErrorMessage?: string | RegExp): T;
   }

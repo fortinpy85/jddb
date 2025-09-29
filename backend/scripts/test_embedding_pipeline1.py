@@ -3,9 +3,9 @@
 This script tests the complete embedding pipeline, including chunk creation,
 embedding generation, and semantic search.
 """
+
 import asyncio
 import argparse
-import logging
 import sys
 from pathlib import Path
 from typing import List

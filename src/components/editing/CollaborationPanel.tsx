@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import {
   Users,
   MessageCircle,
@@ -14,8 +14,8 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  MoreHorizontal
-} from 'lucide-react';
+  MoreHorizontal,
+} from "lucide-react";
 
 interface Collaborator {
   id: string;
@@ -23,7 +23,7 @@ interface Collaborator {
   avatar?: string;
   color: string;
   isActive: boolean;
-  role: 'editor' | 'reviewer' | 'admin';
+  role: "editor" | "reviewer" | "admin";
   lastSeen?: string;
 }
 
@@ -33,9 +33,9 @@ interface DocumentComment {
   author: Collaborator;
   createdAt: string;
   position: number;
-  pane: 'left' | 'right';
+  pane: "left" | "right";
   referencedText?: string;
-  status: 'open' | 'resolved';
+  status: "open" | "resolved";
   replies?: DocumentComment[];
 }
 
@@ -46,81 +46,83 @@ interface CollaborationPanelProps {
 // Mock data
 const mockCollaborators: Collaborator[] = [
   {
-    id: '1',
-    name: 'Alice Johnson',
-    color: '#3B82F6',
+    id: "1",
+    name: "Alice Johnson",
+    color: "#3B82F6",
     isActive: true,
-    role: 'admin',
-    lastSeen: new Date().toISOString()
+    role: "admin",
+    lastSeen: new Date().toISOString(),
   },
   {
-    id: '2',
-    name: 'Bob Smith',
-    color: '#10B981',
+    id: "2",
+    name: "Bob Smith",
+    color: "#10B981",
     isActive: true,
-    role: 'editor',
-    lastSeen: new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    role: "editor",
+    lastSeen: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
   },
   {
-    id: '3',
-    name: 'Carol Wilson',
-    color: '#F59E0B',
+    id: "3",
+    name: "Carol Wilson",
+    color: "#F59E0B",
     isActive: false,
-    role: 'reviewer',
-    lastSeen: new Date(Date.now() - 30 * 60 * 1000).toISOString()
-  }
+    role: "reviewer",
+    lastSeen: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+  },
 ];
 
 const mockComments: DocumentComment[] = [
   {
-    id: '1',
-    text: 'This section needs clarification on the reporting structure. Can we be more specific about the number of direct reports?',
+    id: "1",
+    text: "This section needs clarification on the reporting structure. Can we be more specific about the number of direct reports?",
     author: mockCollaborators[0],
     createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     position: 150,
-    pane: 'left',
-    referencedText: 'Reports to Director',
-    status: 'open',
+    pane: "left",
+    referencedText: "Reports to Director",
+    status: "open",
     replies: [
       {
-        id: '1-1',
-        text: 'Good point! I\'ll update this with the specific number.',
+        id: "1-1",
+        text: "Good point! I'll update this with the specific number.",
         author: mockCollaborators[1],
         createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
         position: 150,
-        pane: 'left',
-        status: 'open'
-      }
-    ]
+        pane: "left",
+        status: "open",
+      },
+    ],
   },
   {
-    id: '2',
-    text: 'The qualifications section looks comprehensive. Should we add language requirements?',
+    id: "2",
+    text: "The qualifications section looks comprehensive. Should we add language requirements?",
     author: mockCollaborators[2],
     createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
     position: 300,
-    pane: 'right',
-    referencedText: 'Required qualifications',
-    status: 'resolved'
-  }
+    pane: "right",
+    referencedText: "Required qualifications",
+    status: "resolved",
+  },
 ];
 
-export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({ className }) => {
+export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({
+  className,
+}) => {
   const [collaborators] = useState<Collaborator[]>(mockCollaborators);
   const [comments, setComments] = useState<DocumentComment[]>(mockComments);
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
   const [showAddComment, setShowAddComment] = useState(false);
   const [replyText, setReplyText] = useState<{ [key: string]: string }>({});
 
   const formatLastSeen = (dateString?: string) => {
-    if (!dateString) return 'Unknown';
+    if (!dateString) return "Unknown";
 
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / (1000 * 60));
 
-    if (diffMins < 1) return 'Just now';
+    if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
     return `${Math.floor(diffMins / 1440)}d ago`;
@@ -128,10 +130,14 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({ classNam
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
-      case 'admin': return 'default';
-      case 'editor': return 'secondary';
-      case 'reviewer': return 'outline';
-      default: return 'secondary';
+      case "admin":
+        return "default";
+      case "editor":
+        return "secondary";
+      case "reviewer":
+        return "outline";
+      default:
+        return "secondary";
     }
   };
 
@@ -144,12 +150,12 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({ classNam
       author: collaborators[0], // Current user
       createdAt: new Date().toISOString(),
       position: 0,
-      pane: 'left',
-      status: 'open'
+      pane: "left",
+      status: "open",
     };
 
-    setComments(prev => [comment, ...prev]);
-    setNewComment('');
+    setComments((prev) => [comment, ...prev]);
+    setNewComment("");
     setShowAddComment(false);
   };
 
@@ -157,37 +163,43 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({ classNam
     const reply = replyText[commentId];
     if (!reply?.trim()) return;
 
-    setComments(prev => prev.map(comment => {
-      if (comment.id === commentId) {
-        const newReply: DocumentComment = {
-          id: `${commentId}-${Date.now()}`,
-          text: reply,
-          author: collaborators[0],
-          createdAt: new Date().toISOString(),
-          position: comment.position,
-          pane: comment.pane,
-          status: 'open'
-        };
+    setComments((prev) =>
+      prev.map((comment) => {
+        if (comment.id === commentId) {
+          const newReply: DocumentComment = {
+            id: `${commentId}-${Date.now()}`,
+            text: reply,
+            author: collaborators[0],
+            createdAt: new Date().toISOString(),
+            position: comment.position,
+            pane: comment.pane,
+            status: "open",
+          };
 
-        return {
-          ...comment,
-          replies: [...(comment.replies || []), newReply]
-        };
-      }
-      return comment;
-    }));
+          return {
+            ...comment,
+            replies: [...(comment.replies || []), newReply],
+          };
+        }
+        return comment;
+      }),
+    );
 
-    setReplyText(prev => ({ ...prev, [commentId]: '' }));
+    setReplyText((prev) => ({ ...prev, [commentId]: "" }));
   };
 
   const handleResolveComment = (commentId: string) => {
-    setComments(prev => prev.map(comment =>
-      comment.id === commentId ? { ...comment, status: 'resolved' as const } : comment
-    ));
+    setComments((prev) =>
+      prev.map((comment) =>
+        comment.id === commentId
+          ? { ...comment, status: "resolved" as const }
+          : comment,
+      ),
+    );
   };
 
-  const activeCollaborators = collaborators.filter(c => c.isActive);
-  const openComments = comments.filter(c => c.status === 'open');
+  const activeCollaborators = collaborators.filter((c) => c.isActive);
+  const openComments = comments.filter((c) => c.status === "open");
 
   return (
     <div className={`w-80 bg-white border-l flex flex-col ${className}`}>
@@ -201,13 +213,16 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({ classNam
         </CardHeader>
         <CardContent className="pt-0">
           <div className="space-y-3">
-            {collaborators.map(collaborator => (
+            {collaborators.map((collaborator) => (
               <div key={collaborator.id} className="flex items-center gap-3">
                 <div className="relative">
                   <Avatar className="w-8 h-8">
                     <AvatarFallback
                       className="text-xs"
-                      style={{ backgroundColor: `${collaborator.color}20`, color: collaborator.color }}
+                      style={{
+                        backgroundColor: `${collaborator.color}20`,
+                        color: collaborator.color,
+                      }}
                     >
                       {collaborator.name.charAt(0)}
                     </AvatarFallback>
@@ -219,13 +234,20 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({ classNam
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium truncate">{collaborator.name}</span>
-                    <Badge variant={getRoleBadgeVariant(collaborator.role)} className="text-xs">
+                    <span className="text-sm font-medium truncate">
+                      {collaborator.name}
+                    </span>
+                    <Badge
+                      variant={getRoleBadgeVariant(collaborator.role)}
+                      className="text-xs"
+                    >
                       {collaborator.role}
                     </Badge>
                   </div>
                   <div className="text-xs text-gray-500">
-                    {collaborator.isActive ? 'Active now' : `Last seen ${formatLastSeen(collaborator.lastSeen)}`}
+                    {collaborator.isActive
+                      ? "Active now"
+                      : `Last seen ${formatLastSeen(collaborator.lastSeen)}`}
                   </div>
                 </div>
 
@@ -270,7 +292,11 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({ classNam
                 className="min-h-[60px] text-sm"
               />
               <div className="flex gap-2">
-                <Button size="sm" onClick={handleAddComment} disabled={!newComment.trim()}>
+                <Button
+                  size="sm"
+                  onClick={handleAddComment}
+                  disabled={!newComment.trim()}
+                >
                   <Send className="w-3 h-3 mr-1" />
                   Add
                 </Button>
@@ -278,7 +304,7 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({ classNam
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    setNewComment('');
+                    setNewComment("");
                     setShowAddComment(false);
                   }}
                 >
@@ -294,15 +320,19 @@ export const CollaborationPanel: React.FC<CollaborationPanelProps> = ({ classNam
               <div className="text-center py-8 text-gray-500">
                 <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">No comments yet</p>
-                <p className="text-xs">Start a discussion about this document</p>
+                <p className="text-xs">
+                  Start a discussion about this document
+                </p>
               </div>
             ) : (
-              comments.map(comment => (
+              comments.map((comment) => (
                 <CommentThread
                   key={comment.id}
                   comment={comment}
-                  replyText={replyText[comment.id] || ''}
-                  onReplyChange={(text) => setReplyText(prev => ({ ...prev, [comment.id]: text }))}
+                  replyText={replyText[comment.id] || ""}
+                  onReplyChange={(text) =>
+                    setReplyText((prev) => ({ ...prev, [comment.id]: text }))
+                  }
                   onReply={() => handleReply(comment.id)}
                   onResolve={() => handleResolveComment(comment.id)}
                 />
@@ -340,14 +370,21 @@ const CommentThread: React.FC<{
   };
 
   return (
-    <div className={`border rounded-lg p-3 space-y-2 ${
-      comment.status === 'resolved' ? 'bg-green-50 border-green-200' : 'bg-white'
-    }`}>
+    <div
+      className={`border rounded-lg p-3 space-y-2 ${
+        comment.status === "resolved"
+          ? "bg-green-50 border-green-200"
+          : "bg-white"
+      }`}
+    >
       <div className="flex items-start gap-2">
         <Avatar className="w-6 h-6 mt-1">
           <AvatarFallback
             className="text-xs"
-            style={{ backgroundColor: `${comment.author.color}20`, color: comment.author.color }}
+            style={{
+              backgroundColor: `${comment.author.color}20`,
+              color: comment.author.color,
+            }}
           >
             {comment.author.name.charAt(0)}
           </AvatarFallback>
@@ -359,7 +396,7 @@ const CommentThread: React.FC<{
             <Badge variant="outline" className="text-xs">
               {comment.pane}
             </Badge>
-            {comment.status === 'resolved' && (
+            {comment.status === "resolved" && (
               <CheckCircle className="w-3 h-3 text-green-600" />
             )}
           </div>
@@ -378,7 +415,7 @@ const CommentThread: React.FC<{
               {formatTimestamp(comment.createdAt)}
             </span>
 
-            {comment.status === 'open' && (
+            {comment.status === "open" && (
               <>
                 <button
                   onClick={() => setShowReply(!showReply)}
@@ -401,19 +438,24 @@ const CommentThread: React.FC<{
       {/* Replies */}
       {comment.replies && comment.replies.length > 0 && (
         <div className="ml-8 space-y-2 border-l-2 border-gray-200 pl-3">
-          {comment.replies.map(reply => (
+          {comment.replies.map((reply) => (
             <div key={reply.id} className="flex items-start gap-2">
               <Avatar className="w-5 h-5 mt-1">
                 <AvatarFallback
                   className="text-xs"
-                  style={{ backgroundColor: `${reply.author.color}20`, color: reply.author.color }}
+                  style={{
+                    backgroundColor: `${reply.author.color}20`,
+                    color: reply.author.color,
+                  }}
                 >
                   {reply.author.name.charAt(0)}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-medium">{reply.author.name}</span>
+                  <span className="text-xs font-medium">
+                    {reply.author.name}
+                  </span>
                   <span className="text-xs text-gray-500">
                     {formatTimestamp(reply.createdAt)}
                   </span>
@@ -426,7 +468,7 @@ const CommentThread: React.FC<{
       )}
 
       {/* Reply input */}
-      {showReply && comment.status === 'open' && (
+      {showReply && comment.status === "open" && (
         <div className="ml-8 space-y-2">
           <Textarea
             placeholder="Write a reply..."
@@ -450,7 +492,7 @@ const CommentThread: React.FC<{
               size="sm"
               variant="outline"
               onClick={() => {
-                onReplyChange('');
+                onReplyChange("");
                 setShowReply(false);
               }}
             >

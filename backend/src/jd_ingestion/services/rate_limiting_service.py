@@ -7,7 +7,7 @@ Implements token bucket algorithm with sliding window counters for precise rate 
 
 import asyncio
 import time
-from typing import Dict, Optional, List, Tuple
+from typing import Any, Dict, Optional, List, Tuple
 from datetime import datetime, timedelta
 from collections import deque
 from dataclasses import dataclass
@@ -57,7 +57,7 @@ class TokenBucket:
 
     def __init__(self, capacity: int, refill_rate: float):
         self.capacity = capacity
-        self.tokens = capacity
+        self.tokens: float = capacity
         self.refill_rate = refill_rate
         self.last_refill = time.time()
         self._lock = asyncio.Lock()
@@ -100,7 +100,7 @@ class SlidingWindowCounter:
 
     def __init__(self, window_seconds: int):
         self.window_seconds = window_seconds
-        self.requests = deque()
+        self.requests: deque = deque()
         self._lock = asyncio.Lock()
 
     async def add_request(
@@ -305,7 +305,7 @@ class RateLimitingService:
 
     async def get_usage_stats(
         self, db: AsyncSession, service: str, period_hours: int = 24
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """Get usage statistics for a service over a time period."""
         try:
             end_time = datetime.now()
@@ -359,7 +359,7 @@ class RateLimitingService:
 
     async def get_cost_optimization_recommendations(
         self, db: AsyncSession, service: str = "openai"
-    ) -> List[Dict[str, any]]:
+    ) -> List[Dict[str, Any]]:
         """Generate cost optimization recommendations based on usage patterns."""
         try:
             recommendations = []
@@ -477,19 +477,20 @@ class RateLimitingService:
             current_stats = await self.get_usage_stats(db, service, 1)  # Last hour
             rate_limits = current_stats.get("current_rate_limits", {})
 
-            for limit_type, status in rate_limits.items():
-                utilization = status.get("utilization", 0)
-                if utilization > 0.8:
-                    recommendations.append(
-                        {
-                            "type": "high_rate_limit_utilization",
-                            "priority": "medium",
-                            "limit_type": limit_type,
-                            "utilization": utilization,
-                            "description": f"{limit_type} at {utilization:.1%} capacity",
-                            "recommendation": "Consider implementing request queuing or load balancing",
-                        }
-                    )
+            if isinstance(rate_limits, dict):
+                for limit_type, status in rate_limits.items():
+                    utilization = status.get("utilization", 0)
+                    if utilization > 0.8:
+                        recommendations.append(
+                            {
+                                "type": "high_rate_limit_utilization",
+                                "priority": "medium",
+                                "limit_type": limit_type,
+                                "utilization": utilization,
+                                "description": f"{limit_type} at {utilization:.1%} capacity",
+                                "recommendation": "Consider implementing request queuing or load balancing",
+                            }
+                        )
 
             logger.info(
                 "Generated cost optimization recommendations",

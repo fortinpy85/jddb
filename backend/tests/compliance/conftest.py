@@ -6,7 +6,7 @@ Provides common fixtures and configuration for government compliance testing.
 
 import pytest
 from typing import Dict, Any
-from unittest.mock import Mock, AsyncMock
+from unittest.mock import Mock
 from datetime import datetime, timedelta
 
 
@@ -17,25 +17,25 @@ def government_security_config():
         "encryption": {
             "algorithm": "AES-256-GCM",
             "key_size": 256,
-            "tls_version": "1.3"
+            "tls_version": "1.3",
         },
         "authentication": {
             "mfa_required": True,
             "password_min_length": 12,
             "session_timeout": 30,  # minutes
-            "max_failed_attempts": 5
+            "max_failed_attempts": 5,
         },
         "audit": {
             "retention_years": 7,
             "real_time_monitoring": True,
-            "integrity_checking": True
+            "integrity_checking": True,
         },
         "privacy": {
             "pii_detection": True,
             "data_masking": True,
             "consent_management": True,
-            "data_retention_policies": True
-        }
+            "data_retention_policies": True,
+        },
     }
 
 
@@ -53,7 +53,9 @@ def mock_audit_logger():
 def mock_auth_service():
     """Mock authentication service for compliance testing."""
     auth_service = Mock()
-    auth_service.authenticate = Mock(return_value={"success": True, "user_id": "test_user"})
+    auth_service.authenticate = Mock(
+        return_value={"success": True, "user_id": "test_user"}
+    )
     auth_service.verify_mfa = Mock(return_value=True)
     auth_service.check_session = Mock(return_value=True)
     auth_service.logout = Mock(return_value=True)
@@ -87,8 +89,8 @@ def sample_job_description():
             "security_clearance": "PROTECTED_B",
             "created_by": "hr_user",
             "created_at": datetime.now(),
-            "last_modified": datetime.now()
-        }
+            "last_modified": datetime.now(),
+        },
     }
 
 
@@ -102,27 +104,27 @@ def compliance_test_data():
                 "username": "john.doe",
                 "clearance": "PROTECTED_B",
                 "department": "HR",
-                "mfa_enabled": True
+                "mfa_enabled": True,
             },
             {
                 "id": "user_2",
                 "username": "jane.smith",
                 "clearance": "SECRET",
                 "department": "Security",
-                "mfa_enabled": True
-            }
+                "mfa_enabled": True,
+            },
         ],
         "documents": [
             {
                 "id": "doc_1",
                 "classification": "PROTECTED_A",
-                "content": "Lower classification content"
+                "content": "Lower classification content",
             },
             {
                 "id": "doc_2",
                 "classification": "SECRET",
-                "content": "Higher classification content"
-            }
+                "content": "Higher classification content",
+            },
         ],
         "audit_events": [
             {
@@ -130,16 +132,16 @@ def compliance_test_data():
                 "user_id": "user_1",
                 "action": "document_access",
                 "resource": "doc_1",
-                "result": "success"
+                "result": "success",
             },
             {
                 "timestamp": datetime.now() - timedelta(hours=1),
                 "user_id": "user_2",
                 "action": "failed_login",
                 "resource": "authentication",
-                "result": "failure"
-            }
-        ]
+                "result": "failure",
+            },
+        ],
     }
 
 
@@ -151,7 +153,7 @@ def privacy_test_scenarios():
             "emails": ["john.doe@gc.ca", "user@department.gov.ca"],
             "phones": ["(613) 555-1234", "613-555-5678"],
             "names": ["John Doe", "Marie Tremblay"],
-            "addresses": ["123 Main St, Ottawa, ON"]
+            "addresses": ["123 Main St, Ottawa, ON"],
         },
         "consent_scenarios": [
             {
@@ -159,14 +161,14 @@ def privacy_test_scenarios():
                 "consent_type": "data_processing",
                 "consent_given": True,
                 "consent_date": datetime.now(),
-                "can_withdraw": True
+                "can_withdraw": True,
             }
         ],
         "retention_policies": {
             "audit_logs": 7 * 365,  # 7 years in days
-            "user_data": 5 * 365,   # 5 years in days
-            "temp_files": 90        # 90 days
-        }
+            "user_data": 5 * 365,  # 5 years in days
+            "temp_files": 90,  # 90 days
+        },
     }
 
 
@@ -181,43 +183,37 @@ def security_test_scenarios():
             "PROTECTED_C": 3,
             "CONFIDENTIAL": 4,
             "SECRET": 5,
-            "TOP_SECRET": 6
+            "TOP_SECRET": 6,
         },
         "attack_scenarios": [
             {
                 "type": "brute_force",
                 "description": "Multiple failed login attempts",
-                "indicators": ["repeated_failed_logins", "source_ip_patterns"]
+                "indicators": ["repeated_failed_logins", "source_ip_patterns"],
             },
             {
                 "type": "privilege_escalation",
                 "description": "Attempt to access higher classified documents",
-                "indicators": ["access_denied", "clearance_insufficient"]
-            }
+                "indicators": ["access_denied", "clearance_insufficient"],
+            },
         ],
         "encryption_requirements": {
             "algorithms": ["AES-256-GCM", "ChaCha20-Poly1305"],
             "key_sizes": [256, 384],
-            "tls_versions": ["1.2", "1.3"]
-        }
+            "tls_versions": ["1.2", "1.3"],
+        },
     }
 
 
 def pytest_configure(config):
     """Configure pytest for compliance testing."""
     # Add custom markers
-    config.addinivalue_line(
-        "markers", "compliance: mark test as compliance test"
-    )
-    config.addinivalue_line(
-        "markers", "privacy: mark test as privacy compliance test"
-    )
+    config.addinivalue_line("markers", "compliance: mark test as compliance test")
+    config.addinivalue_line("markers", "privacy: mark test as privacy compliance test")
     config.addinivalue_line(
         "markers", "security: mark test as security compliance test"
     )
-    config.addinivalue_line(
-        "markers", "itsg33: mark test as ITSG-33 compliance test"
-    )
+    config.addinivalue_line("markers", "itsg33: mark test as ITSG-33 compliance test")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -231,6 +227,7 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture
 def compliance_report_generator():
     """Generate compliance reports for test results."""
+
     def generate_report(test_results: Dict[str, Any]) -> str:
         """Generate a compliance test report."""
         report = []

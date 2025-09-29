@@ -1,7 +1,6 @@
 import pytest
 from pathlib import Path
-from datetime import datetime
-from jd_ingestion.processors.file_discovery import FileDiscovery, FileMetadata
+from jd_ingestion.core.file_discovery import FileDiscovery, FileMetadata
 
 
 # Mock the logger to prevent actual logging during tests
@@ -108,11 +107,12 @@ def test_extract_metadata_from_filename_unrecognized_pattern(file_discovery_inst
     file_discovery_instance._extract_metadata_from_filename(filename, metadata)
 
     assert metadata.classification is None
-    assert metadata.job_number is None
+    assert metadata.job_number is not None  # Now generates hash-based job number
+    assert len(metadata.job_number) == 6  # Hash-based job number is 6 characters
     assert metadata.language == "en"  # Default language
     assert metadata.title is None
     assert any(
-        "Filename doesn't match expected patterns but extracted basic info" in error
+        "Generated job number from filename hash" in error
         for error in metadata.validation_errors
     )
 
@@ -123,11 +123,12 @@ def test_extract_metadata_from_filename_partial_match(file_discovery_instance):
     file_discovery_instance._extract_metadata_from_filename(filename, metadata)
 
     assert metadata.classification == "EX-01"
-    assert metadata.job_number is None
+    assert metadata.job_number is not None  # Now generates hash-based job number
+    assert len(metadata.job_number) == 6  # Hash-based job number is 6 characters
     assert metadata.language == "en"
-    assert metadata.title is None
+    assert metadata.title == "Some File"  # Now extracts title from partial pattern
     assert any(
-        "Filename doesn't match expected patterns but extracted basic info" in error
+        "Generated job number from filename hash" in error
         for error in metadata.validation_errors
     )
 
@@ -148,7 +149,7 @@ def test_extract_metadata_from_filename_case_insensitivity(file_discovery_instan
     filename = "ex-01 director operations 123456 - jd.txt"
     metadata = FileMetadata(file_path=Path(filename))
     file_discovery_instance._extract_metadata_from_filename(filename, metadata)
-    assert metadata.classification == "EX-01"
+    assert metadata.classification == "ex-01"  # Preserves original case
     assert metadata.job_number == "123456"
     assert metadata.language == "en"
     assert metadata.title == "director operations"

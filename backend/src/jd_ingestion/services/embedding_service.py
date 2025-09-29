@@ -6,6 +6,7 @@ Consolidates functionality from both original and optimized embedding services.
 import asyncio
 import math
 import openai
+from decimal import Decimal
 from typing import List, Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text, select
@@ -134,7 +135,7 @@ class EmbeddingService:
         if not self.client:
             return [None] * len(texts)
 
-        embeddings = []
+        embeddings: List[Optional[List[float]]] = []
 
         for i in range(0, len(texts), batch_size):
             batch = texts[i : i + batch_size]
@@ -145,10 +146,11 @@ class EmbeddingService:
 
             # Handle exceptions in batch results
             for emb in batch_embeddings:
-                if isinstance(emb, Exception):
+                if isinstance(emb, BaseException):
                     logger.error("Batch embedding generation failed", error=str(emb))
                     embeddings.append(None)
                 else:
+                    # emb is Optional[List[float]] here
                     embeddings.append(emb)
 
             # Add small delay between batches to respect rate limits
@@ -189,7 +191,7 @@ class EmbeddingService:
             WHERE cc.embedding IS NOT NULL
             """
 
-            params = [query_embedding]
+            params: List[Any] = [query_embedding]
 
             # Add filters to optimize query performance using indexed columns
             if job_id_exclude:
@@ -297,7 +299,7 @@ class EmbeddingService:
                 WHERE cc.embedding IS NOT NULL
                 """
 
-                params = [query_embedding]
+                params: List[Any] = [query_embedding]
 
                 # Add filters using indexed columns for optimal performance
                 if classification_filter:
@@ -320,7 +322,7 @@ class EmbeddingService:
                 result = await db.execute(text(search_query), params)
                 rows = result.fetchall()
             else:
-                # Legacy search using named parameters
+                # Fallback search using named parameters (for compatibility)
                 search_query = """
                 SELECT DISTINCT
                     jd.id as job_id,
@@ -337,15 +339,18 @@ class EmbeddingService:
 
                 # Convert embedding list to PostgreSQL array string format
                 embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
-                params = {"query_embedding": embedding_str, "limit": limit}
+                named_params: Dict[str, Any] = {
+                    "query_embedding": embedding_str,
+                    "limit": limit,
+                }
 
                 if classification_filter:
                     search_query += " AND jd.classification = :classification"
-                    params["classification"] = classification_filter
+                    named_params["classification"] = classification_filter
 
                 if language_filter:
                     search_query += " AND jd.language = :language"
-                    params["language"] = language_filter
+                    named_params["language"] = language_filter
 
                 search_query += f"""
                 GROUP BY jd.id, jd.job_number, jd.title, jd.classification, jd.language
@@ -354,7 +359,7 @@ class EmbeddingService:
                 LIMIT :limit
                 """
 
-                result = await db.execute(text(search_query), params)
+                result = await db.execute(text(search_query), named_params)
                 rows = result.fetchall()
 
             # Format results
@@ -452,7 +457,7 @@ class EmbeddingService:
                         model_name=model_name,
                         input_tokens=input_tokens,
                         output_tokens=0,  # Embedding requests don't have output tokens
-                        cost_usd=estimated_cost,
+                        cost_usd=Decimal(str(estimated_cost)),
                         success="success",
                         metadata={
                             "duration": duration,
@@ -495,14 +500,15 @@ class EmbeddingService:
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             # Handle exceptions and return results
-            batch_results = []
+            batch_results: List[List[Dict[str, Any]]] = []
             for i, result in enumerate(results):
-                if isinstance(result, Exception):
+                if isinstance(result, BaseException):
                     logger.error(
                         f"Batch search failed for query {i}", error=str(result)
                     )
                     batch_results.append([])
                 else:
+                    # result is List[Dict[str, Any]] here
                     batch_results.append(result)
 
             return batch_results
@@ -655,9 +661,9 @@ class EmbeddingService:
             return []
 
         embeddings = []
-        for text in texts:
+        for text_content in texts:
             try:
-                embedding = await self.generate_embedding(text)
+                embedding = await self.generate_embedding(text_content)
                 embeddings.append(embedding)
             except Exception as e:
                 logger.error("Failed to generate embedding for text", error=str(e))
@@ -697,7 +703,7 @@ class EmbeddingService:
             )
 
             # Group by job and take the best match per job
-            job_scores = {}
+            job_scores: Dict[str, Dict[str, Any]] = {}
             for chunk in similar_chunks:
                 job_id_key = chunk["job_id"]
                 if (

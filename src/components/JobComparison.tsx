@@ -3,29 +3,20 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useStore } from "@/lib/store";
 import { apiClient } from "@/lib/api";
 import type { JobDescription } from "@/lib/types";
 import { ErrorBoundaryWrapper } from "@/components/ui/error-boundary";
+import { useProgressUtils } from "@/hooks/useProgressToast";
+import { JobSelector } from "@/components/ui/job-selector";
 import {
-  Search,
   GitCompare,
   TrendingUp,
   BarChart3,
   Users,
-  Target,
   Lightbulb,
-  ArrowRight,
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
@@ -88,24 +79,9 @@ function JobComparison({ onJobSelect }: JobComparisonProps) {
   const [comparisonResult, setComparisonResult] =
     useState<ComparisonResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [searchTermA, setSearchTermA] = useState("");
-  const [searchTermB, setSearchTermB] = useState("");
   const [suggestedJobsB, setSuggestedJobsB] = useState<JobDescription[]>([]);
-
-  // Filter jobs based on search terms
-  const filteredJobsA = jobs.filter(
-    (job) =>
-      job.title.toLowerCase().includes(searchTermA.toLowerCase()) ||
-      job.job_number.toLowerCase().includes(searchTermA.toLowerCase()) ||
-      job.classification.toLowerCase().includes(searchTermA.toLowerCase()),
-  );
-
-  const filteredJobsB = jobs.filter(
-    (job) =>
-      job.title.toLowerCase().includes(searchTermB.toLowerCase()) ||
-      job.job_number.toLowerCase().includes(searchTermB.toLowerCase()) ||
-      job.classification.toLowerCase().includes(searchTermB.toLowerCase()),
-  );
+  const { createComparisonProgress, createAnalysisProgress } =
+    useProgressUtils();
 
   // Load similar jobs when Job A is selected
   const loadSimilarJobs = async (jobId: number) => {
@@ -137,15 +113,45 @@ function JobComparison({ onJobSelect }: JobComparisonProps) {
     }
 
     setLoading(true);
+
+    // Create comparison progress toast
+    const progress = createComparisonProgress(2);
+
     try {
+      // Step 1: Initialize comparison
+      progress.updateProgress(10, "Preparing job comparison analysis...");
+
+      // Step 2: Fetch job details and prepare data
+      progress.updateProgress(30, "Analyzing job structures and content...");
+
+      // Small delay to show progress feedback
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Step 3: Perform semantic analysis
+      progress.updateProgress(60, "Running AI-powered semantic comparison...");
+
       const response = await apiClient.compareJobs({
         job_a_id: selectedJobA.id,
         job_b_id: selectedJobB.id,
       });
 
+      // Step 4: Process results
+      progress.updateProgress(90, "Processing comparison results...");
+
       setComparisonResult(response);
+
+      // Complete with summary
+      const overallSimilarity = Math.round(
+        response.similarity_analysis.overall_similarity * 100,
+      );
+      progress.complete(
+        `Comparison complete: ${overallSimilarity}% similarity found between "${selectedJobA.title}" and "${selectedJobB.title}"`,
+      );
     } catch (error) {
       console.error("Failed to compare jobs:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to compare jobs";
+      progress.error(`Comparison failed: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -185,139 +191,41 @@ function JobComparison({ onJobSelect }: JobComparisonProps) {
         {/* Job A Selection */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Job A (Base Position)</CardTitle>
+            <CardTitle className="text-lg flex items-center">
+              <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+              Job A (Base Position)
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search jobs by title, number, or classification..."
-                value={searchTermA}
-                onChange={(e) => setSearchTermA(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            <Select
-              value={selectedJobA?.id.toString() || ""}
-              onValueChange={(value) => {
-                const job = jobs.find((j) => j.id.toString() === value);
-                handleJobASelect(job || null);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a job to compare from" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredJobsA.slice(0, 20).map((job) => (
-                  <SelectItem key={job.id} value={job.id.toString()}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{job.title}</span>
-                      <span className="text-sm text-gray-500">
-                        {job.job_number} • {job.classification}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {selectedJobA && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <h4 className="font-semibold text-blue-900">
-                  {selectedJobA.title}
-                </h4>
-                <p className="text-sm text-blue-700">
-                  {selectedJobA.job_number} • {selectedJobA.classification} •{" "}
-                  {selectedJobA.language}
-                </p>
-              </div>
-            )}
+          <CardContent>
+            <JobSelector
+              jobs={jobs}
+              selectedJob={selectedJobA}
+              onJobSelect={handleJobASelect}
+              placeholder="Search for base job to compare from..."
+              variant="primary"
+              maxHeight="350px"
+            />
           </CardContent>
         </Card>
 
         {/* Job B Selection */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">
+            <CardTitle className="text-lg flex items-center">
+              <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
               Job B (Comparison Position)
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search jobs by title, number, or classification..."
-                value={searchTermB}
-                onChange={(e) => setSearchTermB(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            <Select
-              value={selectedJobB?.id.toString() || ""}
-              onValueChange={(value) => {
-                const job = jobs.find((j) => j.id.toString() === value);
-                setSelectedJobB(job || null);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a job to compare to" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredJobsB.slice(0, 20).map((job) => (
-                  <SelectItem key={job.id} value={job.id.toString()}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{job.title}</span>
-                      <span className="text-sm text-gray-500">
-                        {job.job_number} • {job.classification}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {selectedJobB && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <h4 className="font-semibold text-green-900">
-                  {selectedJobB.title}
-                </h4>
-                <p className="text-sm text-green-700">
-                  {selectedJobB.job_number} • {selectedJobB.classification} •{" "}
-                  {selectedJobB.language}
-                </p>
-              </div>
-            )}
-
-            {/* Suggested Similar Jobs */}
-            {selectedJobA && suggestedJobsB.length > 0 && !selectedJobB && (
-              <div className="mt-4">
-                <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                  <Target className="w-4 h-4 mr-2" />
-                  Suggested Similar Jobs
-                </h5>
-                <div className="space-y-2">
-                  {suggestedJobsB.slice(0, 3).map((job) => (
-                    <div
-                      key={job.id}
-                      className="flex items-center justify-between p-2 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                      onClick={() => setSelectedJobB(job)}
-                    >
-                      <div>
-                        <p className="text-sm font-medium">{job.title}</p>
-                        <p className="text-xs text-gray-500">
-                          {job.job_number} • {job.classification}
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Select
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+          <CardContent>
+            <JobSelector
+              jobs={jobs}
+              selectedJob={selectedJobB}
+              onJobSelect={setSelectedJobB}
+              placeholder="Search for job to compare against..."
+              variant="secondary"
+              showSuggestions={suggestedJobsB}
+              maxHeight="350px"
+            />
           </CardContent>
         </Card>
       </div>

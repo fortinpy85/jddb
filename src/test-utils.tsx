@@ -10,7 +10,7 @@ import { ToastProvider } from "@/components/ui/toast";
  */
 function customRender(
   ui: React.ReactElement,
-  options: Omit<RenderOptions, "wrapper"> = {}
+  options: Omit<RenderOptions, "wrapper"> = {},
 ) {
   function Wrapper({ children }: { children: React.ReactNode }) {
     return <ToastProvider>{children}</ToastProvider>;

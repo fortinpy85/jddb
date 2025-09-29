@@ -6,7 +6,7 @@ Provides advanced job comparison, skill gap analysis, and career path recommenda
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 from ...database.connection import get_async_session
@@ -303,7 +303,7 @@ async def extract_job_skills(
         )
 
         # Group skills by category
-        skills_by_category = {}
+        skills_by_category: Dict[str, List[Dict[str, Any]]] = {}
         for skill in skills:
             category = skill["category"]
             if category not in skills_by_category:

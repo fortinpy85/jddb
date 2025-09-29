@@ -5,7 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { WorkflowSteps, JOB_PROCESSING_WORKFLOW } from "@/components/ui/workflow-steps";
+import {
+  WorkflowSteps,
+  JOB_PROCESSING_WORKFLOW,
+} from "@/components/ui/workflow-steps";
 import { SidebarNav, JOB_MANAGEMENT_NAV } from "@/components/ui/sidebar-nav";
 import {
   Search,
@@ -25,7 +28,7 @@ import {
   AlertCircle,
   Star,
   Calendar,
-  Building
+  Building,
 } from "lucide-react";
 
 interface JobItem {
@@ -53,7 +56,7 @@ export const ModernDashboard: React.FC = () => {
       classification: "EX-01",
       lastModified: "2024-03-15",
       progress: 100,
-      priority: "High"
+      priority: "High",
     },
     {
       id: 2,
@@ -63,7 +66,7 @@ export const ModernDashboard: React.FC = () => {
       classification: "CS-03",
       lastModified: "2024-03-14",
       progress: 75,
-      priority: "Medium"
+      priority: "Medium",
     },
     {
       id: 3,
@@ -73,15 +76,15 @@ export const ModernDashboard: React.FC = () => {
       classification: "AS-02",
       lastModified: "2024-03-13",
       progress: 45,
-      priority: "Low"
-    }
+      priority: "Low",
+    },
   ];
 
   const stats = [
     { label: "Total Jobs", value: "1,247", icon: FileText, trend: "+12%" },
     { label: "Active", value: "856", icon: CheckCircle, trend: "+5%" },
     { label: "Under Review", value: "234", icon: Clock, trend: "+18%" },
-    { label: "Drafts", value: "157", icon: Edit, trend: "-3%" }
+    { label: "Drafts", value: "157", icon: Edit, trend: "-3%" },
   ];
 
   const getStatusColor = (status: string) => {
@@ -121,9 +124,11 @@ export const ModernDashboard: React.FC = () => {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">JDMS</span>
+                  <span className="text-white font-bold text-sm">JDDB</span>
                 </div>
-                <span className="text-lg font-semibold">Job Descriptions Made Simple</span>
+                <span className="text-lg font-semibold">
+                  Job Description Database
+                </span>
               </div>
             </div>
 
@@ -152,7 +157,9 @@ export const ModernDashboard: React.FC = () => {
                 <Star className="w-4 h-4 text-yellow-500" />
                 <span className="text-sm font-medium">Job Code</span>
               </div>
-              <div className="text-lg font-semibold">Executive Management (500710600)</div>
+              <div className="text-lg font-semibold">
+                Executive Management (500710600)
+              </div>
               <div className="flex items-center space-x-2 mt-2">
                 <Badge className="bg-gray-200 text-gray-800">Status</Badge>
                 <Badge className="bg-green-100 text-green-800">Active</Badge>
@@ -167,10 +174,18 @@ export const ModernDashboard: React.FC = () => {
               <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                 Workflows
               </h4>
-              <Button variant="ghost" size="sm" className="w-full justify-start">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start"
+              >
                 Approve
               </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start"
+              >
                 Reject
               </Button>
             </div>
@@ -180,15 +195,27 @@ export const ModernDashboard: React.FC = () => {
               <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                 Actions
               </h4>
-              <Button variant="ghost" size="sm" className="w-full justify-start">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start"
+              >
                 <FileText className="w-4 h-4 mr-2" />
                 Print PDF
               </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start"
+              >
                 <Download className="w-4 h-4 mr-2" />
                 Print Word
               </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start"
+              >
                 <Upload className="w-4 h-4 mr-2" />
                 Email Job
               </Button>
@@ -210,7 +237,9 @@ export const ModernDashboard: React.FC = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600">{stat.label}</p>
+                      <p className="text-sm font-medium text-gray-600">
+                        {stat.label}
+                      </p>
                       <p className="text-2xl font-bold">{stat.value}</p>
                       <p className="text-xs text-green-600 flex items-center mt-1">
                         <TrendingUp className="w-3 h-3 mr-1" />
@@ -267,7 +296,9 @@ export const ModernDashboard: React.FC = () => {
                           if (e.target.checked) {
                             setSelectedJobs([...selectedJobs, job.id]);
                           } else {
-                            setSelectedJobs(selectedJobs.filter(id => id !== job.id));
+                            setSelectedJobs(
+                              selectedJobs.filter((id) => id !== job.id),
+                            );
                           }
                         }}
                       />

@@ -10,17 +10,16 @@ import asyncio
 import sys
 import os
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
+from typing import List
 import uuid
 import hashlib
 import json
 
 # Add the src directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from sqlalchemy import text, cast
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.dialects.postgresql import JSONB
 from jd_ingestion.database.connection import get_async_session
 
 
@@ -37,7 +36,7 @@ async def create_sample_users(db: AsyncSession) -> List[int]:
             "role": "admin",
             "department": "IT",
             "security_clearance": "SECRET",
-            "preferred_language": "en"
+            "preferred_language": "en",
         },
         {
             "username": "editor_john",
@@ -48,7 +47,7 @@ async def create_sample_users(db: AsyncSession) -> List[int]:
             "role": "editor",
             "department": "HR",
             "security_clearance": "PROTECTED_B",
-            "preferred_language": "en"
+            "preferred_language": "en",
         },
         {
             "username": "editor_marie",
@@ -59,7 +58,7 @@ async def create_sample_users(db: AsyncSession) -> List[int]:
             "role": "editor",
             "department": "HR",
             "security_clearance": "PROTECTED_B",
-            "preferred_language": "fr"
+            "preferred_language": "fr",
         },
         {
             "username": "translator_bob",
@@ -70,7 +69,7 @@ async def create_sample_users(db: AsyncSession) -> List[int]:
             "role": "translator",
             "department": "Translation Services",
             "security_clearance": "PROTECTED_A",
-            "preferred_language": "en"
+            "preferred_language": "en",
         },
         {
             "username": "reviewer_sarah",
@@ -81,13 +80,15 @@ async def create_sample_users(db: AsyncSession) -> List[int]:
             "role": "reviewer",
             "department": "Quality Assurance",
             "security_clearance": "PROTECTED_B",
-            "preferred_language": "en"
-        }
+            "preferred_language": "en",
+        },
     ]
 
     user_ids = []
     for user_data in users_data:
-        result = await db.execute(text("""
+        result = await db.execute(
+            text(
+                """
             INSERT INTO users (username, email, password_hash, first_name, last_name, role,
                              department, security_clearance, preferred_language, is_active)
             VALUES (:username, :email, :password_hash, :first_name, :last_name, :role,
@@ -97,7 +98,10 @@ async def create_sample_users(db: AsyncSession) -> List[int]:
                 first_name = EXCLUDED.first_name,
                 last_name = EXCLUDED.last_name
             RETURNING id
-        """), user_data)
+        """
+            ),
+            user_data,
+        )
 
         user_id = result.fetchone()[0]
         user_ids.append(user_id)
@@ -112,36 +116,85 @@ async def create_user_preferences(db: AsyncSession, user_ids: List[int]):
 
     preferences_data = [
         # Admin preferences - converted to work with existing table structure
-        {"user_id": str(user_ids[0]), "preference_type": "ui", "preference_key": "theme", "preference_value": {"mode": "dark", "color": "blue"}},
-        {"user_id": str(user_ids[0]), "preference_type": "ui", "preference_key": "editor_settings", "preference_value": {"font_size": 14, "line_numbers": True}},
-        {"user_id": str(user_ids[0]), "preference_type": "ui", "preference_key": "notifications", "preference_value": {"email": True, "browser": True}},
-
+        {
+            "user_id": str(user_ids[0]),
+            "preference_type": "ui",
+            "preference_key": "theme",
+            "preference_value": {"mode": "dark", "color": "blue"},
+        },
+        {
+            "user_id": str(user_ids[0]),
+            "preference_type": "ui",
+            "preference_key": "editor_settings",
+            "preference_value": {"font_size": 14, "line_numbers": True},
+        },
+        {
+            "user_id": str(user_ids[0]),
+            "preference_type": "ui",
+            "preference_key": "notifications",
+            "preference_value": {"email": True, "browser": True},
+        },
         # Editor preferences
-        {"user_id": str(user_ids[1]), "preference_type": "ui", "preference_key": "theme", "preference_value": {"mode": "light", "color": "green"}},
-        {"user_id": str(user_ids[1]), "preference_type": "ui", "preference_key": "editor_settings", "preference_value": {"font_size": 12, "line_numbers": False}},
-
+        {
+            "user_id": str(user_ids[1]),
+            "preference_type": "ui",
+            "preference_key": "theme",
+            "preference_value": {"mode": "light", "color": "green"},
+        },
+        {
+            "user_id": str(user_ids[1]),
+            "preference_type": "ui",
+            "preference_key": "editor_settings",
+            "preference_value": {"font_size": 12, "line_numbers": False},
+        },
         # French editor preferences
-        {"user_id": str(user_ids[2]), "preference_type": "ui", "preference_key": "theme", "preference_value": {"mode": "light", "color": "red"}},
-        {"user_id": str(user_ids[2]), "preference_type": "ui", "preference_key": "language_settings", "preference_value": {"spell_check": "fr", "dictionary": "canadian_french"}},
-
+        {
+            "user_id": str(user_ids[2]),
+            "preference_type": "ui",
+            "preference_key": "theme",
+            "preference_value": {"mode": "light", "color": "red"},
+        },
+        {
+            "user_id": str(user_ids[2]),
+            "preference_type": "ui",
+            "preference_key": "language_settings",
+            "preference_value": {"spell_check": "fr", "dictionary": "canadian_french"},
+        },
         # Translator preferences
-        {"user_id": str(user_ids[3]), "preference_type": "ui", "preference_key": "translation_settings", "preference_value": {"auto_save": True, "memory_threshold": 0.8}},
-        {"user_id": str(user_ids[3]), "preference_type": "ui", "preference_key": "editor_settings", "preference_value": {"split_view": True, "sync_scroll": True}},
+        {
+            "user_id": str(user_ids[3]),
+            "preference_type": "ui",
+            "preference_key": "translation_settings",
+            "preference_value": {"auto_save": True, "memory_threshold": 0.8},
+        },
+        {
+            "user_id": str(user_ids[3]),
+            "preference_type": "ui",
+            "preference_key": "editor_settings",
+            "preference_value": {"split_view": True, "sync_scroll": True},
+        },
     ]
 
     for pref in preferences_data:
         # Use string user_id and include preference_type to match existing table structure
-        await db.execute(text("""
+        await db.execute(
+            text(
+                """
             INSERT INTO user_preferences (user_id, session_id, preference_type, preference_key, preference_value)
             VALUES (:user_id, NULL, :preference_type, :preference_key, CAST(:preference_value AS jsonb))
             ON CONFLICT (user_id, session_id, preference_type, preference_key) DO UPDATE SET
                 preference_value = EXCLUDED.preference_value
-        """), {
-            "user_id": pref["user_id"],  # Already converted to string above
-            "preference_type": pref["preference_type"],
-            "preference_key": pref["preference_key"],
-            "preference_value": json.dumps(pref["preference_value"])  # Convert dict to JSON string
-        })
+        """
+            ),
+            {
+                "user_id": pref["user_id"],  # Already converted to string above
+                "preference_type": pref["preference_type"],
+                "preference_key": pref["preference_key"],
+                "preference_value": json.dumps(
+                    pref["preference_value"]
+                ),  # Convert dict to JSON string
+            },
+        )
 
     await db.commit()
     print(f"Created {len(preferences_data)} user preferences")
@@ -155,34 +208,48 @@ async def create_ai_providers(db: AsyncSession) -> List[int]:
             "name": "OpenAI GPT-4",
             "api_endpoint": "https://api.openai.com/v1",
             "model_name": "gpt-4",
-            "capabilities": {"text_generation": True, "translation": True, "summarization": True},
+            "capabilities": {
+                "text_generation": True,
+                "translation": True,
+                "summarization": True,
+            },
             "rate_limits": {"requests_per_minute": 60, "tokens_per_minute": 40000},
             "cost_per_token": 0.00003,
-            "is_active": True
+            "is_active": True,
         },
         {
             "name": "Anthropic Claude",
             "api_endpoint": "https://api.anthropic.com/v1",
             "model_name": "claude-3-sonnet",
-            "capabilities": {"text_generation": True, "translation": True, "analysis": True},
+            "capabilities": {
+                "text_generation": True,
+                "translation": True,
+                "analysis": True,
+            },
             "rate_limits": {"requests_per_minute": 50, "tokens_per_minute": 30000},
             "cost_per_token": 0.00002,
-            "is_active": True
+            "is_active": True,
         },
         {
             "name": "Google Gemini",
             "api_endpoint": "https://generativelanguage.googleapis.com/v1",
             "model_name": "gemini-pro",
-            "capabilities": {"text_generation": True, "translation": True, "multimodal": True},
+            "capabilities": {
+                "text_generation": True,
+                "translation": True,
+                "multimodal": True,
+            },
             "rate_limits": {"requests_per_minute": 60, "tokens_per_minute": 32000},
             "cost_per_token": 0.000025,
-            "is_active": False
-        }
+            "is_active": False,
+        },
     ]
 
     provider_ids = []
     for provider in providers_data:
-        result = await db.execute(text("""
+        result = await db.execute(
+            text(
+                """
             INSERT INTO ai_providers (name, api_endpoint, model_name, capabilities, rate_limits, cost_per_token, is_active)
             VALUES (:name, :api_endpoint, :model_name, :capabilities, :rate_limits, :cost_per_token, :is_active)
             ON CONFLICT (name) DO UPDATE SET
@@ -190,11 +257,14 @@ async def create_ai_providers(db: AsyncSession) -> List[int]:
                 model_name = EXCLUDED.model_name,
                 is_active = EXCLUDED.is_active
             RETURNING id
-        """), {
-            **provider,
-            "capabilities": json.dumps(provider["capabilities"]),
-            "rate_limits": json.dumps(provider["rate_limits"])
-        })
+        """
+            ),
+            {
+                **provider,
+                "capabilities": json.dumps(provider["capabilities"]),
+                "rate_limits": json.dumps(provider["rate_limits"]),
+            },
+        )
 
         provider_id = result.fetchone()[0]
         provider_ids.append(provider_id)
@@ -204,7 +274,9 @@ async def create_ai_providers(db: AsyncSession) -> List[int]:
     return provider_ids
 
 
-async def create_translation_projects(db: AsyncSession, user_ids: List[int]) -> List[int]:
+async def create_translation_projects(
+    db: AsyncSession, user_ids: List[int]
+) -> List[int]:
     """Create sample translation projects."""
 
     projects_data = [
@@ -214,7 +286,7 @@ async def create_translation_projects(db: AsyncSession, user_ids: List[int]) -> 
             "source_language": "en",
             "target_language": "fr",
             "status": "active",
-            "created_by": user_ids[3]  # translator_bob
+            "created_by": user_ids[3],  # translator_bob
         },
         {
             "name": "Technical Documentation FR-EN",
@@ -222,7 +294,7 @@ async def create_translation_projects(db: AsyncSession, user_ids: List[int]) -> 
             "source_language": "fr",
             "target_language": "en",
             "status": "active",
-            "created_by": user_ids[3]  # translator_bob
+            "created_by": user_ids[3],  # translator_bob
         },
         {
             "name": "Policy Documents Bilingual Review",
@@ -230,17 +302,22 @@ async def create_translation_projects(db: AsyncSession, user_ids: List[int]) -> 
             "source_language": "en",
             "target_language": "fr",
             "status": "completed",
-            "created_by": user_ids[2]  # editor_marie
-        }
+            "created_by": user_ids[2],  # editor_marie
+        },
     ]
 
     project_ids = []
     for project in projects_data:
-        result = await db.execute(text("""
+        result = await db.execute(
+            text(
+                """
             INSERT INTO translation_projects (name, description, source_language, target_language, status, created_by)
             VALUES (:name, :description, :source_language, :target_language, :status, :created_by)
             RETURNING id
-        """), project)
+        """
+            ),
+            project,
+        )
 
         project_id = result.fetchone()[0]
         project_ids.append(project_id)
@@ -250,7 +327,9 @@ async def create_translation_projects(db: AsyncSession, user_ids: List[int]) -> 
     return project_ids
 
 
-async def create_translation_memory(db: AsyncSession, project_ids: List[int], user_ids: List[int]):
+async def create_translation_memory(
+    db: AsyncSession, project_ids: List[int], user_ids: List[int]
+):
     """Create sample translation memory entries."""
 
     memory_data = [
@@ -262,7 +341,7 @@ async def create_translation_memory(db: AsyncSession, project_ids: List[int], us
             "target_language": "fr",
             "context_info": {"domain": "job_requirements", "section": "qualifications"},
             "quality_score": 0.95,
-            "created_by": user_ids[3]
+            "created_by": user_ids[3],
         },
         {
             "project_id": project_ids[0],
@@ -272,7 +351,7 @@ async def create_translation_memory(db: AsyncSession, project_ids: List[int], us
             "target_language": "fr",
             "context_info": {"domain": "job_requirements", "section": "skills"},
             "quality_score": 0.92,
-            "created_by": user_ids[3]
+            "created_by": user_ids[3],
         },
         {
             "project_id": project_ids[0],
@@ -280,9 +359,12 @@ async def create_translation_memory(db: AsyncSession, project_ids: List[int], us
             "target_text": "Ce poste exige un baccalauréat en informatique ou dans un domaine connexe.",
             "source_language": "en",
             "target_language": "fr",
-            "context_info": {"domain": "education_requirements", "section": "qualifications"},
+            "context_info": {
+                "domain": "education_requirements",
+                "section": "qualifications",
+            },
             "quality_score": 0.98,
-            "created_by": user_ids[2]
+            "created_by": user_ids[2],
         },
         {
             "project_id": project_ids[1],
@@ -292,20 +374,22 @@ async def create_translation_memory(db: AsyncSession, project_ids: List[int], us
             "target_language": "en",
             "context_info": {"domain": "job_duties", "section": "responsibilities"},
             "quality_score": 0.89,
-            "created_by": user_ids[3]
-        }
+            "created_by": user_ids[3],
+        },
     ]
 
     for memory in memory_data:
-        await db.execute(text("""
+        await db.execute(
+            text(
+                """
             INSERT INTO translation_memory (project_id, source_text, target_text, source_language,
                                           target_language, context_info, quality_score, created_by)
             VALUES (:project_id, :source_text, :target_text, :source_language,
                     :target_language, :context_info, :quality_score, :created_by)
-        """), {
-            **memory,
-            "context_info": json.dumps(memory["context_info"])
-        })
+        """
+            ),
+            {**memory, "context_info": json.dumps(memory["context_info"])},
+        )
 
     await db.commit()
     print(f"Created {len(memory_data)} translation memory entries")
@@ -320,14 +404,20 @@ async def create_editing_sessions(db: AsyncSession, user_ids: List[int]):
 
     if not job_row:
         print("No job descriptions found. Creating a sample job first...")
-        await db.execute(text("""
+        await db.execute(
+            text(
+                """
             INSERT INTO job_descriptions (job_number, title, classification, language, file_path, raw_content)
             VALUES ('SAMPLE-001', 'Sample Job for Testing', 'EX-01', 'en', '/sample/test.txt',
                     'This is a sample job description for testing collaborative editing features.')
-        """))
+        """
+            )
+        )
         await db.commit()
 
-        result = await db.execute(text("SELECT id FROM job_descriptions WHERE job_number = 'SAMPLE-001'"))
+        result = await db.execute(
+            text("SELECT id FROM job_descriptions WHERE job_number = 'SAMPLE-001'")
+        )
         job_row = result.fetchone()
 
     job_id = job_row[0]
@@ -340,7 +430,7 @@ async def create_editing_sessions(db: AsyncSession, user_ids: List[int]):
             "session_type": "editing",
             "status": "active",
             "metadata": {"version": "1.0", "last_save": datetime.utcnow().isoformat()},
-            "expires_at": datetime.utcnow() + timedelta(hours=8)
+            "expires_at": datetime.utcnow() + timedelta(hours=8),
         },
         {
             "session_id": str(uuid.uuid4()),
@@ -349,20 +439,22 @@ async def create_editing_sessions(db: AsyncSession, user_ids: List[int]):
             "session_type": "review",
             "status": "paused",
             "metadata": {"version": "1.1", "review_stage": "content"},
-            "expires_at": datetime.utcnow() + timedelta(hours=4)
-        }
+            "expires_at": datetime.utcnow() + timedelta(hours=4),
+        },
     ]
 
     session_ids = []
     for session in sessions_data:
-        result = await db.execute(text("""
+        result = await db.execute(
+            text(
+                """
             INSERT INTO editing_sessions (session_id, job_id, created_by, session_type, status, metadata, expires_at)
             VALUES (:session_id, :job_id, :created_by, :session_type, :status, :metadata, :expires_at)
             RETURNING id
-        """), {
-            **session,
-            "metadata": json.dumps(session["metadata"])
-        })
+        """
+            ),
+            {**session, "metadata": json.dumps(session["metadata"])},
+        )
 
         session_id = result.fetchone()[0]
         session_ids.append(session_id)
@@ -377,41 +469,88 @@ async def create_sample_analytics(db: AsyncSession, user_ids: List[int]):
 
     # Create system metrics
     metrics_data = [
-        {"metric_name": "active_users", "metric_value": 25, "metric_unit": "count", "metadata": {"daily": True}},
-        {"metric_name": "documents_processed", "metric_value": 150, "metric_unit": "count", "metadata": {"weekly": True}},
-        {"metric_name": "translation_requests", "metric_value": 45, "metric_unit": "count", "metadata": {"daily": True}},
-        {"metric_name": "system_uptime", "metric_value": 99.8, "metric_unit": "percent", "metadata": {"weekly": True}},
-        {"metric_name": "avg_response_time", "metric_value": 120.5, "metric_unit": "milliseconds", "metadata": {"hourly": True}}
+        {
+            "metric_name": "active_users",
+            "metric_value": 25,
+            "metric_unit": "count",
+            "metadata": {"daily": True},
+        },
+        {
+            "metric_name": "documents_processed",
+            "metric_value": 150,
+            "metric_unit": "count",
+            "metadata": {"weekly": True},
+        },
+        {
+            "metric_name": "translation_requests",
+            "metric_value": 45,
+            "metric_unit": "count",
+            "metadata": {"daily": True},
+        },
+        {
+            "metric_name": "system_uptime",
+            "metric_value": 99.8,
+            "metric_unit": "percent",
+            "metadata": {"weekly": True},
+        },
+        {
+            "metric_name": "avg_response_time",
+            "metric_value": 120.5,
+            "metric_unit": "milliseconds",
+            "metadata": {"hourly": True},
+        },
     ]
 
     for metric in metrics_data:
-        await db.execute(text("""
+        await db.execute(
+            text(
+                """
             INSERT INTO system_metrics (metric_name, metric_value, metric_unit, metadata)
             VALUES (:metric_name, :metric_value, :metric_unit, :metadata)
-        """), {
-            **metric,
-            "metadata": json.dumps(metric["metadata"])
-        })
+        """
+            ),
+            {**metric, "metadata": json.dumps(metric["metadata"])},
+        )
 
     # Create user analytics events
     events_data = [
-        {"user_id": user_ids[1], "event_type": "document_edit", "event_data": {"document_id": 1, "changes": 15}},
-        {"user_id": user_ids[2], "event_type": "translation_request", "event_data": {"source": "en", "target": "fr"}},
-        {"user_id": user_ids[3], "event_type": "search_performed", "event_data": {"query": "data analyst", "results": 23}},
-        {"user_id": user_ids[0], "event_type": "user_login", "event_data": {"ip": "10.0.0.1", "browser": "Chrome"}},
+        {
+            "user_id": user_ids[1],
+            "event_type": "document_edit",
+            "event_data": {"document_id": 1, "changes": 15},
+        },
+        {
+            "user_id": user_ids[2],
+            "event_type": "translation_request",
+            "event_data": {"source": "en", "target": "fr"},
+        },
+        {
+            "user_id": user_ids[3],
+            "event_type": "search_performed",
+            "event_data": {"query": "data analyst", "results": 23},
+        },
+        {
+            "user_id": user_ids[0],
+            "event_type": "user_login",
+            "event_data": {"ip": "10.0.0.1", "browser": "Chrome"},
+        },
     ]
 
     for event in events_data:
-        await db.execute(text("""
+        await db.execute(
+            text(
+                """
             INSERT INTO user_analytics (user_id, event_type, event_data, page_url, ip_address)
             VALUES (:user_id, :event_type, :event_data, '/dashboard', '10.0.0.1')
-        """), {
-            **event,
-            "event_data": json.dumps(event["event_data"])
-        })
+        """
+            ),
+            {**event, "event_data": json.dumps(event["event_data"])},
+        )
 
     await db.commit()
-    print(f"Created {len(metrics_data)} system metrics and {len(events_data)} user events")
+    print(
+        f"Created {len(metrics_data)} system metrics and {len(events_data)} user events"
+    )
 
 
 async def main():

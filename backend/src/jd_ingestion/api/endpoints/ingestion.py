@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 # Local imports
 from ...config import settings
 from ...core.file_discovery import FileDiscovery
+from ...processors.content_processor import ProcessedContent
 from ...database.connection import get_async_session
 from ...database.models import ContentChunk, JobDescription, JobMetadata, JobSection
 from ...processors.content_processor import ContentProcessor
@@ -99,6 +100,7 @@ async def process_single_file(
         # Extract file metadata
         file_metadata = file_discovery._extract_file_metadata(file_path_obj)
 
+        # Validate file metadata before processing
         if not file_metadata.is_valid:
             return {
                 "status": "error",
@@ -108,9 +110,43 @@ async def process_single_file(
 
         # Read and process file content
         try:
-            with open(file_path_obj, "r", encoding=file_metadata.encoding) as f:
-                raw_content = f.read()
+            if file_path_obj.suffix.lower() in {".docx", ".doc"}:
+                # Handle Word documents with python-docx
+                from docx import Document
+
+                doc = Document(file_path_obj)
+                raw_content = "\n".join(
+                    [paragraph.text for paragraph in doc.paragraphs]
+                )
+                logger.info(
+                    "Successfully read .docx/.doc file",
+                    file=str(file_path_obj),
+                    content_length=len(raw_content),
+                    paragraphs_count=len(doc.paragraphs),
+                )
+            elif file_path_obj.suffix.lower() == ".pdf":
+                # Handle PDF files (for future implementation)
+                logger.warning(
+                    "PDF processing not yet implemented", file=str(file_path_obj)
+                )
+                raw_content = f"PDF content extraction not yet implemented for: {file_path_obj.name}"
+            else:
+                # Handle text files with detected encoding
+                with open(file_path_obj, "r", encoding=file_metadata.encoding) as f:
+                    raw_content = f.read()
+                logger.info(
+                    "Successfully read text file",
+                    file=str(file_path_obj),
+                    encoding=file_metadata.encoding,
+                    content_length=len(raw_content),
+                )
         except Exception as e:
+            logger.error(
+                "Failed to read file",
+                file=str(file_path_obj),
+                extension=file_path_obj.suffix.lower(),
+                error=str(e),
+            )
             raise HTTPException(
                 status_code=500, detail=f"Failed to read file: {str(e)}"
             )
@@ -157,7 +193,7 @@ async def process_single_file(
                 )
                 processing_errors: list = field(default_factory=list)
 
-            processed_content = MinimalProcessedContent()
+            processed_content = ProcessedContent()
             processed_content.processing_errors = [str(e)]
 
         # Generate chunks
@@ -192,9 +228,31 @@ async def process_single_file(
                 logger.info("Starting database save operation")
                 # Save to database
 
+                # Generate unique job number if not available
+                job_number = file_metadata.job_number
+                if not job_number:
+                    # Generate unique job number from file hash and timestamp
+                    import hashlib
+                    import time
+
+                    timestamp = str(int(time.time()))[-6:]  # Last 6 digits of timestamp
+                    file_hash_short = (
+                        file_metadata.file_hash[:6].upper()
+                        if file_metadata.file_hash
+                        else hashlib.md5(file_path_obj.name.encode())
+                        .hexdigest()[:6]
+                        .upper()
+                    )
+                    job_number = f"{file_hash_short}-{timestamp}"
+                    logger.info(
+                        "Generated unique job number",
+                        job_number=job_number,
+                        filename=file_path_obj.name,
+                    )
+
                 # Create job description record with minimal safe data
                 job_description = JobDescription(
-                    job_number=file_metadata.job_number or "UNKNOWN",
+                    job_number=job_number,
                     title=file_metadata.title or "Untitled",
                     classification=file_metadata.classification or "UNKNOWN",
                     language=file_metadata.language or "en",
@@ -529,18 +587,15 @@ async def upload_file(
 
         temp_file_path = upload_dir / file.filename
 
-        with open(temp_file_path, "wb") as f:
-            content = await file.read()
-            f.write(content)
-
-        # Process the uploaded file and save to database
         try:
+            with open(temp_file_path, "wb") as f:
+                content = await file.read()
+                f.write(content)
+
+            # Process the uploaded file and save to database
             result = await process_single_file(
                 str(temp_file_path), save_to_db=True, db=db
             )
-
-            # Clean up temporary file
-            temp_file_path.unlink()
 
             return {
                 "status": "success",
@@ -548,11 +603,10 @@ async def upload_file(
                 "processing_result": result,
             }
 
-        except Exception as e:
-            # Clean up temporary file on error
+        finally:
+            # Always clean up temporary file
             if temp_file_path.exists():
                 temp_file_path.unlink()
-            raise e
 
     except Exception as e:
         logger.error("File upload failed", filename=file.filename, error=str(e))
@@ -807,7 +861,6 @@ async def generate_embeddings_for_existing_jobs(
 ):
     """Generate embeddings for existing jobs that don't have embeddings."""
     try:
-
         # Build query to find chunks without embeddings
         query = select(ContentChunk)
 
@@ -874,7 +927,7 @@ async def _generate_embeddings_background_task(
             batch_texts = [chunk.chunk_text for chunk in batch]
 
             logger.info(
-                f"Processing batch {i//batch_size + 1} of {(len(chunks) + batch_size - 1)//batch_size}"
+                f"Processing batch {i // batch_size + 1} of {(len(chunks) + batch_size - 1) // batch_size}"
             )
 
             try:
@@ -897,12 +950,12 @@ async def _generate_embeddings_background_task(
 
                 await db.commit()
                 logger.info(
-                    f"Batch {i//batch_size + 1} completed: {sum(1 for e in embeddings if e)} embeddings generated"
+                    f"Batch {i // batch_size + 1} completed: {sum(1 for e in embeddings if e)} embeddings generated"
                 )
 
             except Exception as batch_error:
                 logger.error(
-                    f"Batch {i//batch_size + 1} failed", error=str(batch_error)
+                    f"Batch {i // batch_size + 1} failed", error=str(batch_error)
                 )
                 await db.rollback()
                 # Continue with next batch even if this one fails

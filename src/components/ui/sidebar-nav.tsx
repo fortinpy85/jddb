@@ -33,11 +33,13 @@ export function SidebarNav({ items, onItemClick, className }: SidebarNavProps) {
           "w-full flex items-center justify-between px-3 py-2.5 text-left text-sm font-medium rounded-lg transition-all duration-150 group",
           {
             "bg-blue-500 text-white shadow-sm": item.isActive,
-            "bg-green-50 text-green-700 border border-green-200": item.isCompleted && !item.isActive,
-            "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800": !item.isActive && !item.isCompleted,
+            "bg-green-50 text-green-700 border border-green-200":
+              item.isCompleted && !item.isActive,
+            "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800":
+              !item.isActive && !item.isCompleted,
             "border-l-4 border-blue-500": item.isActive,
             "border-l-4 border-green-400": item.isCompleted && !item.isActive,
-          }
+          },
         )}
       >
         <div className="flex items-center space-x-3">
@@ -46,18 +48,22 @@ export function SidebarNav({ items, onItemClick, className }: SidebarNavProps) {
             {item.isCompleted ? (
               <CheckCircle className="w-4 h-4 text-green-500" />
             ) : item.icon ? (
-              <div className={cn("w-4 h-4", {
-                "text-white": item.isActive,
-                "text-gray-500": !item.isActive,
-              })}>
+              <div
+                className={cn("w-4 h-4", {
+                  "text-white": item.isActive,
+                  "text-gray-500": !item.isActive,
+                })}
+              >
                 {item.icon}
               </div>
             ) : (
-              <div className={cn("w-2 h-2 rounded-full", {
-                "bg-white": item.isActive,
-                "bg-blue-400": !item.isActive && !item.isCompleted,
-                "bg-green-400": item.isCompleted,
-              })} />
+              <div
+                className={cn("w-2 h-2 rounded-full", {
+                  "bg-white": item.isActive,
+                  "bg-blue-400": !item.isActive && !item.isCompleted,
+                  "bg-green-400": item.isCompleted,
+                })}
+              />
             )}
           </div>
 
@@ -72,10 +78,12 @@ export function SidebarNav({ items, onItemClick, className }: SidebarNavProps) {
 
         {/* Expand Arrow for items with children */}
         {item.children && item.children.length > 0 && (
-          <ChevronRight className={cn("w-4 h-4 transition-transform", {
-            "text-white": item.isActive,
-            "text-gray-400": !item.isActive,
-          })} />
+          <ChevronRight
+            className={cn("w-4 h-4 transition-transform", {
+              "text-white": item.isActive,
+              "text-gray-400": !item.isActive,
+            })}
+          />
         )}
       </button>
 

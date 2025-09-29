@@ -2,13 +2,7 @@
  * Unit tests for JobList component
  */
 import React from "react";
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-  cleanup,
-} from "../test-utils";
+import { render, screen, fireEvent, waitFor, cleanup } from "../test-utils";
 import { describe, test, expect, beforeEach, afterEach, mock } from "bun:test";
 import { JobList } from "./JobList";
 
@@ -356,7 +350,7 @@ describe("JobList Component", () => {
 
     // When loading and no jobs, it should show skeleton loader (no specific text)
     // The loading state is indicated by skeleton placeholders
-    expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
+    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
   });
 
   test("calls initial fetch and stats on mount", async () => {

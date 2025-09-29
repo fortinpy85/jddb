@@ -4,6 +4,7 @@ This script tests the FileDiscovery processor by scanning a directory for files,
 extracting metadata from the filenames, detecting the encoding, and validating
 the file format.
 """
+
 import logging
 import sys
 from pathlib import Path
@@ -11,7 +12,7 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from jd_ingestion.processors.file_discovery import FileDiscovery
+from jd_ingestion.core.file_discovery import FileDiscovery
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"

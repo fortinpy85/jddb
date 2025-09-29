@@ -110,7 +110,7 @@ class QualityService:
                 result = await db.execute(query)
                 job_ids = [row[0] for row in result.fetchall()]
 
-            results = {
+            results: Dict[str, Any] = {
                 "total_jobs": len(job_ids),
                 "successful": 0,
                 "failed": 0,
@@ -471,7 +471,7 @@ class QualityService:
         self, job: JobDescription, validation_results: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Generate quality flags and recommendations."""
-        flags = {
+        flags: Dict[str, Any] = {
             "high_quality": True,
             "needs_review": False,
             "processing_issues": False,

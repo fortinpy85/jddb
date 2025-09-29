@@ -11,8 +11,11 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .service import (
-    UserService, SessionService, PermissionService, PreferenceService,
-    verify_access_token
+    UserService,
+    SessionService,
+    PermissionService,
+    PreferenceService,
+    verify_access_token,
 )
 from .models import User
 from ..database.connection import get_async_session
@@ -24,29 +27,37 @@ logger = get_logger(__name__)
 security = HTTPBearer(auto_error=False)
 
 
-async def get_user_service(db: AsyncSession = Depends(get_async_session)) -> UserService:
+async def get_user_service(
+    db: AsyncSession = Depends(get_async_session),
+) -> UserService:
     """Get UserService instance."""
     return UserService(db)
 
 
-async def get_session_service(db: AsyncSession = Depends(get_async_session)) -> SessionService:
+async def get_session_service(
+    db: AsyncSession = Depends(get_async_session),
+) -> SessionService:
     """Get SessionService instance."""
     return SessionService(db)
 
 
-async def get_permission_service(db: AsyncSession = Depends(get_async_session)) -> PermissionService:
+async def get_permission_service(
+    db: AsyncSession = Depends(get_async_session),
+) -> PermissionService:
     """Get PermissionService instance."""
     return PermissionService(db)
 
 
-async def get_preference_service(db: AsyncSession = Depends(get_async_session)) -> PreferenceService:
+async def get_preference_service(
+    db: AsyncSession = Depends(get_async_session),
+) -> PreferenceService:
     """Get PreferenceService instance."""
     return PreferenceService(db)
 
 
 async def get_current_user_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    session_service: SessionService = Depends(get_session_service)
+    session_service: SessionService = Depends(get_session_service),
 ) -> Optional[User]:
     """
     Get current user from JWT token or session token (optional).
@@ -82,7 +93,7 @@ async def get_current_user_optional(
 
 
 async def get_current_user(
-    current_user: Optional[User] = Depends(get_current_user_optional)
+    current_user: Optional[User] = Depends(get_current_user_optional),
 ) -> User:
     """
     Get current user from JWT token or session token (required).
@@ -97,14 +108,11 @@ async def get_current_user(
     return current_user
 
 
-async def get_active_user(
-    current_user: User = Depends(get_current_user)
-) -> User:
+async def get_active_user(current_user: User = Depends(get_current_user)) -> User:
     """Get current active user."""
     if not current_user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Inactive user"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user"
         )
     return current_user
 
@@ -118,11 +126,12 @@ def require_role(required_role: str):
         async def admin_endpoint(user: User = Depends(require_role("admin"))):
             ...
     """
+
     async def role_checker(current_user: User = Depends(get_active_user)) -> User:
         if current_user.role != required_role:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Operation requires {required_role} role"
+                detail=f"Operation requires {required_role} role",
             )
         return current_user
 
@@ -138,18 +147,21 @@ def require_roles(required_roles: list):
         async def editor_endpoint(user: User = Depends(require_roles(["admin", "editor"]))):
             ...
     """
+
     async def roles_checker(current_user: User = Depends(get_active_user)) -> User:
         if current_user.role not in required_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Operation requires one of these roles: {', '.join(required_roles)}"
+                detail=f"Operation requires one of these roles: {', '.join(required_roles)}",
             )
         return current_user
 
     return roles_checker
 
 
-def require_permission(resource_type: str, permission_type: str, resource_id: Optional[int] = None):
+def require_permission(
+    resource_type: str, permission_type: str, resource_id: Optional[int] = None
+):
     """
     Dependency factory to require specific permission.
 
@@ -161,9 +173,10 @@ def require_permission(resource_type: str, permission_type: str, resource_id: Op
         ):
             ...
     """
+
     async def permission_checker(
         current_user: User = Depends(get_active_user),
-        permission_service: PermissionService = Depends(get_permission_service)
+        permission_service: PermissionService = Depends(get_permission_service),
     ) -> User:
         # Admin users have all permissions
         if current_user.is_admin:
@@ -177,7 +190,7 @@ def require_permission(resource_type: str, permission_type: str, resource_id: Op
         if not has_permission:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Permission denied: {permission_type} on {resource_type}"
+                detail=f"Permission denied: {permission_type} on {resource_type}",
             )
 
         return current_user
@@ -221,7 +234,7 @@ class UserContext:
 
 
 async def get_user_context(
-    current_user: Optional[User] = Depends(get_current_user_optional)
+    current_user: Optional[User] = Depends(get_current_user_optional),
 ) -> UserContext:
     """Get user context for the current request."""
     return UserContext(current_user)

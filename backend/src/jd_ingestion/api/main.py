@@ -6,6 +6,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Local imports
@@ -26,7 +27,7 @@ from .endpoints import (
     rate_limits,
     saved_searches,
     search,
-    search_analytics,
+    # search_analytics consolidated into analytics.py
     tasks,
     translation_memory,
     websocket,
@@ -108,11 +109,12 @@ app = FastAPI(
     ],
 )
 
-# Add CORS middleware with production-ready configuration
+# Add CORS middleware with development configuration
+# Temporarily using wildcard for development - change to specific origins in production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_allowed_origins_list,
-    allow_credentials=settings.cors_allow_credentials,
+    allow_origins=["*"],  # Allow all origins for development
+    allow_credentials=False,  # Must be False when using wildcard
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
@@ -133,20 +135,37 @@ app.include_router(performance.router, prefix="/api/performance", tags=["perform
 app.include_router(
     saved_searches.router, prefix="/api/saved-searches", tags=["saved-searches"]
 )
-app.include_router(
-    search_analytics.router, prefix="/api/search-analytics", tags=["search-analytics"]
-)
+# search_analytics consolidated into analytics.py - routes now under /api/analytics/search/
 app.include_router(rate_limits.router, prefix="/api/rate-limits", tags=["rate-limits"])
 app.include_router(health.router, prefix="/api/health", tags=["health"])
 app.include_router(websocket.router, prefix="/api", tags=["websocket"])
 app.include_router(auth.router, prefix="/api", tags=["authentication"])
 app.include_router(phase2_monitoring.router, prefix="/api", tags=["phase2-monitoring"])
-app.include_router(translation_memory.router, prefix="/api", tags=["translation-memory"])
+app.include_router(
+    translation_memory.router, prefix="/api", tags=["translation-memory"]
+)
+
+# Mount static files for serving the frontend
+import os  # noqa: E402
+
+static_dir = os.path.join(
+    os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        )
+    ),
+    "dist",
+)
+if settings.is_production and os.path.exists(static_dir):
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")
+    logger.info(f"Serving frontend from {static_dir}")
+elif settings.is_production:
+    logger.warning(f"Frontend build directory not found: {static_dir}")
 
 
-@app.get("/")
-async def root():
-    """Root endpoint with basic API information."""
+@app.get("/status")
+async def status_endpoint():
+    """Status endpoint with basic API information."""
     return {
         "name": "JDDB - Government Job Description Database",
         "version": "1.0.0",

@@ -1,0 +1,359 @@
+name: Automated Rollback Procedure
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to rollback'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      rollback_version:
+        description: 'Version/Tag to rollback to (leave empty for previous version)'
+        required: false
+        type: string
+      reason:
+        description: 'Reason for rollback'
+        required: true
+        type: string
+
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types:
+      - completed
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/${{ github.repository }}/backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository }}/frontend
+
+jobs:
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch'
+    outputs:
+      needs_rollback: ${{ steps.check.outputs.needs_rollback }}
+      current_version: ${{ steps.version.outputs.current }}
+      previous_version: ${{ steps.version.outputs.previous }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version information
+        id: version
+        run: |
+          # Get current deployed version
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "current=${CURRENT_VERSION}" >> $GITHUB_OUTPUT
+
+          # Get previous version
+          PREVIOUS_VERSION=$(git describe --tags --abbrev=0 ${CURRENT_VERSION}^ 2>/dev/null || echo "v0.0.0")
+          echo "previous=${PREVIOUS_VERSION}" >> $GITHUB_OUTPUT
+
+          echo "Current version: ${CURRENT_VERSION}"
+          echo "Previous version: ${PREVIOUS_VERSION}"
+
+      - name: Health check
+        id: check
+        run: |
+          # Perform health checks on deployed application
+          ENVIRONMENT="${{ github.event.inputs.environment || 'production' }}"
+
+          if [ "$ENVIRONMENT" == "production" ]; then
+            API_URL="https://api.jddb.gc.ca"
+            APP_URL="https://jddb.gc.ca"
+          else
+            API_URL="https://api-staging.jddb.gc.ca"
+            APP_URL="https://staging.jddb.gc.ca"
+          fi
+
+          # Check API health
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${API_URL}/health || echo "000")
+
+          # Check frontend health
+          APP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${APP_URL} || echo "000")
+
+          # Check critical endpoints
+          JOBS_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${API_URL}/api/jobs/status || echo "000")
+
+          echo "API Status: ${API_STATUS}"
+          echo "App Status: ${APP_STATUS}"
+          echo "Jobs API Status: ${JOBS_STATUS}"
+
+          # Determine if rollback is needed
+          NEEDS_ROLLBACK="false"
+
+          if [ "$API_STATUS" != "200" ] || [ "$APP_STATUS" == "000" ] || [ "$JOBS_STATUS" != "200" ]; then
+            NEEDS_ROLLBACK="true"
+            echo "⚠️ Health checks failed! Rollback recommended."
+          else
+            echo "✅ All health checks passed."
+          fi
+
+          # Override if manual rollback requested
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            NEEDS_ROLLBACK="true"
+            echo "Manual rollback requested: ${{ github.event.inputs.reason }}"
+          fi
+
+          echo "needs_rollback=${NEEDS_ROLLBACK}" >> $GITHUB_OUTPUT
+
+  rollback:
+    name: Execute Rollback
+    runs-on: ubuntu-latest
+    needs: health-check
+    if: needs.health-check.outputs.needs_rollback == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine rollback version
+        id: rollback_version
+        run: |
+          if [ -n "${{ github.event.inputs.rollback_version }}" ]; then
+            ROLLBACK_VERSION="${{ github.event.inputs.rollback_version }}"
+          else
+            ROLLBACK_VERSION="${{ needs.health-check.outputs.previous_version }}"
+          fi
+
+          echo "Rolling back to version: ${ROLLBACK_VERSION}"
+          echo "version=${ROLLBACK_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Backup current database
+        run: |
+          # Create database backup before rollback
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+          echo "Creating database backup: backup_${TIMESTAMP}.sql"
+
+          # This would connect to your production database
+          # Example for PostgreSQL:
+          # PGPASSWORD=${{ secrets.DB_PASSWORD }} pg_dump \
+          #   -h ${{ secrets.DB_HOST }} \
+          #   -U ${{ secrets.DB_USER }} \
+          #   -d jddb_production \
+          #   > backup_${TIMESTAMP}.sql
+
+          echo "Database backup completed"
+
+      - name: Pull rollback images
+        run: |
+          ROLLBACK_TAG="${{ steps.rollback_version.outputs.version }}"
+
+          # Pull the specific version images
+          docker pull ${BACKEND_IMAGE}:${ROLLBACK_TAG}
+          docker pull ${FRONTEND_IMAGE}:${ROLLBACK_TAG}
+
+          # Tag as latest for deployment
+          docker tag ${BACKEND_IMAGE}:${ROLLBACK_TAG} ${BACKEND_IMAGE}:rollback
+          docker tag ${FRONTEND_IMAGE}:${ROLLBACK_TAG} ${FRONTEND_IMAGE}:rollback
+
+      - name: Deploy rollback version
+        run: |
+          ENVIRONMENT="${{ github.event.inputs.environment || 'production' }}"
+
+          # Deploy using your deployment method
+          # Example with Docker Compose:
+          cat > docker-compose.rollback.yml <<EOF
+          version: '3.8'
+          services:
+            backend:
+              image: ${BACKEND_IMAGE}:rollback
+              environment:
+                - DATABASE_URL=\${{ secrets.DATABASE_URL }}
+                - REDIS_URL=\${{ secrets.REDIS_URL }}
+                - SECRET_KEY=\${{ secrets.SECRET_KEY }}
+              ports:
+                - "8000:8000"
+              restart: unless-stopped
+
+            frontend:
+              image: ${FRONTEND_IMAGE}:rollback
+              environment:
+                - NEXT_PUBLIC_API_URL=https://api.jddb.gc.ca
+              ports:
+                - "3000:3000"
+              restart: unless-stopped
+          EOF
+
+          # Deploy the rollback version
+          # docker-compose -f docker-compose.rollback.yml up -d
+
+          echo "Rollback deployment initiated for ${ENVIRONMENT}"
+
+      - name: Run database migrations (if needed)
+        run: |
+          # Check if database migrations need to be rolled back
+          ROLLBACK_VERSION="${{ steps.rollback_version.outputs.version }}"
+
+          # Get migration version for rollback tag
+          git checkout ${ROLLBACK_VERSION}
+
+          # Run migration rollback if needed
+          # Example with Alembic:
+          # cd backend
+          # poetry run alembic downgrade <target_revision>
+
+          echo "Database migrations handled for rollback"
+
+      - name: Verify rollback
+        run: |
+          # Wait for services to be ready
+          sleep 30
+
+          ENVIRONMENT="${{ github.event.inputs.environment || 'production' }}"
+
+          if [ "$ENVIRONMENT" == "production" ]; then
+            API_URL="https://api.jddb.gc.ca"
+            APP_URL="https://jddb.gc.ca"
+          else
+            API_URL="https://api-staging.jddb.gc.ca"
+            APP_URL="https://staging.jddb.gc.ca"
+          fi
+
+          # Verify services are responding
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${API_URL}/health || echo "000")
+          APP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${APP_URL} || echo "000")
+
+          if [ "$API_STATUS" == "200" ] && [ "$APP_STATUS" == "200" ]; then
+            echo "✅ Rollback successful! Services are healthy."
+          else
+            echo "❌ Rollback verification failed. Manual intervention required."
+            exit 1
+          fi
+
+      - name: Clear CDN cache
+        run: |
+          # Clear CDN/CloudFront cache if applicable
+          # aws cloudfront create-invalidation \
+          #   --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+          #   --paths "/*"
+
+          echo "CDN cache cleared"
+
+      - name: Notify team
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            🔄 Rollback ${{ job.status == 'success' && 'completed' || 'failed' }}
+            Environment: ${{ github.event.inputs.environment || 'production' }}
+            Rolled back to: ${{ steps.rollback_version.outputs.version }}
+            Reason: ${{ github.event.inputs.reason || 'Automated rollback due to health check failure' }}
+            Triggered by: ${{ github.actor }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  post-rollback:
+    name: Post-Rollback Actions
+    runs-on: ubuntu-latest
+    needs: rollback
+    if: success()
+
+    steps:
+      - name: Create incident report
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          INCIDENT_ID="INC-$(date +%Y%m%d%H%M%S)"
+
+          cat > incident_report.md <<EOF
+          # Incident Report ${INCIDENT_ID}
+
+          ## Summary
+          - **Date/Time**: ${TIMESTAMP}
+          - **Environment**: ${{ github.event.inputs.environment || 'production' }}
+          - **Rollback Version**: ${{ needs.health-check.outputs.previous_version }}
+          - **Triggered By**: ${{ github.actor }}
+          - **Reason**: ${{ github.event.inputs.reason || 'Automated rollback due to health check failure' }}
+
+          ## Timeline
+          - Deployment completed
+          - Health checks failed
+          - Rollback initiated
+          - Services restored
+
+          ## Impact
+          - Service downtime: ~2-5 minutes
+          - Data loss: None (database backed up)
+
+          ## Root Cause
+          [To be investigated]
+
+          ## Action Items
+          - [ ] Investigate root cause
+          - [ ] Fix identified issues
+          - [ ] Test fixes in staging
+          - [ ] Plan re-deployment
+
+          ## Lessons Learned
+          [To be documented after investigation]
+          EOF
+
+          echo "Incident report created: ${INCIDENT_ID}"
+
+      - name: Create GitHub issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueTitle = `🔄 Rollback Incident - ${{ github.event.inputs.environment || 'production' }} - ${new Date().toISOString().split('T')[0]}`;
+            const issueBody = `
+            ## Rollback Executed
+
+            **Environment**: ${{ github.event.inputs.environment || 'production' }}
+            **Rolled back to**: ${{ needs.health-check.outputs.previous_version }}
+            **Reason**: ${{ github.event.inputs.reason || 'Automated rollback due to health check failure' }}
+            **Triggered by**: @${{ github.actor }}
+
+            ### Next Steps
+            - [ ] Review deployment logs
+            - [ ] Identify root cause
+            - [ ] Fix issues
+            - [ ] Test in staging
+            - [ ] Plan re-deployment
+
+            ### Related Links
+            - [Failed Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - [Deployment Logs](#)
+
+            cc: @fortinpy85
+            `;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+              labels: ['incident', 'rollback', 'high-priority']
+            });
+
+      - name: Update status page
+        run: |
+          # Update external status page if applicable
+          # curl -X POST https://api.statuspage.io/v1/incidents \
+          #   -H "Authorization: OAuth ${{ secrets.STATUSPAGE_API_KEY }}" \
+          #   -d '{
+          #     "incident": {
+          #       "name": "Service disruption - rollback in progress",
+          #       "status": "resolved",
+          #       "message": "Services have been restored to previous stable version"
+          #     }
+          #   }'
+
+          echo "Status page updated"

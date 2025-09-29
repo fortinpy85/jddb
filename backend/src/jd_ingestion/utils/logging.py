@@ -1,7 +1,7 @@
 import structlog
 import logging
 import logging.handlers
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union, cast
 from pathlib import Path
 from datetime import datetime
 import sys
@@ -19,7 +19,9 @@ def configure_logging() -> None:
         log_dir.mkdir(exist_ok=True)
 
     # Configure stdlib logging with file handlers for production
-    handlers = []
+    handlers: list[
+        Union[logging.StreamHandler, logging.handlers.RotatingFileHandler]
+    ] = []
 
     if settings.is_development or settings.debug:
         # Console handler for development
@@ -32,14 +34,18 @@ def configure_logging() -> None:
 
         # Main application log
         main_handler = logging.handlers.RotatingFileHandler(
-            log_dir / "app.log", maxBytes=50 * 1024 * 1024, backupCount=10  # 50MB
+            log_dir / "app.log",
+            maxBytes=50 * 1024 * 1024,
+            backupCount=10,  # 50MB
         )
         main_handler.setFormatter(logging.Formatter("%(message)s"))
         handlers.append(main_handler)
 
         # Error log
         error_handler = logging.handlers.RotatingFileHandler(
-            log_dir / "error.log", maxBytes=50 * 1024 * 1024, backupCount=10  # 50MB
+            log_dir / "error.log",
+            maxBytes=50 * 1024 * 1024,
+            backupCount=10,  # 50MB
         )
         error_handler.setLevel(logging.ERROR)
         error_handler.setFormatter(logging.Formatter("%(message)s"))
@@ -47,7 +53,9 @@ def configure_logging() -> None:
 
         # Task log for Celery tasks
         task_handler = logging.handlers.RotatingFileHandler(
-            log_dir / "tasks.log", maxBytes=50 * 1024 * 1024, backupCount=10  # 50MB
+            log_dir / "tasks.log",
+            maxBytes=50 * 1024 * 1024,
+            backupCount=10,  # 50MB
         )
         task_handler.setFormatter(logging.Formatter("%(message)s"))
         handlers.append(task_handler)
@@ -97,7 +105,7 @@ def configure_logging() -> None:
     )
 
 
-def get_logger(name: str, **initial_context) -> structlog.BoundLogger:
+def get_logger(name: str, **initial_context: Any) -> structlog.BoundLogger:
     """Get a configured logger instance with optional initial context."""
     logger = structlog.get_logger(name)
     if initial_context:
@@ -125,7 +133,7 @@ def log_performance_metric(
     """Log a performance metric for monitoring systems to pick up."""
     logger = get_logger(logger_name)
 
-    metric_data = {
+    metric_data: Dict[str, Any] = {
         "metric_type": "performance",
         "metric_name": metric_name,
         "value": value,
@@ -136,7 +144,11 @@ def log_performance_metric(
     if tags:
         metric_data["tags"] = tags
 
-    logger.info("performance_metric", **metric_data)
+    # Explicitly cast logger to Any to bypass MyPy's interpretation of structlog's dynamic info method
+    # This is a common workaround for structlog with MyPy
+
+    _metric_data: Dict[str, Any] = metric_data
+    cast(Any, logger).info("performance_metric", **metric_data)  # type: ignore[call-arg]
 
 
 def log_business_metric(
@@ -149,7 +161,7 @@ def log_business_metric(
     """Log a business metric (jobs processed, files uploaded, etc.)."""
     logger = get_logger(logger_name)
 
-    metric_data = {
+    metric_data: Dict[str, Any] = {
         "metric_type": "business",
         "metric_name": metric_name,
         "value": value,
@@ -160,7 +172,11 @@ def log_business_metric(
     if tags:
         metric_data["tags"] = tags
 
-    logger.info("business_metric", **metric_data)
+    # Explicitly cast logger to Any to bypass MyPy's interpretation of structlog's dynamic info method
+    # This is a common workaround for structlog with MyPy
+
+    _metric_data: Dict[str, Any] = metric_data
+    cast(Any, logger).info("business_metric", **metric_data)  # type: ignore[call-arg]
 
 
 def log_error_with_context(
@@ -171,7 +187,7 @@ def log_error_with_context(
     request_id: Optional[str] = None,
 ) -> None:
     """Log an error with rich context for debugging."""
-    error_context = {
+    error_context: Dict[str, Any] = {
         "error_type": type(error).__name__,
         "error_message": str(error),
     }
@@ -198,17 +214,17 @@ class PerformanceTimer:
         self.operation_name = operation_name
         self.logger = logger or get_logger("performance")
         self.tags = tags or {}
-        self.start_time = None
+        self.start_time: Optional[datetime] = None
         self._elapsed_ms = 0.0
 
-    def __enter__(self):
+    def __enter__(self) -> "PerformanceTimer":
         self.start_time = datetime.utcnow()
         self.logger.debug(
             "operation_started", operation=self.operation_name, **self.tags
         )
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         if self.start_time:
             duration = (datetime.utcnow() - self.start_time).total_seconds() * 1000
             self._elapsed_ms = duration
@@ -244,14 +260,14 @@ class PerformanceTimer:
         return (datetime.utcnow() - self.start_time).total_seconds() * 1000
 
 
-def setup_health_check_logging():
+def setup_health_check_logging() -> Any:
     """Configure logging specifically for health checks and monitoring."""
     health_logger = get_logger("health_check")
 
     def log_component_health(
-        component: str, status: str, details: Optional[Dict] = None
-    ):
-        health_data = {
+        component: str, status: str, details: Optional[Dict[str, Any]] = None
+    ) -> None:
+        health_data: Dict[str, Any] = {
             "component": component,
             "status": status,
             "timestamp": datetime.utcnow().isoformat(),

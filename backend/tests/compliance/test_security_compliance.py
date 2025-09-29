@@ -6,12 +6,10 @@ including ITSG-33, Treasury Board guidelines, and cybersecurity frameworks.
 """
 
 import pytest
-import asyncio
-from typing import Dict, List, Any
-from unittest.mock import Mock, patch, AsyncMock
+from typing import Dict, Any
+from unittest.mock import Mock
 import hashlib
 import hmac
-import time
 from datetime import datetime, timedelta
 
 # Mock imports - these will be replaced with actual imports when Phase 2 is complete
@@ -22,14 +20,17 @@ except ImportError:
     AuthService = None
     AuditLogger = None
 
+
 # Mock classes for Phase 2 services that aren't fully integrated yet
 class MockAuthService:
     def verify_mfa_token(self, token):
         return True
 
+
 class MockAuditLogger:
     def log_event(self, event_type, data):
         return True
+
 
 class MockPerformanceMonitor:
     def track_metric(self, metric, value):
@@ -56,14 +57,14 @@ class TestAuthenticationSecurity:
         strong_passwords = [
             "MyStr0ng!P@ssw0rd123",
             "G0v3rnm3nt$ecur1ty!",
-            "C0mpl3x&S@fe#Pass"
+            "C0mpl3x&S@fe#Pass",
         ]
 
         weak_passwords = [
             "password",  # Too simple
             "12345678",  # Too short, no complexity
             "Password1",  # No symbols, too short
-            "password123!"  # No uppercase
+            "password123!",  # No uppercase
         ]
 
         for password in strong_passwords:
@@ -82,7 +83,7 @@ class TestAuthenticationSecurity:
         user_credentials = {
             "username": "test_user",
             "password": "ValidP@ssw0rd123!",
-            "mfa_token": "123456"
+            "mfa_token": "123456",
         }
 
         # Authentication should require both password and MFA
@@ -98,18 +99,20 @@ class TestAuthenticationSecurity:
 
     def test_session_security(self, auth_service):
         """Test that user sessions are properly secured."""
-        session_requirements = {
+        session_requirements = {  # noqa: F841
             "secure_token": True,
             "httponly_cookie": True,
             "samesite_strict": True,
             "session_timeout": 30,  # minutes
-            "session_regeneration": True
+            "session_regeneration": True,
         }
 
         # Test session token generation
         token = self._generate_session_token()
         assert len(token) >= 32, "Session token should be at least 32 characters"
-        assert token.isalnum() or any(c in token for c in ['-', '_']), "Token should be alphanumeric"
+        assert token.isalnum() or any(
+            c in token for c in ["-", "_"]
+        ), "Token should be alphanumeric"
 
         # Test session timeout
         session_created = datetime.now()
@@ -120,7 +123,7 @@ class TestAuthenticationSecurity:
     def test_account_lockout_mechanism(self, auth_service):
         """Test that account lockout prevents brute force attacks."""
         max_attempts = 5
-        lockout_duration = 15  # minutes
+        lockout_duration = 15  # minutes  # noqa: F841
 
         # Simulate failed login attempts
         failed_attempts = 0
@@ -129,7 +132,9 @@ class TestAuthenticationSecurity:
             is_locked = failed_attempts >= max_attempts
 
             if is_locked:
-                assert is_locked, f"Account should be locked after {max_attempts} failed attempts"
+                assert (
+                    is_locked
+                ), f"Account should be locked after {max_attempts} failed attempts"
                 break
 
     def _validate_password_complexity(self, password: str) -> bool:
@@ -144,7 +149,9 @@ class TestAuthenticationSecurity:
 
         return all([has_upper, has_lower, has_digit, has_symbol])
 
-    def _authenticate_with_mfa(self, auth_service: Mock, credentials: Dict[str, str]) -> Dict[str, Any]:
+    def _authenticate_with_mfa(
+        self, auth_service: Mock, credentials: Dict[str, str]
+    ) -> Dict[str, Any]:
         """Mock MFA authentication process."""
         if "mfa_token" not in credentials:
             return {"success": False, "mfa_verified": False}
@@ -153,14 +160,12 @@ class TestAuthenticationSecurity:
         password_valid = len(credentials.get("password", "")) >= 12
         mfa_valid = auth_service.verify_mfa_token.return_value
 
-        return {
-            "success": password_valid and mfa_valid,
-            "mfa_verified": mfa_valid
-        }
+        return {"success": password_valid and mfa_valid, "mfa_verified": mfa_valid}
 
     def _generate_session_token(self) -> str:
         """Generate a secure session token."""
         import secrets
+
         return secrets.token_urlsafe(32)
 
     def _is_session_expired(self, created: datetime, current: datetime) -> bool:
@@ -180,7 +185,9 @@ class TestDataProtectionSecurity:
         # Mock encryption (in real implementation, this would use actual encryption)
         encrypted_data = self._encrypt_data(sensitive_data, "test-key")
         assert encrypted_data != sensitive_data, "Data should be encrypted"
-        assert len(encrypted_data) > len(sensitive_data), "Encrypted data should be longer"
+        assert len(encrypted_data) > len(
+            sensitive_data
+        ), "Encrypted data should be longer"
 
         # Test decryption
         decrypted_data = self._decrypt_data(encrypted_data, "test-key")
@@ -193,7 +200,7 @@ class TestDataProtectionSecurity:
             "min_version": "TLS1.3",
             "cipher_suites": ["TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256"],
             "certificate_validation": True,
-            "hsts_enabled": True
+            "hsts_enabled": True,
         }
 
         assert tls_config["min_version"] in ["TLS1.2", "TLS1.3"]
@@ -207,11 +214,13 @@ class TestDataProtectionSecurity:
             "key_storage": "HSM_OR_VAULT",
             "key_access_control": True,
             "key_backup": True,
-            "key_destruction": True
+            "key_destruction": True,
         }
 
         for requirement, implemented in key_management.items():
-            assert implemented, f"Key management requirement '{requirement}' must be implemented"
+            assert (
+                implemented
+            ), f"Key management requirement '{requirement}' must be implemented"
 
     def test_pii_data_handling(self):
         """Test that PII is properly identified and protected."""
@@ -219,7 +228,7 @@ class TestDataProtectionSecurity:
             "email": "john.doe@gc.ca",
             "phone": "(613) 555-1234",
             "sin": "123-456-789",  # Should never be in job descriptions
-            "name": "John Doe"
+            "name": "John Doe",
         }
 
         # Test PII detection
@@ -236,6 +245,7 @@ class TestDataProtectionSecurity:
         """Mock data encryption (simplified for testing)."""
         # In real implementation, use proper encryption libraries
         import base64
+
         encoded = base64.b64encode(data.encode()).decode()
         return f"ENCRYPTED:{encoded}"
 
@@ -245,19 +255,21 @@ class TestDataProtectionSecurity:
             raise ValueError("Invalid encrypted data format")
 
         import base64
+
         encoded = encrypted_data.replace("ENCRYPTED:", "")
         return base64.b64decode(encoded).decode()
 
     def _detect_pii(self, value: str, pii_type: str) -> bool:
         """Detect if value contains PII."""
         pii_patterns = {
-            "email": r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-            "phone": r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}',
-            "sin": r'\d{3}-\d{3}-\d{3}',
-            "name": r'\b[A-Z][a-z]+ [A-Z][a-z]+\b'
+            "email": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+            "phone": r"\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}",
+            "sin": r"\d{3}-\d{3}-\d{3}",
+            "name": r"\b[A-Z][a-z]+ [A-Z][a-z]+\b",
         }
 
         import re
+
         pattern = pii_patterns.get(pii_type)
         if pattern:
             return bool(re.search(pattern, value))
@@ -298,7 +310,7 @@ class TestAuditLoggingSecurity:
             "permission_change",
             "admin_action",
             "system_error",
-            "security_violation"
+            "security_violation",
         ]
 
         for event_type in required_events:
@@ -314,7 +326,7 @@ class TestAuditLoggingSecurity:
             "user_id": "test_user",
             "action": "document_access",
             "resource": "job_description_123",
-            "result": "success"
+            "result": "success",
         }
 
         # Generate integrity hash
@@ -338,19 +350,23 @@ class TestAuditLoggingSecurity:
             "audit_logs": 7 * 365,  # days
             "security_events": 7 * 365,
             "access_logs": 2 * 365,
-            "system_logs": 1 * 365
+            "system_logs": 1 * 365,
         }
 
         current_date = datetime.now()
         log_date = current_date - timedelta(days=8 * 365)  # 8 years old
 
         # Logs older than retention period should be marked for deletion
-        should_delete = self._should_delete_log(log_date, current_date, retention_policy["audit_logs"])
+        should_delete = self._should_delete_log(
+            log_date, current_date, retention_policy["audit_logs"]
+        )
         assert should_delete, "Logs older than retention period should be deleted"
 
         # Recent logs should be retained
         recent_log = current_date - timedelta(days=30)
-        should_keep = self._should_delete_log(recent_log, current_date, retention_policy["audit_logs"])
+        should_keep = self._should_delete_log(
+            recent_log, current_date, retention_policy["audit_logs"]
+        )
         assert not should_keep, "Recent logs should be retained"
 
     def test_real_time_monitoring(self, audit_logger):
@@ -360,13 +376,15 @@ class TestAuditLoggingSecurity:
             "privilege_escalation_attempt",
             "unauthorized_access_attempt",
             "data_exfiltration_indicator",
-            "system_compromise_indicator"
+            "system_compromise_indicator",
         ]
 
         for event in critical_events:
             # These events should trigger immediate alerts
             alert_triggered = self._check_security_alert(event)
-            assert alert_triggered, f"Critical event '{event}' should trigger security alert"
+            assert (
+                alert_triggered
+            ), f"Critical event '{event}' should trigger security alert"
 
     def _log_security_event(self, audit_logger: Mock, event_type: str) -> bool:
         """Mock logging a security event."""
@@ -382,9 +400,7 @@ class TestAuditLoggingSecurity:
         # Generate HMAC-SHA256 hash
         secret_key = "audit_log_secret_key"  # In production, use proper key management
         return hmac.new(
-            secret_key.encode(),
-            log_string.encode(),
-            hashlib.sha256
+            secret_key.encode(), log_string.encode(), hashlib.sha256
         ).hexdigest()
 
     def _verify_log_integrity(self, log_entry: Dict[str, Any]) -> bool:
@@ -396,7 +412,9 @@ class TestAuditLoggingSecurity:
         calculated_hash = self._generate_log_hash(log_entry)
         return stored_hash == calculated_hash
 
-    def _should_delete_log(self, log_date: datetime, current_date: datetime, retention_days: int) -> bool:
+    def _should_delete_log(
+        self, log_date: datetime, current_date: datetime, retention_days: int
+    ) -> bool:
         """Determine if log should be deleted based on retention policy."""
         age_days = (current_date - log_date).days
         return age_days > retention_days
@@ -409,7 +427,7 @@ class TestAuditLoggingSecurity:
             "privilege_escalation_attempt",
             "unauthorized_access_attempt",
             "data_exfiltration_indicator",
-            "system_compromise_indicator"
+            "system_compromise_indicator",
         ]
         return event_type in critical_events
 
@@ -431,7 +449,9 @@ class TestWebSocketSecurity:
 
         # Invalid token should reject connection
         can_connect_invalid = self._validate_websocket_auth(invalid_token)
-        assert not can_connect_invalid, "Invalid token should reject WebSocket connection"
+        assert (
+            not can_connect_invalid
+        ), "Invalid token should reject WebSocket connection"
 
     def test_websocket_rate_limiting(self):
         """Test that WebSocket connections are rate limited."""
@@ -455,13 +475,16 @@ class TestWebSocketSecurity:
             "operation": "insert",
             "position": 10,
             "content": "Valid content",
-            "user_id": "user_123"
+            "user_id": "user_123",
         }
 
         invalid_messages = [
             {"type": "invalid_type"},  # Invalid message type
             {"type": "document_edit"},  # Missing required fields
-            {"type": "document_edit", "document_id": "../etc/passwd"},  # Path traversal attempt
+            {
+                "type": "document_edit",
+                "document_id": "../etc/passwd",
+            },  # Path traversal attempt
         ]
 
         # Valid message should pass validation
@@ -471,7 +494,9 @@ class TestWebSocketSecurity:
         # Invalid messages should fail validation
         for invalid_msg in invalid_messages:
             is_invalid = self._validate_websocket_message(invalid_msg)
-            assert not is_invalid, f"Invalid message should fail validation: {invalid_msg}"
+            assert (
+                not is_invalid
+            ), f"Invalid message should fail validation: {invalid_msg}"
 
     def _validate_websocket_auth(self, token: str) -> bool:
         """Mock WebSocket authentication validation."""

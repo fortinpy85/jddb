@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Any
+from typing import Dict, Any, Optional, Union
 from dataclasses import dataclass, field
 
 
@@ -11,8 +11,8 @@ class StructuredFields:
     department: str = ""
     reports_to: str = ""
     location: str = ""
-    fte_count: int = None
-    salary_budget: float = None
+    fte_count: Optional[int] = None
+    salary_budget: Optional[float] = None
     effective_date: str = ""
 
 
@@ -54,7 +54,7 @@ class ContentProcessor:
         processed_content = self.raw_content or ""
 
         # Step 1: Find all header matches and their positions
-        header_matches = []
+        header_matches: list[Dict[str, Union[str, int]]] = []
         header_regex = re.compile(
             r"(?:\n|^|\s)(?P<header>"
             + "|".join(re.escape(h) for h in section_headers)
@@ -72,12 +72,12 @@ class ContentProcessor:
 
         # Step 2: Extract content between headers
         for i, current_header_info in enumerate(header_matches):
-            header_text = current_header_info["header"]
-            content_start = current_header_info["end"]
+            header_text = str(current_header_info["header"])
+            content_start = int(current_header_info["end"])
 
             if i + 1 < len(header_matches):
                 # Content ends at the start of the next header
-                content_end = header_matches[i + 1]["start"]
+                content_end = int(header_matches[i + 1]["start"])
             else:
                 # Last header, content goes to the end of the document
                 content_end = len(processed_content)
@@ -112,7 +112,7 @@ class ContentProcessor:
         reporting structure, department, etc.
         This will require specific regex patterns for each field.
         """
-        structured_fields = {
+        structured_fields: Dict[str, Optional[Union[str, int, float]]] = {
             "position_title": None,
             "reports_to": None,
             "department": None,

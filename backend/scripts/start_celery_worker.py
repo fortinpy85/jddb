@@ -2,11 +2,11 @@
 """
 This script starts a Celery worker for the job description ingestion system.
 """
+
+import argparse
 import logging
-import os
 import sys
 from pathlib import Path
-import argparse
 
 # Add the src directory to Python path
 backend_dir = Path(__file__).parent.parent
@@ -14,7 +14,7 @@ src_dir = backend_dir / "src"
 sys.path.insert(0, str(src_dir))
 
 # Import Celery app
-from jd_ingestion.tasks.celery_app import celery_app
+from jd_ingestion.tasks.celery_app import celery_app  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"

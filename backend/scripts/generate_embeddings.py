@@ -2,9 +2,9 @@
 """
 This script generates embeddings for existing job descriptions in the database.
 """
+
 import asyncio
 import argparse
-import logging
 import sys
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -15,7 +15,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select, func
-from sqlalchemy.exc import SQLAlchemyError
 
 from jd_ingestion.config import settings
 from jd_ingestion.database.models import JobDescription, JobSection, ContentChunk

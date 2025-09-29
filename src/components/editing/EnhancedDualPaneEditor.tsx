@@ -1,13 +1,22 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { WorkflowSteps, TRANSLATION_WORKFLOW } from '@/components/ui/workflow-steps';
-import { SidebarNav, TRANSLATION_NAV } from '@/components/ui/sidebar-nav';
+import React, { useState, useRef } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  WorkflowSteps,
+  TRANSLATION_WORKFLOW,
+} from "@/components/ui/workflow-steps";
+import { SidebarNav, TRANSLATION_NAV } from "@/components/ui/sidebar-nav";
 import {
   ArrowLeftRight,
   Sparkles,
@@ -22,40 +31,42 @@ import {
   FileText,
   ChevronDown,
   Globe,
-  Zap
-} from 'lucide-react';
+  Zap,
+} from "lucide-react";
 
 interface EnhancedDualPaneEditorProps {
   jobId?: number;
   sessionId?: string;
-  mode: 'editing' | 'translation' | 'comparison';
+  mode: "editing" | "translation" | "comparison";
   readonly?: boolean;
   initialLeftContent?: string;
   initialRightContent?: string;
-  onContentChange?: (pane: 'left' | 'right', content: string) => void;
+  onContentChange?: (pane: "left" | "right", content: string) => void;
   onSave?: (leftContent: string, rightContent: string) => void;
 }
 
 export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
   mode,
   readonly = false,
-  initialLeftContent = '',
-  initialRightContent = '',
+  initialLeftContent = "",
+  initialRightContent = "",
   onContentChange,
-  onSave
+  onSave,
 }) => {
-  const [leftPaneContent, setLeftPaneContent] = useState<string>(initialLeftContent);
-  const [rightPaneContent, setRightPaneContent] = useState<string>(initialRightContent);
+  const [leftPaneContent, setLeftPaneContent] =
+    useState<string>(initialLeftContent);
+  const [rightPaneContent, setRightPaneContent] =
+    useState<string>(initialRightContent);
   const [isSyncScroll, setIsSyncScroll] = useState(true);
-  const [sourceLanguage, setSourceLanguage] = useState('en');
-  const [targetLanguage, setTargetLanguage] = useState('fr');
-  const [formality, setFormality] = useState('default');
+  const [sourceLanguage, setSourceLanguage] = useState("en");
+  const [targetLanguage, setTargetLanguage] = useState("fr");
+  const [formality, setFormality] = useState("default");
 
   const leftEditorRef = useRef<HTMLTextAreaElement>(null);
   const rightEditorRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleContentChange = (pane: 'left' | 'right', content: string) => {
-    if (pane === 'left') {
+  const handleContentChange = (pane: "left" | "right", content: string) => {
+    if (pane === "left") {
       setLeftPaneContent(content);
     } else {
       setRightPaneContent(content);
@@ -63,23 +74,45 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
     onContentChange?.(pane, content);
   };
 
-  const handleScroll = (source: 'left' | 'right') => {
+  const handleScroll = (source: "left" | "right") => {
     if (!isSyncScroll) return;
 
-    const sourceRef = source === 'left' ? leftEditorRef.current : rightEditorRef.current;
-    const targetRef = source === 'left' ? rightEditorRef.current : leftEditorRef.current;
+    const sourceRef =
+      source === "left" ? leftEditorRef.current : rightEditorRef.current;
+    const targetRef =
+      source === "left" ? rightEditorRef.current : leftEditorRef.current;
 
     if (sourceRef && targetRef) {
-      const percentage = sourceRef.scrollTop / (sourceRef.scrollHeight - sourceRef.clientHeight);
-      targetRef.scrollTop = percentage * (targetRef.scrollHeight - targetRef.clientHeight);
+      const percentage =
+        sourceRef.scrollTop / (sourceRef.scrollHeight - sourceRef.clientHeight);
+      targetRef.scrollTop =
+        percentage * (targetRef.scrollHeight - targetRef.clientHeight);
     }
   };
 
   const getModeTabs = () => {
     const tabs = [
-      { id: 'text', label: 'Translate text', subtitle: '35 languages', icon: <Languages className="w-4 h-4" />, active: mode === 'translation' },
-      { id: 'files', label: 'Translate files', subtitle: '.pdf, .docx, .pptx', icon: <FileText className="w-4 h-4" />, active: false },
-      { id: 'deepl', label: 'DeepL Write', subtitle: 'AI-powered edits', icon: <Zap className="w-4 h-4" />, active: mode === 'editing' }
+      {
+        id: "text",
+        label: "Translate text",
+        subtitle: "35 languages",
+        icon: <Languages className="w-4 h-4" />,
+        active: mode === "translation",
+      },
+      {
+        id: "files",
+        label: "Translate files",
+        subtitle: ".pdf, .docx, .pptx",
+        icon: <FileText className="w-4 h-4" />,
+        active: false,
+      },
+      {
+        id: "deepl",
+        label: "DeepL Write",
+        subtitle: "AI-powered edits",
+        icon: <Zap className="w-4 h-4" />,
+        active: mode === "editing",
+      },
     ];
 
     return tabs;
@@ -95,8 +128,8 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
               key={tab.id}
               className={`px-4 py-3 rounded-lg flex items-center space-x-3 mr-4 transition-all ${
                 tab.active
-                  ? 'bg-blue-50 border border-blue-200 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? "bg-blue-50 border border-blue-200 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-50"
               }`}
             >
               {tab.icon}
@@ -113,11 +146,14 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
         {/* Sidebar */}
         <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
           {/* Language Selection */}
-          {mode === 'translation' && (
+          {mode === "translation" && (
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="space-y-4">
                 <div className="flex items-center justify-center space-x-4">
-                  <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
+                  <Select
+                    value={sourceLanguage}
+                    onValueChange={setSourceLanguage}
+                  >
                     <SelectTrigger className="w-36">
                       <SelectValue />
                     </SelectTrigger>
@@ -133,7 +169,10 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
                     <ArrowLeftRight className="w-4 h-4" />
                   </Button>
 
-                  <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                  <Select
+                    value={targetLanguage}
+                    onValueChange={setTargetLanguage}
+                  >
                     <SelectTrigger className="w-36">
                       <SelectValue />
                     </SelectTrigger>
@@ -156,7 +195,7 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
               Editing tools
             </h3>
 
-            {mode === 'translation' && (
+            {mode === "translation" && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Formality</span>
@@ -192,16 +231,28 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
             </h3>
 
             <div className="space-y-3">
-              <Button variant="outline" size="sm" className="w-full justify-start text-sm">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start text-sm"
+              >
                 <Settings className="w-4 h-4 mr-2" />
                 Custom rules
-                <Badge className="ml-auto bg-green-100 text-green-700 text-xs">Pro</Badge>
+                <Badge className="ml-auto bg-green-100 text-green-700 text-xs">
+                  Pro
+                </Badge>
               </Button>
 
-              <Button variant="outline" size="sm" className="w-full justify-start text-sm">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start text-sm"
+              >
                 <Book className="w-4 h-4 mr-2" />
                 Glossaries
-                <span className="ml-auto text-xs text-gray-400">None set →</span>
+                <span className="ml-auto text-xs text-gray-400">
+                  None set →
+                </span>
               </Button>
             </div>
           </div>
@@ -211,7 +262,11 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
             <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
               Powered by
             </h3>
-            <Button variant="ghost" size="sm" className="w-full justify-start text-sm text-gray-600">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-start text-sm text-gray-600"
+            >
               <Globe className="w-4 h-4 mr-2" />
               Language model
             </Button>
@@ -226,11 +281,14 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
             <div className="flex-1 flex flex-col bg-white dark:bg-gray-800">
               <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="text-sm text-gray-600 mb-2">
-                  {mode === 'translation' ? 'Type to translate.' : 'Type or paste text to see ideas for improvement.'}
+                  {mode === "translation"
+                    ? "Type to translate."
+                    : "Type or paste text to see ideas for improvement."}
                 </div>
-                {mode === 'translation' && (
+                {mode === "translation" && (
                   <div className="text-xs text-gray-500">
-                    Drag and drop to translate PDF, Word (.docx), and PowerPoint (.pptx) files with our document translator.
+                    Drag and drop to translate PDF, Word (.docx), and PowerPoint
+                    (.pptx) files with our document translator.
                   </div>
                 )}
               </div>
@@ -238,12 +296,13 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
               <textarea
                 ref={leftEditorRef}
                 value={leftPaneContent}
-                onChange={(e) => handleContentChange('left', e.target.value)}
-                onScroll={() => handleScroll('left')}
+                onChange={(e) => handleContentChange("left", e.target.value)}
+                onScroll={() => handleScroll("left")}
                 className="flex-1 p-4 bg-transparent resize-none focus:outline-none text-gray-800 dark:text-gray-100 placeholder-gray-400"
-                placeholder={mode === 'translation'
-                  ? 'Type to translate.'
-                  : 'Click any word for alternatives or to rephrase a sentence.'
+                placeholder={
+                  mode === "translation"
+                    ? "Type to translate."
+                    : "Click any word for alternatives or to rephrase a sentence."
                 }
                 readOnly={readonly}
               />
@@ -254,7 +313,7 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
               <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-600">
-                    {mode === 'translation' ? 'Translation' : 'Enhanced text'}
+                    {mode === "translation" ? "Translation" : "Enhanced text"}
                   </div>
                   <div className="flex items-center space-x-2">
                     <Button variant="ghost" size="sm">
@@ -270,12 +329,13 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
               <textarea
                 ref={rightEditorRef}
                 value={rightPaneContent}
-                onChange={(e) => handleContentChange('right', e.target.value)}
-                onScroll={() => handleScroll('right')}
+                onChange={(e) => handleContentChange("right", e.target.value)}
+                onScroll={() => handleScroll("right")}
                 className="flex-1 p-4 bg-transparent resize-none focus:outline-none text-gray-800 dark:text-gray-100 placeholder-gray-400"
-                placeholder={mode === 'translation'
-                  ? 'Translation will appear here'
-                  : 'Enhanced text will appear here'
+                placeholder={
+                  mode === "translation"
+                    ? "Translation will appear here"
+                    : "Enhanced text will appear here"
                 }
                 readOnly={readonly}
               />
@@ -283,7 +343,7 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
           </div>
 
           {/* Bottom Dictionary Section */}
-          {mode === 'translation' && (
+          {mode === "translation" && (
             <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <Book className="w-4 h-4" />

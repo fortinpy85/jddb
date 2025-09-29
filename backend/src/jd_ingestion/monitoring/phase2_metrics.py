@@ -25,6 +25,7 @@ logger = get_logger(__name__)
 @dataclass
 class MetricEvent:
     """A single metric event."""
+
     timestamp: datetime
     metric_name: str
     metric_value: float
@@ -36,6 +37,7 @@ class MetricEvent:
 @dataclass
 class WebSocketMetrics:
     """WebSocket connection metrics."""
+
     active_connections: int = 0
     total_connections: int = 0
     messages_sent: int = 0
@@ -49,6 +51,7 @@ class WebSocketMetrics:
 @dataclass
 class CollaborationMetrics:
     """Collaborative editing metrics."""
+
     active_sessions: int = 0
     total_operations: int = 0
     operations_per_minute: float = 0.0
@@ -61,6 +64,7 @@ class CollaborationMetrics:
 @dataclass
 class TranslationMetrics:
     """Translation memory metrics."""
+
     translation_requests: int = 0
     cache_hits: int = 0
     cache_misses: int = 0
@@ -73,6 +77,7 @@ class TranslationMetrics:
 @dataclass
 class SystemMetrics:
     """System resource metrics."""
+
     cpu_usage_percent: float = 0.0
     memory_usage_percent: float = 0.0
     memory_usage_mb: float = 0.0
@@ -131,20 +136,29 @@ class MetricsCollector:
             duration_ms = (time.time() - start_time) * 1000
 
             # Store timing data
-            self.operation_timings.append({
-                'operation': operation_name,
-                'duration_ms': duration_ms,
-                'timestamp': start_dt
-            })
+            self.operation_timings.append(
+                {
+                    "operation": operation_name,
+                    "duration_ms": duration_ms,
+                    "timestamp": start_dt,
+                }
+            )
 
             # Add to metric history
-            self.record_metric(f"operation_duration_{operation_name}", duration_ms, "milliseconds")
+            self.record_metric(
+                f"operation_duration_{operation_name}", duration_ms, "milliseconds"
+            )
 
             logger.debug(f"Operation '{operation_name}' took {duration_ms:.2f}ms")
 
-    def record_metric(self, metric_name: str, value: float, unit: str,
-                     labels: Optional[Dict[str, str]] = None,
-                     metadata: Optional[Dict[str, Any]] = None):
+    def record_metric(
+        self,
+        metric_name: str,
+        value: float,
+        unit: str,
+        labels: Optional[Dict[str, str]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
         """Record a metric value."""
         event = MetricEvent(
             timestamp=datetime.utcnow(),
@@ -152,7 +166,7 @@ class MetricsCollector:
             metric_value=value,
             metric_unit=unit,
             labels=labels or {},
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
 
         self.metric_history[metric_name].append(event)
@@ -164,17 +178,23 @@ class MetricsCollector:
             self.websocket_metrics.total_connections += 1
             self.websocket_metrics.peak_connections = max(
                 self.websocket_metrics.peak_connections,
-                self.websocket_metrics.active_connections
+                self.websocket_metrics.active_connections,
             )
         else:
-            self.websocket_metrics.active_connections = max(0,
-                self.websocket_metrics.active_connections - 1)
+            self.websocket_metrics.active_connections = max(
+                0, self.websocket_metrics.active_connections - 1
+            )
 
         self.websocket_metrics.last_activity = datetime.utcnow()
-        self.record_metric("websocket_active_connections",
-                          self.websocket_metrics.active_connections, "count")
+        self.record_metric(
+            "websocket_active_connections",
+            self.websocket_metrics.active_connections,
+            "count",
+        )
 
-    def record_websocket_message(self, sent: bool = True, latency_ms: float = None):
+    def record_websocket_message(
+        self, sent: bool = True, latency_ms: Optional[float] = None
+    ):
         """Record WebSocket message event."""
         if sent:
             self.websocket_metrics.messages_sent += 1
@@ -184,9 +204,13 @@ class MetricsCollector:
         if latency_ms is not None:
             self.latency_measurements.append(latency_ms)
             if self.latency_measurements:
-                self.websocket_metrics.average_latency_ms = sum(self.latency_measurements) / len(self.latency_measurements)
+                self.websocket_metrics.average_latency_ms = sum(
+                    self.latency_measurements
+                ) / len(self.latency_measurements)
 
-    def record_collaboration_operation(self, operation_type: str, conflict: bool = False):
+    def record_collaboration_operation(
+        self, operation_type: str, conflict: bool = False
+    ):
         """Record collaborative editing operation."""
         self.collaboration_metrics.total_operations += 1
 
@@ -194,15 +218,23 @@ class MetricsCollector:
             self.collaboration_metrics.conflict_resolution_count += 1
 
         # Calculate operations per minute
-        recent_ops = [op for op in self.operation_timings
-                     if op['timestamp'] > datetime.utcnow() - timedelta(minutes=1)]
+        recent_ops = [
+            op
+            for op in self.operation_timings
+            if op["timestamp"] > datetime.utcnow() - timedelta(minutes=1)
+        ]
         self.collaboration_metrics.operations_per_minute = len(recent_ops)
 
-        self.record_metric("collaboration_operations",
-                          self.collaboration_metrics.total_operations, "count",
-                          labels={"operation_type": operation_type, "conflict": str(conflict)})
+        self.record_metric(
+            "collaboration_operations",
+            self.collaboration_metrics.total_operations,
+            "count",
+            labels={"operation_type": operation_type, "conflict": str(conflict)},
+        )
 
-    def record_translation_request(self, cache_hit: bool = False, duration_ms: float = None):
+    def record_translation_request(
+        self, cache_hit: bool = False, duration_ms: Optional[float] = None
+    ):
         """Record translation memory request."""
         self.translation_metrics.translation_requests += 1
 
@@ -212,9 +244,13 @@ class MetricsCollector:
             self.translation_metrics.cache_misses += 1
 
         # Calculate cache hit ratio
-        total_requests = self.translation_metrics.cache_hits + self.translation_metrics.cache_misses
+        total_requests = (
+            self.translation_metrics.cache_hits + self.translation_metrics.cache_misses
+        )
         if total_requests > 0:
-            self.translation_metrics.cache_hit_ratio = self.translation_metrics.cache_hits / total_requests
+            self.translation_metrics.cache_hit_ratio = (
+                self.translation_metrics.cache_hits / total_requests
+            )
 
         if duration_ms is not None:
             self.record_metric("translation_duration", duration_ms, "milliseconds")
@@ -231,7 +267,7 @@ class MetricsCollector:
             self.system_metrics.memory_usage_mb = memory.used / (1024 * 1024)
 
             # Disk usage
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
             self.system_metrics.disk_usage_percent = disk.percent
 
             # Network connections
@@ -242,10 +278,22 @@ class MetricsCollector:
             self.system_metrics.uptime_hours = uptime_seconds / 3600
 
             # Record metrics
-            self.record_metric("system_cpu_usage", self.system_metrics.cpu_usage_percent, "percent")
-            self.record_metric("system_memory_usage", self.system_metrics.memory_usage_percent, "percent")
-            self.record_metric("system_memory_mb", self.system_metrics.memory_usage_mb, "megabytes")
-            self.record_metric("system_network_connections", self.system_metrics.network_connections, "count")
+            self.record_metric(
+                "system_cpu_usage", self.system_metrics.cpu_usage_percent, "percent"
+            )
+            self.record_metric(
+                "system_memory_usage",
+                self.system_metrics.memory_usage_percent,
+                "percent",
+            )
+            self.record_metric(
+                "system_memory_mb", self.system_metrics.memory_usage_mb, "megabytes"
+            )
+            self.record_metric(
+                "system_network_connections",
+                self.system_metrics.network_connections,
+                "count",
+            )
 
         except Exception as e:
             logger.error(f"Error collecting system metrics: {e}")
@@ -255,18 +303,28 @@ class MetricsCollector:
         try:
             async for db in get_async_session():
                 # Get database connection count
-                result = await db.execute(text("SELECT count(*) FROM pg_stat_activity WHERE state = 'active'"))
+                result = await db.execute(
+                    text("SELECT count(*) FROM pg_stat_activity WHERE state = 'active'")
+                )
                 active_connections = result.scalar()
                 self.system_metrics.database_connections = active_connections
 
                 # Get database size
-                result = await db.execute(text("SELECT pg_database_size(current_database())"))
+                result = await db.execute(
+                    text("SELECT pg_database_size(current_database())")
+                )
                 db_size_bytes = result.scalar()
                 db_size_mb = db_size_bytes / (1024 * 1024) if db_size_bytes else 0
 
                 # Get table statistics for Phase 2 tables
-                phase2_tables = ['users', 'user_sessions', 'editing_sessions', 'document_changes',
-                               'translation_memory', 'user_analytics']
+                phase2_tables = [
+                    "users",
+                    "user_sessions",
+                    "editing_sessions",
+                    "document_changes",
+                    "translation_memory",
+                    "user_analytics",
+                ]
 
                 for table in phase2_tables:
                     try:
@@ -290,23 +348,48 @@ class MetricsCollector:
             async for db in get_async_session():
                 # Save system metrics
                 metrics_to_save = [
-                    ("system_cpu_usage", self.system_metrics.cpu_usage_percent, "percent"),
-                    ("system_memory_usage", self.system_metrics.memory_usage_percent, "percent"),
-                    ("websocket_active_connections", self.websocket_metrics.active_connections, "count"),
-                    ("collaboration_active_sessions", self.collaboration_metrics.active_sessions, "count"),
-                    ("translation_cache_hit_ratio", self.translation_metrics.cache_hit_ratio, "ratio"),
+                    (
+                        "system_cpu_usage",
+                        self.system_metrics.cpu_usage_percent,
+                        "percent",
+                    ),
+                    (
+                        "system_memory_usage",
+                        self.system_metrics.memory_usage_percent,
+                        "percent",
+                    ),
+                    (
+                        "websocket_active_connections",
+                        self.websocket_metrics.active_connections,
+                        "count",
+                    ),
+                    (
+                        "collaboration_active_sessions",
+                        self.collaboration_metrics.active_sessions,
+                        "count",
+                    ),
+                    (
+                        "translation_cache_hit_ratio",
+                        self.translation_metrics.cache_hit_ratio,
+                        "ratio",
+                    ),
                 ]
 
                 for metric_name, value, unit in metrics_to_save:
-                    await db.execute(text("""
+                    await db.execute(
+                        text(
+                            """
                         INSERT INTO system_metrics (metric_name, metric_value, metric_unit, metadata)
                         VALUES (:name, :value, :unit, :metadata)
-                    """), {
-                        "name": metric_name,
-                        "value": value,
-                        "unit": unit,
-                        "metadata": json.dumps({"source": "phase2_monitoring"})
-                    })
+                    """
+                        ),
+                        {
+                            "name": metric_name,
+                            "value": value,
+                            "unit": unit,
+                            "metadata": json.dumps({"source": "phase2_monitoring"}),
+                        },
+                    )
 
                 await db.commit()
                 break
@@ -324,37 +407,40 @@ class MetricsCollector:
                 "messages_sent": self.websocket_metrics.messages_sent,
                 "messages_received": self.websocket_metrics.messages_received,
                 "average_latency_ms": self.websocket_metrics.average_latency_ms,
-                "peak_connections": self.websocket_metrics.peak_connections
+                "peak_connections": self.websocket_metrics.peak_connections,
             },
             "collaboration": {
                 "total_operations": self.collaboration_metrics.total_operations,
                 "operations_per_minute": self.collaboration_metrics.operations_per_minute,
                 "conflict_resolution_count": self.collaboration_metrics.conflict_resolution_count,
-                "document_saves": self.collaboration_metrics.document_saves
+                "document_saves": self.collaboration_metrics.document_saves,
             },
             "translation": {
                 "translation_requests": self.translation_metrics.translation_requests,
                 "cache_hit_ratio": self.translation_metrics.cache_hit_ratio,
-                "memory_entries": self.translation_metrics.memory_entries
+                "memory_entries": self.translation_metrics.memory_entries,
             },
             "system": {
                 "cpu_usage_percent": self.system_metrics.cpu_usage_percent,
                 "memory_usage_percent": self.system_metrics.memory_usage_percent,
                 "memory_usage_mb": self.system_metrics.memory_usage_mb,
                 "database_connections": self.system_metrics.database_connections,
-                "uptime_hours": self.system_metrics.uptime_hours
-            }
+                "uptime_hours": self.system_metrics.uptime_hours,
+            },
         }
 
     def get_performance_report(self) -> Dict[str, Any]:
         """Generate a performance report for Phase 2 features."""
         # Calculate average operation times
-        recent_operations = [op for op in self.operation_timings
-                           if op['timestamp'] > datetime.utcnow() - timedelta(minutes=5)]
+        recent_operations = [
+            op
+            for op in self.operation_timings
+            if op["timestamp"] > datetime.utcnow() - timedelta(minutes=5)
+        ]
 
         operation_stats = defaultdict(list)
         for op in recent_operations:
-            operation_stats[op['operation']].append(op['duration_ms'])
+            operation_stats[op["operation"]].append(op["duration_ms"])
 
         avg_operation_times = {}
         for op_name, durations in operation_stats.items():
@@ -362,7 +448,7 @@ class MetricsCollector:
                 "avg_ms": sum(durations) / len(durations),
                 "min_ms": min(durations),
                 "max_ms": max(durations),
-                "count": len(durations)
+                "count": len(durations),
             }
 
         return {
@@ -370,14 +456,20 @@ class MetricsCollector:
             "summary": self.get_metrics_summary(),
             "performance": {
                 "operation_timings": avg_operation_times,
-                "recent_latency": list(self.latency_measurements)[-10:] if self.latency_measurements else [],
+                "recent_latency": (
+                    list(self.latency_measurements)[-10:]
+                    if self.latency_measurements
+                    else []
+                ),
                 "memory_efficiency": {
-                    "metric_history_size": sum(len(h) for h in self.metric_history.values()),
+                    "metric_history_size": sum(
+                        len(h) for h in self.metric_history.values()
+                    ),
                     "operation_timings_size": len(self.operation_timings),
-                    "latency_measurements_size": len(self.latency_measurements)
-                }
+                    "latency_measurements_size": len(self.latency_measurements),
+                },
             },
-            "recommendations": self._generate_recommendations()
+            "recommendations": self._generate_recommendations(),
         }
 
     def _generate_recommendations(self) -> List[str]:
@@ -386,25 +478,39 @@ class MetricsCollector:
 
         # High CPU usage
         if self.system_metrics.cpu_usage_percent > 80:
-            recommendations.append("High CPU usage detected. Consider optimizing WebSocket message processing.")
+            recommendations.append(
+                "High CPU usage detected. Consider optimizing WebSocket message processing."
+            )
 
         # High memory usage
         if self.system_metrics.memory_usage_percent > 85:
-            recommendations.append("High memory usage detected. Review in-memory caching strategies.")
+            recommendations.append(
+                "High memory usage detected. Review in-memory caching strategies."
+            )
 
         # High latency
         if self.websocket_metrics.average_latency_ms > 100:
-            recommendations.append("High WebSocket latency detected. Check network conditions and server load.")
+            recommendations.append(
+                "High WebSocket latency detected. Check network conditions and server load."
+            )
 
         # Many conflicts
-        conflict_ratio = (self.collaboration_metrics.conflict_resolution_count /
-                         max(1, self.collaboration_metrics.total_operations))
+        conflict_ratio = self.collaboration_metrics.conflict_resolution_count / max(
+            1, self.collaboration_metrics.total_operations
+        )
         if conflict_ratio > 0.1:
-            recommendations.append("High conflict resolution rate. Consider improving operational transformation.")
+            recommendations.append(
+                "High conflict resolution rate. Consider improving operational transformation."
+            )
 
         # Low cache hit ratio
-        if self.translation_metrics.cache_hit_ratio < 0.7 and self.translation_metrics.translation_requests > 10:
-            recommendations.append("Low translation cache hit ratio. Review cache eviction policies.")
+        if (
+            self.translation_metrics.cache_hit_ratio < 0.7
+            and self.translation_metrics.translation_requests > 10
+        ):
+            recommendations.append(
+                "Low translation cache hit ratio. Review cache eviction policies."
+            )
 
         return recommendations
 
@@ -427,11 +533,10 @@ def stop_monitoring():
 def record_websocket_event(event_type: str, **kwargs):
     """Record a WebSocket event."""
     if event_type == "connection":
-        metrics_collector.record_websocket_connection(kwargs.get('connected', True))
+        metrics_collector.record_websocket_connection(kwargs.get("connected", True))
     elif event_type == "message":
         metrics_collector.record_websocket_message(
-            kwargs.get('sent', True),
-            kwargs.get('latency_ms')
+            kwargs.get("sent", True), kwargs.get("latency_ms")
         )
 
 
@@ -440,7 +545,9 @@ def record_collaboration_event(operation_type: str, conflict: bool = False):
     metrics_collector.record_collaboration_operation(operation_type, conflict)
 
 
-def record_translation_event(cache_hit: bool = False, duration_ms: float = None):
+def record_translation_event(
+    cache_hit: bool = False, duration_ms: Optional[float] = None
+):
     """Record a translation event."""
     metrics_collector.record_translation_request(cache_hit, duration_ms)
 

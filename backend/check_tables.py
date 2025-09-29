@@ -2,6 +2,7 @@
 """
 This script checks the database connection and lists the existing tables.
 """
+
 import asyncio
 import logging
 from sqlalchemy import text

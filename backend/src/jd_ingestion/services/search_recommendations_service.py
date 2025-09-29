@@ -10,10 +10,10 @@ ML-powered query suggestions and search recommendations based on:
 
 import re
 import asyncio
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, cast
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc, and_, text
+from sqlalchemy import select, func, desc, and_, or_, text
 
 from ..database.models import (
     SearchAnalytics,
@@ -154,7 +154,7 @@ class SearchRecommendationsService:
         - Filter recommendations
         """
         try:
-            recommendations = {
+            recommendations: Dict[str, Any] = {
                 "related_searches": [],
                 "trending_queries": [],
                 "suggested_filters": [],
@@ -177,21 +177,31 @@ class SearchRecommendationsService:
 
             # Process results
             recommendations["related_searches"] = (
-                results[0] if not isinstance(results[0], Exception) else []
+                cast(List[Any], results[0])
+                if not isinstance(results[0], Exception)
+                else []
             )
             recommendations["trending_queries"] = (
-                results[1] if not isinstance(results[1], Exception) else []
+                cast(List[Any], results[1])
+                if not isinstance(results[1], Exception)
+                else []
             )
             recommendations["suggested_filters"] = (
-                results[2] if not isinstance(results[2], Exception) else []
+                cast(List[Any], results[2])
+                if not isinstance(results[2], Exception)
+                else []
             )
             recommendations["popular_in_category"] = (
-                results[3] if not isinstance(results[3], Exception) else []
+                cast(List[Any], results[3])
+                if not isinstance(results[3], Exception)
+                else []
             )
 
             if user_id and len(results) > 4:
                 recommendations["similar_users_searched"] = (
-                    results[4] if not isinstance(results[4], Exception) else []
+                    cast(List[Any], results[4])
+                    if not isinstance(results[4], Exception)
+                    else []
                 )
 
             logger.info(
@@ -292,7 +302,7 @@ class SearchRecommendationsService:
             result = await db.execute(
                 similarity_query,
                 {
-                    "query_embedding": f'[{",".join(map(str, query_embedding))}]',
+                    "query_embedding": f"[{','.join(map(str, query_embedding))}]",
                     "limit": limit * 2,
                 },
             )
@@ -642,7 +652,7 @@ class SearchRecommendationsService:
     ) -> List[Dict[str, Any]]:
         """Suggest relevant filters based on search context."""
         try:
-            query_text = search_context.get("query", "")
+            # query_text = search_context.get("query", "")  # Future use for context-aware filtering
 
             # Analyze common filters used with similar queries
             suggestions = []
@@ -701,9 +711,117 @@ class SearchRecommendationsService:
     ) -> List[Dict[str, Any]]:
         """Get searches from users with similar search patterns."""
         try:
-            # This would require user behavior analysis
-            # For now, return empty - can be enhanced with collaborative filtering
-            return []
+            if not user_id:
+                return []
+
+            # Get user's recent search patterns (last 30 days)
+            user_searches_query = (
+                select(SearchAnalytics.query_text, SearchAnalytics.filters_applied)
+                .where(
+                    and_(
+                        SearchAnalytics.user_id == user_id,
+                        SearchAnalytics.timestamp
+                        >= func.now() - text("INTERVAL '30 days'"),
+                        SearchAnalytics.total_results > 0,
+                    )
+                )
+                .order_by(desc(SearchAnalytics.timestamp))
+                .limit(20)  # Recent searches for pattern analysis
+            )
+
+            user_result = await db.execute(user_searches_query)
+            user_searches = user_result.fetchall()
+
+            if not user_searches:
+                return []
+
+            # Extract common search terms and filters from user's history
+            user_terms = set()
+            user_filters: set[str] = set()
+
+            for search in user_searches:
+                query_text = search.query_text or ""
+                # Extract key terms (simple word extraction)
+                terms = [
+                    term.lower().strip() for term in query_text.split() if len(term) > 3
+                ]
+                user_terms.update(terms)
+
+                # Extract filter keys if filters_applied exists
+                if search.filters_applied:
+                    filter_keys = (
+                        search.filters_applied.keys()
+                        if isinstance(search.filters_applied, dict)
+                        else []
+                    )
+                    user_filters.update(filter_keys)
+
+            if not user_terms:
+                return []
+
+            # Find users with similar search patterns
+            # Look for searches that contain similar terms
+            similar_terms_condition = []
+            for term in list(user_terms)[
+                :5
+            ]:  # Use top 5 terms to avoid too broad search
+                similar_terms_condition.append(
+                    SearchAnalytics.query_text.ilike(f"%{term}%")
+                )
+
+            if not similar_terms_condition:
+                return []
+
+            # Find searches by other users with similar patterns
+            similar_users_query = (
+                select(
+                    SearchAnalytics.query_text,
+                    func.count().label("frequency"),
+                    SearchAnalytics.user_id,
+                )
+                .where(
+                    and_(
+                        SearchAnalytics.user_id != user_id,
+                        SearchAnalytics.user_id.isnot(None),
+                        or_(*similar_terms_condition),
+                        SearchAnalytics.total_results > 0,
+                        SearchAnalytics.timestamp
+                        >= func.now() - text("INTERVAL '60 days'"),
+                    )
+                )
+                .group_by(SearchAnalytics.query_text, SearchAnalytics.user_id)
+                .having(func.count() >= 2)  # Query used at least twice
+                .order_by(desc("frequency"))
+                .limit(limit * 2)  # Get more to filter out user's own searches
+            )
+
+            similar_result = await db.execute(similar_users_query)
+            similar_searches = similar_result.fetchall()
+
+            # Format results and remove duplicates with user's own searches
+            user_query_texts = {search.query_text.lower() for search in user_searches}
+            recommendations = []
+
+            for search in similar_searches:
+                if (
+                    search.query_text
+                    and search.query_text.lower() not in user_query_texts
+                ):
+                    recommendations.append(
+                        {
+                            "query": search.query_text,
+                            "frequency": search.frequency,
+                            "reason": "users_with_similar_interests",
+                            "confidence": min(
+                                0.8, search.frequency / 10
+                            ),  # Scale confidence
+                        }
+                    )
+
+                if len(recommendations) >= limit:
+                    break
+
+            return recommendations
 
         except Exception as e:
             logger.error("Error getting similar users searches", error=str(e))
@@ -714,29 +832,102 @@ class SearchRecommendationsService:
     ) -> List[Dict[str, Any]]:
         """Get popular searches in the same category/classification."""
         try:
-            # If no classification in context, return general popular searches
+            # Get classification or department from search context
             classification = search_context.get("classification")
+            department = search_context.get("department")
+            query_terms = (
+                search_context.get("query", "").lower()
+                if search_context.get("query")
+                else ""
+            )
 
-            conditions = [SearchAnalytics.total_results > 0]
-            if classification:
-                # This would require joining with job results
-                # For now, get general popular searches
-                pass
+            conditions = [
+                SearchAnalytics.total_results > 0,
+                SearchAnalytics.timestamp
+                >= func.now() - text("INTERVAL '90 days'"),  # Recent searches only
+            ]
 
+            # If we have classification or department, try to find related searches
+            if classification or department or query_terms:
+                category_conditions = []
+
+                # Search for queries containing classification terms
+                if classification:
+                    classification_terms = classification.lower().split()
+                    for term in classification_terms:
+                        if len(term) > 2:  # Skip very short terms
+                            category_conditions.append(
+                                SearchAnalytics.query_text.ilike(f"%{term}%")
+                            )
+
+                # Search for queries containing department terms
+                if department:
+                    department_terms = department.lower().split()
+                    for term in department_terms:
+                        if len(term) > 2:
+                            category_conditions.append(
+                                SearchAnalytics.query_text.ilike(f"%{term}%")
+                            )
+
+                # Search for queries with similar terms from current query
+                if query_terms:
+                    query_words = [
+                        word.strip() for word in query_terms.split() if len(word) > 3
+                    ]
+                    for word in query_words[:3]:  # Use first 3 significant words
+                        category_conditions.append(
+                            SearchAnalytics.query_text.ilike(f"%{word}%")
+                        )
+
+                # Add category conditions if any were found
+                if category_conditions:
+                    conditions.append(or_(*category_conditions))
+
+            # Build the main query
             query = (
-                select(SearchAnalytics.query_text, func.count().label("frequency"))
+                select(
+                    SearchAnalytics.query_text,
+                    func.count().label("frequency"),
+                    func.avg(SearchAnalytics.total_results).label("avg_results"),
+                )
                 .where(and_(*conditions))
                 .group_by(SearchAnalytics.query_text)
-                .order_by(desc("frequency"))
-                .limit(limit)
+                .having(func.count() >= 2)  # Must appear at least twice
+                .order_by(desc("frequency"), desc("avg_results"))
+                .limit(limit * 2)  # Get extra to filter out current query
             )
 
             result = await db.execute(query)
             rows = result.fetchall()
 
-            return [
-                {"query": row.query_text, "frequency": row.frequency} for row in rows
-            ]
+            # Filter out current query if it appears in results and format response
+            current_query = (
+                search_context.get("query", "").lower()
+                if search_context.get("query")
+                else ""
+            )
+            recommendations = []
+
+            for row in rows:
+                if row.query_text and row.query_text.lower() != current_query:
+                    recommendations.append(
+                        {
+                            "query": row.query_text,
+                            "frequency": row.frequency,
+                            "avg_results": (
+                                int(row.avg_results) if row.avg_results else 0
+                            ),
+                            "reason": "popular_in_category",
+                            "confidence": min(
+                                0.9, row.frequency / 20
+                            ),  # Scale confidence based on frequency
+                        }
+                    )
+
+                if len(recommendations) >= limit:
+                    break
+
+            return recommendations
 
         except Exception as e:
             logger.error("Error getting popular in category", error=str(e))

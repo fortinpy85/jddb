@@ -17,7 +17,7 @@ echo Choose an option:
 echo.
 echo 1. Full Setup (first time)
 echo 2. Start Backend Server
-echo 3. Start Frontend Server  
+echo 3. Start Frontend Server
 echo 4. Check Prerequisites
 echo 5. Edit Environment Settings
 echo 6. View Documentation
@@ -110,7 +110,7 @@ goto menu
 echo.
 echo Available documentation:
 echo.
-echo - README.md - Main project documentation  
+echo - README.md - Main project documentation
 echo - docs\DEPLOYMENT.md - Full deployment guide
 echo - docs\SETUP.md - Unified setup guide
 echo - docs\POSTGRESQL_17_NOTES.md - PostgreSQL 17 configuration

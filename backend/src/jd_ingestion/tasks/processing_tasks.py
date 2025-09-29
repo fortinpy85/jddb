@@ -11,9 +11,10 @@ from sqlalchemy.orm import sessionmaker
 from .celery_app import celery_app
 from ..config.settings import settings
 from ..core.file_discovery import FileDiscovery
-from ..processors.content_processor import ContentProcessor
+from ..processors.content_processor import ContentProcessor, ProcessedContent
 from ..database.models import JobDescription, JobSection, JobMetadata, ContentChunk
 from ..utils.logging import get_logger
+from ..utils.retry_utils import is_retryable_error
 
 logger = get_logger(__name__)
 
@@ -71,7 +72,7 @@ def process_single_file_task(
         )
 
         # Determine if error is retryable
-        if _is_retryable_error(e):
+        if is_retryable_error(e):
             logger.warning(
                 "Retryable error detected, scheduling retry",
                 file_path=file_path,
@@ -181,7 +182,7 @@ async def _process_single_file_async(
                     )
                     processing_errors: list = field(default_factory=list)
 
-                processed_content = MinimalProcessedContent()
+                processed_content = ProcessedContent()
                 processed_content.processing_errors = [str(e)]
 
             # Update task progress
@@ -441,7 +442,7 @@ def batch_process_files_task(
         )
 
         # Determine if error is retryable
-        if _is_retryable_error(e):
+        if is_retryable_error(e):
             logger.warning(
                 "Retryable error detected in batch processing, scheduling retry",
                 directory=directory_path,
@@ -478,63 +479,6 @@ def batch_process_files_task(
                 meta={"error": str(e), "directory": directory_path, "retryable": False},
             )
             raise
-
-
-def _is_retryable_error(exc: Exception) -> bool:
-    """
-    Determine if an exception should trigger a task retry.
-
-    Args:
-        exc: The exception that occurred
-
-    Returns:
-        True if the error is retryable, False otherwise
-    """
-    # Non-retryable errors (permanent failures)
-    non_retryable_errors = (
-        FileNotFoundError,  # File doesn't exist
-        PermissionError,  # Permission denied
-        ValueError,  # Invalid data/parameters
-        TypeError,  # Type mismatches
-        KeyError,  # Missing required data
-    )
-
-    if isinstance(exc, non_retryable_errors):
-        return False
-
-    # Retryable errors (temporary failures)
-    retryable_errors = (
-        ConnectionError,  # Network/database connection issues
-        TimeoutError,  # Operation timeouts
-        OSError,  # I/O errors
-        ImportError,  # Module loading issues
-        RuntimeError,  # General runtime issues
-    )
-
-    if isinstance(exc, retryable_errors):
-        return True
-
-    # Check error message for specific patterns
-    error_message = str(exc).lower()
-    retryable_patterns = [
-        "connection",
-        "timeout",
-        "temporary",
-        "rate limit",
-        "service unavailable",
-        "internal server error",
-        "database",
-        "network",
-        "redis",
-        "celery",
-    ]
-
-    for pattern in retryable_patterns:
-        if pattern in error_message:
-            return True
-
-    # Default to non-retryable for safety
-    return False
 
 
 def _handle_task_failure(task, exc: Exception, task_name: str, **context) -> None:

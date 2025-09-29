@@ -2,8 +2,8 @@
 """
 This script creates sample job description data for testing and development.
 """
+
 import asyncio
-import logging
 import sys
 from pathlib import Path
 from typing import List, Dict, Any
@@ -11,7 +11,6 @@ from typing import List, Dict, Any
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.exc import SQLAlchemyError
 from jd_ingestion.database.connection import AsyncSessionLocal

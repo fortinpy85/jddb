@@ -1,7 +1,7 @@
 """Add job analysis tables for comparison and skill analysis
 
 Revision ID: 004
-Revises: 003
+Revises: fba902742fb7
 Create Date: 2025-09-12 16:20:00.000000
 
 """

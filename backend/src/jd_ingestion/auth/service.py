@@ -27,18 +27,20 @@ logger = get_logger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT settings (in production, use proper secret management)
-SECRET_KEY = getattr(settings, 'jwt_secret_key', 'your-secret-key-change-in-production')
+SECRET_KEY = getattr(settings, "jwt_secret_key", "your-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 class AuthenticationError(Exception):
     """Raised when authentication fails."""
+
     pass
 
 
 class AuthorizationError(Exception):
     """Raised when authorization fails."""
+
     pass
 
 
@@ -48,11 +50,18 @@ class UserService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_user(self, username: str, email: str, password: str,
-                         first_name: Optional[str] = None, last_name: Optional[str] = None,
-                         role: str = "user", department: Optional[str] = None,
-                         security_clearance: Optional[str] = None,
-                         preferred_language: str = "en") -> User:
+    async def create_user(
+        self,
+        username: str,
+        email: str,
+        password: str,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+        role: str = "user",
+        department: Optional[str] = None,
+        security_clearance: Optional[str] = None,
+        preferred_language: str = "en",
+    ) -> User:
         """Create a new user."""
 
         # Check if username or email already exists
@@ -76,7 +85,7 @@ class UserService:
             role=role,
             department=department,
             security_clearance=security_clearance,
-            preferred_language=preferred_language
+            preferred_language=preferred_language,
         )
         user.set_password(password)
 
@@ -89,23 +98,17 @@ class UserService:
 
     async def get_user_by_id(self, user_id: int) -> Optional[User]:
         """Get user by ID."""
-        result = await self.db.execute(
-            select(User).where(User.id == user_id)
-        )
+        result = await self.db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
 
     async def get_user_by_username(self, username: str) -> Optional[User]:
         """Get user by username."""
-        result = await self.db.execute(
-            select(User).where(User.username == username)
-        )
+        result = await self.db.execute(select(User).where(User.username == username))
         return result.scalar_one_or_none()
 
     async def get_user_by_email(self, email: str) -> Optional[User]:
         """Get user by email."""
-        result = await self.db.execute(
-            select(User).where(User.email == email)
-        )
+        result = await self.db.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
 
     async def authenticate_user(self, username: str, password: str) -> Optional[User]:
@@ -132,8 +135,16 @@ class UserService:
             return None
 
         # Update allowed fields
-        allowed_fields = ['first_name', 'last_name', 'email', 'role', 'department',
-                         'security_clearance', 'preferred_language', 'is_active']
+        allowed_fields = [
+            "first_name",
+            "last_name",
+            "email",
+            "role",
+            "department",
+            "security_clearance",
+            "preferred_language",
+            "is_active",
+        ]
 
         for field, value in kwargs.items():
             if field in allowed_fields and hasattr(user, field):
@@ -145,7 +156,9 @@ class UserService:
         logger.info(f"Updated user: {user.username} (ID: {user.id})")
         return user
 
-    async def change_password(self, user_id: int, current_password: str, new_password: str) -> bool:
+    async def change_password(
+        self, user_id: int, current_password: str, new_password: str
+    ) -> bool:
         """Change user password."""
         user = await self.get_user_by_id(user_id)
         if not user:
@@ -179,8 +192,12 @@ class SessionService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_session(self, user_id: int, ip_address: Optional[str] = None,
-                           user_agent: Optional[str] = None) -> UserSession:
+    async def create_session(
+        self,
+        user_id: int,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
+    ) -> UserSession:
         """Create a new user session."""
         session = UserSession.create_session(user_id, ip_address, user_agent)
 
@@ -188,13 +205,16 @@ class SessionService:
         await self.db.commit()
         await self.db.refresh(session)
 
-        logger.info(f"Created session for user {user_id}: {session.session_token[:8]}...")
+        logger.info(
+            f"Created session for user {user_id}: {session.session_token[:8]}..."
+        )
         return session
 
     async def get_session(self, session_token: str) -> Optional[UserSession]:
         """Get session by token."""
         result = await self.db.execute(
-            select(UserSession).options(selectinload(UserSession.user))
+            select(UserSession)
+            .options(selectinload(UserSession.user))
             .where(UserSession.session_token == session_token)
         )
         return result.scalar_one_or_none()
@@ -252,10 +272,15 @@ class PermissionService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def grant_permission(self, user_id: int, resource_type: str,
-                             permission_type: str, resource_id: Optional[int] = None,
-                             granted_by_id: Optional[int] = None,
-                             expires_at: Optional[datetime] = None) -> UserPermission:
+    async def grant_permission(
+        self,
+        user_id: int,
+        resource_type: str,
+        permission_type: str,
+        resource_id: Optional[int] = None,
+        granted_by_id: Optional[int] = None,
+        expires_at: Optional[datetime] = None,
+    ) -> UserPermission:
         """Grant a permission to a user."""
 
         permission = UserPermission(
@@ -264,18 +289,25 @@ class PermissionService:
             resource_id=resource_id,
             permission_type=permission_type,
             granted_by=granted_by_id,
-            expires_at=expires_at
+            expires_at=expires_at,
         )
 
         self.db.add(permission)
         await self.db.commit()
         await self.db.refresh(permission)
 
-        logger.info(f"Granted permission {permission_type} on {resource_type} to user {user_id}")
+        logger.info(
+            f"Granted permission {permission_type} on {resource_type} to user {user_id}"
+        )
         return permission
 
-    async def check_permission(self, user_id: int, resource_type: str,
-                             permission_type: str, resource_id: Optional[int] = None) -> bool:
+    async def check_permission(
+        self,
+        user_id: int,
+        resource_type: str,
+        permission_type: str,
+        resource_id: Optional[int] = None,
+    ) -> bool:
         """Check if user has specific permission."""
 
         # Check for specific resource permission
@@ -286,14 +318,13 @@ class PermissionService:
         ]
 
         if resource_id is not None:
-            conditions.append(
-                or_(UserPermission.resource_id == resource_id,
-                    UserPermission.resource_id.is_(None))  # Global permission
-            )
+            conditions.append(UserPermission.resource_id == resource_id)
+        else:
+            # SQLAlchemy handles == None as IS NULL in SQL
+            # Use type: ignore to suppress MyPy false positive
+            conditions.append(UserPermission.resource_id == None)  # type: ignore # noqa: E711
 
-        result = await self.db.execute(
-            select(UserPermission).where(and_(*conditions))
-        )
+        result = await self.db.execute(select(UserPermission).where(and_(*conditions)))
         permissions = result.scalars().all()
 
         # Check if any valid permission exists
@@ -332,14 +363,18 @@ class PreferenceService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def set_preference(self, user_id: int, key: str, value: Any) -> UserPreference:
+    async def set_preference(
+        self, user_id: int, key: str, value: Any
+    ) -> UserPreference:
         """Set a user preference."""
 
         # Check if preference already exists
         result = await self.db.execute(
             select(UserPreference).where(
-                and_(UserPreference.user_id == user_id,
-                     UserPreference.preference_key == key)
+                and_(
+                    UserPreference.user_id == user_id,
+                    UserPreference.preference_key == key,
+                )
             )
         )
         preference = result.scalar_one_or_none()
@@ -348,9 +383,7 @@ class PreferenceService:
             preference.preference_value = value
         else:
             preference = UserPreference(
-                user_id=user_id,
-                preference_key=key,
-                preference_value=value
+                user_id=user_id, preference_key=key, preference_value=value
             )
             self.db.add(preference)
 
@@ -363,8 +396,10 @@ class PreferenceService:
         """Get a user preference."""
         result = await self.db.execute(
             select(UserPreference).where(
-                and_(UserPreference.user_id == user_id,
-                     UserPreference.preference_key == key)
+                and_(
+                    UserPreference.user_id == user_id,
+                    UserPreference.preference_key == key,
+                )
             )
         )
         preference = result.scalar_one_or_none()
@@ -387,8 +422,10 @@ class PreferenceService:
         """Delete a user preference."""
         result = await self.db.execute(
             select(UserPreference).where(
-                and_(UserPreference.user_id == user_id,
-                     UserPreference.preference_key == key)
+                and_(
+                    UserPreference.user_id == user_id,
+                    UserPreference.preference_key == key,
+                )
             )
         )
         preference = result.scalar_one_or_none()
@@ -401,7 +438,9 @@ class PreferenceService:
         return False
 
 
-def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(
+    data: Dict[str, Any], expires_delta: Optional[timedelta] = None
+) -> str:
     """Create a JWT access token."""
     if jwt is None:
         # Fallback to simple token for development

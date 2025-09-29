@@ -44,7 +44,9 @@ class Settings(BaseSettings):
     secret_key: str = "default-secret-key-change-in-production"
 
     # Security Settings
-    cors_allowed_origins: str = "http://localhost:3000"
+    cors_allowed_origins: str = (
+        "http://localhost:3000,http://localhost:3001,http://localhost:3002"
+    )
     cors_allow_credentials: bool = True
     allowed_hosts: str = "localhost,127.0.0.1"
 
@@ -58,7 +60,12 @@ class Settings(BaseSettings):
     chunk_size: int = 512
     chunk_overlap: int = 50
 
+    # Retry Settings
+    RETRY_MAX_RETRIES: int = 3
+    RETRY_BASE_DELAY: float = 0.5
+
     # API Settings
+    API_KEY: str = "your_api_key"
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     api_workers: int = 1

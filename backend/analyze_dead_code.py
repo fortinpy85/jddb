@@ -4,9 +4,8 @@ Comprehensive dead code and unused variable analysis for API endpoints.
 """
 
 import ast
-import os
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, Any
+from typing import Dict, List, Any
 from collections import defaultdict
 
 

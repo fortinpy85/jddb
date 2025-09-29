@@ -14,6 +14,10 @@ from ..database.models import (
     SystemMetrics,
     AIUsageTracking,
     JobDescription,
+    ContentChunk,
+    DataQualityMetrics,
+    JobMetadata,
+    JobSection,
 )
 from ..utils.logging import get_logger
 
@@ -678,6 +682,158 @@ class AnalyticsService:
         except Exception as e:
             logger.error("Failed to generate analytics dashboard", error=str(e))
             raise
+
+    async def get_summary_stats(self, db: AsyncSession) -> dict:
+        """Get summary statistics."""
+        total_jobs_result = await db.execute(
+            select(func.count()).select_from(JobDescription)
+        )
+        total_jobs = total_jobs_result.scalar_one()
+
+        jobs_with_embeddings_result = await db.execute(
+            select(func.count(func.distinct(ContentChunk.job_id)))
+            .select_from(ContentChunk)
+            .where(ContentChunk.embedding.isnot(None))
+        )
+        jobs_with_embeddings = jobs_with_embeddings_result.scalar_one()
+
+        total_chunks_result = await db.execute(
+            select(func.count()).select_from(ContentChunk)
+        )
+        total_chunks = total_chunks_result.scalar_one()
+
+        embeddings_count_result = await db.execute(
+            select(func.count())
+            .select_from(ContentChunk)
+            .where(ContentChunk.embedding.isnot(None))
+        )
+        embeddings_count = embeddings_count_result.scalar_one()
+
+        seven_days_ago = datetime.now() - timedelta(days=7)
+        recent_uploads_result = await db.execute(
+            select(func.count())
+            .select_from(JobDescription)
+            .where(JobDescription.created_at >= seven_days_ago)
+        )
+        recent_uploads = recent_uploads_result.scalar_one()
+
+        return {
+            "total_jobs": total_jobs,
+            "jobs_with_embeddings": jobs_with_embeddings,
+            "total_content_chunks": total_chunks,
+            "total_embeddings": embeddings_count,
+            "recent_uploads_7d": recent_uploads,
+            "embedding_coverage_percent": round(
+                (embeddings_count / max(total_chunks, 1)) * 100, 1
+            ),
+        }
+
+    async def get_quality_metrics(self, db: AsyncSession) -> dict:
+        """Get data quality metrics."""
+        quality_stats_result = await db.execute(
+            select(
+                func.avg(DataQualityMetrics.content_completeness_score),
+                func.avg(DataQualityMetrics.sections_completeness_score),
+                func.avg(DataQualityMetrics.metadata_completeness_score),
+                func.count(),
+                func.sum(DataQualityMetrics.processing_errors_count),
+                func.sum(DataQualityMetrics.validation_errors_count),
+            ).select_from(DataQualityMetrics)
+        )
+        quality_stats = quality_stats_result.fetchone()
+
+        total_jobs_result = await db.execute(
+            select(func.count()).select_from(JobDescription)
+        )
+        total_jobs = total_jobs_result.scalar_one()
+
+        return {
+            "avg_content_completeness": float(quality_stats[0] or 0),
+            "avg_sections_completeness": float(quality_stats[1] or 0),
+            "avg_metadata_completeness": float(quality_stats[2] or 0),
+            "jobs_with_quality_data": quality_stats[3] or 0,
+            "total_processing_errors": quality_stats[4] or 0,
+            "total_validation_errors": quality_stats[5] or 0,
+            "quality_coverage_percent": round(
+                (quality_stats[3] or 0) / max(total_jobs, 1) * 100, 1
+            ),
+        }
+
+    async def get_ai_usage_stats(self, db: AsyncSession) -> dict:
+        """Get AI usage statistics for the last 30 days."""
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+
+        ai_stats_result = await db.execute(
+            select(
+                func.count(),
+                func.sum(AIUsageTracking.total_tokens),
+                func.sum(AIUsageTracking.cost_usd),
+                func.count().filter(AIUsageTracking.success == "success"),
+                func.count().filter(AIUsageTracking.success != "success"),
+            )
+            .select_from(AIUsageTracking)
+            .where(AIUsageTracking.request_timestamp >= thirty_days_ago)
+        )
+        ai_stats = ai_stats_result.fetchone()
+
+        return {
+            "total_requests": ai_stats[0] or 0,
+            "total_tokens": ai_stats[1] or 0,
+            "total_cost_usd": float(ai_stats[2] or 0),
+            "successful_requests": ai_stats[3] or 0,
+            "failed_requests": ai_stats[4] or 0,
+            "success_rate_percent": round(
+                (ai_stats[3] or 0) / max(ai_stats[0] or 1, 1) * 100, 1
+            ),
+        }
+
+    async def get_content_distribution(self, db: AsyncSession) -> dict:
+        """Get content distribution statistics."""
+        dept_stats_result = await db.execute(
+            select(JobMetadata.department, func.count())
+            .select_from(JobMetadata)
+            .where(JobMetadata.department.isnot(None))
+            .group_by(JobMetadata.department)
+            .order_by(func.count().desc())
+            .limit(10)
+        )
+        dept_distribution = {row[0]: row[1] for row in dept_stats_result.fetchall()}
+
+        sections_stats_result = await db.execute(
+            select(JobSection.section_type, func.count())
+            .select_from(JobSection)
+            .group_by(JobSection.section_type)
+            .order_by(func.count().desc())
+        )
+        sections_distribution = {
+            row[0]: row[1] for row in sections_stats_result.fetchall()
+        }
+
+        return {
+            "by_department": dept_distribution,
+            "by_section_type": sections_distribution,
+        }
+
+    async def get_performance_stats(self, db: AsyncSession) -> dict:
+        """Get performance statistics."""
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+        avg_processing_time_result = await db.execute(
+            select(func.avg(UsageAnalytics.processing_time_ms))
+            .select_from(UsageAnalytics)
+            .where(
+                UsageAnalytics.action_type == "upload",
+                UsageAnalytics.processing_time_ms.isnot(None),
+                UsageAnalytics.timestamp >= thirty_days_ago,
+            )
+        )
+        avg_processing_time = avg_processing_time_result.scalar_one()
+
+        return {
+            "avg_processing_time_ms": float(avg_processing_time or 0),
+            "processing_health": (
+                "good" if (avg_processing_time or 0) < 30000 else "slow"
+            ),
+        }
 
 
 # Global service instance

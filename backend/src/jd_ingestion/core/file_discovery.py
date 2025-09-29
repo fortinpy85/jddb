@@ -3,7 +3,7 @@ import hashlib
 import chardet
 from pathlib import Path
 from typing import List, Optional, Dict, Any
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 
 from ..utils.logging import get_logger
@@ -25,11 +25,7 @@ class FileMetadata:
     encoding: str = "utf-8"
     last_modified: Optional[datetime] = None
     is_valid: bool = True
-    validation_errors: List[str] = None
-
-    def __post_init__(self):
-        if self.validation_errors is None:
-            self.validation_errors = []
+    validation_errors: List[str] = field(default_factory=list)
 
 
 class FileDiscovery:
@@ -42,6 +38,11 @@ class FileDiscovery:
         # New pattern: "EX-01 Dir, Business Analysis 103249 - JD.txt"
         re.compile(
             r"(?P<classification>EX-\d{2})\s+(?P<title>[^0-9]+?)\s+(?P<job_number>\d+)\s*-\s*(?P<lang_code>JD|DE)\.(?P<extension>\w+)$",
+            re.IGNORECASE,
+        ),
+        # Pattern for SJD files with language code: "EX-01 SJD Director, Special Projects EN.docx"
+        re.compile(
+            r"(?P<classification>EX-\d{2})\s+(?P<title>.+?)\s+(?P<lang_code>EN|FR)\.(?P<extension>\w+)$",
             re.IGNORECASE,
         ),
         # Legacy pattern: "JD_EX-01_123456_Director.txt"
@@ -60,6 +61,8 @@ class FileDiscovery:
     LANGUAGE_MAPPING = {
         "JD": "en",  # Job Description (English)
         "DE": "fr",  # Description d'Emploi (French)
+        "EN": "en",  # English
+        "FR": "fr",  # French
     }
 
     # Supported file extensions
@@ -179,14 +182,48 @@ class FileDiscovery:
             # Try to extract at least the classification and job number with a more lenient approach
             classification_match = re.search(r"(EX-\d{2})", filename, re.IGNORECASE)
             job_number_match = re.search(r"(\d{6})", filename)
+            language_match = re.search(r"\b(EN|FR|JD|DE)\b", filename, re.IGNORECASE)
 
             if classification_match:
                 metadata.classification = classification_match.group(1).upper()
+
             if job_number_match:
                 metadata.job_number = job_number_match.group(1)
+            else:
+                # Generate a temporary job number based on file hash (first 6 chars)
+                import hashlib
 
-            # Default to English and mark for manual review
-            metadata.language = "en"
+                file_hash = hashlib.md5(filename.encode()).hexdigest()[:6].upper()
+                metadata.job_number = file_hash
+                metadata.validation_errors.append(
+                    f"Generated job number from filename hash: {file_hash}"
+                )
+
+            # Extract language from filename
+            if language_match:
+                lang_code = language_match.group(1).upper()
+                metadata.language = self.LANGUAGE_MAPPING.get(lang_code, "en")
+            else:
+                metadata.language = "en"
+
+            # Try to extract title from filename
+            if metadata.classification:
+                # Remove classification and language codes to get title
+                title_pattern = (
+                    filename.replace(metadata.classification, "")
+                    .replace(".docx", "")
+                    .replace(".txt", "")
+                    .replace(".doc", "")
+                    .replace(".pdf", "")
+                )
+                if language_match:
+                    title_pattern = title_pattern.replace(language_match.group(1), "")
+                # Clean up the title
+                title = title_pattern.strip(" -.,_")
+                title = " ".join(title.split())  # Remove extra whitespace
+                if title:
+                    metadata.title = title
+
             metadata.validation_errors.append(
                 f"Filename doesn't match expected patterns but extracted basic info: {filename}"
             )
@@ -199,6 +236,15 @@ class FileDiscovery:
 
     def _detect_encoding(self, file_path: Path) -> str:
         """Detect file encoding for proper text processing."""
+        # Skip encoding detection for binary file formats
+        if file_path.suffix.lower() in {".docx", ".doc", ".pdf"}:
+            logger.debug(
+                "Skipping encoding detection for binary file",
+                file=str(file_path),
+                extension=file_path.suffix.lower(),
+            )
+            return "utf-8"  # Not used for binary files, but return default
+
         try:
             with open(file_path, "rb") as f:
                 # Read first chunk to detect encoding
@@ -267,9 +313,20 @@ class FileDiscovery:
             )
             metadata.is_valid = False
 
-        # If any errors exist, mark as invalid
-        if metadata.validation_errors:
+        # Only mark as invalid for critical errors (file size, unsupported extension)
+        # Allow files with minor validation issues (missing job number, pattern mismatch) to be processed
+        critical_errors = [
+            error
+            for error in metadata.validation_errors
+            if "File is empty" in error
+            or "File too large" in error
+            or "Unsupported file extension" in error
+        ]
+        if critical_errors:
             metadata.is_valid = False
+        else:
+            # File can be processed even with warnings about filename patterns
+            metadata.is_valid = True
 
         logger.debug(
             "File validation completed",
@@ -280,7 +337,7 @@ class FileDiscovery:
 
     def get_stats(self, files_metadata: List[FileMetadata]) -> Dict[str, Any]:
         """Generate statistics about discovered files."""
-        stats = {
+        stats: Dict[str, Any] = {
             "total_files": len(files_metadata),
             "valid_files": sum(1 for f in files_metadata if f.is_valid),
             "invalid_files": sum(1 for f in files_metadata if not f.is_valid),

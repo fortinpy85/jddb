@@ -2,26 +2,27 @@
 import csv
 import io
 import json
-from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 # Third-party imports
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Security
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import SQLAlchemyError
 
 # Local imports
 from ...database.connection import get_async_session
 from ...database.models import (
-    AIUsageTracking,
-    ContentChunk,
-    DataQualityMetrics,
     JobDescription,
     JobMetadata,
     JobSection,
-    UsageAnalytics,
 )
+from ...auth.api_key import get_api_key
+
+# Statistics functions now available via analytics_service
+from ...services.analytics_service import analytics_service
 from ...utils.error_handler import handle_errors, retry_on_failure
 from ...utils.logging import get_logger
 
@@ -30,10 +31,7 @@ router = APIRouter()
 
 
 @router.get("/")
-@handle_errors(
-    operation_name="list_jobs", context={"endpoint": "/jobs/", "method": "GET"}
-)
-@retry_on_failure(max_retries=2, base_delay=0.5)
+@retry_on_failure()
 async def list_jobs(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(100, ge=1, le=1000, description="Number of records to return"),
@@ -46,6 +44,7 @@ async def list_jobs(
     language: Optional[str] = Query(None, description="Filter by language (en/fr)"),
     department: Optional[str] = Query(None, description="Filter by department"),
     db: AsyncSession = Depends(get_async_session),
+    api_key: str = Security(get_api_key),
 ):
     """List job descriptions with optional filters."""
     # Handle page/size parameters vs skip/limit
@@ -73,15 +72,31 @@ async def list_jobs(
     if language:
         base_query = base_query.where(JobDescription.language == language)
     if department:
-        base_query = base_query.join(JobDescription.job_metadata).where(
+        base_query = base_query.join(JobDescription.metadata_entry).where(
             JobMetadata.department.ilike(f"%{department}%")
         )
 
     # Get total count and paginated results in a single query if possible, or two efficient queries
     # For simplicity and broad compatibility, we'll stick to two queries, but ensure they are efficient.
 
-    # Count query
-    count_query = select(func.count()).select_from(base_query.subquery())
+    # Count query - optimized to avoid subquery
+    count_query = select(func.count(JobDescription.id))
+
+    # Apply the same filters for count query
+    if search:
+        count_query = count_query.where(
+            JobDescription.title.ilike(f"%{search}%")
+            | JobDescription.raw_content.ilike(f"%{search}%")
+        )
+    if classification:
+        count_query = count_query.where(JobDescription.classification == classification)
+    if language:
+        count_query = count_query.where(JobDescription.language == language)
+    if department:
+        count_query = count_query.join(JobDescription.metadata_entry).where(
+            JobMetadata.department.ilike(f"%{department}%")
+        )
+
     total_result = await db.execute(count_query)
     total_count = total_result.scalar_one()
 
@@ -134,8 +149,10 @@ async def list_jobs(
     operation_name="get_processing_status",
     context={"endpoint": "/jobs/status", "method": "GET"},
 )
-@retry_on_failure(max_retries=2, base_delay=0.5)
-async def get_processing_status(db: AsyncSession = Depends(get_async_session)):
+@retry_on_failure()
+async def get_processing_status(
+    db: AsyncSession = Depends(get_async_session), api_key: str = Security(get_api_key)
+):
     """Get current processing status of all jobs."""
     # Get total job count
     total_result = await db.execute(select(func.count()).select_from(JobDescription))
@@ -178,8 +195,10 @@ async def get_processing_status(db: AsyncSession = Depends(get_async_session)):
 @handle_errors(
     operation_name="get_job_stats", context={"endpoint": "/jobs/stats", "method": "GET"}
 )
-@retry_on_failure(max_retries=2, base_delay=0.5)
-async def get_job_stats(db: AsyncSession = Depends(get_async_session)):
+@retry_on_failure()
+async def get_job_stats(
+    db: AsyncSession = Depends(get_async_session), api_key: str = Security(get_api_key)
+):
     """Get basic job statistics."""
     try:
         # Total jobs count
@@ -210,8 +229,13 @@ async def get_job_stats(db: AsyncSession = Depends(get_async_session)):
             "language_distribution": language_distribution,
         }
 
+    except SQLAlchemyError as e:
+        logger.error("Database error getting job statistics", error=str(e))
+        raise HTTPException(
+            status_code=500, detail="Database error retrieving statistics"
+        )
     except Exception as e:
-        logger.error("Failed to get job statistics", error=str(e))
+        logger.error("Unexpected error getting job statistics", error=str(e))
         raise HTTPException(status_code=500, detail="Failed to retrieve statistics")
 
 
@@ -220,159 +244,111 @@ async def get_job_stats(db: AsyncSession = Depends(get_async_session)):
     operation_name="get_comprehensive_stats",
     context={"endpoint": "/jobs/stats/comprehensive", "method": "GET"},
 )
-@retry_on_failure(max_retries=2, base_delay=0.5)
-async def get_comprehensive_stats(db: AsyncSession = Depends(get_async_session)):
+@retry_on_failure()
+async def get_comprehensive_stats(
+    db: AsyncSession = Depends(get_async_session), api_key: str = Security(get_api_key)
+):
     """Get comprehensive ingestion and processing statistics."""
     try:
-        # Basic job statistics
-        total_jobs_result = await db.execute(
-            select(func.count()).select_from(JobDescription)
-        )
-        total_jobs = total_jobs_result.scalar_one()
+        summary = await analytics_service.get_summary_stats(db)
+        quality_metrics = await analytics_service.get_quality_metrics(db)
+        ai_usage = await analytics_service.get_ai_usage_stats(db)
+        content_distribution = await analytics_service.get_content_distribution(db)
+        performance = await analytics_service.get_performance_stats(db)
 
-        # Jobs with embeddings
-        jobs_with_embeddings_result = await db.execute(
-            select(func.count(func.distinct(ContentChunk.job_id)))
-            .select_from(ContentChunk)
-            .where(ContentChunk.embedding.isnot(None))
-        )
-        jobs_with_embeddings = jobs_with_embeddings_result.scalar_one()
-
-        # Total content chunks and embeddings
-        total_chunks_result = await db.execute(
-            select(func.count()).select_from(ContentChunk)
-        )
-        total_chunks = total_chunks_result.scalar_one()
-
-        embeddings_count_result = await db.execute(
-            select(func.count())
-            .select_from(ContentChunk)
-            .where(ContentChunk.embedding.isnot(None))
-        )
-        embeddings_count = embeddings_count_result.scalar_one()
-
-        # Data quality statistics
-        quality_stats_result = await db.execute(
-            select(
-                func.avg(DataQualityMetrics.content_completeness_score),
-                func.avg(DataQualityMetrics.sections_completeness_score),
-                func.avg(DataQualityMetrics.metadata_completeness_score),
-                func.count(),
-                func.sum(DataQualityMetrics.processing_errors_count),
-                func.sum(DataQualityMetrics.validation_errors_count),
-            ).select_from(DataQualityMetrics)
-        )
-        quality_stats = quality_stats_result.fetchone()
-
-        # AI usage statistics (last 30 days)
-        thirty_days_ago = datetime.now() - timedelta(days=30)
-
-        ai_stats_result = await db.execute(
-            select(
-                func.count(),
-                func.sum(AIUsageTracking.total_tokens),
-                func.sum(AIUsageTracking.cost_usd),
-                func.count().filter(AIUsageTracking.success == "success"),
-                func.count().filter(AIUsageTracking.success != "success"),
-            )
-            .select_from(AIUsageTracking)
-            .where(AIUsageTracking.request_timestamp >= thirty_days_ago)
-        )
-        ai_stats = ai_stats_result.fetchone()
-
-        # Department distribution
-        dept_stats_result = await db.execute(
-            select(JobMetadata.department, func.count())
-            .select_from(JobMetadata)
-            .where(JobMetadata.department.isnot(None))
-            .group_by(JobMetadata.department)
-            .order_by(func.count().desc())
-            .limit(10)
-        )
-        dept_distribution = {row[0]: row[1] for row in dept_stats_result.fetchall()}
-
-        # Recent activity (last 7 days)
-        seven_days_ago = datetime.now() - timedelta(days=7)
-        recent_uploads_result = await db.execute(
-            select(func.count())
-            .select_from(JobDescription)
-            .where(JobDescription.created_at >= seven_days_ago)
-        )
-        recent_uploads = recent_uploads_result.scalar_one()
-
-        # Processing performance
-        avg_processing_time_result = await db.execute(
-            select(func.avg(UsageAnalytics.processing_time_ms))
-            .select_from(UsageAnalytics)
-            .where(
-                UsageAnalytics.action_type == "upload",
-                UsageAnalytics.processing_time_ms.isnot(None),
-                UsageAnalytics.timestamp >= thirty_days_ago,
-            )
-        )
-        avg_processing_time = avg_processing_time_result.scalar_one()
-
-        # Section completeness
-        sections_stats_result = await db.execute(
-            select(JobSection.section_type, func.count())
-            .select_from(JobSection)
-            .group_by(JobSection.section_type)
-            .order_by(func.count().desc())
-        )
-        sections_distribution = {
-            row[0]: row[1] for row in sections_stats_result.fetchall()
-        }
-
-        # Build comprehensive response
         return {
-            "summary": {
-                "total_jobs": total_jobs,
-                "jobs_with_embeddings": jobs_with_embeddings,
-                "total_content_chunks": total_chunks,
-                "total_embeddings": embeddings_count,
-                "recent_uploads_7d": recent_uploads,
-                "embedding_coverage_percent": round(
-                    (embeddings_count / max(total_chunks, 1)) * 100, 1
-                ),
-            },
-            "quality_metrics": {
-                "avg_content_completeness": float(quality_stats[0] or 0),
-                "avg_sections_completeness": float(quality_stats[1] or 0),
-                "avg_metadata_completeness": float(quality_stats[2] or 0),
-                "jobs_with_quality_data": quality_stats[3] or 0,
-                "total_processing_errors": quality_stats[4] or 0,
-                "total_validation_errors": quality_stats[5] or 0,
-                "quality_coverage_percent": round(
-                    (quality_stats[3] or 0) / max(total_jobs, 1) * 100, 1
-                ),
-            },
-            "ai_usage_30d": {
-                "total_requests": ai_stats[0] or 0,
-                "total_tokens": ai_stats[1] or 0,
-                "total_cost_usd": float(ai_stats[2] or 0),
-                "successful_requests": ai_stats[3] or 0,
-                "failed_requests": ai_stats[4] or 0,
-                "success_rate_percent": round(
-                    (ai_stats[3] or 0) / max(ai_stats[0] or 1, 1) * 100, 1
-                ),
-            },
-            "content_distribution": {
-                "by_department": dept_distribution,
-                "by_section_type": sections_distribution,
-            },
-            "performance": {
-                "avg_processing_time_ms": float(avg_processing_time or 0),
-                "processing_health": (
-                    "good" if (avg_processing_time or 0) < 30000 else "slow"
-                ),
-            },
+            "summary": summary,
+            "quality_metrics": quality_metrics,
+            "ai_usage_30d": ai_usage,
+            "content_distribution": content_distribution,
+            "performance": performance,
         }
 
+    except SQLAlchemyError as e:
+        logger.error("Database error getting comprehensive statistics", error=str(e))
+        raise HTTPException(
+            status_code=500, detail="Database error retrieving statistics"
+        )
+    except ValueError as e:
+        logger.error("Data validation error in comprehensive statistics", error=str(e))
+        raise HTTPException(status_code=400, detail="Invalid data encountered")
     except Exception as e:
-        logger.error("Failed to get comprehensive statistics", error=str(e))
+        logger.error("Unexpected error getting comprehensive statistics", error=str(e))
         raise HTTPException(
             status_code=500, detail="Failed to retrieve comprehensive statistics"
         )
+
+
+async def _get_job_details(
+    job_id: int,
+    db: AsyncSession,
+    include_content: bool = False,
+    include_sections: bool = True,
+    include_metadata: bool = True,
+) -> dict:
+    """Get detailed information about a specific job description."""
+    query = select(JobDescription).where(JobDescription.id == job_id)
+    if include_sections:
+        query = query.options(selectinload(JobDescription.sections))
+    if include_metadata:
+        query = query.options(selectinload(JobDescription.metadata_entry))
+
+    result = await db.execute(query)
+    job = result.scalar_one_or_none()
+
+    if not job:
+        raise HTTPException(status_code=404, detail="Job description not found")
+
+    response = {
+        "id": job.id,
+        "job_number": job.job_number,
+        "title": job.title,
+        "classification": job.classification,
+        "language": job.language,
+        "file_path": job.file_path,
+        "file_hash": job.file_hash,
+        "processed_date": (
+            job.processed_date.isoformat() if job.processed_date else None
+        ),
+        "created_at": job.created_at.isoformat() if job.created_at else None,
+        "updated_at": job.updated_at.isoformat() if job.updated_at else None,
+    }
+
+    if include_content:
+        response["raw_content"] = job.raw_content
+
+    if include_sections:
+        response["sections"] = [
+            {
+                "id": section.id,
+                "section_type": section.section_type,
+                "section_content": section.section_content,
+                "section_order": section.section_order,
+            }
+            for section in job.sections
+        ]
+
+    if include_metadata and job.metadata_entry:
+        response["metadata"] = {
+            "reports_to": job.metadata_entry.reports_to,
+            "department": job.metadata_entry.department,
+            "location": job.metadata_entry.location,
+            "fte_count": job.metadata_entry.fte_count,
+            "salary_budget": (
+                float(job.metadata_entry.salary_budget)
+                if job.metadata_entry.salary_budget
+                else None
+            ),
+            "effective_date": (
+                job.metadata_entry.effective_date.isoformat()
+                if job.metadata_entry.effective_date
+                else None
+            ),
+        }
+    else:
+        response["metadata"] = None
+
+    return response
 
 
 @router.get("/{job_id}")
@@ -382,94 +358,35 @@ async def get_job(
     include_sections: bool = Query(True, description="Include parsed sections"),
     include_metadata: bool = Query(True, description="Include job metadata"),
     db: AsyncSession = Depends(get_async_session),
+    api_key: str = Security(get_api_key),
 ):
     """Get detailed information about a specific job description."""
     try:
-        # Get job description
-        query = select(JobDescription).where(JobDescription.id == job_id)
-        result = await db.execute(query)
-        job = result.scalar_one_or_none()
-
-        if not job:
-            raise HTTPException(status_code=404, detail="Job description not found")
-
-        response = {
-            "id": job.id,
-            "job_number": job.job_number,
-            "title": job.title,
-            "classification": job.classification,
-            "language": job.language,
-            "file_path": job.file_path,
-            "file_hash": job.file_hash,
-            "processed_date": (
-                job.processed_date.isoformat() if job.processed_date else None
-            ),
-            "created_at": job.created_at.isoformat() if job.created_at else None,
-            "updated_at": job.updated_at.isoformat() if job.updated_at else None,
-        }
-
-        # Include raw content if requested
-        if include_content:
-            response["raw_content"] = job.raw_content
-
-        # Include sections if requested
-        if include_sections:
-            sections_query = (
-                select(JobSection)
-                .where(JobSection.job_id == job_id)
-                .order_by(JobSection.section_order)
-            )
-            sections_result = await db.execute(sections_query)
-            sections = sections_result.scalars().all()
-
-            response["sections"] = [
-                {
-                    "id": section.id,
-                    "section_type": section.section_type,
-                    "section_content": section.section_content,
-                    "section_order": section.section_order,
-                }
-                for section in sections
-            ]
-
-        # Include metadata if requested
-        if include_metadata:
-            metadata_query = select(JobMetadata).where(JobMetadata.job_id == job_id)
-            metadata_result = await db.execute(metadata_query)
-            metadata = metadata_result.scalar_one_or_none()
-
-            if metadata:
-                response["job_metadata"] = {
-                    "reports_to": metadata.reports_to,
-                    "department": metadata.department,
-                    "location": metadata.location,
-                    "fte_count": metadata.fte_count,
-                    "salary_budget": (
-                        float(metadata.salary_budget)
-                        if metadata.salary_budget
-                        else None
-                    ),
-                    "effective_date": (
-                        metadata.effective_date.isoformat()
-                        if metadata.effective_date
-                        else None
-                    ),
-                }
-            else:
-                response["job_metadata"] = None
-
-        return response
-
+        return await _get_job_details(
+            job_id=job_id,
+            db=db,
+            include_content=include_content,
+            include_sections=include_sections,
+            include_metadata=include_metadata,
+        )
     except HTTPException:
         raise
+    except SQLAlchemyError as e:
+        logger.error("Database error getting job", job_id=job_id, error=str(e))
+        raise HTTPException(
+            status_code=500, detail="Database error retrieving job details"
+        )
     except Exception as e:
-        logger.error("Failed to get job", job_id=job_id, error=str(e))
+        logger.error("Unexpected error getting job", job_id=job_id, error=str(e))
         raise HTTPException(status_code=500, detail="Failed to retrieve job details")
 
 
 @router.get("/{job_id}/sections/{section_type}")
 async def get_job_section(
-    job_id: int, section_type: str, db: AsyncSession = Depends(get_async_session)
+    job_id: int,
+    section_type: str,
+    db: AsyncSession = Depends(get_async_session),
+    api_key: str = Security(get_api_key),
 ):
     """Get a specific section of a job description."""
     try:
@@ -504,9 +421,17 @@ async def get_job_section(
 
     except HTTPException:
         raise
+    except SQLAlchemyError as e:
+        logger.error(
+            "Database error getting job section",
+            job_id=job_id,
+            section_type=section_type,
+            error=str(e),
+        )
+        raise HTTPException(status_code=500, detail="Database error retrieving section")
     except Exception as e:
         logger.error(
-            "Failed to get job section",
+            "Unexpected error getting job section",
             job_id=job_id,
             section_type=section_type,
             error=str(e),
@@ -515,7 +440,11 @@ async def get_job_section(
 
 
 @router.delete("/{job_id}")
-async def delete_job(job_id: int, db: AsyncSession = Depends(get_async_session)):
+async def delete_job(
+    job_id: int,
+    db: AsyncSession = Depends(get_async_session),
+    api_key: str = Security(get_api_key),
+):
     """Delete a job description and all related data."""
     try:
         # Get job to verify it exists
@@ -539,15 +468,23 @@ async def delete_job(job_id: int, db: AsyncSession = Depends(get_async_session))
 
     except HTTPException:
         raise
+    except SQLAlchemyError as e:
+        logger.error("Database error deleting job", job_id=job_id, error=str(e))
+        await db.rollback()
+        raise HTTPException(
+            status_code=500, detail="Database error deleting job description"
+        )
     except Exception as e:
-        logger.error("Failed to delete job", job_id=job_id, error=str(e))
+        logger.error("Unexpected error deleting job", job_id=job_id, error=str(e))
         await db.rollback()
         raise HTTPException(status_code=500, detail="Failed to delete job description")
 
 
 @router.post("/export/bulk")
 async def bulk_export_jobs(
-    export_request: Dict[str, Any], db: AsyncSession = Depends(get_async_session)
+    export_request: Dict[str, Any],
+    db: AsyncSession = Depends(get_async_session),
+    api_key: str = Security(get_api_key),
 ):
     """
     Export multiple jobs in various formats.
@@ -578,8 +515,10 @@ async def bulk_export_jobs(
         filters = export_request.get("filters", {})
 
         # Build query based on job_ids or filters
-        query = select(JobDescription)
-
+        query = select(JobDescription).options(
+            selectinload(JobDescription.sections),
+            selectinload(JobDescription.metadata_entry),
+        )
         if job_ids:
             query = query.where(JobDescription.id.in_(job_ids))
         else:
@@ -591,7 +530,7 @@ async def bulk_export_jobs(
             if filters.get("language"):
                 query = query.where(JobDescription.language.in_(filters["language"]))
             if filters.get("department") and include_metadata:
-                query = query.join(JobDescription.job_metadata).where(
+                query = query.join(JobDescription.metadata_entry).where(
                     JobMetadata.department.in_(filters["department"])
                 )
 
@@ -620,40 +559,29 @@ async def bulk_export_jobs(
                 job_data["raw_content"] = job.raw_content
 
             if include_sections:
-                sections_result = await db.execute(
-                    select(JobSection)
-                    .where(JobSection.job_id == job.id)
-                    .order_by(JobSection.section_order)
-                )
-                sections = sections_result.scalars().all()
                 job_data["sections"] = [
                     {
                         "section_type": s.section_type,
                         "section_content": s.section_content,
                         "section_order": s.section_order,
                     }
-                    for s in sections
+                    for s in job.sections
                 ]
 
-            if include_metadata:
-                metadata_result = await db.execute(
-                    select(JobMetadata).where(JobMetadata.job_id == job.id)
-                )
-                metadata = metadata_result.scalar_one_or_none()
-                if metadata:
-                    job_data["metadata"] = {
-                        "department": metadata.department,
-                        "reports_to": metadata.reports_to,
-                        "location": metadata.location,
-                        "fte_count": metadata.fte_count,
-                        "salary_budget": metadata.salary_budget,
-                    }
+            if include_metadata and job.metadata_entry:
+                job_data["metadata"] = {
+                    "department": job.metadata_entry.department,
+                    "reports_to": job.metadata_entry.reports_to,
+                    "location": job.metadata_entry.location,
+                    "fte_count": job.metadata_entry.fte_count,
+                    "salary_budget": job.metadata_entry.salary_budget,
+                }
 
             jobs_data.append(job_data)
 
         # Generate export based on format
         if export_format == "json":
-            output = json.dumps(jobs_data, indent=2, default=str)
+            output_str = json.dumps(jobs_data, indent=2, default=str)
             content_type = "application/json"
             filename = f"jobs_export_{len(jobs_data)}_jobs.json"
 
@@ -763,13 +691,19 @@ async def bulk_export_jobs(
             headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
+    except SQLAlchemyError as e:
+        logger.error("Database error during bulk export", error=str(e))
+        raise HTTPException(status_code=500, detail="Database error during export")
+    except ValueError as e:
+        logger.error("Data validation error during bulk export", error=str(e))
+        raise HTTPException(status_code=400, detail="Invalid export parameters")
     except Exception as e:
-        logger.error("Bulk export failed", error=str(e))
+        logger.error("Unexpected error during bulk export", error=str(e))
         raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
 
 
 @router.get("/export/formats")
-async def get_export_formats():
+async def get_export_formats(api_key: str = Security(get_api_key)):
     """Get available export formats and options."""
     return {
         "formats": {

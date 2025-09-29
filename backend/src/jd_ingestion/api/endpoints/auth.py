@@ -12,10 +12,18 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 
 from ...auth.dependencies import (
-    get_user_service, get_session_service, get_preference_service,
-    CurrentUser, OptionalCurrentUser
+    get_user_service,
+    get_session_service,
+    get_preference_service,
+    CurrentUser,
+    OptionalCurrentUser,
 )
-from ...auth.service import UserService, SessionService, PreferenceService, create_access_token
+from ...auth.service import (
+    UserService,
+    SessionService,
+    PreferenceService,
+    create_access_token,
+)
 from ...auth.models import User
 from ...utils.logging import get_logger
 
@@ -65,7 +73,7 @@ class UserResponse(BaseModel):
             preferred_language=user.preferred_language,
             is_active=user.is_active,
             last_login=user.last_login.isoformat() if user.last_login else None,
-            created_at=user.created_at.isoformat()
+            created_at=user.created_at.isoformat(),
         )
 
 
@@ -94,10 +102,11 @@ class PreferenceRequest(BaseModel):
     value: Any
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+)
 async def register_user(
-    user_data: UserCreate,
-    user_service: UserService = Depends(get_user_service)
+    user_data: UserCreate, user_service: UserService = Depends(get_user_service)
 ):
     """
     Register a new user account.
@@ -117,17 +126,14 @@ async def register_user(
             role=user_data.role,
             department=user_data.department,
             security_clearance=user_data.security_clearance,
-            preferred_language=user_data.preferred_language
+            preferred_language=user_data.preferred_language,
         )
 
         logger.info(f"User registered: {user.username}")
         return UserResponse.from_user(user)
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -135,7 +141,7 @@ async def login_user(
     form_data: OAuth2PasswordRequestForm = Depends(),
     request: Request = None,
     user_service: UserService = Depends(get_user_service),
-    session_service: SessionService = Depends(get_session_service)
+    session_service: SessionService = Depends(get_session_service),
 ):
     """
     Authenticate user and return access token.
@@ -150,7 +156,9 @@ async def login_user(
     if not user:
         user_by_email = await user_service.get_user_by_email(form_data.username)
         if user_by_email:
-            user = await user_service.authenticate_user(user_by_email.username, form_data.password)
+            user = await user_service.authenticate_user(
+                user_by_email.username, form_data.password
+            )
 
     if not user:
         raise HTTPException(
@@ -163,17 +171,15 @@ async def login_user(
     access_token_expires = timedelta(minutes=30)
     access_token = create_access_token(
         data={"sub": str(user.id), "username": user.username, "role": user.role},
-        expires_delta=access_token_expires
+        expires_delta=access_token_expires,
     )
 
     # Create session for longer-term authentication
-    ip_address = getattr(request.client, 'host', None) if request else None
-    user_agent = request.headers.get('user-agent') if request else None
+    ip_address = getattr(request.client, "host", None) if request else None
+    user_agent = request.headers.get("user-agent") if request else None
 
     _ = await session_service.create_session(
-        user_id=user.id,
-        ip_address=ip_address,
-        user_agent=user_agent
+        user_id=user.id, ip_address=ip_address, user_agent=user_agent
     )
 
     logger.info(f"User logged in: {user.username}")
@@ -182,14 +188,14 @@ async def login_user(
         access_token=access_token,
         token_type="bearer",
         expires_in=1800,  # 30 minutes
-        user=UserResponse.from_user(user)
+        user=UserResponse.from_user(user),
     )
 
 
 @router.post("/logout")
 async def logout_user(
     current_user: CurrentUser,
-    session_service: SessionService = Depends(get_session_service)
+    session_service: SessionService = Depends(get_session_service),
 ):
     """Logout current user and invalidate sessions."""
     # Note: In a full implementation, we'd need to track which session token
@@ -210,7 +216,7 @@ async def get_current_user_info(current_user: CurrentUser):
 async def update_current_user(
     user_update: UserUpdateRequest,
     current_user: CurrentUser,
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
 ):
     """Update current user profile."""
     update_data = user_update.dict(exclude_unset=True)
@@ -219,37 +225,31 @@ async def update_current_user(
         updated_user = await user_service.update_user(current_user.id, **update_data)
         if not updated_user:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
             )
 
         logger.info(f"User profile updated: {current_user.username}")
         return UserResponse.from_user(updated_user)
 
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post("/change-password")
 async def change_password(
     password_data: PasswordChangeRequest,
     current_user: CurrentUser,
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
 ):
     """Change current user password."""
     success = await user_service.change_password(
-        current_user.id,
-        password_data.current_password,
-        password_data.new_password
+        current_user.id, password_data.current_password, password_data.new_password
     )
 
     if not success:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is incorrect"
+            detail="Current password is incorrect",
         )
 
     logger.info(f"Password changed for user: {current_user.username}")
@@ -259,7 +259,7 @@ async def change_password(
 @router.get("/preferences")
 async def get_user_preferences(
     current_user: CurrentUser,
-    preference_service: PreferenceService = Depends(get_preference_service)
+    preference_service: PreferenceService = Depends(get_preference_service),
 ):
     """Get all user preferences."""
     preferences = await preference_service.get_all_preferences(current_user.id)
@@ -270,19 +270,17 @@ async def get_user_preferences(
 async def set_user_preference(
     preference_data: PreferenceRequest,
     current_user: CurrentUser,
-    preference_service: PreferenceService = Depends(get_preference_service)
+    preference_service: PreferenceService = Depends(get_preference_service),
 ):
     """Set a user preference."""
     preference = await preference_service.set_preference(
-        current_user.id,
-        preference_data.key,
-        preference_data.value
+        current_user.id, preference_data.key, preference_data.value
     )
 
     return {
         "message": "Preference set successfully",
         "key": preference.preference_key,
-        "value": preference.preference_value
+        "value": preference.preference_value,
     }
 
 
@@ -290,15 +288,14 @@ async def set_user_preference(
 async def get_user_preference(
     key: str,
     current_user: CurrentUser,
-    preference_service: PreferenceService = Depends(get_preference_service)
+    preference_service: PreferenceService = Depends(get_preference_service),
 ):
     """Get a specific user preference."""
     value = await preference_service.get_preference(current_user.id, key)
 
     if value is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Preference not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Preference not found"
         )
 
     return {"key": key, "value": value}
@@ -308,15 +305,14 @@ async def get_user_preference(
 async def delete_user_preference(
     key: str,
     current_user: CurrentUser,
-    preference_service: PreferenceService = Depends(get_preference_service)
+    preference_service: PreferenceService = Depends(get_preference_service),
 ):
     """Delete a user preference."""
     success = await preference_service.delete_preference(current_user.id, key)
 
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Preference not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Preference not found"
         )
 
     return {"message": "Preference deleted successfully"}
@@ -326,17 +322,14 @@ async def delete_user_preference(
 async def auth_status(current_user: OptionalCurrentUser):
     """Get authentication status."""
     if current_user:
-        return {
-            "authenticated": True,
-            "user": UserResponse.from_user(current_user)
-        }
+        return {"authenticated": True, "user": UserResponse.from_user(current_user)}
     else:
         return {"authenticated": False}
 
 
 @router.post("/cleanup-sessions")
 async def cleanup_expired_sessions(
-    session_service: SessionService = Depends(get_session_service)
+    session_service: SessionService = Depends(get_session_service),
 ):
     """Clean up expired sessions (admin operation)."""
     # Note: In production, this should require admin privileges

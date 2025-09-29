@@ -1,13 +1,14 @@
 """
 Test configuration and fixtures for the JDDB backend tests.
 """
+
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 import pytest
-import asyncio
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -18,9 +19,9 @@ import os
 from pathlib import Path
 
 from jd_ingestion.api.main import app
-from jd_ingestion.database.connection import get_async_session, get_sync_session
+from jd_ingestion.database.connection import get_async_session, get_db
 from jd_ingestion.database.models import Base
-from jd_ingestion.config.settings import settings
+
 
 @pytest.fixture(scope="session")
 def test_db_url() -> str:
@@ -84,7 +85,16 @@ def sync_session(sync_engine):
 def test_session():
     """Provide access to the test database session."""
     # Use in-memory database for sync tests
-    from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Boolean, Float, ForeignKey
+    from sqlalchemy import (
+        create_engine,
+        Column,
+        Integer,
+        String,
+        Text,
+        DateTime,
+        Float,
+        ForeignKey,
+    )
     from sqlalchemy.orm import sessionmaker, relationship
     from sqlalchemy.orm import declarative_base
     from sqlalchemy.pool import StaticPool
@@ -106,11 +116,17 @@ def test_session():
         processed_date = Column(DateTime)
         file_hash = Column(String(64))
         created_at = Column(DateTime, default=datetime.datetime.utcnow)
-        updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+        updated_at = Column(
+            DateTime,
+            default=datetime.datetime.utcnow,
+            onupdate=datetime.datetime.utcnow,
+        )
 
         # Add relationships for test compatibility
         sections = relationship("TestJobSection", back_populates="job")
-        job_metadata = relationship("TestJobMetadata", back_populates="job", uselist=False)
+        job_metadata = relationship(
+            "TestJobMetadata", back_populates="job", uselist=False
+        )
 
     class TestJobSection(TestBase):
         __tablename__ = "job_sections"
@@ -143,7 +159,7 @@ def test_session():
         "sqlite:///:memory:",
         echo=False,
         connect_args={"check_same_thread": False},
-        poolclass=StaticPool
+        poolclass=StaticPool,
     )
     TestBase.metadata.create_all(sync_engine)
 
@@ -162,10 +178,11 @@ def test_client(test_session):
 
     # Mock the database models for testing - preserve original Base to avoid affecting other models
     import jd_ingestion.database.models as models
+
     original_models = {
-        'JobDescription': models.JobDescription,
-        'JobSection': models.JobSection,
-        'JobMetadata': models.JobMetadata,
+        "JobDescription": models.JobDescription,
+        "JobSection": models.JobSection,
+        "JobMetadata": models.JobMetadata,
     }
 
     # Temporarily replace the models with test models
@@ -214,14 +231,15 @@ def test_client(test_session):
     def override_get_async_session():
         return async_wrapper
 
-    def override_get_sync_session():
-        return session
+    def override_get_db():
+        yield session
 
     app.dependency_overrides[get_async_session] = override_get_async_session
-    app.dependency_overrides[get_sync_session] = override_get_sync_session
+    app.dependency_overrides[get_db] = override_get_db
 
     # Override configure_mappers to prevent loading JSONB models
     from jd_ingestion.database import connection
+
     original_configure_mappers = connection.configure_mappers
 
     def test_configure_mappers():

@@ -311,7 +311,9 @@ async def get_quality_recommendations(
             "priority": (
                 "high"
                 if quality_flags.get("processing_issues")
-                else "medium" if quality_flags.get("content_issues") else "low"
+                else "medium"
+                if quality_flags.get("content_issues")
+                else "low"
             ),
         }
 

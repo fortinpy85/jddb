@@ -76,6 +76,36 @@ class SearchResult(BaseModel):
     snippet: str
 
 
+@router.get("/")
+@handle_errors(operation_name="search_jobs_get")
+@retry_on_failure(max_retries=2, base_delay=1.0)
+async def search_jobs_get(
+    q: str = Query(..., description="Search query"),
+    classification: Optional[str] = Query(
+        None, description="Job classification filter"
+    ),
+    language: Optional[str] = Query(None, description="Language filter"),
+    department: Optional[str] = Query(None, description="Department filter"),
+    limit: int = Query(20, description="Maximum number of results", ge=1, le=100),
+    use_semantic_search: bool = Query(True, description="Use semantic search"),
+    request: Request = None,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Search job descriptions using GET request with query parameters."""
+    # Convert query parameters to SearchQuery model
+    search_query = SearchQuery(
+        query=q,
+        classification=classification,
+        language=language,
+        department=department,
+        limit=limit,
+        use_semantic_search=use_semantic_search,
+    )
+
+    # Delegate to the main search function
+    return await search_jobs(search_query, request, db)
+
+
 @router.post("/")
 @handle_errors(operation_name="search_jobs")
 @retry_on_failure(max_retries=2, base_delay=1.0)
@@ -489,17 +519,17 @@ async def advanced_search_with_filters(
 
             # Cache results for 30 minutes
             await cache_service.cache_search_results(
-                search_query.query, filters_dict, response, 1800
+                search_query.query, filters_dict, [response], 1800
             )
 
-            # Log analytics
-            await search_analytics_service.log_search(
-                session_id=str(request.client.host),
-                query=search_query.query,
-                filters=filters_dict,
-                result_count=len(search_results),
-                db=db,
-            )
+            # Log analytics - method not available
+            # await search_analytics_service.log_search(
+            #     session_id=str(request.client.host),
+            #     query=search_query.query,
+            #     filters=filters_dict,
+            #     result_count=len(search_results),
+            #     db=db,
+            # )
 
             log_performance_metric("advanced_search_success", 1, "count")
             return response
@@ -820,7 +850,7 @@ async def find_similar_jobs_optimized(
                         }
 
                         # Cache the results
-                        await cache_service.cache_similar_jobs(job_id, limit, result)
+                        await cache_service.cache_similar_jobs(job_id, limit, [result])
                         log_performance_metric(
                             "similar_jobs_vector_success", 1, "count"
                         )
@@ -862,12 +892,12 @@ async def find_similar_jobs_optimized(
             },
             "similar_jobs": [
                 {
-                    "id": job.id,
-                    "job_number": job.job_number,
-                    "title": job.title,
-                    "classification": job.classification,
-                    "language": job.language,
-                    "similarity_score": float(job.rank),
+                    "id": job["id"],
+                    "job_number": job["job_number"],
+                    "title": job["title"],
+                    "classification": job["classification"],
+                    "language": job["language"],
+                    "similarity_score": float(job["rank"]),
                 }
                 for job in similar_jobs
             ],
@@ -908,13 +938,13 @@ async def compare_jobs(
             JobSection.job_id.in_([job1_id, job2_id])
         )
         sections_result = await db.execute(sections_query)
-        sections_by_job = {}
+        sections_by_job: Dict[int, Dict[str, str]] = {}
         for section in sections_result.scalars().all():
             if section.job_id not in sections_by_job:
                 sections_by_job[section.job_id] = {}
-            sections_by_job[section.job_id][
-                section.section_type
-            ] = section.section_content
+            sections_by_job[section.job_id][section.section_type] = (
+                section.section_content
+            )
 
         # Get content chunks with embeddings for similarity analysis
         chunks_query = select(ContentChunk).where(
@@ -922,7 +952,7 @@ async def compare_jobs(
             ContentChunk.embedding.isnot(None),
         )
         chunks_result = await db.execute(chunks_query)
-        chunks_by_job = {}
+        chunks_by_job: Dict[int, List[ContentChunk]] = {}
         for chunk in chunks_result.scalars().all():
             if chunk.job_id not in chunks_by_job:
                 chunks_by_job[chunk.job_id] = []
@@ -930,7 +960,6 @@ async def compare_jobs(
 
         # Calculate overall similarity using chunk embeddings
         overall_similarity = 0.0
-        section_similarities = {}
 
         if job1_id in chunks_by_job and job2_id in chunks_by_job:
             job1_chunks = chunks_by_job[job1_id]
@@ -959,7 +988,7 @@ async def compare_jobs(
                 overall_similarity = sum(top_half) / len(top_half)
 
         # Analyze section-by-section differences
-        all_section_types = set()
+        all_section_types: set[str] = set()
         if job1_id in sections_by_job:
             all_section_types.update(sections_by_job[job1_id].keys())
         if job2_id in sections_by_job:
@@ -1361,7 +1390,7 @@ async def get_query_suggestions(
     """
     try:
         # Fixed: Added operation_name parameter
-        with PerformanceTimer("query_suggestions") as timer:
+        with PerformanceTimer("query_suggestions"):
             suggestions = await search_recommendations_service.get_query_suggestions(
                 db=db,
                 partial_query=q,
@@ -1403,7 +1432,7 @@ async def get_search_recommendations(
     trending queries, and personalized suggestions.
     """
     try:
-        with PerformanceTimer("search_recommendations") as timer:
+        with PerformanceTimer("search_recommendations"):
             search_context = {"query": query or "", "classification": classification}
 
             recommendations = (
@@ -1453,7 +1482,7 @@ async def get_trending_searches(
     Get trending search queries for a specified time period.
     """
     try:
-        with PerformanceTimer("trending_searches") as timer:
+        with PerformanceTimer("trending_searches"):
             # Map period to timedelta
             period_map = {
                 "1h": timedelta(hours=1),
@@ -1533,8 +1562,8 @@ async def get_popular_filters(
     Get popular filter suggestions based on query context and general usage patterns.
     """
     try:
-        with PerformanceTimer("popular_filters") as timer:
-            filters = {
+        with PerformanceTimer("popular_filters"):
+            filters: Dict[str, List[Dict[str, Any]]] = {
                 "classifications": [],
                 "departments": [],
                 "languages": [],

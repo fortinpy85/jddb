@@ -38,11 +38,11 @@ class User(BaseModel):
 
     def set_password(self, password: str) -> str:
         """Hash and return the password hash."""
-        return pwd_context.hash(password)
+        return str(pwd_context.hash(password))
 
     def verify_password(self, password: str) -> bool:
         """Verify a password against the hash."""
-        return pwd_context.verify(password, self.password_hash)
+        return bool(pwd_context.verify(password, self.password_hash))
 
     @property
     def full_name(self) -> str:
@@ -83,7 +83,9 @@ class UserSession(BaseModel):
         from_attributes = True
 
     @classmethod
-    def create_token(cls, user_id: int, expires_hours: int = 24) -> tuple[str, datetime]:
+    def create_token(
+        cls, user_id: int, expires_hours: int = 24
+    ) -> tuple[str, datetime]:
         """Create a new session token and expiration."""
         session_token = secrets.token_urlsafe(32)
         expires_at = datetime.utcnow() + timedelta(hours=expires_hours)
@@ -145,9 +147,9 @@ class UserPermission(BaseModel):
 # Password utility functions
 def hash_password(password: str) -> str:
     """Hash a password."""
-    return pwd_context.hash(password)
+    return str(pwd_context.hash(password))
 
 
 def verify_password(password: str, password_hash: str) -> bool:
     """Verify a password against a hash."""
-    return pwd_context.verify(password, password_hash)
+    return bool(pwd_context.verify(password, password_hash))

@@ -2,6 +2,7 @@
 """
 This script is a simple test of the API endpoint /api/ingestion/process-file.
 """
+
 import logging
 import requests
 from pathlib import Path

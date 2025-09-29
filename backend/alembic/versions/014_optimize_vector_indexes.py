@@ -1,13 +1,12 @@
 """Optimize vector indexes for performance
 
 Revision ID: 014_optimize_vector_indexes
-Revises: 013_add_search_analytics
+Revises: 400307a1032c
 Create Date: 2024-09-13 10:00:00.000000
 
 """
 
 from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
@@ -112,7 +111,5 @@ def downgrade():
     op.execute("DROP INDEX IF EXISTS idx_jobs_id_title_classification;")
     op.execute("DROP INDEX IF EXISTS idx_jobs_classification_language;")
     op.execute("DROP INDEX IF EXISTS idx_chunks_job_id_embedding;")
-    op.execute(
-        "DROP INDEX IF EXISTS idx_content_chunks_embedding_ivfflat;"
-    )
+    op.execute("DROP INDEX IF EXISTS idx_content_chunks_embedding_ivfflat;")
     op.execute("DROP INDEX IF EXISTS idx_content_chunks_embedding_hnsw;")

@@ -2,6 +2,7 @@
 """
 This script checks the statistics of the embeddings in the database.
 """
+
 import asyncio
 import logging
 import sys

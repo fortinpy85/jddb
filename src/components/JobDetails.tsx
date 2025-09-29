@@ -68,7 +68,10 @@ export function JobDetails({ jobId, onBack }: JobDetailsProps) {
       }
     };
 
-    if (jobId && (!selectedJob || selectedJob.id !== jobId)) {
+    if (
+      jobId &&
+      (!selectedJob || selectedJob.id !== jobId || !selectedJob.sections)
+    ) {
       loadJobDetails();
     }
   }, [jobId, selectedJob, selectJob, addToast]);

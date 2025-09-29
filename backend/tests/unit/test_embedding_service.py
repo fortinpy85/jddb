@@ -4,11 +4,8 @@ Unit tests for the EmbeddingService.
 
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
-import numpy as np
-from httpx import Response
 
 from jd_ingestion.services.embedding_service import EmbeddingService
-from jd_ingestion.database.models import JobDescription, ContentChunk
 
 
 @pytest.mark.unit
@@ -34,8 +31,7 @@ class TestEmbeddingService:
         mock_embeddings = Mock()
         mock_embeddings.create = AsyncMock()
         mock_embeddings.create.return_value = Mock(
-            data=[Mock(embedding=mock_openai_embedding)],
-            usage=Mock(total_tokens=100)
+            data=[Mock(embedding=mock_openai_embedding)], usage=Mock(total_tokens=100)
         )
 
         mock_client = Mock()
@@ -54,7 +50,9 @@ class TestEmbeddingService:
 
     @patch("jd_ingestion.services.embedding_service.openai.AsyncOpenAI")
     @pytest.mark.asyncio
-    async def test_generate_embedding_api_error(self, mock_openai_client, embedding_service):
+    async def test_generate_embedding_api_error(
+        self, mock_openai_client, embedding_service
+    ):
         """Test embedding generation with API error."""
         mock_embeddings = Mock()
         mock_embeddings.create = AsyncMock()
@@ -74,7 +72,9 @@ class TestEmbeddingService:
 
     @patch("jd_ingestion.services.embedding_service.openai.AsyncOpenAI")
     @pytest.mark.asyncio
-    async def test_generate_embedding_timeout(self, mock_openai_client, embedding_service):
+    async def test_generate_embedding_timeout(
+        self, mock_openai_client, embedding_service
+    ):
         """Test embedding generation with timeout."""
         import asyncio
 
@@ -96,7 +96,9 @@ class TestEmbeddingService:
 
     @patch("jd_ingestion.services.embedding_service.openai.AsyncOpenAI")
     @pytest.mark.asyncio
-    async def test_generate_embedding_empty_text(self, mock_openai_client, embedding_service):
+    async def test_generate_embedding_empty_text(
+        self, mock_openai_client, embedding_service
+    ):
         """Test embedding generation with empty text."""
         mock_embeddings = Mock()
         mock_embeddings.create = AsyncMock()
@@ -122,8 +124,7 @@ class TestEmbeddingService:
         mock_embeddings = Mock()
         mock_embeddings.create = AsyncMock()
         mock_embeddings.create.return_value = Mock(
-            data=[Mock(embedding=mock_openai_embedding)],
-            usage=Mock(total_tokens=8000)
+            data=[Mock(embedding=mock_openai_embedding)], usage=Mock(total_tokens=8000)
         )
 
         mock_client = Mock()
@@ -185,8 +186,7 @@ class TestEmbeddingService:
         mock_embeddings = Mock()
         mock_embeddings.create = AsyncMock()
         mock_embeddings.create.return_value = Mock(
-            data=[Mock(embedding=mock_openai_embedding)],
-            usage=Mock(total_tokens=100)
+            data=[Mock(embedding=mock_openai_embedding)], usage=Mock(total_tokens=100)
         )
 
         mock_client = Mock()
@@ -220,7 +220,7 @@ class TestEmbeddingService:
         mock_result = Mock()
         mock_result.scalars.return_value.all.return_value = [
             Mock(job_id=2, similarity=0.95),
-            Mock(job_id=3, similarity=0.87)
+            Mock(job_id=3, similarity=0.87),
         ]
         mock_session.execute.return_value = mock_result
 
