@@ -48,20 +48,29 @@ interface StatusChange {
 interface TranslationStatusTrackerProps {
   segments: BilingualSegment[];
   onSegmentClick?: (segmentId: string) => void;
-  onBatchStatusChange?: (segmentIds: string[], status: TranslationStatus) => void;
+  onBatchStatusChange?: (
+    segmentIds: string[],
+    status: TranslationStatus,
+  ) => void;
   statusHistory?: StatusChange[];
   className?: string;
 }
 
-export const TranslationStatusTracker: React.FC<TranslationStatusTrackerProps> = ({
+export const TranslationStatusTracker: React.FC<
+  TranslationStatusTrackerProps
+> = ({
   segments,
   onSegmentClick,
   onBatchStatusChange,
   statusHistory = [],
   className,
 }) => {
-  const [filterStatus, setFilterStatus] = useState<TranslationStatus | "all">("all");
-  const [selectedSegments, setSelectedSegments] = useState<Set<string>>(new Set());
+  const [filterStatus, setFilterStatus] = useState<TranslationStatus | "all">(
+    "all",
+  );
+  const [selectedSegments, setSelectedSegments] = useState<Set<string>>(
+    new Set(),
+  );
   const [showHistory, setShowHistory] = useState(false);
 
   // Calculate statistics
@@ -208,7 +217,9 @@ export const TranslationStatusTracker: React.FC<TranslationStatusTrackerProps> =
             <div className="flex flex-col items-center p-2 bg-yellow-50 rounded">
               <div className="flex items-center gap-1 mb-1">
                 <Clock className="w-3 h-3 text-yellow-600" />
-                <span className="text-xs font-medium text-yellow-900">Draft</span>
+                <span className="text-xs font-medium text-yellow-900">
+                  Draft
+                </span>
               </div>
               <span className="text-lg font-bold text-yellow-900">
                 {statistics.draft}
@@ -218,7 +229,9 @@ export const TranslationStatusTracker: React.FC<TranslationStatusTrackerProps> =
             <div className="flex flex-col items-center p-2 bg-blue-50 rounded">
               <div className="flex items-center gap-1 mb-1">
                 <Eye className="w-3 h-3 text-blue-600" />
-                <span className="text-xs font-medium text-blue-900">Review</span>
+                <span className="text-xs font-medium text-blue-900">
+                  Review
+                </span>
               </div>
               <span className="text-lg font-bold text-blue-900">
                 {statistics.review}
@@ -228,7 +241,9 @@ export const TranslationStatusTracker: React.FC<TranslationStatusTrackerProps> =
             <div className="flex flex-col items-center p-2 bg-green-50 rounded">
               <div className="flex items-center gap-1 mb-1">
                 <CheckCircle className="w-3 h-3 text-green-600" />
-                <span className="text-xs font-medium text-green-900">Approved</span>
+                <span className="text-xs font-medium text-green-900">
+                  Approved
+                </span>
               </div>
               <span className="text-lg font-bold text-green-900">
                 {statistics.approved}
@@ -243,7 +258,9 @@ export const TranslationStatusTracker: React.FC<TranslationStatusTrackerProps> =
             <Filter className="w-4 h-4 text-gray-600" />
             <Select
               value={filterStatus}
-              onValueChange={(value) => setFilterStatus(value as TranslationStatus | "all")}
+              onValueChange={(value) =>
+                setFilterStatus(value as TranslationStatus | "all")
+              }
             >
               <SelectTrigger className="h-8 w-[140px] text-xs">
                 <SelectValue />
@@ -357,11 +374,15 @@ export const TranslationStatusTracker: React.FC<TranslationStatusTrackerProps> =
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge className={getStatusBadgeColor(change.oldStatus)}>
+                        <Badge
+                          className={getStatusBadgeColor(change.oldStatus)}
+                        >
                           {change.oldStatus}
                         </Badge>
                         <span>→</span>
-                        <Badge className={getStatusBadgeColor(change.newStatus)}>
+                        <Badge
+                          className={getStatusBadgeColor(change.newStatus)}
+                        >
                           {change.newStatus}
                         </Badge>
                       </div>
@@ -416,7 +437,9 @@ export const TranslationStatusTracker: React.FC<TranslationStatusTrackerProps> =
                             </Badge>
                           </div>
 
-                          <Badge className={`text-xs ${getStatusBadgeColor(segment.status)}`}>
+                          <Badge
+                            className={`text-xs ${getStatusBadgeColor(segment.status)}`}
+                          >
                             {getStatusIcon(segment.status)}
                             <span className="ml-1">{segment.status}</span>
                           </Badge>

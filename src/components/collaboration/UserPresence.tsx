@@ -77,7 +77,8 @@ export const UserPresence: React.FC<UserPresenceProps> = ({
         {displayedCollaborators.map((collaborator) => {
           const isCurrentUser = collaborator.userId === currentUserId;
           const color = collaborator.color || getUserColor(collaborator.userId);
-          const username = collaborator.username || `User ${collaborator.userId}`;
+          const username =
+            collaborator.username || `User ${collaborator.userId}`;
 
           return (
             <div
@@ -124,7 +125,8 @@ export const UserPresence: React.FC<UserPresenceProps> = ({
       </div>
 
       <span className="text-sm text-gray-600 dark:text-gray-400">
-        {collaborators.length} {collaborators.length === 1 ? "collaborator" : "collaborators"}
+        {collaborators.length}{" "}
+        {collaborators.length === 1 ? "collaborator" : "collaborators"}
       </span>
     </div>
   );

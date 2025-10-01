@@ -46,7 +46,7 @@ function getUserCursorColor(userId: number): string {
  */
 function getPixelPositionFromCharPosition(
   textarea: HTMLTextAreaElement,
-  charPosition: number
+  charPosition: number,
 ): { top: number; left: number } | null {
   try {
     const text = textarea.value;
@@ -88,7 +88,7 @@ export const CollaborativeCursor: React.FC<CollaborativeCursorProps> = ({
 
         const position = getPixelPositionFromCharPosition(
           editorRef.current!,
-          cursor.position
+          cursor.position,
         );
 
         if (!position) {

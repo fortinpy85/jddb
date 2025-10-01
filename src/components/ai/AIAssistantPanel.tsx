@@ -39,11 +39,36 @@ interface AIAssistantPanelProps {
 }
 
 const SUGGESTION_TYPE_LABELS = {
-  grammar: { label: "Grammar", icon: AlertCircle, color: "text-red-600", bg: "bg-red-100" },
-  style: { label: "Style", icon: Lightbulb, color: "text-blue-600", bg: "bg-blue-100" },
-  clarity: { label: "Clarity", icon: Lightbulb, color: "text-yellow-600", bg: "bg-yellow-100" },
-  bias: { label: "Inclusivity", icon: AlertCircle, color: "text-purple-600", bg: "bg-purple-100" },
-  compliance: { label: "Compliance", icon: AlertCircle, color: "text-orange-600", bg: "bg-orange-100" },
+  grammar: {
+    label: "Grammar",
+    icon: AlertCircle,
+    color: "text-red-600",
+    bg: "bg-red-100",
+  },
+  style: {
+    label: "Style",
+    icon: Lightbulb,
+    color: "text-blue-600",
+    bg: "bg-blue-100",
+  },
+  clarity: {
+    label: "Clarity",
+    icon: Lightbulb,
+    color: "text-yellow-600",
+    bg: "bg-yellow-100",
+  },
+  bias: {
+    label: "Inclusivity",
+    icon: AlertCircle,
+    color: "text-purple-600",
+    bg: "bg-purple-100",
+  },
+  compliance: {
+    label: "Compliance",
+    icon: AlertCircle,
+    color: "text-orange-600",
+    bg: "bg-orange-100",
+  },
 };
 
 export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
@@ -65,18 +90,19 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
   });
 
   // Group suggestions by type
-  const groupedSuggestions = suggestions.reduce((acc, suggestion) => {
-    if (!acc[suggestion.type]) {
-      acc[suggestion.type] = [];
-    }
-    acc[suggestion.type].push(suggestion);
-    return acc;
-  }, {} as Record<string, AISuggestion[]>);
+  const groupedSuggestions = suggestions.reduce(
+    (acc, suggestion) => {
+      if (!acc[suggestion.type]) {
+        acc[suggestion.type] = [];
+      }
+      acc[suggestion.type].push(suggestion);
+      return acc;
+    },
+    {} as Record<string, AISuggestion[]>,
+  );
 
   // Filter suggestions by enabled types
-  const filteredSuggestions = suggestions.filter(
-    (s) => enabledTypes[s.type]
-  );
+  const filteredSuggestions = suggestions.filter((s) => enabledTypes[s.type]);
 
   const getScoreColor = (score: number) => {
     if (score >= 0.9) return "text-green-600";
@@ -106,7 +132,9 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
               onClick={onRefresh}
               disabled={isLoading}
             >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+              />
             </Button>
           )}
         </div>
@@ -116,8 +144,11 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
           <div className="mt-3">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-600">Quality Score</span>
-              <span className={`text-sm font-bold ${getScoreColor(overallScore)}`}>
-                {Math.round(overallScore * 100)}% - {getScoreLabel(overallScore)}
+              <span
+                className={`text-sm font-bold ${getScoreColor(overallScore)}`}
+              >
+                {Math.round(overallScore * 100)}% -{" "}
+                {getScoreLabel(overallScore)}
               </span>
             </div>
             <Progress value={overallScore * 100} className="h-2" />
@@ -130,7 +161,9 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
         {isLoading && (
           <div className="flex items-center justify-center py-8">
             <RefreshCw className="w-6 h-6 animate-spin text-purple-600" />
-            <span className="ml-2 text-sm text-gray-600">Analyzing text...</span>
+            <span className="ml-2 text-sm text-gray-600">
+              Analyzing text...
+            </span>
           </div>
         )}
 
@@ -139,7 +172,8 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
           <div className="text-center py-8">
             <Sparkles className="w-12 h-12 mx-auto text-gray-300 mb-3" />
             <p className="text-sm text-gray-500">
-              No suggestions available. Start typing to get AI-powered recommendations.
+              No suggestions available. Start typing to get AI-powered
+              recommendations.
             </p>
           </div>
         )}
@@ -151,20 +185,32 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
             <div className="bg-gray-50 rounded p-3">
               <div className="flex items-center space-x-2 mb-2">
                 <Filter className="w-4 h-4 text-gray-600" />
-                <span className="text-xs font-medium text-gray-700">Filter by Type</span>
+                <span className="text-xs font-medium text-gray-700">
+                  Filter by Type
+                </span>
               </div>
               <div className="space-y-2">
-                {Object.entries(SUGGESTION_TYPE_LABELS).map(([type, config]) => (
-                  <div key={type} className="flex items-center justify-between">
-                    <span className="text-xs text-gray-600">{config.label}</span>
-                    <Switch
-                      checked={enabledTypes[type]}
-                      onCheckedChange={(checked) =>
-                        setEnabledTypes((prev) => ({ ...prev, [type]: checked }))
-                      }
-                    />
-                  </div>
-                ))}
+                {Object.entries(SUGGESTION_TYPE_LABELS).map(
+                  ([type, config]) => (
+                    <div
+                      key={type}
+                      className="flex items-center justify-between"
+                    >
+                      <span className="text-xs text-gray-600">
+                        {config.label}
+                      </span>
+                      <Switch
+                        checked={enabledTypes[type]}
+                        onCheckedChange={(checked) =>
+                          setEnabledTypes((prev) => ({
+                            ...prev,
+                            [type]: checked,
+                          }))
+                        }
+                      />
+                    </div>
+                  ),
+                )}
               </div>
             </div>
 
@@ -191,67 +237,78 @@ export const AIAssistantPanel: React.FC<AIAssistantPanelProps> = ({
             </div>
 
             {/* Grouped Suggestions */}
-            {Object.entries(groupedSuggestions).map(([type, typeSuggestions]) => {
-              if (!enabledTypes[type]) return null;
+            {Object.entries(groupedSuggestions).map(
+              ([type, typeSuggestions]) => {
+                if (!enabledTypes[type]) return null;
 
-              const config = SUGGESTION_TYPE_LABELS[type as keyof typeof SUGGESTION_TYPE_LABELS];
-              const Icon = config.icon;
+                const config =
+                  SUGGESTION_TYPE_LABELS[
+                    type as keyof typeof SUGGESTION_TYPE_LABELS
+                  ];
+                const Icon = config.icon;
 
-              return (
-                <div key={type} className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Icon className={`w-4 h-4 ${config.color}`} />
-                    <span className="text-sm font-medium text-gray-900">
-                      {config.label}
-                    </span>
-                    <Badge variant="secondary" className="text-xs">
-                      {typeSuggestions.length}
-                    </Badge>
+                return (
+                  <div key={type} className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Icon className={`w-4 h-4 ${config.color}`} />
+                      <span className="text-sm font-medium text-gray-900">
+                        {config.label}
+                      </span>
+                      <Badge variant="secondary" className="text-xs">
+                        {typeSuggestions.length}
+                      </Badge>
+                    </div>
+
+                    {typeSuggestions.map((suggestion) => (
+                      <Card
+                        key={suggestion.id}
+                        className="border-l-4"
+                        style={{ borderLeftColor: config.color }}
+                      >
+                        <CardContent className="p-3">
+                          <p className="text-xs text-gray-700 mb-2">
+                            {suggestion.explanation}
+                          </p>
+                          <div className="space-y-1 mb-3">
+                            <div className="text-xs">
+                              <span className="text-gray-500">From: </span>
+                              <span className="line-through">
+                                {suggestion.original_text}
+                              </span>
+                            </div>
+                            <div className="text-xs">
+                              <span className="text-gray-500">To: </span>
+                              <span className="font-medium text-green-700">
+                                {suggestion.suggested_text}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button
+                              size="sm"
+                              onClick={() => onAcceptSuggestion?.(suggestion)}
+                              className="flex-1 h-7 text-xs"
+                            >
+                              <Check className="w-3 h-3 mr-1" />
+                              Accept
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => onRejectSuggestion?.(suggestion)}
+                              className="flex-1 h-7 text-xs"
+                            >
+                              <X className="w-3 h-3 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-
-                  {typeSuggestions.map((suggestion) => (
-                    <Card key={suggestion.id} className="border-l-4" style={{ borderLeftColor: config.color }}>
-                      <CardContent className="p-3">
-                        <p className="text-xs text-gray-700 mb-2">
-                          {suggestion.explanation}
-                        </p>
-                        <div className="space-y-1 mb-3">
-                          <div className="text-xs">
-                            <span className="text-gray-500">From: </span>
-                            <span className="line-through">{suggestion.original_text}</span>
-                          </div>
-                          <div className="text-xs">
-                            <span className="text-gray-500">To: </span>
-                            <span className="font-medium text-green-700">
-                              {suggestion.suggested_text}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            onClick={() => onAcceptSuggestion?.(suggestion)}
-                            className="flex-1 h-7 text-xs"
-                          >
-                            <Check className="w-3 h-3 mr-1" />
-                            Accept
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => onRejectSuggestion?.(suggestion)}
-                            className="flex-1 h-7 text-xs"
-                          >
-                            <X className="w-3 h-3 mr-1" />
-                            Reject
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              );
-            })}
+                );
+              },
+            )}
           </div>
         )}
       </CardContent>

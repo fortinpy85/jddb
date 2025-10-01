@@ -95,7 +95,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
   const [linkCopied, setLinkCopied] = useState(false);
 
   const currentUser = sessionInfo?.participants.find(
-    (p) => p.userId === currentUserId
+    (p) => p.userId === currentUserId,
   );
   const isOwner = currentUserId === sessionInfo?.ownerId;
   const canManageUsers = isOwner || currentUser?.role === "editor";
@@ -183,7 +183,10 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
           <div className="space-y-2">
             <Label className="text-xs">Invite Collaborators</Label>
             <div className="flex gap-2">
-              <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+              <Dialog
+                open={inviteDialogOpen}
+                onOpenChange={setInviteDialogOpen}
+              >
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm" className="flex-1">
                     <UserPlus className="w-3 h-3 mr-1" />
@@ -214,7 +217,9 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
                       <Label htmlFor="invite-role">Role</Label>
                       <Select
                         value={inviteRole}
-                        onValueChange={(value) => setInviteRole(value as UserRole)}
+                        onValueChange={(value) =>
+                          setInviteRole(value as UserRole)
+                        }
                       >
                         <SelectTrigger id="invite-role">
                           <SelectValue />
@@ -358,7 +363,9 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => onRemoveParticipant?.(participant.userId)}
+                        onClick={() =>
+                          onRemoveParticipant?.(participant.userId)
+                        }
                       >
                         <X className="w-3 h-3" />
                       </Button>
@@ -385,7 +392,9 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
         <div className="pt-2 border-t text-xs text-gray-500 space-y-1">
           <div className="flex justify-between">
             <span>Session ID:</span>
-            <span className="font-mono">{sessionInfo.sessionId.slice(0, 8)}</span>
+            <span className="font-mono">
+              {sessionInfo.sessionId.slice(0, 8)}
+            </span>
           </div>
           <div className="flex justify-between">
             <span>Created:</span>

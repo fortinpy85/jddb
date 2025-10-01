@@ -41,12 +41,14 @@ export const SuggestionHighlight: React.FC<SuggestionHighlightProps> = ({
   onHover,
   onClick,
 }) => {
-  const colorClass = SUGGESTION_COLORS[suggestion.type] || SUGGESTION_COLORS.grammar;
-  const underlineClass = SUGGESTION_UNDERLINES[suggestion.type] || SUGGESTION_UNDERLINES.grammar;
+  const colorClass =
+    SUGGESTION_COLORS[suggestion.type] || SUGGESTION_COLORS.grammar;
+  const underlineClass =
+    SUGGESTION_UNDERLINES[suggestion.type] || SUGGESTION_UNDERLINES.grammar;
 
   const highlightedText = text.substring(
     suggestion.start_index,
-    suggestion.end_index
+    suggestion.end_index,
   );
 
   return (
@@ -84,7 +86,7 @@ export const TextWithSuggestions: React.FC<TextWithSuggestionsProps> = ({
 
   // Sort suggestions by start index
   const sortedSuggestions = [...suggestions].sort(
-    (a, b) => a.start_index - b.start_index
+    (a, b) => a.start_index - b.start_index,
   );
 
   const elements: React.ReactNode[] = [];
@@ -96,7 +98,7 @@ export const TextWithSuggestions: React.FC<TextWithSuggestionsProps> = ({
       elements.push(
         <span key={`text-${idx}`}>
           {text.substring(currentIndex, suggestion.start_index)}
-        </span>
+        </span>,
       );
     }
 
@@ -108,7 +110,7 @@ export const TextWithSuggestions: React.FC<TextWithSuggestionsProps> = ({
         text={text}
         onHover={onSuggestionHover}
         onClick={onSuggestionClick}
-      />
+      />,
     );
 
     currentIndex = suggestion.end_index;
@@ -116,9 +118,7 @@ export const TextWithSuggestions: React.FC<TextWithSuggestionsProps> = ({
 
   // Add remaining text
   if (currentIndex < text.length) {
-    elements.push(
-      <span key="text-end">{text.substring(currentIndex)}</span>
-    );
+    elements.push(<span key="text-end">{text.substring(currentIndex)}</span>);
   }
 
   return <>{elements}</>;

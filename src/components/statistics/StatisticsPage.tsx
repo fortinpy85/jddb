@@ -7,7 +7,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,7 +42,9 @@ interface StatisticsPageProps {
 }
 
 export function StatisticsPage({ onBack, className }: StatisticsPageProps) {
-  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d" | "1y">("30d");
+  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d" | "1y">(
+    "30d",
+  );
 
   // Mock data - in production, fetch from API
   const overallStats = {
@@ -52,10 +60,28 @@ export function StatisticsPage({ onBack, className }: StatisticsPageProps) {
   const categoryStats = [
     { category: "EX", count: 342, percentage: 27.4, trend: "up", change: 8.3 },
     { category: "AS", count: 298, percentage: 23.9, trend: "up", change: 5.1 },
-    { category: "PM", count: 187, percentage: 15.0, trend: "down", change: -2.4 },
+    {
+      category: "PM",
+      count: 187,
+      percentage: 15.0,
+      trend: "down",
+      change: -2.4,
+    },
     { category: "CR", count: 165, percentage: 13.2, trend: "up", change: 3.7 },
-    { category: "PE", count: 143, percentage: 11.5, trend: "neutral", change: 0.2 },
-    { category: "Other", count: 112, percentage: 9.0, trend: "up", change: 1.9 },
+    {
+      category: "PE",
+      count: 143,
+      percentage: 11.5,
+      trend: "neutral",
+      change: 0.2,
+    },
+    {
+      category: "Other",
+      count: 112,
+      percentage: 9.0,
+      trend: "up",
+      change: 1.9,
+    },
   ];
 
   const languageStats = [
@@ -204,7 +230,9 @@ export function StatisticsPage({ onBack, className }: StatisticsPageProps) {
                   <LineChart className="w-5 h-5" />
                   <span>Recent Activity</span>
                 </CardTitle>
-                <CardDescription>Jobs processed over the last 7 days</CardDescription>
+                <CardDescription>
+                  Jobs processed over the last 7 days
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -292,7 +320,9 @@ export function StatisticsPage({ onBack, className }: StatisticsPageProps) {
           <Card>
             <CardHeader>
               <CardTitle>Job Categories</CardTitle>
-              <CardDescription>Distribution and trends by classification</CardDescription>
+              <CardDescription>
+                Distribution and trends by classification
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -317,9 +347,12 @@ export function StatisticsPage({ onBack, className }: StatisticsPageProps) {
                         <span
                           className={cn(
                             "text-sm font-medium",
-                            cat.trend === "up" && "text-green-600 dark:text-green-400",
-                            cat.trend === "down" && "text-red-600 dark:text-red-400",
-                            cat.trend === "neutral" && "text-slate-600 dark:text-slate-400"
+                            cat.trend === "up" &&
+                              "text-green-600 dark:text-green-400",
+                            cat.trend === "down" &&
+                              "text-red-600 dark:text-red-400",
+                            cat.trend === "neutral" &&
+                              "text-slate-600 dark:text-slate-400",
                           )}
                         >
                           {cat.change > 0 ? "+" : ""}
@@ -346,15 +379,32 @@ export function StatisticsPage({ onBack, className }: StatisticsPageProps) {
             <Card>
               <CardHeader>
                 <CardTitle>Quality Metrics</CardTitle>
-                <CardDescription>Average scores across all jobs</CardDescription>
+                <CardDescription>
+                  Average scores across all jobs
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <QualityMetric label="Accessibility" score={qualityMetrics.accessibility} />
-                  <QualityMetric label="Language Bias" score={qualityMetrics.languageBias} />
-                  <QualityMetric label="Clarity Score" score={qualityMetrics.clarityScore} />
-                  <QualityMetric label="Structure Score" score={qualityMetrics.structureScore} />
-                  <QualityMetric label="Compliance Rate" score={qualityMetrics.complianceRate} />
+                  <QualityMetric
+                    label="Accessibility"
+                    score={qualityMetrics.accessibility}
+                  />
+                  <QualityMetric
+                    label="Language Bias"
+                    score={qualityMetrics.languageBias}
+                  />
+                  <QualityMetric
+                    label="Clarity Score"
+                    score={qualityMetrics.clarityScore}
+                  />
+                  <QualityMetric
+                    label="Structure Score"
+                    score={qualityMetrics.structureScore}
+                  />
+                  <QualityMetric
+                    label="Compliance Rate"
+                    score={qualityMetrics.complianceRate}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -362,12 +412,17 @@ export function StatisticsPage({ onBack, className }: StatisticsPageProps) {
             <Card>
               <CardHeader>
                 <CardTitle>Quality Trends</CardTitle>
-                <CardDescription>Quality improvements over time</CardDescription>
+                <CardDescription>
+                  Quality improvements over time
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {recentActivity.map((day, index) => (
-                    <div key={index} className="flex items-center justify-between">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between"
+                    >
                       <span className="text-sm text-slate-600 dark:text-slate-400">
                         {new Date(day.date).toLocaleDateString("en-US", {
                           month: "short",
@@ -485,24 +540,40 @@ interface StatCardProps {
   bgColor: string;
 }
 
-function StatCard({ icon: Icon, label, value, trend, trendValue, iconColor, bgColor }: StatCardProps) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  trend,
+  trendValue,
+  iconColor,
+  bgColor,
+}: StatCardProps) {
   return (
     <Card>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{label}</p>
-            <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">{value}</p>
+            <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+              {label}
+            </p>
+            <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+              {value}
+            </p>
             {trend && trendValue && (
               <div className="flex items-center space-x-1">
-                {trend === "up" && <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />}
-                {trend === "down" && <TrendingDown className="w-4 h-4 text-red-600 dark:text-red-400" />}
+                {trend === "up" && (
+                  <TrendingUp className="w-4 h-4 text-green-600 dark:text-green-400" />
+                )}
+                {trend === "down" && (
+                  <TrendingDown className="w-4 h-4 text-red-600 dark:text-red-400" />
+                )}
                 <span
                   className={cn(
                     "text-sm font-medium",
                     trend === "up" && "text-green-600 dark:text-green-400",
                     trend === "down" && "text-red-600 dark:text-red-400",
-                    trend === "neutral" && "text-slate-600 dark:text-slate-400"
+                    trend === "neutral" && "text-slate-600 dark:text-slate-400",
                   )}
                 >
                   {trendValue}
@@ -537,8 +608,12 @@ function MetricCard({ label, value, icon: Icon }: MetricCardProps) {
             <Icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-600 dark:text-slate-400">{label}</p>
-            <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">{value}</p>
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+              {label}
+            </p>
+            <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-0.5">
+              {value}
+            </p>
           </div>
         </div>
       </CardContent>
@@ -565,11 +640,19 @@ function QualityMetric({ label, score }: QualityMetricProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-slate-900 dark:text-slate-100">{label}</span>
+        <span className="font-medium text-slate-900 dark:text-slate-100">
+          {label}
+        </span>
         <span className="text-slate-600 dark:text-slate-400">{score}%</span>
       </div>
       <div className="relative h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-        <div className={cn("absolute inset-y-0 left-0 rounded-full", getColor(score))} style={{ width: `${score}%` }} />
+        <div
+          className={cn(
+            "absolute inset-y-0 left-0 rounded-full",
+            getColor(score),
+          )}
+          style={{ width: `${score}%` }}
+        />
       </div>
     </div>
   );
@@ -588,7 +671,9 @@ function ProcessingMetric({ label, value, percentage }: ProcessingMetricProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-slate-900 dark:text-slate-100">{label}</span>
+        <span className="font-medium text-slate-900 dark:text-slate-100">
+          {label}
+        </span>
         <span className="text-slate-600 dark:text-slate-400">{value}</span>
       </div>
       <div className="relative h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">

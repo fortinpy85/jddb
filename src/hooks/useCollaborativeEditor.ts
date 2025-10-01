@@ -8,9 +8,9 @@
  * - Cursor position sharing
  */
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { useWebSocket } from './useWebSocket';
-import { WebSocketMessage } from '@/lib/websocket-client';
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useWebSocket } from "./useWebSocket";
+import { WebSocketMessage } from "@/lib/websocket-client";
 
 export interface Participant {
   userId: number;
@@ -18,7 +18,7 @@ export interface Participant {
 }
 
 export interface Operation {
-  type: 'insert' | 'delete';
+  type: "insert" | "delete";
   position?: number;
   start?: number;
   end?: number;
@@ -56,7 +56,7 @@ export interface UseCollaborativeEditorReturn {
  * Hook for managing collaborative editing sessions
  */
 export function useCollaborativeEditor(
-  options: UseCollaborativeEditorOptions | null
+  options: UseCollaborativeEditorOptions | null,
 ): UseCollaborativeEditorReturn {
   // Handle null options (when collaboration is disabled)
   if (!options) {
@@ -66,7 +66,7 @@ export function useCollaborativeEditor(
       participants: [],
       applyOperation: () => {},
       updateCursorPosition: () => {},
-      connectionState: 'disconnected',
+      connectionState: "disconnected",
     };
   }
 
@@ -74,7 +74,7 @@ export function useCollaborativeEditor(
     sessionId,
     userId,
     jobId,
-    apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+    apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
     onDocumentChange,
     onParticipantsChange,
     onOperationApplied,
@@ -85,12 +85,12 @@ export function useCollaborativeEditor(
   const operationQueueRef = useRef<Operation[]>([]);
 
   // Construct WebSocket URL
-  const wsUrl = `${apiUrl.replace('http', 'ws').replace('/api', '')}/api/ws/edit/${sessionId}?user_id=${userId}&job_id=${jobId}`;
+  const wsUrl = `${apiUrl.replace("http", "ws").replace("/api", "")}/api/ws/edit/${sessionId}?user_id=${userId}&job_id=${jobId}`;
 
   const handleMessage = useCallback(
     (message: WebSocketMessage) => {
       switch (message.type) {
-        case 'session_state':
+        case "session_state":
           // Initial session state received
           setSessionState({
             sessionId: message.session_id,
@@ -103,14 +103,14 @@ export function useCollaborativeEditor(
           onDocumentChange?.(message.document_state);
           break;
 
-        case 'operation':
+        case "operation":
           // Remote operation received from another user
           const operation = message.operation as Operation;
           if (operation && sessionState) {
             // Apply operation to local state
             const newDocumentState = applyOperationToDocument(
               sessionState.documentState,
-              operation
+              operation,
             );
             setSessionState((prev) =>
               prev
@@ -119,28 +119,28 @@ export function useCollaborativeEditor(
                     documentState: newDocumentState,
                     operationCount: prev.operationCount + 1,
                   }
-                : null
+                : null,
             );
             onDocumentChange?.(newDocumentState);
             onOperationApplied?.(operation);
           }
           break;
 
-        case 'operation_ack':
+        case "operation_ack":
           // Operation acknowledged by server
-          console.log('Operation acknowledged:', message.operation_id);
+          console.log("Operation acknowledged:", message.operation_id);
           break;
 
-        case 'user_joined':
+        case "user_joined":
           // New user joined the session
           const newParticipants = message.participants as number[];
           setSessionState((prev) =>
-            prev ? { ...prev, participants: newParticipants } : null
+            prev ? { ...prev, participants: newParticipants } : null,
           );
           onParticipantsChange?.(newParticipants);
           break;
 
-        case 'cursor_update':
+        case "cursor_update":
           // Update cursor position for a participant
           setParticipants((prev) => {
             const updated = prev.filter((p) => p.userId !== message.user_id);
@@ -152,10 +152,10 @@ export function useCollaborativeEditor(
           break;
 
         default:
-          console.log('Unknown message type:', message.type);
+          console.log("Unknown message type:", message.type);
       }
     },
-    [sessionState, onDocumentChange, onParticipantsChange, onOperationApplied]
+    [sessionState, onDocumentChange, onParticipantsChange, onOperationApplied],
   );
 
   const { connectionState, isConnected, send } = useWebSocket(wsUrl, {
@@ -167,7 +167,7 @@ export function useCollaborativeEditor(
       while (operationQueueRef.current.length > 0) {
         const op = operationQueueRef.current.shift();
         if (op) {
-          send({ type: 'operation', operation: op });
+          send({ type: "operation", operation: op });
         }
       }
     },
@@ -175,7 +175,7 @@ export function useCollaborativeEditor(
       console.log(`Disconnected from session: ${sessionId}`);
     },
     onError: (error) => {
-      console.error('WebSocket error:', error);
+      console.error("WebSocket error:", error);
     },
   });
 
@@ -185,13 +185,13 @@ export function useCollaborativeEditor(
   const applyOperation = useCallback(
     (operation: Operation) => {
       if (isConnected) {
-        send({ type: 'operation', operation });
+        send({ type: "operation", operation });
 
         // Optimistically apply to local state
         if (sessionState) {
           const newDocumentState = applyOperationToDocument(
             sessionState.documentState,
-            operation
+            operation,
           );
           setSessionState((prev) =>
             prev
@@ -200,7 +200,7 @@ export function useCollaborativeEditor(
                   documentState: newDocumentState,
                   operationCount: prev.operationCount + 1,
                 }
-              : null
+              : null,
           );
           onDocumentChange?.(newDocumentState);
         }
@@ -209,7 +209,7 @@ export function useCollaborativeEditor(
         operationQueueRef.current.push(operation);
       }
     },
-    [isConnected, send, sessionState, onDocumentChange]
+    [isConnected, send, sessionState, onDocumentChange],
   );
 
   /**
@@ -218,10 +218,10 @@ export function useCollaborativeEditor(
   const updateCursorPosition = useCallback(
     (position: number) => {
       if (isConnected) {
-        send({ type: 'cursor_update', position });
+        send({ type: "cursor_update", position });
       }
     },
-    [isConnected, send]
+    [isConnected, send],
   );
 
   return {
@@ -237,12 +237,15 @@ export function useCollaborativeEditor(
 /**
  * Apply an operation to a document string
  */
-function applyOperationToDocument(document: string, operation: Operation): string {
-  if (operation.type === 'insert') {
+function applyOperationToDocument(
+  document: string,
+  operation: Operation,
+): string {
+  if (operation.type === "insert") {
     const position = operation.position ?? 0;
-    const text = operation.text ?? '';
+    const text = operation.text ?? "";
     return document.slice(0, position) + text + document.slice(position);
-  } else if (operation.type === 'delete') {
+  } else if (operation.type === "delete") {
     const start = operation.start ?? 0;
     const end = operation.end ?? start + 1;
     return document.slice(0, start) + document.slice(end);

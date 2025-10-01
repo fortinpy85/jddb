@@ -147,7 +147,7 @@ export function AppHeader({
         "shadow-card border-b",
         "border-slate-200/50 dark:border-slate-700/30",
 
-        className
+        className,
       )}
     >
       <div className="h-full mx-auto px-4 sm:px-6 lg:px-8">
@@ -216,7 +216,7 @@ export function AppHeader({
                     ],
 
                     // Inactive state
-                    !isActive && "text-slate-600 dark:text-slate-400"
+                    !isActive && "text-slate-600 dark:text-slate-400",
                   )}
                   title={item.description}
                 >
@@ -318,10 +318,7 @@ export function AppHeader({
                 </Button>
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent
-                align="end"
-                className="w-56 shadow-dropdown"
-              >
+              <DropdownMenuContent align="end" className="w-56 shadow-dropdown">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium">{userName}</p>
@@ -333,12 +330,16 @@ export function AppHeader({
 
                 <DropdownMenuSeparator />
 
-                <DropdownMenuItem onClick={() => handleNavigation("preferences")}>
+                <DropdownMenuItem
+                  onClick={() => handleNavigation("preferences")}
+                >
                   <User className="mr-2 h-4 w-4" />
                   <span>Preferences</span>
                 </DropdownMenuItem>
 
-                <DropdownMenuItem onClick={() => handleNavigation("system-health")}>
+                <DropdownMenuItem
+                  onClick={() => handleNavigation("system-health")}
+                >
                   <Settings className="mr-2 h-4 w-4" />
                   <span>System Settings</span>
                 </DropdownMenuItem>

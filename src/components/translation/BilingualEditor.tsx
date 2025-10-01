@@ -66,7 +66,11 @@ export interface BilingualDocument {
 interface BilingualEditorProps {
   document: BilingualDocument;
   onSave?: (document: BilingualDocument) => void;
-  onSegmentChange?: (segmentId: string, language: "en" | "fr", content: string) => void;
+  onSegmentChange?: (
+    segmentId: string,
+    language: "en" | "fr",
+    content: string,
+  ) => void;
   onStatusChange?: (segmentId: string, status: TranslationStatus) => void;
   readOnly?: boolean;
   className?: string;
@@ -108,7 +112,11 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
   };
 
   // Handle segment content change
-  const handleSegmentChange = (segmentId: string, language: "en" | "fr", content: string) => {
+  const handleSegmentChange = (
+    segmentId: string,
+    language: "en" | "fr",
+    content: string,
+  ) => {
     setDocument((prev) => ({
       ...prev,
       segments: prev.segments.map((seg) =>
@@ -118,7 +126,7 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
               [language === "en" ? "english" : "french"]: content,
               lastModified: new Date(),
             }
-          : seg
+          : seg,
       ),
       metadata: {
         ...prev.metadata,
@@ -146,7 +154,7 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
               status,
               lastModified: new Date(),
             }
-          : seg
+          : seg,
       ),
     }));
 
@@ -166,11 +174,15 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
   };
 
   // Synchronized scrolling
-  const handleScroll = (source: "en" | "fr", event: React.UIEvent<HTMLDivElement>) => {
+  const handleScroll = (
+    source: "en" | "fr",
+    event: React.UIEvent<HTMLDivElement>,
+  ) => {
     if (!linkedScrolling) return;
 
     const sourceElement = event.currentTarget;
-    const targetElement = source === "en" ? frenchScrollRef.current : englishScrollRef.current;
+    const targetElement =
+      source === "en" ? frenchScrollRef.current : englishScrollRef.current;
 
     if (targetElement) {
       const scrollPercentage =
@@ -208,7 +220,10 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
   };
 
   // Render segment editor
-  const renderSegmentEditor = (segment: BilingualSegment, language: "en" | "fr") => {
+  const renderSegmentEditor = (
+    segment: BilingualSegment,
+    language: "en" | "fr",
+  ) => {
     const content = language === "en" ? segment.english : segment.french;
     const isActive = activeSegment === segment.id;
 
@@ -255,7 +270,9 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
         {/* Segment Content */}
         <Textarea
           value={content}
-          onChange={(e) => handleSegmentChange(segment.id, language, e.target.value)}
+          onChange={(e) =>
+            handleSegmentChange(segment.id, language, e.target.value)
+          }
           disabled={readOnly}
           className="min-h-[100px] text-sm"
           placeholder={`Enter ${language === "en" ? "English" : "French"} content...`}
@@ -300,7 +317,9 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
           ref={englishScrollRef}
           onScroll={(e) => handleScroll("en", e)}
         >
-          {document.segments.map((segment) => renderSegmentEditor(segment, "en"))}
+          {document.segments.map((segment) =>
+            renderSegmentEditor(segment, "en"),
+          )}
         </ScrollArea>
       </div>
 
@@ -329,7 +348,9 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
           ref={frenchScrollRef}
           onScroll={(e) => handleScroll("fr", e)}
         >
-          {document.segments.map((segment) => renderSegmentEditor(segment, "fr"))}
+          {document.segments.map((segment) =>
+            renderSegmentEditor(segment, "fr"),
+          )}
         </ScrollArea>
       </div>
     </div>
@@ -351,13 +372,17 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
 
       <TabsContent value="en">
         <ScrollArea className="h-[600px] pr-4">
-          {document.segments.map((segment) => renderSegmentEditor(segment, "en"))}
+          {document.segments.map((segment) =>
+            renderSegmentEditor(segment, "en"),
+          )}
         </ScrollArea>
       </TabsContent>
 
       <TabsContent value="fr">
         <ScrollArea className="h-[600px] pr-4">
-          {document.segments.map((segment) => renderSegmentEditor(segment, "fr"))}
+          {document.segments.map((segment) =>
+            renderSegmentEditor(segment, "fr"),
+          )}
         </ScrollArea>
       </TabsContent>
     </Tabs>
@@ -383,7 +408,9 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setViewMode(viewMode === "split" ? "tabs" : "split")}
+              onClick={() =>
+                setViewMode(viewMode === "split" ? "tabs" : "split")
+              }
             >
               {viewMode === "split" ? (
                 <>

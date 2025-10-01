@@ -13,7 +13,6 @@ import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, and_
 
 logger = logging.getLogger(__name__)
 
@@ -122,9 +121,7 @@ class BilingualDocumentService:
         Returns:
             Updated segment data
         """
-        logger.info(
-            f"Updating segment {segment_id} for job {job_id} in {language}"
-        )
+        logger.info(f"Updating segment {segment_id} for job {job_id} in {language}")
 
         # In production, this would update the database
         return {
@@ -364,10 +361,13 @@ class BilingualDocumentService:
         review = len([s for s in segments if s.get("status") == "review"])
         approved = len([s for s in segments if s.get("status") == "approved"])
 
-        both_filled = len([
-            s for s in segments
-            if s.get("english", "").strip() and s.get("french", "").strip()
-        ])
+        both_filled = len(
+            [
+                s
+                for s in segments
+                if s.get("english", "").strip() and s.get("french", "").strip()
+            ]
+        )
 
         return {
             "englishCompleteness": int((english_filled / total) * 100),

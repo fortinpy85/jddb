@@ -111,12 +111,12 @@ While industry best practices provide valuable guidance, ESDC must operate withi
 
 The TBS provides a detailed "Guide to Writing Work Descriptions," which serves as the official standard for positions within the federal public service.25 This document is not a simple job description for recruitment but a formal instrument used for the critical function of job classification. Any system adopted by ESDC must be capable of creating, managing, and storing work descriptions that conform to the prescribed seven-part structure:
 
-1. Position Identification  
-2. General Accountability  
-3. Organizational Structure  
-4. Nature and Scope  
-5. Dimensions (e.g., budget, FTEs)  
-6. Specific Accountabilities  
+1. Position Identification
+2. General Accountability
+3. Organizational Structure
+4. Nature and Scope
+5. Dimensions (e.g., budget, FTEs)
+6. Specific Accountabilities
 7. Signature Block 25
 
 The creation process is also formalized into an eight-step methodology, covering everything from initial information gathering to the final sign-off by the supervisor and incumbent.25 An effective software solution should be configurable to support and guide users through this specific process.
@@ -147,43 +147,43 @@ To ensure the successful adoption and effectiveness of a new system, it is essen
 
 ### **Section 3.1: Persona Profile: The HR Business Partner / OD Consultant ("Hélène")**
 
-* **Role:** Hélène is an experienced HR Business Partner (HRBP) and Organizational Design (OD) Consultant at ESDC. She is the primary strategic advisor and operational liaison between hiring managers in her client portfolio and corporate HR functions, particularly Classification and Staffing.  
-* **Responsibilities:**  
-  * Advising managers on organizational structure, workforce planning, and the creation of new roles.  
-  * Guiding managers through the complex process of creating new work descriptions or initiating reclassification actions for existing positions.  
-  * Drafting, reviewing, and revising work descriptions to ensure they accurately reflect the assigned duties while strictly adhering to TBS standards.  
-  * Shepherding work descriptions through the multi-stage approval workflow, liaising with all stakeholders to resolve issues and ensure timely progression.  
-  * Ensuring every work description and subsequent staffing action is fully compliant with the *Official Languages Act*, accessibility policies, and other federal directives.  
-* **Goals:**  
-  * To accelerate the end-to-end process, from a manager's initial request to a final, classified position ready for staffing.  
-  * To create high-quality, accurate, and compliant work descriptions efficiently, reducing the need for multiple rounds of revision.  
-  * To provide clear, consistent, and transparent guidance to her client managers, demystifying the corporate HR process.  
-  * To maintain a single, reliable source of truth for all work descriptions within her portfolio, eliminating version control issues.  
-* **Pain Points (Current State):**  
-  * Managing version control is a significant challenge, often involving multiple iterations of Word documents with confusing filenames being exchanged via email.  
-  * There is a lack of visibility into the approval process; it is difficult to know where a work description is stalled and who needs to take action.  
-  * Consolidating feedback from multiple stakeholders (e.g., the manager, the director, a classification advisor) is a manual and error-prone process.  
-  * Ensuring consistent language, formatting, and application of standards across dozens of similar roles requires constant manual checking.  
+* **Role:** Hélène is an experienced HR Business Partner (HRBP) and Organizational Design (OD) Consultant at ESDC. She is the primary strategic advisor and operational liaison between hiring managers in her client portfolio and corporate HR functions, particularly Classification and Staffing.
+* **Responsibilities:**
+  * Advising managers on organizational structure, workforce planning, and the creation of new roles.
+  * Guiding managers through the complex process of creating new work descriptions or initiating reclassification actions for existing positions.
+  * Drafting, reviewing, and revising work descriptions to ensure they accurately reflect the assigned duties while strictly adhering to TBS standards.
+  * Shepherding work descriptions through the multi-stage approval workflow, liaising with all stakeholders to resolve issues and ensure timely progression.
+  * Ensuring every work description and subsequent staffing action is fully compliant with the *Official Languages Act*, accessibility policies, and other federal directives.
+* **Goals:**
+  * To accelerate the end-to-end process, from a manager's initial request to a final, classified position ready for staffing.
+  * To create high-quality, accurate, and compliant work descriptions efficiently, reducing the need for multiple rounds of revision.
+  * To provide clear, consistent, and transparent guidance to her client managers, demystifying the corporate HR process.
+  * To maintain a single, reliable source of truth for all work descriptions within her portfolio, eliminating version control issues.
+* **Pain Points (Current State):**
+  * Managing version control is a significant challenge, often involving multiple iterations of Word documents with confusing filenames being exchanged via email.
+  * There is a lack of visibility into the approval process; it is difficult to know where a work description is stalled and who needs to take action.
+  * Consolidating feedback from multiple stakeholders (e.g., the manager, the director, a classification advisor) is a manual and error-prone process.
+  * Ensuring consistent language, formatting, and application of standards across dozens of similar roles requires constant manual checking.
   * Coordinating with the translation unit is a completely separate, manual process that happens after the fact, creating potential for delays and version mismatches.
 
 ### **Section 3.2: The End-to-End Job Description Lifecycle Journey**
 
 This journey map illustrates the ideal "to-be" state enabled by the new system, highlighting the efficiencies gained compared to the current manual process.
 
-* Phase 1: Initiation & Drafting  
-  A manager identifies the need for a new position and discusses it with Hélène. Inside the new system, Hélène initiates a "Create New Work Description" request. She accesses a library of official, pre-approved generic work description templates and selects the one corresponding to the appropriate classification (e.g., AS-06).26 Using the system's structured editor, which has fields for each of the seven TBS-mandated sections, she customizes the specific accountabilities. As she types, she receives real-time AI-powered guidance on using inclusive, bias-free language.27  
-* Phase 2: Collaboration & Review  
-  Instead of emailing a document, Hélène shares the draft with the hiring manager directly within the system. The manager reviews the draft, adding comments and suggesting changes that are automatically tracked. This creates a single, centralized record of all feedback, eliminating version confusion. Hélène reviews the manager's input, accepts or rejects the changes, and finalizes the draft for formal submission.  
-* Phase 3: Formal Approval Workflow  
-  Hélène submits the draft to the pre-configured formal approval workflow. The system takes over, automating the routing and notifications.  
-  1. **Manager Approval:** The system notifies the manager for formal sign-off.  
-  2. **Classification Review:** Upon manager approval, the work description is automatically routed to the Classification team's queue. A Classification Advisor reviews it for compliance with TBS standards, ensuring all sections are completed correctly.25 They can approve it, or reject it with comments, which automatically sends it back to Hélène's dashboard with clear instructions.  
-  3. **Director Approval:** After Classification's endorsement, the system routes it to the appropriate Director for final sign-off on budget and organizational fit. A complete, unalterable audit log records every action, comment, and approval.  
-* Phase 4: Translation & Finalization  
-  Upon final approval of the source language version (e.g., English), the system checks the position's linguistic profile. If it is designated "Bilingual," the system automatically triggers the translation workflow.48 The request, containing only the final, approved text, appears in the translation unit's queue. Once the translated version is completed and approved, it is electronically linked to the source version. The work description's status is updated to "Approved and Bilingual."  
-* Phase 5: Publication & Use  
-  The final, approved English and French versions are published to the central, searchable repository, becoming the official record. The system can then automatically push the necessary data (job title, classification, location) to the downstream ATS to initiate a staffing action. This document now serves as the official basis for performance management objectives and career development discussions.  
-* Phase 6: Maintenance & Archiving  
+* Phase 1: Initiation & Drafting
+  A manager identifies the need for a new position and discusses it with Hélène. Inside the new system, Hélène initiates a "Create New Work Description" request. She accesses a library of official, pre-approved generic work description templates and selects the one corresponding to the appropriate classification (e.g., AS-06).26 Using the system's structured editor, which has fields for each of the seven TBS-mandated sections, she customizes the specific accountabilities. As she types, she receives real-time AI-powered guidance on using inclusive, bias-free language.27
+* Phase 2: Collaboration & Review
+  Instead of emailing a document, Hélène shares the draft with the hiring manager directly within the system. The manager reviews the draft, adding comments and suggesting changes that are automatically tracked. This creates a single, centralized record of all feedback, eliminating version confusion. Hélène reviews the manager's input, accepts or rejects the changes, and finalizes the draft for formal submission.
+* Phase 3: Formal Approval Workflow
+  Hélène submits the draft to the pre-configured formal approval workflow. The system takes over, automating the routing and notifications.
+  1. **Manager Approval:** The system notifies the manager for formal sign-off.
+  2. **Classification Review:** Upon manager approval, the work description is automatically routed to the Classification team's queue. A Classification Advisor reviews it for compliance with TBS standards, ensuring all sections are completed correctly.25 They can approve it, or reject it with comments, which automatically sends it back to Hélène's dashboard with clear instructions.
+  3. **Director Approval:** After Classification's endorsement, the system routes it to the appropriate Director for final sign-off on budget and organizational fit. A complete, unalterable audit log records every action, comment, and approval.
+* Phase 4: Translation & Finalization
+  Upon final approval of the source language version (e.g., English), the system checks the position's linguistic profile. If it is designated "Bilingual," the system automatically triggers the translation workflow.48 The request, containing only the final, approved text, appears in the translation unit's queue. Once the translated version is completed and approved, it is electronically linked to the source version. The work description's status is updated to "Approved and Bilingual."
+* Phase 5: Publication & Use
+  The final, approved English and French versions are published to the central, searchable repository, becoming the official record. The system can then automatically push the necessary data (job title, classification, location) to the downstream ATS to initiate a staffing action. This document now serves as the official basis for performance management objectives and career development discussions.
+* Phase 6: Maintenance & Archiving
   The system is configured to flag work descriptions that have not been reviewed within a specified period (e.g., three years), prompting Hélène or the manager to validate their accuracy. When a role is substantively updated, the entire lifecycle is repeated, creating a new, versioned record while securely archiving the previous one, maintaining a complete historical lineage for every position.
 
 ### **Section 3.3: A Comprehensive Suite of User Stories**
@@ -192,35 +192,35 @@ These user stories define the granular functional requirements of the system fro
 
 #### **Epic 1: Core System & Repository Management**
 
-* **As an HR Systems Administrator, I want** to configure granular user roles and permissions (e.g., HRBP, Manager, Classification Advisor, Read-Only), **so that** users can only perform actions and view data appropriate to their function, ensuring data integrity and security.  
-* **As an HRBP, I want** a centralized dashboard that provides an at-a-glance view of all work descriptions in my portfolio, with the ability to filter by status (e.g., Draft, In Review, Approved), classification, or manager, **so that** I can efficiently manage my workload and priorities.  
+* **As an HR Systems Administrator, I want** to configure granular user roles and permissions (e.g., HRBP, Manager, Classification Advisor, Read-Only), **so that** users can only perform actions and view data appropriate to their function, ensuring data integrity and security.
+* **As an HRBP, I want** a centralized dashboard that provides an at-a-glance view of all work descriptions in my portfolio, with the ability to filter by status (e.g., Draft, In Review, Approved), classification, or manager, **so that** I can efficiently manage my workload and priorities.
 * **As an Employee, I want** to be able to easily search for and view the official, approved work description for my own position and any other position in the organization, **so that** I have clarity on roles, responsibilities, and potential career paths.
 
 #### **Epic 2: Drafting, Collaboration, and Content Improvement**
 
-* **As an HRBP, I want** to initiate the creation of a new work description by selecting from a library of pre-approved, TBS-compliant generic templates, **so that** I can ensure structural consistency and significantly reduce manual drafting time.26  
-* **As a Hiring Manager, I want** to collaborate on a draft work description within the system by adding comments and seeing tracked changes in real-time, **so that** my feedback is captured accurately in a centralized location, eliminating email chains.  
-* **As an HRBP, I want** to receive real-time, AI-powered suggestions for inclusive and bias-free language as I write, **so that** every work description aligns with ESDC's diversity, equity, and inclusion goals from the very beginning.16  
+* **As an HRBP, I want** to initiate the creation of a new work description by selecting from a library of pre-approved, TBS-compliant generic templates, **so that** I can ensure structural consistency and significantly reduce manual drafting time.26
+* **As a Hiring Manager, I want** to collaborate on a draft work description within the system by adding comments and seeing tracked changes in real-time, **so that** my feedback is captured accurately in a centralized location, eliminating email chains.
+* **As an HRBP, I want** to receive real-time, AI-powered suggestions for inclusive and bias-free language as I write, **so that** every work description aligns with ESDC's diversity, equity, and inclusion goals from the very beginning.16
 * **As an OD Consultant, I want** to access a content library of standardized and pre-approved statements for skills, qualifications, and responsibilities, **so that** I can build new work descriptions using consistent and high-quality language.1
 
 #### **Epic 3: Multi-Stage Review and Approval Workflows**
 
-* **As an HR Systems Administrator, I want** to use a visual, no-code interface to build and customize multi-stage, conditional approval workflows, **so that** I can adapt the approval process to the unique needs of different directorates or classification groups without requiring IT intervention.3  
-* **As a Classification Advisor, I want** to receive an automated notification in my work queue when a work description is ready for my review, **so that** I can act on it promptly and keep the process moving.  
-* **As a Director, I want** to be able to review and approve or reject a work description from any device, including my mobile phone or tablet, **so that** I am not a bottleneck when I am away from my desk.  
+* **As an HR Systems Administrator, I want** to use a visual, no-code interface to build and customize multi-stage, conditional approval workflows, **so that** I can adapt the approval process to the unique needs of different directorates or classification groups without requiring IT intervention.3
+* **As a Classification Advisor, I want** to receive an automated notification in my work queue when a work description is ready for my review, **so that** I can act on it promptly and keep the process moving.
+* **As a Director, I want** to be able to review and approve or reject a work description from any device, including my mobile phone or tablet, **so that** I am not a bottleneck when I am away from my desk.
 * **As an HRBP, I want** to see a clear, visual indicator of a work description's current stage in the approval workflow and who the current approver is, **so that** I have full visibility into its progress and can follow up effectively if there are delays.
 
 #### **Epic 4: Translation and Linguistic Profile Management**
 
-* **As an HRBP, I want** the system to guide me through a structured questionnaire based on TBS policy to objectively determine a position's linguistic profile (e.g., Bilingual CBC), **so that** the profile is set correctly and a justification is automatically recorded.46  
-* **As an HRBP, I want** the system to automatically send a fully approved source-language work description to the translation team's queue, **so that** the bilingual versioning process is initiated immediately and without manual intervention.  
-* **As a Translator, I want** to receive translation tasks in a dedicated interface that shows the source text side-by-side with the translation field and provides access to a shared Translation Memory and Terminology Base, **so that** my translations are fast, accurate, and consistent with official terminology.  
+* **As an HRBP, I want** the system to guide me through a structured questionnaire based on TBS policy to objectively determine a position's linguistic profile (e.g., Bilingual CBC), **so that** the profile is set correctly and a justification is automatically recorded.46
+* **As an HRBP, I want** the system to automatically send a fully approved source-language work description to the translation team's queue, **so that** the bilingual versioning process is initiated immediately and without manual intervention.
+* **As a Translator, I want** to receive translation tasks in a dedicated interface that shows the source text side-by-side with the translation field and provides access to a shared Translation Memory and Terminology Base, **so that** my translations are fast, accurate, and consistent with official terminology.
 * **As an HR Systems Administrator, I want** the system to automatically place a "hold" on a translated work description and trigger a re-translation workflow if its source-language parent version is modified and re-approved, **so that** the two language versions always remain synchronized and compliant.
 
 #### **Epic 5: Versioning, Archiving, and Reporting**
 
-* **As a Classification Advisor, I want** to view a complete, unalterable history of every version of a work description, including a side-by-side comparison that highlights the specific changes between any two versions, **so that** I can easily conduct audits and understand the evolution of a role over time.1  
-* **As an HRBP, I want** to be able to clone an existing approved work description to serve as the starting point for a new, similar position, **so that** I do not have to start from scratch and can ensure consistency between related roles.  
+* **As a Classification Advisor, I want** to view a complete, unalterable history of every version of a work description, including a side-by-side comparison that highlights the specific changes between any two versions, **so that** I can easily conduct audits and understand the evolution of a role over time.1
+* **As an HRBP, I want** to be able to clone an existing approved work description to serve as the starting point for a new, similar position, **so that** I do not have to start from scratch and can ensure consistency between related roles.
 * **As an OD Consultant, I want** to run analytical reports across the entire work description database (e.g., number of positions by classification, frequency of specific skills, average time-to-approval), **so that** I can identify organizational trends, skills gaps, and process bottlenecks to inform strategic workforce planning.3
 
 ## **Part IV: Strategic Recommendations and Implementation Pathways**
@@ -239,64 +239,64 @@ Finally, the market analysis shows that no single, off-the-shelf product perfect
 
 Based on the synthesis of findings, the most effective and lowest-risk path forward for ESDC is to adopt a hybrid, best-of-breed system architecture. This approach avoids the high cost and extended timeline of a fully custom build while ensuring that each component of the complex job description lifecycle is handled by a specialized, best-in-class tool.
 
-* **Core System Recommendation:** Procure a dedicated, configurable commercial job data governance platform, such as JDXpert or RoleMapper, to serve as the central repository and workflow engine. This "buy" decision prioritizes the most complex and unique government requirements: structured TBS-compliant templates, configurable multi-stage approval workflows, and robust versioning for auditability. These platforms are purpose-built for the governance challenges ESDC faces.  
-* **Integration for Enhancement:** This core system should then be integrated via Application Programming Interfaces (APIs) with two other specialized systems:  
-  1. A dedicated **Translation Management System (TMS)**, such as Phrase. A specialized TMS will manage the bilingual workflow with the necessary sophistication, including Translation Memory and Terminology Bases, which are critical for maintaining quality and consistency at an enterprise scale. This is superior to the more basic translation features offered in most all-in-one platforms.  
+* **Core System Recommendation:** Procure a dedicated, configurable commercial job data governance platform, such as JDXpert or RoleMapper, to serve as the central repository and workflow engine. This "buy" decision prioritizes the most complex and unique government requirements: structured TBS-compliant templates, configurable multi-stage approval workflows, and robust versioning for auditability. These platforms are purpose-built for the governance challenges ESDC faces.
+* **Integration for Enhancement:** This core system should then be integrated via Application Programming Interfaces (APIs) with two other specialized systems:
+  1. A dedicated **Translation Management System (TMS)**, such as Phrase. A specialized TMS will manage the bilingual workflow with the necessary sophistication, including Translation Memory and Terminology Bases, which are critical for maintaining quality and consistency at an enterprise scale. This is superior to the more basic translation features offered in most all-in-one platforms.
   2. An **AI Writing and Optimization Tool**, such as Datapeople or Textio. This tool would be integrated into the "source-to-post" process. Once a work description is fully approved in the core governance platform, its content can be pushed to the AI tool, where recruiters can optimize the language specifically for a public job posting, ensuring it is inclusive, engaging, and effective at attracting top talent.
 
 This hybrid approach directly addresses the key findings of the analysis. It acknowledges the duality of purpose by separating the governance of the work description from the optimization of the job posting. It provides a robust, specialized solution for the complex bilingual workflow. Most importantly, it allows ESDC to leverage the strengths of market-leading tools for each distinct function, creating a comprehensive and future-proof ecosystem for job description management that is both compliant and competitive.
 
 #### **Works cited**
 
-1. What is Job Description Management Software, and Why is it Essential to HR? \- JDXpert, accessed September 29, 2025, [https://jdxpert.com/blog/what-is-job-description-management-software-and-why-is-it-essential-to-hr/](https://jdxpert.com/blog/what-is-job-description-management-software-and-why-is-it-essential-to-hr/)  
-2. JDXpert \- Leading Global Solution for Workforce Information, accessed September 29, 2025, [https://jdxpert.com/](https://jdxpert.com/)  
-3. Features and Benefits – JDXpert Job Description Solution, accessed September 29, 2025, [https://jdxpert.com/product/features/](https://jdxpert.com/product/features/)  
-4. Job Description Management Software solution by HRTMS, Inc. \- iCIMS Marketplace, accessed September 29, 2025, [https://marketplace.icims.com/en-US/apps/170192/job-description-management-software-solution-by-hrtms-inc/features](https://marketplace.icims.com/en-US/apps/170192/job-description-management-software-solution-by-hrtms-inc/features)  
-5. RoleMapper | AI-powered Job Architecture Workspace, accessed September 29, 2025, [https://www.rolemapper.tech/](https://www.rolemapper.tech/)  
-6. Why RoleMapper Is Changing the Way We Write Job Descriptions \- Ongig Blog, accessed September 29, 2025, [https://blog.ongig.com/job-descriptions/ongig-vs-rolemapper/](https://blog.ongig.com/job-descriptions/ongig-vs-rolemapper/)  
-7. RoleMapper \- GOV.UK, accessed September 29, 2025, [https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-13/documents/716571/232326403534420-service-definition-document-2022-05-12-1339.pdf](https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-13/documents/716571/232326403534420-service-definition-document-2022-05-12-1339.pdf)  
-8. Debias your job descriptions with RoleMapper, accessed September 29, 2025, [https://www.rolemapper.tech/debiasing-job-descriptions/](https://www.rolemapper.tech/debiasing-job-descriptions/)  
-9. RoleMapper Data Transformation \- Digital Marketplace, accessed September 29, 2025, [https://www.applytosupply.digitalmarketplace.service.gov.uk/g-cloud/services/568218298643406](https://www.applytosupply.digitalmarketplace.service.gov.uk/g-cloud/services/568218298643406)  
-10. RoleMapper | Content Partner \- HR Grapevine, accessed September 29, 2025, [https://www.hrgrapevine.com/partners/partner/rolemapper](https://www.hrgrapevine.com/partners/partner/rolemapper)  
-11. Role Mapper Technologies Limited Jobs and Careers \- App: Otta, accessed September 29, 2025, [https://app.otta.com/companies/Role-Mapper-Technologies-Limited](https://app.otta.com/companies/Role-Mapper-Technologies-Limited)  
-12. Inclusive Job Descriptions \- RoleMapper, accessed September 29, 2025, [https://www.rolemapper.tech/inclusive-job-descriptions/](https://www.rolemapper.tech/inclusive-job-descriptions/)  
-13. Job Descriptions Management Software \- JDMS \- HRIZONS, accessed September 29, 2025, [https://hrizons.com/job-description-management-software/](https://hrizons.com/job-description-management-software/)  
-14. Datapeople: Job Description Management, accessed September 29, 2025, [https://datapeople.io/](https://datapeople.io/)  
-15. Best Job Description Software Reviews 2025 | Gartner Peer Insights, accessed September 29, 2025, [https://www.gartner.com/reviews/market/job-description-software](https://www.gartner.com/reviews/market/job-description-software)  
-16. The Importance of Job Description Software Platforms \- Datapeople, accessed September 29, 2025, [https://datapeople.io/blog/job-description-software-matters/](https://datapeople.io/blog/job-description-software-matters/)  
-17. Our Language Analytics Platform for Inclusive Job Posts \- Datapeople, accessed September 29, 2025, [https://datapeople.io/blog/our-language-analytics-platform-for-inclusive-job-posts/](https://datapeople.io/blog/our-language-analytics-platform-for-inclusive-job-posts/)  
-18. Datapeople Reviews 2025: Details, Pricing, & Features \- G2, accessed September 29, 2025, [https://www.g2.com/products/datapeople/reviews](https://www.g2.com/products/datapeople/reviews)  
-19. Datapeople Anywhere \- Browser Extension for Recruiting, accessed September 29, 2025, [https://datapeople.io/product/datapeople-anywhere/](https://datapeople.io/product/datapeople-anywhere/)  
-20. Datapeople Features \- G2, accessed September 29, 2025, [https://www.g2.com/products/datapeople/features](https://www.g2.com/products/datapeople/features)  
-21. Textio – Giving feedback has never been easier, accessed September 29, 2025, [https://textio.com/](https://textio.com/)  
-22. gptbot.io, accessed September 29, 2025, [https://gptbot.io/ai-tools/textio](https://gptbot.io/ai-tools/textio)  
-23. Generating a job post with “Write with Textio AI”, accessed September 29, 2025, [https://support.textio.com/s/article/Generating-a-job-post-with-Write-with-Textio-AI](https://support.textio.com/s/article/Generating-a-job-post-with-Write-with-Textio-AI)  
-24. Feedback \- Textio, accessed September 29, 2025, [https://textio.com/products/feedback](https://textio.com/products/feedback)  
-25. Guide to Writing Work Descriptions for the Executive Group, accessed September 29, 2025, [https://www.tbs-sct.canada.ca/gui/wwdeg-rdtgd-eng.pdf](https://www.tbs-sct.canada.ca/gui/wwdeg-rdtgd-eng.pdf)  
-26. How do I write a work description? \- Treasury Board of Canada Secretariat, accessed September 29, 2025, [https://www.tbs-sct.canada.ca/quest/desc-eng.asp](https://www.tbs-sct.canada.ca/quest/desc-eng.asp)  
-27. Learn How to Write Inclusive Job Postings \- SHRM, accessed September 29, 2025, [https://www.shrm.org/topics-tools/news/talent-acquisition/learn-how-to-write-inclusive-job-postings](https://www.shrm.org/topics-tools/news/talent-acquisition/learn-how-to-write-inclusive-job-postings)  
-28. MintHCM | Open Source HCM | employee management | free HR HRM HRMS HRIS software, accessed September 29, 2025, [https://minthcm.org/](https://minthcm.org/)  
-29. Features \- Check the functions of our HCM software. It's ... \- MintHCM, accessed September 29, 2025, [https://minthcm.org/features/](https://minthcm.org/features/)  
-30. OpenProject \- Open Source Project Management Software, accessed September 29, 2025, [https://www.openproject.org/](https://www.openproject.org/)  
-31. MintHCM Wiki, accessed September 29, 2025, [https://wiki.minthcm.org/index.php?title=Main\_Page](https://wiki.minthcm.org/index.php?title=Main_Page)  
-32. Why do I need MintHCM? System Introduction \- YouTube, accessed September 29, 2025, [https://www.youtube.com/watch?v=TdbKbix9dko](https://www.youtube.com/watch?v=TdbKbix9dko)  
-33. How to manage Job Titles in OrangeHRM, accessed September 29, 2025, [https://help.orangehrm.com/hc/en-us/articles/4949453751449-How-to-manage-Job-Titles-in-OrangeHRM](https://help.orangehrm.com/hc/en-us/articles/4949453751449-How-to-manage-Job-Titles-in-OrangeHRM)  
-34. OrangeHRM: Human Resources Management Software | HRMS, accessed September 29, 2025, [https://www.orangehrm.com/](https://www.orangehrm.com/)  
-35. 17 Best Open Source HR Software Reviewed for 2025, accessed September 29, 2025, [https://peoplemanagingpeople.com/tools/open-source-hr-software/](https://peoplemanagingpeople.com/tools/open-source-hr-software/)  
-36. Job Description Defined | OrangeHRM HR Dictionary, accessed September 29, 2025, [https://www.orangehrm.com/en/resources/hr-dictionary/job-description](https://www.orangehrm.com/en/resources/hr-dictionary/job-description)  
-37. Task & Project Management Tools for Teams \- Bitrix24, accessed September 29, 2025, [https://www.bitrix24.com/tools/tasks\_and\_projects/](https://www.bitrix24.com/tools/tasks_and_projects/)  
-38. Job positions — Odoo 19.0 documentation, accessed September 29, 2025, [https://www.odoo.com/documentation/19.0/applications/hr/recruitment/new\_job.html](https://www.odoo.com/documentation/19.0/applications/hr/recruitment/new_job.html)  
-39. Project management \- Bitrix24, accessed September 29, 2025, [https://www.bitrix24.com/solutions/role/project\_management.php](https://www.bitrix24.com/solutions/role/project_management.php)  
-40. A Guide to Writing Job Descriptions \- Bitrix24, accessed September 29, 2025, [https://www.bitrix24.com/articles/a-guide-to-writing-job-descriptions.php](https://www.bitrix24.com/articles/a-guide-to-writing-job-descriptions.php)  
-41. Odoo Developer Job Description Template \- Adaface, accessed September 29, 2025, [https://www.adaface.com/job-descriptions/odoo-developer-job-description/](https://www.adaface.com/job-descriptions/odoo-developer-job-description/)  
-42. Job positions — Odoo 15.0 documentation \- Recruitment, accessed September 29, 2025, [https://www.odoo.com/documentation/15.0/applications/hr/recruitment/new\_job.html](https://www.odoo.com/documentation/15.0/applications/hr/recruitment/new_job.html)  
-43. 5 Helpful Examples of a SHRM Job Description Template \- Ongig Blog, accessed September 29, 2025, [https://blog.ongig.com/job-descriptions/job-description-template-shrm/](https://blog.ongig.com/job-descriptions/job-description-template-shrm/)  
-44. 4.2 How to Write Inclusive Job Descriptions \- Hire for Talent, accessed September 29, 2025, [https://hirefortalent.ca/toolkit/recruitment/item/4-2-how-to-write-inclusive-job-descriptions](https://hirefortalent.ca/toolkit/recruitment/item/4-2-how-to-write-inclusive-job-descriptions)  
-45. Job Description Guide & Templates \- SHRM, accessed September 29, 2025, [https://www.shrm.org/topics-tools/tools/job-descriptions](https://www.shrm.org/topics-tools/tools/job-descriptions)  
-46. Establishing Language Requirements of Positions, accessed September 29, 2025, [https://wiki.gccollab.ca/images/1/11/HRSDC-Presentation\_Classification\_Eng.pdf](https://wiki.gccollab.ca/images/1/11/HRSDC-Presentation_Classification_Eng.pdf)  
-47. Language requirements of positions, accessed September 29, 2025, [https://www.clo-ocol.gc.ca/en/language-rights/language-rights-federal-public-service/language-requirements-positions](https://www.clo-ocol.gc.ca/en/language-rights/language-rights-federal-public-service/language-requirements-positions)  
-48. Language requirements for candidates \- Canada.ca, accessed September 29, 2025, [https://www.canada.ca/en/public-service-commission/jobs/services/gc-jobs/language-requirements-candidates.html](https://www.canada.ca/en/public-service-commission/jobs/services/gc-jobs/language-requirements-candidates.html)  
-49. The Employee Eligibility and Selection Process \- Employment \- House of Commons, accessed September 29, 2025, [https://www.ourcommons.ca/About/Employment/eligibility-e.html](https://www.ourcommons.ca/About/Employment/eligibility-e.html)  
-50. Language requirements for positions in federal institutions: Three criteria, accessed September 29, 2025, [https://publications.gc.ca/collections/collection\_2021/clo-ocol/SF31-148-10-2019-eng.pdf](https://publications.gc.ca/collections/collection_2021/clo-ocol/SF31-148-10-2019-eng.pdf)  
-51. Phrase TMS: The Leading Translation Management System, accessed September 29, 2025, [https://phrase.com/platform/tms/](https://phrase.com/platform/tms/)  
+1. What is Job Description Management Software, and Why is it Essential to HR? \- JDXpert, accessed September 29, 2025, [https://jdxpert.com/blog/what-is-job-description-management-software-and-why-is-it-essential-to-hr/](https://jdxpert.com/blog/what-is-job-description-management-software-and-why-is-it-essential-to-hr/)
+2. JDXpert \- Leading Global Solution for Workforce Information, accessed September 29, 2025, [https://jdxpert.com/](https://jdxpert.com/)
+3. Features and Benefits – JDXpert Job Description Solution, accessed September 29, 2025, [https://jdxpert.com/product/features/](https://jdxpert.com/product/features/)
+4. Job Description Management Software solution by HRTMS, Inc. \- iCIMS Marketplace, accessed September 29, 2025, [https://marketplace.icims.com/en-US/apps/170192/job-description-management-software-solution-by-hrtms-inc/features](https://marketplace.icims.com/en-US/apps/170192/job-description-management-software-solution-by-hrtms-inc/features)
+5. RoleMapper | AI-powered Job Architecture Workspace, accessed September 29, 2025, [https://www.rolemapper.tech/](https://www.rolemapper.tech/)
+6. Why RoleMapper Is Changing the Way We Write Job Descriptions \- Ongig Blog, accessed September 29, 2025, [https://blog.ongig.com/job-descriptions/ongig-vs-rolemapper/](https://blog.ongig.com/job-descriptions/ongig-vs-rolemapper/)
+7. RoleMapper \- GOV.UK, accessed September 29, 2025, [https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-13/documents/716571/232326403534420-service-definition-document-2022-05-12-1339.pdf](https://assets.applytosupply.digitalmarketplace.service.gov.uk/g-cloud-13/documents/716571/232326403534420-service-definition-document-2022-05-12-1339.pdf)
+8. Debias your job descriptions with RoleMapper, accessed September 29, 2025, [https://www.rolemapper.tech/debiasing-job-descriptions/](https://www.rolemapper.tech/debiasing-job-descriptions/)
+9. RoleMapper Data Transformation \- Digital Marketplace, accessed September 29, 2025, [https://www.applytosupply.digitalmarketplace.service.gov.uk/g-cloud/services/568218298643406](https://www.applytosupply.digitalmarketplace.service.gov.uk/g-cloud/services/568218298643406)
+10. RoleMapper | Content Partner \- HR Grapevine, accessed September 29, 2025, [https://www.hrgrapevine.com/partners/partner/rolemapper](https://www.hrgrapevine.com/partners/partner/rolemapper)
+11. Role Mapper Technologies Limited Jobs and Careers \- App: Otta, accessed September 29, 2025, [https://app.otta.com/companies/Role-Mapper-Technologies-Limited](https://app.otta.com/companies/Role-Mapper-Technologies-Limited)
+12. Inclusive Job Descriptions \- RoleMapper, accessed September 29, 2025, [https://www.rolemapper.tech/inclusive-job-descriptions/](https://www.rolemapper.tech/inclusive-job-descriptions/)
+13. Job Descriptions Management Software \- JDMS \- HRIZONS, accessed September 29, 2025, [https://hrizons.com/job-description-management-software/](https://hrizons.com/job-description-management-software/)
+14. Datapeople: Job Description Management, accessed September 29, 2025, [https://datapeople.io/](https://datapeople.io/)
+15. Best Job Description Software Reviews 2025 | Gartner Peer Insights, accessed September 29, 2025, [https://www.gartner.com/reviews/market/job-description-software](https://www.gartner.com/reviews/market/job-description-software)
+16. The Importance of Job Description Software Platforms \- Datapeople, accessed September 29, 2025, [https://datapeople.io/blog/job-description-software-matters/](https://datapeople.io/blog/job-description-software-matters/)
+17. Our Language Analytics Platform for Inclusive Job Posts \- Datapeople, accessed September 29, 2025, [https://datapeople.io/blog/our-language-analytics-platform-for-inclusive-job-posts/](https://datapeople.io/blog/our-language-analytics-platform-for-inclusive-job-posts/)
+18. Datapeople Reviews 2025: Details, Pricing, & Features \- G2, accessed September 29, 2025, [https://www.g2.com/products/datapeople/reviews](https://www.g2.com/products/datapeople/reviews)
+19. Datapeople Anywhere \- Browser Extension for Recruiting, accessed September 29, 2025, [https://datapeople.io/product/datapeople-anywhere/](https://datapeople.io/product/datapeople-anywhere/)
+20. Datapeople Features \- G2, accessed September 29, 2025, [https://www.g2.com/products/datapeople/features](https://www.g2.com/products/datapeople/features)
+21. Textio – Giving feedback has never been easier, accessed September 29, 2025, [https://textio.com/](https://textio.com/)
+22. gptbot.io, accessed September 29, 2025, [https://gptbot.io/ai-tools/textio](https://gptbot.io/ai-tools/textio)
+23. Generating a job post with “Write with Textio AI”, accessed September 29, 2025, [https://support.textio.com/s/article/Generating-a-job-post-with-Write-with-Textio-AI](https://support.textio.com/s/article/Generating-a-job-post-with-Write-with-Textio-AI)
+24. Feedback \- Textio, accessed September 29, 2025, [https://textio.com/products/feedback](https://textio.com/products/feedback)
+25. Guide to Writing Work Descriptions for the Executive Group, accessed September 29, 2025, [https://www.tbs-sct.canada.ca/gui/wwdeg-rdtgd-eng.pdf](https://www.tbs-sct.canada.ca/gui/wwdeg-rdtgd-eng.pdf)
+26. How do I write a work description? \- Treasury Board of Canada Secretariat, accessed September 29, 2025, [https://www.tbs-sct.canada.ca/quest/desc-eng.asp](https://www.tbs-sct.canada.ca/quest/desc-eng.asp)
+27. Learn How to Write Inclusive Job Postings \- SHRM, accessed September 29, 2025, [https://www.shrm.org/topics-tools/news/talent-acquisition/learn-how-to-write-inclusive-job-postings](https://www.shrm.org/topics-tools/news/talent-acquisition/learn-how-to-write-inclusive-job-postings)
+28. MintHCM | Open Source HCM | employee management | free HR HRM HRMS HRIS software, accessed September 29, 2025, [https://minthcm.org/](https://minthcm.org/)
+29. Features \- Check the functions of our HCM software. It's ... \- MintHCM, accessed September 29, 2025, [https://minthcm.org/features/](https://minthcm.org/features/)
+30. OpenProject \- Open Source Project Management Software, accessed September 29, 2025, [https://www.openproject.org/](https://www.openproject.org/)
+31. MintHCM Wiki, accessed September 29, 2025, [https://wiki.minthcm.org/index.php?title=Main\_Page](https://wiki.minthcm.org/index.php?title=Main_Page)
+32. Why do I need MintHCM? System Introduction \- YouTube, accessed September 29, 2025, [https://www.youtube.com/watch?v=TdbKbix9dko](https://www.youtube.com/watch?v=TdbKbix9dko)
+33. How to manage Job Titles in OrangeHRM, accessed September 29, 2025, [https://help.orangehrm.com/hc/en-us/articles/4949453751449-How-to-manage-Job-Titles-in-OrangeHRM](https://help.orangehrm.com/hc/en-us/articles/4949453751449-How-to-manage-Job-Titles-in-OrangeHRM)
+34. OrangeHRM: Human Resources Management Software | HRMS, accessed September 29, 2025, [https://www.orangehrm.com/](https://www.orangehrm.com/)
+35. 17 Best Open Source HR Software Reviewed for 2025, accessed September 29, 2025, [https://peoplemanagingpeople.com/tools/open-source-hr-software/](https://peoplemanagingpeople.com/tools/open-source-hr-software/)
+36. Job Description Defined | OrangeHRM HR Dictionary, accessed September 29, 2025, [https://www.orangehrm.com/en/resources/hr-dictionary/job-description](https://www.orangehrm.com/en/resources/hr-dictionary/job-description)
+37. Task & Project Management Tools for Teams \- Bitrix24, accessed September 29, 2025, [https://www.bitrix24.com/tools/tasks\_and\_projects/](https://www.bitrix24.com/tools/tasks_and_projects/)
+38. Job positions — Odoo 19.0 documentation, accessed September 29, 2025, [https://www.odoo.com/documentation/19.0/applications/hr/recruitment/new\_job.html](https://www.odoo.com/documentation/19.0/applications/hr/recruitment/new_job.html)
+39. Project management \- Bitrix24, accessed September 29, 2025, [https://www.bitrix24.com/solutions/role/project\_management.php](https://www.bitrix24.com/solutions/role/project_management.php)
+40. A Guide to Writing Job Descriptions \- Bitrix24, accessed September 29, 2025, [https://www.bitrix24.com/articles/a-guide-to-writing-job-descriptions.php](https://www.bitrix24.com/articles/a-guide-to-writing-job-descriptions.php)
+41. Odoo Developer Job Description Template \- Adaface, accessed September 29, 2025, [https://www.adaface.com/job-descriptions/odoo-developer-job-description/](https://www.adaface.com/job-descriptions/odoo-developer-job-description/)
+42. Job positions — Odoo 15.0 documentation \- Recruitment, accessed September 29, 2025, [https://www.odoo.com/documentation/15.0/applications/hr/recruitment/new\_job.html](https://www.odoo.com/documentation/15.0/applications/hr/recruitment/new_job.html)
+43. 5 Helpful Examples of a SHRM Job Description Template \- Ongig Blog, accessed September 29, 2025, [https://blog.ongig.com/job-descriptions/job-description-template-shrm/](https://blog.ongig.com/job-descriptions/job-description-template-shrm/)
+44. 4.2 How to Write Inclusive Job Descriptions \- Hire for Talent, accessed September 29, 2025, [https://hirefortalent.ca/toolkit/recruitment/item/4-2-how-to-write-inclusive-job-descriptions](https://hirefortalent.ca/toolkit/recruitment/item/4-2-how-to-write-inclusive-job-descriptions)
+45. Job Description Guide & Templates \- SHRM, accessed September 29, 2025, [https://www.shrm.org/topics-tools/tools/job-descriptions](https://www.shrm.org/topics-tools/tools/job-descriptions)
+46. Establishing Language Requirements of Positions, accessed September 29, 2025, [https://wiki.gccollab.ca/images/1/11/HRSDC-Presentation\_Classification\_Eng.pdf](https://wiki.gccollab.ca/images/1/11/HRSDC-Presentation_Classification_Eng.pdf)
+47. Language requirements of positions, accessed September 29, 2025, [https://www.clo-ocol.gc.ca/en/language-rights/language-rights-federal-public-service/language-requirements-positions](https://www.clo-ocol.gc.ca/en/language-rights/language-rights-federal-public-service/language-requirements-positions)
+48. Language requirements for candidates \- Canada.ca, accessed September 29, 2025, [https://www.canada.ca/en/public-service-commission/jobs/services/gc-jobs/language-requirements-candidates.html](https://www.canada.ca/en/public-service-commission/jobs/services/gc-jobs/language-requirements-candidates.html)
+49. The Employee Eligibility and Selection Process \- Employment \- House of Commons, accessed September 29, 2025, [https://www.ourcommons.ca/About/Employment/eligibility-e.html](https://www.ourcommons.ca/About/Employment/eligibility-e.html)
+50. Language requirements for positions in federal institutions: Three criteria, accessed September 29, 2025, [https://publications.gc.ca/collections/collection\_2021/clo-ocol/SF31-148-10-2019-eng.pdf](https://publications.gc.ca/collections/collection_2021/clo-ocol/SF31-148-10-2019-eng.pdf)
+51. Phrase TMS: The Leading Translation Management System, accessed September 29, 2025, [https://phrase.com/platform/tms/](https://phrase.com/platform/tms/)
 52. Crowdin: Localization Platform to Manage Your Translation, accessed September 29, 2025, [https://crowdin.com/](https://crowdin.com/)

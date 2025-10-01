@@ -50,7 +50,11 @@ import {
   Briefcase,
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
-import { LoadingState, ErrorState, TableSkeleton } from "@/components/ui/states";
+import {
+  LoadingState,
+  ErrorState,
+  TableSkeleton,
+} from "@/components/ui/states";
 import { EmptyState } from "@/components/ui/empty-state";
 
 interface JobsTableProps {
@@ -61,7 +65,12 @@ interface JobsTableProps {
   className?: string;
 }
 
-type SortField = "id" | "job_code" | "classification" | "language" | "created_at";
+type SortField =
+  | "id"
+  | "job_code"
+  | "classification"
+  | "language"
+  | "created_at";
 type SortDirection = "asc" | "desc";
 
 export function JobsTable({
@@ -79,7 +88,8 @@ export function JobsTable({
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState<SortField>("created_at");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const [filterClassification, setFilterClassification] = useState<string>("all");
+  const [filterClassification, setFilterClassification] =
+    useState<string>("all");
   const [filterLanguage, setFilterLanguage] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -96,14 +106,14 @@ export function JobsTable({
         (job) =>
           job.job_code?.toLowerCase().includes(query) ||
           job.original_filename?.toLowerCase().includes(query) ||
-          job.classification?.toLowerCase().includes(query)
+          job.classification?.toLowerCase().includes(query),
       );
     }
 
     // Classification filter
     if (filterClassification !== "all") {
       filtered = filtered.filter(
-        (job) => job.classification === filterClassification
+        (job) => job.classification === filterClassification,
       );
     }
 
@@ -152,23 +162,32 @@ export function JobsTable({
     });
 
     return filtered;
-  }, [jobs, searchQuery, filterClassification, filterLanguage, filterStatus, sortField, sortDirection]);
+  }, [
+    jobs,
+    searchQuery,
+    filterClassification,
+    filterLanguage,
+    filterStatus,
+    sortField,
+    sortDirection,
+  ]);
 
   // Pagination
   const totalPages = Math.ceil(filteredJobs.length / pageSize);
   const paginatedJobs = filteredJobs.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   // Get unique values for filters
   const classifications = useMemo(
-    () => Array.from(new Set(jobs.map((j) => j.classification).filter(Boolean))),
-    [jobs]
+    () =>
+      Array.from(new Set(jobs.map((j) => j.classification).filter(Boolean))),
+    [jobs],
   );
   const languages = useMemo(
     () => Array.from(new Set(jobs.map((j) => j.language).filter(Boolean))),
-    [jobs]
+    [jobs],
   );
 
   // Handlers
@@ -262,14 +281,18 @@ export function JobsTable({
     return (
       <EmptyState
         type="no-jobs"
-        actions={onNavigateToUpload ? [
-          {
-            label: "Upload Jobs",
-            onClick: onNavigateToUpload,
-            variant: "default" as const,
-            icon: Upload,
-          },
-        ] : []}
+        actions={
+          onNavigateToUpload
+            ? [
+                {
+                  label: "Upload Jobs",
+                  onClick: onNavigateToUpload,
+                  variant: "default" as const,
+                  icon: Upload,
+                },
+              ]
+            : []
+        }
       />
     );
   }
@@ -337,7 +360,10 @@ export function JobsTable({
             </div>
 
             {/* Classification Filter */}
-            <Select value={filterClassification} onValueChange={setFilterClassification}>
+            <Select
+              value={filterClassification}
+              onValueChange={setFilterClassification}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Classification" />
               </SelectTrigger>
@@ -426,7 +452,10 @@ export function JobsTable({
                 <tr>
                   <th className="px-4 py-3 text-left w-12">
                     <Checkbox
-                      checked={selectedJobs.length === paginatedJobs.length && paginatedJobs.length > 0}
+                      checked={
+                        selectedJobs.length === paginatedJobs.length &&
+                        paginatedJobs.length > 0
+                      }
                       onCheckedChange={handleSelectAll}
                     />
                   </th>
@@ -490,7 +519,10 @@ export function JobsTable({
                     className="shadow-table-row cursor-pointer"
                     onClick={() => onJobSelect?.(job)}
                   >
-                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <td
+                      className="px-4 py-3"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Checkbox
                         checked={selectedJobs.includes(job.id)}
                         onCheckedChange={(checked) =>
@@ -542,10 +574,17 @@ export function JobsTable({
                         {new Date(job.created_at).toLocaleDateString()}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                    <td
+                      className="px-4 py-3 text-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                          >
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -554,11 +593,15 @@ export function JobsTable({
                             <Eye className="w-4 h-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleJobAction(job, "Edit")}>
+                          <DropdownMenuItem
+                            onClick={() => handleJobAction(job, "Edit")}
+                          >
                             <Edit className="w-4 h-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleJobAction(job, "Duplicate")}>
+                          <DropdownMenuItem
+                            onClick={() => handleJobAction(job, "Duplicate")}
+                          >
                             <Copy className="w-4 h-4 mr-2" />
                             Duplicate
                           </DropdownMenuItem>
@@ -617,7 +660,9 @@ export function JobsTable({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  }
                   disabled={currentPage === totalPages}
                 >
                   <ChevronRight className="w-4 h-4" />

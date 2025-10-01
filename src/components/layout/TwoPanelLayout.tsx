@@ -78,10 +78,10 @@ export function TwoPanelLayout({
   hideRightPanelOnMobile = true,
 }: TwoPanelLayoutProps) {
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(
-    initialLeftPanelCollapsed
+    initialLeftPanelCollapsed,
   );
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(
-    initialRightPanelCollapsed
+    initialRightPanelCollapsed,
   );
 
   const handleLeftPanelToggle = () => {
@@ -104,15 +104,11 @@ export function TwoPanelLayout({
     <div
       className={cn(
         "flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900/20",
-        className
+        className,
       )}
     >
       {/* Header */}
-      {header && (
-        <div className="flex-shrink-0 z-50">
-          {header}
-        </div>
-      )}
+      {header && <div className="flex-shrink-0 z-50">{header}</div>}
 
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
@@ -120,7 +116,9 @@ export function TwoPanelLayout({
         {showLeftPanel && leftPanel && (
           <aside
             style={{
-              width: leftPanelCollapsed ? `${leftPanelCollapsedWidth}px` : `${leftPanelWidth}px`,
+              width: leftPanelCollapsed
+                ? `${leftPanelCollapsedWidth}px`
+                : `${leftPanelWidth}px`,
             }}
             className={cn(
               "flex-shrink-0 transition-all duration-300 ease-in-out",
@@ -129,7 +127,7 @@ export function TwoPanelLayout({
               "shadow-card",
               "overflow-y-auto overflow-x-hidden",
               hideLeftPanelOnMobile && "hidden lg:block",
-              leftPanelClassName
+              leftPanelClassName,
             )}
           >
             <div className="relative h-full">
@@ -141,7 +139,9 @@ export function TwoPanelLayout({
                     size="sm"
                     onClick={handleLeftPanelToggle}
                     className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-700 shadow-button"
-                    title={leftPanelCollapsed ? "Expand panel" : "Collapse panel"}
+                    title={
+                      leftPanelCollapsed ? "Expand panel" : "Collapse panel"
+                    }
                   >
                     {leftPanelCollapsed ? (
                       <PanelLeftOpen className="h-4 w-4" />
@@ -165,13 +165,11 @@ export function TwoPanelLayout({
           className={cn(
             "flex-1 overflow-y-auto overflow-x-hidden",
             "bg-transparent",
-            contentClassName
+            contentClassName,
           )}
         >
           <div className="h-full p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-              {children}
-            </div>
+            <div className="max-w-7xl mx-auto">{children}</div>
           </div>
         </main>
 
@@ -188,7 +186,7 @@ export function TwoPanelLayout({
               "shadow-card",
               "overflow-y-auto overflow-x-hidden",
               hideRightPanelOnMobile && "hidden xl:block",
-              rightPanelClassName
+              rightPanelClassName,
             )}
           >
             <div className="relative h-full">
@@ -200,7 +198,9 @@ export function TwoPanelLayout({
                     size="sm"
                     onClick={handleRightPanelToggle}
                     className="h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-700 shadow-button"
-                    title={rightPanelCollapsed ? "Expand panel" : "Collapse panel"}
+                    title={
+                      rightPanelCollapsed ? "Expand panel" : "Collapse panel"
+                    }
                   >
                     {rightPanelCollapsed ? (
                       <PanelRightOpen className="h-4 w-4" />
@@ -221,11 +221,7 @@ export function TwoPanelLayout({
       </div>
 
       {/* Footer */}
-      {footer && (
-        <div className="flex-shrink-0">
-          {footer}
-        </div>
-      )}
+      {footer && <div className="flex-shrink-0">{footer}</div>}
     </div>
   );
 }
@@ -267,7 +263,7 @@ export function MobilePanelOverlay({
           "transform transition-transform duration-300 ease-in-out",
           "overflow-y-auto",
           "lg:hidden",
-          side === "left" ? "left-0" : "right-0"
+          side === "left" ? "left-0" : "right-0",
         )}
       >
         {/* Header */}
@@ -333,7 +329,8 @@ export function PanelSection({
             onClick={() => collapsible && setCollapsed(!collapsed)}
             className={cn(
               "flex items-center space-x-2 text-sm font-semibold text-slate-700 dark:text-slate-300",
-              collapsible && "hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer"
+              collapsible &&
+                "hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer",
             )}
             disabled={!collapsible}
           >
@@ -343,12 +340,14 @@ export function PanelSection({
               <ChevronRight
                 className={cn(
                   "w-4 h-4 transition-transform",
-                  !collapsed && "transform rotate-90"
+                  !collapsed && "transform rotate-90",
                 )}
               />
             )}
           </button>
-          {headerActions && <div className="flex items-center space-x-2">{headerActions}</div>}
+          {headerActions && (
+            <div className="flex items-center space-x-2">{headerActions}</div>
+          )}
         </div>
       )}
       {!collapsed && <div>{children}</div>}

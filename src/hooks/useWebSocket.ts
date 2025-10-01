@@ -5,15 +5,15 @@
  * Handles connection lifecycle, message sending/receiving, and state management.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
   CollaborativeWebSocketClient,
   ConnectionState,
   WebSocketMessage,
   WebSocketConfig,
-} from '@/lib/websocket-client';
+} from "@/lib/websocket-client";
 
-export interface UseWebSocketOptions extends Omit<WebSocketConfig, 'url'> {
+export interface UseWebSocketOptions extends Omit<WebSocketConfig, "url"> {
   enabled?: boolean;
   onMessage?: (message: WebSocketMessage) => void;
   onOpen?: () => void;
@@ -39,7 +39,7 @@ export interface UseWebSocketReturn {
  */
 export function useWebSocket(
   url: string | null,
-  options: UseWebSocketOptions = {}
+  options: UseWebSocketOptions = {},
 ): UseWebSocketReturn {
   const {
     enabled = true,
@@ -52,7 +52,8 @@ export function useWebSocket(
     heartbeatInterval,
   } = options;
 
-  const [connectionState, setConnectionState] = useState<ConnectionState>('disconnected');
+  const [connectionState, setConnectionState] =
+    useState<ConnectionState>("disconnected");
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
   const clientRef = useRef<CollaborativeWebSocketClient | null>(null);
 
@@ -119,7 +120,7 @@ export function useWebSocket(
     clientRef.current?.disconnect();
   }, []);
 
-  const isConnected = connectionState === 'connected';
+  const isConnected = connectionState === "connected";
 
   return {
     connectionState,

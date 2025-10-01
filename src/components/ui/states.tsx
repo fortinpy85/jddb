@@ -209,7 +209,11 @@ export function ErrorState({
 
           {showRetry && (
             <div className="space-y-3">
-              <Button onClick={onAction} className="w-full shadow-button" variant="outline">
+              <Button
+                onClick={onAction}
+                className="w-full shadow-button"
+                variant="outline"
+              >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 {actionLabel}
               </Button>

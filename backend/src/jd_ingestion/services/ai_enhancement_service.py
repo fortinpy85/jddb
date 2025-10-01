@@ -80,7 +80,9 @@ class AIEnhancementService:
         # If OpenAI is available, enhance suggestions with AI
         if self.client:
             try:
-                ai_suggestions = await self._get_ai_suggestions(text, context, suggestion_types)
+                ai_suggestions = await self._get_ai_suggestions(
+                    text, context, suggestion_types
+                )
                 suggestions.extend(ai_suggestions)
             except Exception as e:
                 logger.error(f"Error getting AI suggestions: {e}")
@@ -247,16 +249,18 @@ class AIEnhancementService:
         # Check for double spaces
         if "  " in text:
             for match in re.finditer(r"  +", text):
-                suggestions.append({
-                    "id": str(uuid.uuid4()),
-                    "type": "grammar",
-                    "original_text": match.group(),
-                    "suggested_text": " ",
-                    "explanation": "Remove extra spaces",
-                    "confidence": 0.95,
-                    "start_index": match.start(),
-                    "end_index": match.end(),
-                })
+                suggestions.append(
+                    {
+                        "id": str(uuid.uuid4()),
+                        "type": "grammar",
+                        "original_text": match.group(),
+                        "suggested_text": " ",
+                        "explanation": "Remove extra spaces",
+                        "confidence": 0.95,
+                        "start_index": match.start(),
+                        "end_index": match.end(),
+                    }
+                )
 
         return suggestions
 
@@ -268,16 +272,18 @@ class AIEnhancementService:
         passive_patterns = [r"\bis\s+\w+ed\b", r"\bwas\s+\w+ed\b", r"\bare\s+\w+ed\b"]
         for pattern in passive_patterns:
             for match in re.finditer(pattern, text, re.IGNORECASE):
-                suggestions.append({
-                    "id": str(uuid.uuid4()),
-                    "type": "style",
-                    "original_text": match.group(),
-                    "suggested_text": "[Consider active voice]",
-                    "explanation": "Consider using active voice for clarity",
-                    "confidence": 0.7,
-                    "start_index": match.start(),
-                    "end_index": match.end(),
-                })
+                suggestions.append(
+                    {
+                        "id": str(uuid.uuid4()),
+                        "type": "style",
+                        "original_text": match.group(),
+                        "suggested_text": "[Consider active voice]",
+                        "explanation": "Consider using active voice for clarity",
+                        "confidence": 0.7,
+                        "start_index": match.start(),
+                        "end_index": match.end(),
+                    }
+                )
 
         return suggestions
 
@@ -291,16 +297,18 @@ class AIEnhancementService:
         for sentence in sentences:
             word_count = len(sentence.split())
             if word_count > 30:
-                suggestions.append({
-                    "id": str(uuid.uuid4()),
-                    "type": "clarity",
-                    "original_text": sentence.strip(),
-                    "suggested_text": "[Consider breaking into shorter sentences]",
-                    "explanation": f"Long sentence ({word_count} words) may reduce clarity",
-                    "confidence": 0.8,
-                    "start_index": position,
-                    "end_index": position + len(sentence),
-                })
+                suggestions.append(
+                    {
+                        "id": str(uuid.uuid4()),
+                        "type": "clarity",
+                        "original_text": sentence.strip(),
+                        "suggested_text": "[Consider breaking into shorter sentences]",
+                        "explanation": f"Long sentence ({word_count} words) may reduce clarity",
+                        "confidence": 0.8,
+                        "start_index": position,
+                        "end_index": position + len(sentence),
+                    }
+                )
             position += len(sentence) + 1
 
         return suggestions
@@ -355,15 +363,17 @@ class AIEnhancementService:
         for term, alternative in gendered_terms.items():
             pattern = r"\b" + term + r"\b"
             for match in re.finditer(pattern, text, re.IGNORECASE):
-                issues.append({
-                    "type": "gender",
-                    "description": "Gender-specific pronoun detected",
-                    "problematic_text": match.group(),
-                    "suggested_alternatives": [alternative],
-                    "severity": "medium",
-                    "start_index": match.start(),
-                    "end_index": match.end(),
-                })
+                issues.append(
+                    {
+                        "type": "gender",
+                        "description": "Gender-specific pronoun detected",
+                        "problematic_text": match.group(),
+                        "suggested_alternatives": [alternative],
+                        "severity": "medium",
+                        "start_index": match.start(),
+                        "end_index": match.end(),
+                    }
+                )
 
         return issues
 

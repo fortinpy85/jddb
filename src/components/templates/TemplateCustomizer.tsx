@@ -65,7 +65,9 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
   className,
 }) => {
   const [placeholders, setPlaceholders] = useState<PlaceholderValue[]>([]);
-  const [customizedTemplate, setCustomizedTemplate] = useState<Template | null>(null);
+  const [customizedTemplate, setCustomizedTemplate] = useState<Template | null>(
+    null,
+  );
   const [previewOpen, setPreviewOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [validationStatus, setValidationStatus] = useState<{
@@ -111,9 +113,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
 
   const handlePlaceholderChange = (placeholder: string, value: string) => {
     setPlaceholders((prev) =>
-      prev.map((p) =>
-        p.placeholder === placeholder ? { ...p, value } : p
-      )
+      prev.map((p) => (p.placeholder === placeholder ? { ...p, value } : p)),
     );
   };
 
@@ -165,13 +165,16 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
   };
 
   // Group placeholders by section
-  const groupedPlaceholders = placeholders.reduce((acc, p) => {
-    if (!acc[p.section]) {
-      acc[p.section] = [];
-    }
-    acc[p.section].push(p);
-    return acc;
-  }, {} as { [section: string]: PlaceholderValue[] });
+  const groupedPlaceholders = placeholders.reduce(
+    (acc, p) => {
+      if (!acc[p.section]) {
+        acc[p.section] = [];
+      }
+      acc[p.section].push(p);
+      return acc;
+    },
+    {} as { [section: string]: PlaceholderValue[] },
+  );
 
   return (
     <Card className={className}>
@@ -224,60 +227,73 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
         {/* Placeholder Input Sections */}
         <ScrollArea className="h-[400px] pr-4">
           <Accordion type="multiple" className="space-y-2">
-            {Object.entries(groupedPlaceholders).map(([section, sectionPlaceholders]) => (
-              <AccordionItem key={section} value={section}>
-                <AccordionTrigger className="text-sm font-medium">
-                  <div className="flex items-center gap-2">
-                    <ChevronRight className="w-4 h-4" />
-                    {section}
-                    <Badge variant="outline" className="ml-2">
-                      {sectionPlaceholders.filter((p) => p.value.trim()).length}/
-                      {sectionPlaceholders.length}
-                    </Badge>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-3 pt-2">
-                    {sectionPlaceholders.map((p, idx) => (
-                      <div key={idx} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-xs font-medium">
-                            {p.placeholder}
-                          </Label>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 text-xs"
-                            onClick={() => handleCopyPlaceholder(p.placeholder)}
-                          >
-                            <Copy className="w-3 h-3" />
-                          </Button>
+            {Object.entries(groupedPlaceholders).map(
+              ([section, sectionPlaceholders]) => (
+                <AccordionItem key={section} value={section}>
+                  <AccordionTrigger className="text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <ChevronRight className="w-4 h-4" />
+                      {section}
+                      <Badge variant="outline" className="ml-2">
+                        {
+                          sectionPlaceholders.filter((p) => p.value.trim())
+                            .length
+                        }
+                        /{sectionPlaceholders.length}
+                      </Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-3 pt-2">
+                      {sectionPlaceholders.map((p, idx) => (
+                        <div key={idx} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-xs font-medium">
+                              {p.placeholder}
+                            </Label>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 text-xs"
+                              onClick={() =>
+                                handleCopyPlaceholder(p.placeholder)
+                              }
+                            >
+                              <Copy className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          {p.placeholder.length > 50 ? (
+                            <Textarea
+                              placeholder={`Enter value for ${p.placeholder}`}
+                              value={p.value}
+                              onChange={(e) =>
+                                handlePlaceholderChange(
+                                  p.placeholder,
+                                  e.target.value,
+                                )
+                              }
+                              className="text-sm min-h-[80px]"
+                            />
+                          ) : (
+                            <Input
+                              placeholder={`Enter value for ${p.placeholder}`}
+                              value={p.value}
+                              onChange={(e) =>
+                                handlePlaceholderChange(
+                                  p.placeholder,
+                                  e.target.value,
+                                )
+                              }
+                              className="text-sm"
+                            />
+                          )}
                         </div>
-                        {p.placeholder.length > 50 ? (
-                          <Textarea
-                            placeholder={`Enter value for ${p.placeholder}`}
-                            value={p.value}
-                            onChange={(e) =>
-                              handlePlaceholderChange(p.placeholder, e.target.value)
-                            }
-                            className="text-sm min-h-[80px]"
-                          />
-                        ) : (
-                          <Input
-                            placeholder={`Enter value for ${p.placeholder}`}
-                            value={p.value}
-                            onChange={(e) =>
-                              handlePlaceholderChange(p.placeholder, e.target.value)
-                            }
-                            className="text-sm"
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ),
+            )}
           </Accordion>
         </ScrollArea>
 
@@ -333,7 +349,8 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
                 Customized Template Preview
               </DialogTitle>
               <DialogDescription>
-                {customizedTemplate.classification} - {customizedTemplate.category}
+                {customizedTemplate.classification} -{" "}
+                {customizedTemplate.category}
               </DialogDescription>
             </DialogHeader>
 
@@ -341,7 +358,10 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
               <div className="space-y-4">
                 {Object.entries(customizedTemplate.sections).map(
                   ([sectionId, section]) => (
-                    <div key={sectionId} className="border-b pb-4 last:border-0">
+                    <div
+                      key={sectionId}
+                      className="border-b pb-4 last:border-0"
+                    >
                       <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
                         <ChevronRight className="w-4 h-4" />
                         {section.title}
@@ -360,7 +380,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
                         </div>
                       )}
                     </div>
-                  )
+                  ),
                 )}
               </div>
 
@@ -368,8 +388,8 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
                 <p className="text-xs text-green-800">
                   <CheckCircle className="w-3 h-3 inline mr-1" />
-                  {customizedTemplate.metadata.customizations_applied} customizations
-                  applied
+                  {customizedTemplate.metadata.customizations_applied}{" "}
+                  customizations applied
                 </p>
               </div>
             </ScrollArea>

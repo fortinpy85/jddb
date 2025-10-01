@@ -64,7 +64,11 @@ interface ComparisonMetric {
   icon?: React.ComponentType<{ className?: string }>;
 }
 
-type MergeStrategy = "replace-both" | "include-into-first" | "include-into-second" | "create-hybrid";
+type MergeStrategy =
+  | "replace-both"
+  | "include-into-first"
+  | "include-into-second"
+  | "create-hybrid";
 
 export function CompareView({
   jobId1: initialJobId1,
@@ -75,13 +79,18 @@ export function CompareView({
   const { jobs } = useStore();
   const { addToast } = useToast();
 
-  const [selectedJobId1, setSelectedJobId1] = useState<number | undefined>(initialJobId1);
-  const [selectedJobId2, setSelectedJobId2] = useState<number | undefined>(initialJobId2);
+  const [selectedJobId1, setSelectedJobId1] = useState<number | undefined>(
+    initialJobId1,
+  );
+  const [selectedJobId2, setSelectedJobId2] = useState<number | undefined>(
+    initialJobId2,
+  );
   const [job1, setJob1] = useState<JobDescription | null>(null);
   const [job2, setJob2] = useState<JobDescription | null>(null);
   const [loading, setLoading] = useState(false);
   const [showMergeDialog, setShowMergeDialog] = useState(false);
-  const [mergeStrategy, setMergeStrategy] = useState<MergeStrategy>("create-hybrid");
+  const [mergeStrategy, setMergeStrategy] =
+    useState<MergeStrategy>("create-hybrid");
 
   // Load jobs when IDs change
   useEffect(() => {
@@ -127,40 +136,55 @@ export function CompareView({
     // TODO: Navigate to editing view with merged content
   };
 
-  const comparisonMetrics: ComparisonMetric[] = job1 && job2 ? [
-    {
-      label: "Classification",
-      job1Value: job1.classification || "N/A",
-      job2Value: job2.classification || "N/A",
-      difference: "same",
-      icon: FileText,
-    },
-    {
-      label: "Word Count",
-      job1Value: 1247,
-      job2Value: 1156,
-      difference: "higher",
-      icon: FileText,
-    },
-    {
-      label: "Sections",
-      job1Value: job1.sections?.length || 0,
-      job2Value: job2.sections?.length || 0,
-      difference: job1.sections?.length === job2.sections?.length ? "same" : job1.sections && job2.sections && job1.sections.length > job2.sections.length ? "higher" : "lower",
-      icon: FileText,
-    },
-    {
-      label: "Quality Score",
-      job1Value: "85%",
-      job2Value: "78%",
-      difference: "higher",
-      icon: TrendingUp,
-    },
-  ] : [];
+  const comparisonMetrics: ComparisonMetric[] =
+    job1 && job2
+      ? [
+          {
+            label: "Classification",
+            job1Value: job1.classification || "N/A",
+            job2Value: job2.classification || "N/A",
+            difference: "same",
+            icon: FileText,
+          },
+          {
+            label: "Word Count",
+            job1Value: 1247,
+            job2Value: 1156,
+            difference: "higher",
+            icon: FileText,
+          },
+          {
+            label: "Sections",
+            job1Value: job1.sections?.length || 0,
+            job2Value: job2.sections?.length || 0,
+            difference:
+              job1.sections?.length === job2.sections?.length
+                ? "same"
+                : job1.sections &&
+                    job2.sections &&
+                    job1.sections.length > job2.sections.length
+                  ? "higher"
+                  : "lower",
+            icon: FileText,
+          },
+          {
+            label: "Quality Score",
+            job1Value: "85%",
+            job2Value: "78%",
+            difference: "higher",
+            icon: TrendingUp,
+          },
+        ]
+      : [];
 
   // Loading state
   if (loading) {
-    return <LoadingState title="Loading jobs" description="Preparing comparison view" />;
+    return (
+      <LoadingState
+        title="Loading jobs"
+        description="Preparing comparison view"
+      />
+    );
   }
 
   // Empty state - no jobs selected
@@ -169,7 +193,12 @@ export function CompareView({
       <div className={cn("space-y-6", className)}>
         <div className="flex items-start justify-between">
           <div>
-            <Button variant="ghost" size="sm" onClick={onBack} className="mb-2 -ml-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="mb-2 -ml-2"
+            >
               <ChevronLeft className="w-4 h-4 mr-1" />
               Back
             </Button>
@@ -187,14 +216,18 @@ export function CompareView({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <Label>First Job</Label>
-                <Select value={selectedJobId1?.toString()} onValueChange={(v) => setSelectedJobId1(parseInt(v))}>
+                <Select
+                  value={selectedJobId1?.toString()}
+                  onValueChange={(v) => setSelectedJobId1(parseInt(v))}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select first job..." />
                   </SelectTrigger>
                   <SelectContent>
                     {jobs.map((job) => (
                       <SelectItem key={job.id} value={job.id.toString()}>
-                        {job.job_code || `Job #${job.id}`} - {job.classification}
+                        {job.job_code || `Job #${job.id}`} -{" "}
+                        {job.classification}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -203,16 +236,22 @@ export function CompareView({
 
               <div className="space-y-3">
                 <Label>Second Job</Label>
-                <Select value={selectedJobId2?.toString()} onValueChange={(v) => setSelectedJobId2(parseInt(v))}>
+                <Select
+                  value={selectedJobId2?.toString()}
+                  onValueChange={(v) => setSelectedJobId2(parseInt(v))}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select second job..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {jobs.filter((j) => j.id !== selectedJobId1).map((job) => (
-                      <SelectItem key={job.id} value={job.id.toString()}>
-                        {job.job_code || `Job #${job.id}`} - {job.classification}
-                      </SelectItem>
-                    ))}
+                    {jobs
+                      .filter((j) => j.id !== selectedJobId1)
+                      .map((job) => (
+                        <SelectItem key={job.id} value={job.id.toString()}>
+                          {job.job_code || `Job #${job.id}`} -{" "}
+                          {job.classification}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -229,7 +268,12 @@ export function CompareView({
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <Button variant="ghost" size="sm" onClick={onBack} className="mb-2 -ml-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="mb-2 -ml-2"
+          >
             <ChevronLeft className="w-4 h-4 mr-1" />
             Back
           </Button>
@@ -251,7 +295,10 @@ export function CompareView({
       <Card>
         <CardContent className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Select value={selectedJobId1?.toString()} onValueChange={(v) => setSelectedJobId1(parseInt(v))}>
+            <Select
+              value={selectedJobId1?.toString()}
+              onValueChange={(v) => setSelectedJobId1(parseInt(v))}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -264,16 +311,21 @@ export function CompareView({
               </SelectContent>
             </Select>
 
-            <Select value={selectedJobId2?.toString()} onValueChange={(v) => setSelectedJobId2(parseInt(v))}>
+            <Select
+              value={selectedJobId2?.toString()}
+              onValueChange={(v) => setSelectedJobId2(parseInt(v))}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {jobs.filter((j) => j.id !== selectedJobId1).map((job) => (
-                  <SelectItem key={job.id} value={job.id.toString()}>
-                    {job.job_code || `Job #${job.id}`} - {job.classification}
-                  </SelectItem>
-                ))}
+                {jobs
+                  .filter((j) => j.id !== selectedJobId1)
+                  .map((job) => (
+                    <SelectItem key={job.id} value={job.id.toString()}>
+                      {job.job_code || `Job #${job.id}`} - {job.classification}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -311,7 +363,9 @@ export function CompareView({
                 </CardTitle>
                 <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
                   <Badge variant="outline">{job1.classification}</Badge>
-                  <Badge variant="outline">{getLanguageName(job1.language || "en")}</Badge>
+                  <Badge variant="outline">
+                    {getLanguageName(job1.language || "en")}
+                  </Badge>
                 </div>
               </CardHeader>
               <CardContent className="p-4 space-y-4">
@@ -336,7 +390,9 @@ export function CompareView({
                 </CardTitle>
                 <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
                   <Badge variant="outline">{job2.classification}</Badge>
-                  <Badge variant="outline">{getLanguageName(job2.language || "en")}</Badge>
+                  <Badge variant="outline">
+                    {getLanguageName(job2.language || "en")}
+                  </Badge>
                 </div>
               </CardHeader>
               <CardContent className="p-4 space-y-4">
@@ -360,28 +416,42 @@ export function CompareView({
           <DialogHeader>
             <DialogTitle>Merge Job Descriptions</DialogTitle>
             <DialogDescription>
-              Choose how you want to merge these job descriptions. This will create a new version with notes about the relationship.
+              Choose how you want to merge these job descriptions. This will
+              create a new version with notes about the relationship.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <RadioGroup value={mergeStrategy} onValueChange={(v) => setMergeStrategy(v as MergeStrategy)}>
+            <RadioGroup
+              value={mergeStrategy}
+              onValueChange={(v) => setMergeStrategy(v as MergeStrategy)}
+            >
               <div className="flex items-start space-x-2">
                 <RadioGroupItem value="replace-both" id="replace-both" />
                 <div className="flex-1">
-                  <Label htmlFor="replace-both" className="font-medium cursor-pointer">
+                  <Label
+                    htmlFor="replace-both"
+                    className="font-medium cursor-pointer"
+                  >
                     Replace Both Jobs
                   </Label>
                   <p className="text-xs text-slate-500 mt-1">
-                    Create a merged version and mark both original jobs as superseded
+                    Create a merged version and mark both original jobs as
+                    superseded
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start space-x-2">
-                <RadioGroupItem value="include-into-first" id="include-into-first" />
+                <RadioGroupItem
+                  value="include-into-first"
+                  id="include-into-first"
+                />
                 <div className="flex-1">
-                  <Label htmlFor="include-into-first" className="font-medium cursor-pointer">
+                  <Label
+                    htmlFor="include-into-first"
+                    className="font-medium cursor-pointer"
+                  >
                     Include into First Job
                   </Label>
                   <p className="text-xs text-slate-500 mt-1">
@@ -391,9 +461,15 @@ export function CompareView({
               </div>
 
               <div className="flex items-start space-x-2">
-                <RadioGroupItem value="include-into-second" id="include-into-second" />
+                <RadioGroupItem
+                  value="include-into-second"
+                  id="include-into-second"
+                />
                 <div className="flex-1">
-                  <Label htmlFor="include-into-second" className="font-medium cursor-pointer">
+                  <Label
+                    htmlFor="include-into-second"
+                    className="font-medium cursor-pointer"
+                  >
                     Include into Second Job
                   </Label>
                   <p className="text-xs text-slate-500 mt-1">
@@ -405,7 +481,10 @@ export function CompareView({
               <div className="flex items-start space-x-2">
                 <RadioGroupItem value="create-hybrid" id="create-hybrid" />
                 <div className="flex-1">
-                  <Label htmlFor="create-hybrid" className="font-medium cursor-pointer">
+                  <Label
+                    htmlFor="create-hybrid"
+                    className="font-medium cursor-pointer"
+                  >
                     Create New Hybrid Role
                   </Label>
                   <p className="text-xs text-slate-500 mt-1">
@@ -485,16 +564,24 @@ interface JobSectionComparisonProps {
   side: "left" | "right";
 }
 
-function JobSectionComparison({ title, content, side }: JobSectionComparisonProps) {
+function JobSectionComparison({
+  title,
+  content,
+  side,
+}: JobSectionComparisonProps) {
   return (
     <div className="space-y-2">
       <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 capitalize">
         {title.replace(/_/g, " ")}
       </h4>
-      <div className={cn(
-        "p-3 rounded-lg text-sm",
-        side === "left" ? "bg-blue-50 dark:bg-blue-900/10" : "bg-green-50 dark:bg-green-900/10"
-      )}>
+      <div
+        className={cn(
+          "p-3 rounded-lg text-sm",
+          side === "left"
+            ? "bg-blue-50 dark:bg-blue-900/10"
+            : "bg-green-50 dark:bg-green-900/10",
+        )}
+      >
         <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
           {content}
         </p>

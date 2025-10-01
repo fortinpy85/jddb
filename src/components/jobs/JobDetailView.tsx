@@ -79,7 +79,9 @@ export function JobDetailView({
       const jobData = await apiClient.getJobById(jobId);
       setJob(jobData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load job details");
+      setError(
+        err instanceof Error ? err.message : "Failed to load job details",
+      );
     } finally {
       setLoading(false);
     }
@@ -203,7 +205,10 @@ export function JobDetailView({
                   <span className="hidden sm:inline">Approve</span>
                 </Button>
 
-                <Separator orientation="vertical" className="h-6 hidden md:block" />
+                <Separator
+                  orientation="vertical"
+                  className="h-6 hidden md:block"
+                />
 
                 {/* Secondary Actions - Hidden on mobile */}
                 <div className="hidden md:flex items-center gap-2">
@@ -240,16 +245,15 @@ export function JobDetailView({
               {/* More Actions Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shadow-button"
-                  >
+                  <Button variant="outline" size="sm" className="shadow-button">
                     <MoreVertical className="w-4 h-4" />
                     <span className="sr-only">More actions</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 shadow-dropdown">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48 shadow-dropdown"
+                >
                   {/* Mobile-only actions */}
                   <div className="md:hidden">
                     <DropdownMenuItem onClick={() => onTranslate?.(job)}>
@@ -403,7 +407,13 @@ interface MetadataCardProps {
   statusBadge?: string;
 }
 
-function MetadataCard({ icon: Icon, label, value, badge, statusBadge }: MetadataCardProps) {
+function MetadataCard({
+  icon: Icon,
+  label,
+  value,
+  badge,
+  statusBadge,
+}: MetadataCardProps) {
   return (
     <Card>
       <CardContent className="p-4">

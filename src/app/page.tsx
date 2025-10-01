@@ -34,17 +34,26 @@ import {
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ui/theme-toggle";
 import { LoadingState, ErrorState } from "@/components/ui/states";
-import {
-  PageTransition,
-} from "@/components/ui/transitions";
+import { PageTransition } from "@/components/ui/transitions";
 import { AlertBanner } from "@/components/ui/alert-banner";
 
 // View types for routing
-type ViewType = "home" | "job-details" | "upload" | "search" | "editing" | "compare" | "statistics" | "system-health" | "preferences";
+type ViewType =
+  | "home"
+  | "job-details"
+  | "upload"
+  | "search"
+  | "editing"
+  | "compare"
+  | "statistics"
+  | "system-health"
+  | "preferences";
 
 export default function HomePage() {
   const [activeView, setActiveView] = useState<ViewType>("home");
-  const [previousView, setPreviousView] = useState<ViewType | undefined>(undefined);
+  const [previousView, setPreviousView] = useState<ViewType | undefined>(
+    undefined,
+  );
   const [showAlertBanner, setShowAlertBanner] = useState(true);
   const {
     stats,
@@ -197,7 +206,9 @@ export default function HomePage() {
         return (
           <BasicEditingView
             jobId={selectedJob?.id}
-            onBack={() => handleViewChange(selectedJob ? "job-details" : "home")}
+            onBack={() =>
+              handleViewChange(selectedJob ? "job-details" : "home")
+            }
             onAdvancedEdit={() => {
               // TODO: Add lock warning modal
               console.log("Opening advanced editor");
@@ -268,7 +279,9 @@ export default function HomePage() {
                 <DashboardSidebar
                   stats={stats}
                   onNavigateToStatistics={() => handleViewChange("statistics")}
-                  onNavigateToSystemHealth={() => handleViewChange("system-health")}
+                  onNavigateToSystemHealth={() =>
+                    handleViewChange("system-health")
+                  }
                   collapsed={leftPanelCollapsed}
                 />
               }
@@ -278,7 +291,10 @@ export default function HomePage() {
               leftPanelWidth={300}
               className="pt-16"
             >
-              <PageTransition currentPage={activeView} previousPage={previousView}>
+              <PageTransition
+                currentPage={activeView}
+                previousPage={previousView}
+              >
                 {error ? (
                   <ErrorState
                     title="Failed to load JDDB"

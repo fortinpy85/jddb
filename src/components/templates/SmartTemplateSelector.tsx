@@ -78,7 +78,8 @@ export const SmartTemplateSelector: React.FC<SmartTemplateSelectorProps> = ({
   className,
 }) => {
   const [classifications, setClassifications] = useState<Classification[]>([]);
-  const [selectedClassification, setSelectedClassification] = useState<string>("");
+  const [selectedClassification, setSelectedClassification] =
+    useState<string>("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
   const [language, setLanguage] = useState<string>(selectedLanguage);
   const [template, setTemplate] = useState<Template | null>(null);
@@ -93,7 +94,9 @@ export const SmartTemplateSelector: React.FC<SmartTemplateSelectorProps> = ({
 
   const loadClassifications = async () => {
     try {
-      const response = await fetch(`${api.getBaseUrl()}/templates/classifications`);
+      const response = await fetch(
+        `${api.getBaseUrl()}/templates/classifications`,
+      );
       const data = await response.json();
       setClassifications(data);
     } catch (error) {
@@ -112,7 +115,7 @@ export const SmartTemplateSelector: React.FC<SmartTemplateSelectorProps> = ({
       });
 
       const response = await fetch(
-        `${api.getBaseUrl()}/templates/generate/${selectedClassification}?${params}`
+        `${api.getBaseUrl()}/templates/generate/${selectedClassification}?${params}`,
       );
       const data = await response.json();
 
@@ -135,7 +138,7 @@ export const SmartTemplateSelector: React.FC<SmartTemplateSelectorProps> = ({
   const filteredClassifications = classifications.filter(
     (c) =>
       c.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.name.toLowerCase().includes(searchQuery.toLowerCase())
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -169,13 +172,19 @@ export const SmartTemplateSelector: React.FC<SmartTemplateSelectorProps> = ({
         {/* Classification Selection */}
         <div className="space-y-2">
           <Label className="text-xs">Classification</Label>
-          <Select value={selectedClassification} onValueChange={setSelectedClassification}>
+          <Select
+            value={selectedClassification}
+            onValueChange={setSelectedClassification}
+          >
             <SelectTrigger className="h-9">
               <SelectValue placeholder="Select classification" />
             </SelectTrigger>
             <SelectContent>
               {filteredClassifications.map((classification) => (
-                <SelectItem key={classification.code} value={classification.code}>
+                <SelectItem
+                  key={classification.code}
+                  value={classification.code}
+                >
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="font-mono text-xs">
                       {classification.code}
@@ -324,35 +333,41 @@ export const SmartTemplateSelector: React.FC<SmartTemplateSelectorProps> = ({
 
             <ScrollArea className="max-h-[60vh] pr-4">
               <div className="space-y-4">
-                {Object.entries(template.sections).map(([sectionId, section]) => (
-                  <div key={sectionId} className="border-b pb-4 last:border-0">
-                    <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
-                      <ChevronRight className="w-4 h-4" />
-                      {section.title}
-                    </h4>
-                    <p className="text-sm text-gray-700 whitespace-pre-line pl-6">
-                      {section.content}
-                    </p>
-                    {section.placeholders && section.placeholders.length > 0 && (
-                      <div className="mt-2 pl-6">
-                        <p className="text-xs text-gray-500 mb-1">
-                          Placeholders to customize:
-                        </p>
-                        <div className="flex flex-wrap gap-1">
-                          {section.placeholders.map((placeholder, idx) => (
-                            <Badge
-                              key={idx}
-                              variant="outline"
-                              className="text-xs font-mono"
-                            >
-                              {placeholder}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                {Object.entries(template.sections).map(
+                  ([sectionId, section]) => (
+                    <div
+                      key={sectionId}
+                      className="border-b pb-4 last:border-0"
+                    >
+                      <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
+                        <ChevronRight className="w-4 h-4" />
+                        {section.title}
+                      </h4>
+                      <p className="text-sm text-gray-700 whitespace-pre-line pl-6">
+                        {section.content}
+                      </p>
+                      {section.placeholders &&
+                        section.placeholders.length > 0 && (
+                          <div className="mt-2 pl-6">
+                            <p className="text-xs text-gray-500 mb-1">
+                              Placeholders to customize:
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {section.placeholders.map((placeholder, idx) => (
+                                <Badge
+                                  key={idx}
+                                  variant="outline"
+                                  className="text-xs font-mono"
+                                >
+                                  {placeholder}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                    </div>
+                  ),
+                )}
               </div>
             </ScrollArea>
 

@@ -77,7 +77,8 @@ export function BasicEditingView({
       id: "1",
       type: "general_accountability",
       title: "General Accountability",
-      content: "The Director of Business Analysis is accountable for leading the business analysis function across the organization, ensuring alignment with strategic objectives and delivering value through data-driven insights.",
+      content:
+        "The Director of Business Analysis is accountable for leading the business analysis function across the organization, ensuring alignment with strategic objectives and delivering value through data-driven insights.",
       lastModified: new Date(),
       modifiedBy: "Alice Johnson",
     },
@@ -85,7 +86,8 @@ export function BasicEditingView({
       id: "2",
       type: "organization_structure",
       title: "Organization Structure",
-      content: "Reports to: Chief Operating Officer\nDirect Reports: 5 Senior Business Analysts, 3 Business Analysts\nDotted Line Reports: Project Managers in all departments",
+      content:
+        "Reports to: Chief Operating Officer\nDirect Reports: 5 Senior Business Analysts, 3 Business Analysts\nDotted Line Reports: Project Managers in all departments",
       lastModified: new Date(),
       modifiedBy: "Bob Smith",
     },
@@ -93,7 +95,8 @@ export function BasicEditingView({
       id: "3",
       type: "nature_scope",
       title: "Nature and Scope",
-      content: "This position requires strategic thinking, analytical expertise, and leadership capabilities to drive business intelligence initiatives. The role involves collaborating with executive leadership, managing a team of analysts, and implementing data-driven solutions.",
+      content:
+        "This position requires strategic thinking, analytical expertise, and leadership capabilities to drive business intelligence initiatives. The role involves collaborating with executive leadership, managing a team of analysts, and implementing data-driven solutions.",
       lastModified: new Date(),
       modifiedBy: "Alice Johnson",
     },
@@ -101,25 +104,46 @@ export function BasicEditingView({
       id: "4",
       type: "specific_accountabilities",
       title: "Specific Accountabilities",
-      content: "• Lead and mentor a team of business analysts\n• Develop and implement business analysis strategies\n• Conduct complex data analysis and provide insights\n• Collaborate with stakeholders across the organization\n• Ensure quality and accuracy of analytical outputs",
+      content:
+        "• Lead and mentor a team of business analysts\n• Develop and implement business analysis strategies\n• Conduct complex data analysis and provide insights\n• Collaborate with stakeholders across the organization\n• Ensure quality and accuracy of analytical outputs",
       lastModified: new Date(),
       modifiedBy: "Alice Johnson",
     },
   ]);
 
   const [collaborators] = useState<Collaborator[]>([
-    { id: 1, name: "Alice Johnson", initials: "AJ", color: "bg-blue-500", active: true },
-    { id: 2, name: "Bob Smith", initials: "BS", color: "bg-green-500", active: true },
-    { id: 3, name: "Carol White", initials: "CW", color: "bg-purple-500", active: false },
+    {
+      id: 1,
+      name: "Alice Johnson",
+      initials: "AJ",
+      color: "bg-blue-500",
+      active: true,
+    },
+    {
+      id: 2,
+      name: "Bob Smith",
+      initials: "BS",
+      color: "bg-green-500",
+      active: true,
+    },
+    {
+      id: 3,
+      name: "Carol White",
+      initials: "CW",
+      color: "bg-purple-500",
+      active: false,
+    },
   ]);
 
   const activeCollaborators = collaborators.filter((c) => c.active);
 
   // Handle section content change
   const handleSectionChange = (sectionId: string, newContent: string) => {
-    setSections(sections.map((s) =>
-      s.id === sectionId ? { ...s, content: newContent } : s
-    ));
+    setSections(
+      sections.map((s) =>
+        s.id === sectionId ? { ...s, content: newContent } : s,
+      ),
+    );
   };
 
   // Handle save
@@ -188,7 +212,11 @@ export function BasicEditingView({
               className="w-full justify-start"
               onClick={() => setShowPropertiesPanel(!showPropertiesPanel)}
             >
-              {showPropertiesPanel ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
+              {showPropertiesPanel ? (
+                <Eye className="w-4 h-4 mr-2" />
+              ) : (
+                <EyeOff className="w-4 h-4 mr-2" />
+              )}
               Properties
             </Button>
             <Button
@@ -197,7 +225,11 @@ export function BasicEditingView({
               className="w-full justify-start"
               onClick={() => setShowAIPanel(!showAIPanel)}
             >
-              {showAIPanel ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
+              {showAIPanel ? (
+                <Eye className="w-4 h-4 mr-2" />
+              ) : (
+                <EyeOff className="w-4 h-4 mr-2" />
+              )}
               AI Assistant
             </Button>
           </div>
@@ -221,7 +253,12 @@ export function BasicEditingView({
   };
 
   if (loading) {
-    return <LoadingState title="Loading job description" description="Preparing editing workspace" />;
+    return (
+      <LoadingState
+        title="Loading job description"
+        description="Preparing editing workspace"
+      />
+    );
   }
 
   return (
@@ -264,7 +301,9 @@ export function BasicEditingView({
                           key={collab.id}
                           className="w-6 h-6 border-2 border-white dark:border-slate-900"
                         >
-                          <AvatarFallback className={cn("text-xs text-white", collab.color)}>
+                          <AvatarFallback
+                            className={cn("text-xs text-white", collab.color)}
+                          >
                             {collab.initials}
                           </AvatarFallback>
                         </Avatar>
@@ -275,27 +314,15 @@ export function BasicEditingView({
 
                 <Separator orientation="vertical" className="h-6" />
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleUndo}
-                >
+                <Button variant="outline" size="sm" onClick={handleUndo}>
                   <Undo className="w-4 h-4 mr-2" />
                   Undo
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onAdvancedEdit}
-                >
+                <Button variant="outline" size="sm" onClick={onAdvancedEdit}>
                   <Sparkles className="w-4 h-4 mr-2" />
                   Advanced Edit
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleApprove}
-                >
+                <Button variant="outline" size="sm" onClick={handleApprove}>
                   <CheckCircle className="w-4 h-4 mr-2" />
                   Approve
                 </Button>

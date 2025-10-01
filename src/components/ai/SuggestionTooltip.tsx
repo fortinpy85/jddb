@@ -28,7 +28,11 @@ const SUGGESTION_TYPES = {
   style: { label: "Style", icon: Lightbulb, color: "text-blue-600" },
   clarity: { label: "Clarity", icon: Lightbulb, color: "text-yellow-600" },
   bias: { label: "Inclusivity", icon: AlertCircle, color: "text-purple-600" },
-  compliance: { label: "Compliance", icon: AlertCircle, color: "text-orange-600" },
+  compliance: {
+    label: "Compliance",
+    icon: AlertCircle,
+    color: "text-orange-600",
+  },
 };
 
 export const SuggestionTooltip: React.FC<SuggestionTooltipProps> = ({
@@ -37,15 +41,16 @@ export const SuggestionTooltip: React.FC<SuggestionTooltipProps> = ({
   onAccept,
   onReject,
 }) => {
-  const suggestionType = SUGGESTION_TYPES[suggestion.type] || SUGGESTION_TYPES.grammar;
+  const suggestionType =
+    SUGGESTION_TYPES[suggestion.type] || SUGGESTION_TYPES.grammar;
   const Icon = suggestionType.icon;
 
   return (
     <Card
       className="absolute z-50 w-80 shadow-lg border-2"
       style={{
-        top: position ? `${position.top}px` : 'auto',
-        left: position ? `${position.left}px` : 'auto',
+        top: position ? `${position.top}px` : "auto",
+        left: position ? `${position.left}px` : "auto",
       }}
     >
       <CardContent className="p-4">
@@ -57,24 +62,21 @@ export const SuggestionTooltip: React.FC<SuggestionTooltipProps> = ({
               {suggestionType.label}
             </span>
           </div>
-          <Badge
-            variant="outline"
-            className="text-xs"
-          >
+          <Badge variant="outline" className="text-xs">
             {Math.round(suggestion.confidence * 100)}% confidence
           </Badge>
         </div>
 
         {/* Explanation */}
-        <p className="text-sm text-gray-700 mb-3">
-          {suggestion.explanation}
-        </p>
+        <p className="text-sm text-gray-700 mb-3">{suggestion.explanation}</p>
 
         {/* Text Comparison */}
         <div className="space-y-2 mb-4">
           {/* Original Text */}
           <div className="bg-red-50 border border-red-200 rounded p-2">
-            <div className="text-xs text-red-600 font-medium mb-1">Original:</div>
+            <div className="text-xs text-red-600 font-medium mb-1">
+              Original:
+            </div>
             <div className="text-sm text-gray-900 line-through">
               {suggestion.original_text}
             </div>
@@ -82,7 +84,9 @@ export const SuggestionTooltip: React.FC<SuggestionTooltipProps> = ({
 
           {/* Suggested Text */}
           <div className="bg-green-50 border border-green-200 rounded p-2">
-            <div className="text-xs text-green-600 font-medium mb-1">Suggested:</div>
+            <div className="text-xs text-green-600 font-medium mb-1">
+              Suggested:
+            </div>
             <div className="text-sm text-gray-900 font-medium">
               {suggestion.suggested_text}
             </div>
@@ -121,10 +125,9 @@ interface SuggestionTooltipPortalProps extends SuggestionTooltipProps {
 /**
  * Tooltip with portal support for better positioning
  */
-export const SuggestionTooltipPortal: React.FC<SuggestionTooltipPortalProps> = ({
-  isOpen,
-  ...props
-}) => {
+export const SuggestionTooltipPortal: React.FC<
+  SuggestionTooltipPortalProps
+> = ({ isOpen, ...props }) => {
   if (!isOpen) return null;
 
   return (

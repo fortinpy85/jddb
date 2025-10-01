@@ -80,9 +80,7 @@ class TemplateGenerationService:
         self, classification: str, language: str, level: Optional[str]
     ) -> Dict[str, Any]:
         """Generate a template based on classification and language."""
-        category_name = self.TEMPLATE_CATEGORIES.get(
-            classification, "General Position"
-        )
+        category_name = self.TEMPLATE_CATEGORIES.get(classification, "General Position")
 
         if language == "fr":
             return self._generate_french_template(classification, category_name, level)
@@ -337,9 +335,7 @@ class TemplateGenerationService:
             for placeholder, value in customizations.items():
                 if placeholder in content:
                     content = content.replace(placeholder, value)
-                    logger.info(
-                        f"Replaced {placeholder} with {value} in {section_id}"
-                    )
+                    logger.info(f"Replaced {placeholder} with {value} in {section_id}")
 
             section_data["content"] = content
 

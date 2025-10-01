@@ -115,7 +115,7 @@ export function AlertBanner({
         "shadow-card",
         "animate-in slide-in-from-top duration-300",
         config.containerClass,
-        className
+        className,
       )}
       role="alert"
       aria-live="polite"
@@ -123,12 +123,18 @@ export function AlertBanner({
       <div className="mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex items-start gap-3">
           {/* Icon */}
-          {showIcon && <Icon className={cn("w-5 h-5 mt-0.5 flex-shrink-0", config.iconClass)} />}
+          {showIcon && (
+            <Icon
+              className={cn("w-5 h-5 mt-0.5 flex-shrink-0", config.iconClass)}
+            />
+          )}
 
           {/* Content */}
           <div className="flex-1 min-w-0">
             {title && (
-              <h3 className={cn("text-sm font-semibold mb-1", config.titleClass)}>
+              <h3
+                className={cn("text-sm font-semibold mb-1", config.titleClass)}
+              >
                 {title}
               </h3>
             )}
@@ -160,7 +166,7 @@ export function AlertBanner({
               onClick={handleDismiss}
               className={cn(
                 "p-1 h-auto flex-shrink-0 hover:bg-black/5 dark:hover:bg-white/10",
-                config.iconClass
+                config.iconClass,
               )}
               aria-label="Dismiss alert"
             >
@@ -206,7 +212,9 @@ export function AlertBannerStack({
   if (visibleAlerts.length === 0) return null;
 
   return (
-    <div className={cn("fixed top-16 left-0 right-0 z-40 space-y-0", className)}>
+    <div
+      className={cn("fixed top-16 left-0 right-0 z-40 space-y-0", className)}
+    >
       {visibleAlerts.map((alert, index) => (
         <div
           key={alert.id}

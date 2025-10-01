@@ -55,17 +55,21 @@ type WorkflowStage = "editing" | "review" | "approved";
  * Get stage status based on document state
  */
 const getStageStatus = (
-  document: BilingualDocument
+  document: BilingualDocument,
 ): {
   stage: WorkflowStage;
   label: string;
   color: string;
   icon: React.ReactNode;
 } => {
-  const draftCount = document.segments.filter((s) => s.status === "draft").length;
-  const reviewCount = document.segments.filter((s) => s.status === "review").length;
+  const draftCount = document.segments.filter(
+    (s) => s.status === "draft",
+  ).length;
+  const reviewCount = document.segments.filter(
+    (s) => s.status === "review",
+  ).length;
   const approvedCount = document.segments.filter(
-    (s) => s.status === "approved"
+    (s) => s.status === "approved",
   ).length;
   const totalCount = document.segments.length;
 
@@ -98,7 +102,13 @@ const getStageStatus = (
  */
 export const TranslationReviewWorkflow: React.FC<
   TranslationReviewWorkflowProps
-> = ({ document: initialDocument, onSave, onSubmit, onApprove, readOnly = false }) => {
+> = ({
+  document: initialDocument,
+  onSave,
+  onSubmit,
+  onApprove,
+  readOnly = false,
+}) => {
   const [document, setDocument] = useState<BilingualDocument>(initialDocument);
   const [activeTab, setActiveTab] = useState<string>("editor");
   const [qualityAssessment, setQualityAssessment] =
@@ -135,7 +145,7 @@ export const TranslationReviewWorkflow: React.FC<
             french_text: frenchText,
             context: { job_id: document.job_id },
           }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -166,13 +176,13 @@ export const TranslationReviewWorkflow: React.FC<
               french: s.french,
             })),
           }),
-        }
+        },
       );
 
       const data = await response.json();
       if (data.success && data.consistency.issues.length > 0) {
         alert(
-          `Found ${data.consistency.issues.length} consistency issues. Check the Quality tab for details.`
+          `Found ${data.consistency.issues.length} consistency issues. Check the Quality tab for details.`,
         );
       }
     } catch (error) {
@@ -196,11 +206,11 @@ export const TranslationReviewWorkflow: React.FC<
   const handleSubmitForReview = () => {
     // Check if all segments are translated
     const missingTranslations = document.segments.filter(
-      (s) => !s.french.trim()
+      (s) => !s.french.trim(),
     );
     if (missingTranslations.length > 0) {
       alert(
-        `${missingTranslations.length} segment(s) are missing translations. Please complete all translations before submitting.`
+        `${missingTranslations.length} segment(s) are missing translations. Please complete all translations before submitting.`,
       );
       return;
     }
@@ -216,7 +226,7 @@ export const TranslationReviewWorkflow: React.FC<
     const updatedDocument = {
       ...document,
       segments: document.segments.map((s) =>
-        s.status === "draft" ? { ...s, status: "review" as const } : s
+        s.status === "draft" ? { ...s, status: "review" as const } : s,
       ),
     };
 
@@ -236,7 +246,7 @@ export const TranslationReviewWorkflow: React.FC<
     // Check quality score
     if (qualityAssessment && qualityAssessment.overall_score < 70) {
       alert(
-        "Quality score is below 70%. Please address quality issues before approving."
+        "Quality score is below 70%. Please address quality issues before approving.",
       );
       return;
     }
@@ -277,7 +287,7 @@ export const TranslationReviewWorkflow: React.FC<
     completeness: Math.round(
       (document.segments.filter((s) => s.french.trim()).length /
         document.segments.length) *
-        100
+        100,
     ),
   };
 
@@ -306,14 +316,20 @@ export const TranslationReviewWorkflow: React.FC<
           <div className="grid grid-cols-5 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold">{stats.total}</div>
-              <div className="text-xs text-muted-foreground">Total Segments</div>
+              <div className="text-xs text-muted-foreground">
+                Total Segments
+              </div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-yellow-600">{stats.draft}</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {stats.draft}
+              </div>
               <div className="text-xs text-muted-foreground">Draft</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-blue-600">{stats.review}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {stats.review}
+              </div>
               <div className="text-xs text-muted-foreground">In Review</div>
             </div>
             <div>
@@ -342,11 +358,7 @@ export const TranslationReviewWorkflow: React.FC<
                 <BarChart3 className="h-4 w-4 mr-2" />
                 {loadingQuality ? "Assessing..." : "Assess Quality"}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={checkConsistency}
-              >
+              <Button variant="outline" size="sm" onClick={checkConsistency}>
                 <BookOpen className="h-4 w-4 mr-2" />
                 Check Consistency
               </Button>
@@ -404,7 +416,7 @@ export const TranslationReviewWorkflow: React.FC<
               const updatedDocument = {
                 ...document,
                 segments: document.segments.map((s) =>
-                  s.id === segmentId ? { ...s, ...updates } : s
+                  s.id === segmentId ? { ...s, ...updates } : s,
                 ),
               };
               setDocument(updatedDocument);
@@ -414,7 +426,7 @@ export const TranslationReviewWorkflow: React.FC<
               const updatedDocument = {
                 ...document,
                 segments: document.segments.map((s) =>
-                  s.id === segmentId ? { ...s, status } : s
+                  s.id === segmentId ? { ...s, status } : s,
                 ),
               };
               setDocument(updatedDocument);
@@ -448,7 +460,9 @@ export const TranslationReviewWorkflow: React.FC<
                   {document.segments.map((segment) => (
                     <div key={segment.id} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">Segment {segment.id}</span>
+                        <span className="font-medium">
+                          Segment {segment.id}
+                        </span>
                         <Badge
                           variant={
                             segment.status === "approved"

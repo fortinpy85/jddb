@@ -15,6 +15,7 @@ from enum import Enum
 
 class OperationType(str, Enum):
     """Types of operations supported."""
+
     INSERT = "insert"
     DELETE = "delete"
     RETAIN = "retain"
@@ -181,7 +182,9 @@ def transform_operations(
     # DELETE vs INSERT
     elif op1.type == OperationType.DELETE and op2.type == OperationType.INSERT:
         # Symmetric case - swap and reverse
-        op2_prime, op1_prime = transform_operations(op2, op1, "right" if side == "left" else "left")
+        op2_prime, op1_prime = transform_operations(
+            op2, op1, "right" if side == "left" else "left"
+        )
         return op1_prime, op2_prime
 
     # DELETE vs DELETE

@@ -50,7 +50,9 @@ export function DashboardSidebar({
   // If collapsed, show minimal version
   if (collapsed) {
     return (
-      <div className={cn("flex flex-col items-center space-y-4 py-4", className)}>
+      <div
+        className={cn("flex flex-col items-center space-y-4 py-4", className)}
+      >
         <Button
           variant="ghost"
           size="sm"
@@ -108,7 +110,9 @@ export function DashboardSidebar({
         collapsible
         defaultCollapsed={false}
       >
-        <SystemHealthCards onNavigateToSystemHealth={onNavigateToSystemHealth} />
+        <SystemHealthCards
+          onNavigateToSystemHealth={onNavigateToSystemHealth}
+        />
       </PanelSection>
 
       {/* Recent Activity Section */}
@@ -208,7 +212,7 @@ function StatisticsCards({
                       "text-xs",
                       category.trend.startsWith("+")
                         ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
-                        : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400"
+                        : "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400",
                     )}
                   >
                     {category.trend}
@@ -244,7 +248,9 @@ interface SystemHealthCardsProps {
   onNavigateToSystemHealth?: () => void;
 }
 
-function SystemHealthCards({ onNavigateToSystemHealth }: SystemHealthCardsProps) {
+function SystemHealthCards({
+  onNavigateToSystemHealth,
+}: SystemHealthCardsProps) {
   const healthMetrics = [
     {
       label: "API Performance",
@@ -314,12 +320,17 @@ function SystemHealthCards({ onNavigateToSystemHealth }: SystemHealthCardsProps)
             <CardContent className="p-3">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-2">
-                  <metric.icon className={cn("w-4 h-4", getStatusColor(metric.status))} />
+                  <metric.icon
+                    className={cn("w-4 h-4", getStatusColor(metric.status))}
+                  />
                   <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
                     {metric.label}
                   </p>
                 </div>
-                <Badge variant="secondary" className={cn("text-xs", getStatusBadge(metric.status))}>
+                <Badge
+                  variant="secondary"
+                  className={cn("text-xs", getStatusBadge(metric.status))}
+                >
                   {metric.value}
                 </Badge>
               </div>

@@ -51,7 +51,7 @@ export interface QualityIndicatorProps {
  * Get quality status based on score
  */
 const getQualityStatus = (
-  score: number
+  score: number,
 ): { label: string; color: string; icon: React.ReactNode } => {
   if (score >= 90) {
     return {
@@ -149,7 +149,9 @@ export const QualityIndicator: React.FC<QualityIndicatorProps> = ({
         <DialogTrigger asChild>
           <div className="flex items-center gap-2 cursor-pointer hover:opacity-80">
             <div className={`w-2 h-2 rounded-full ${status.color}`} />
-            <span className={`font-semibold ${getScoreColor(assessment.overall_score)}`}>
+            <span
+              className={`font-semibold ${getScoreColor(assessment.overall_score)}`}
+            >
               {assessment.overall_score}%
             </span>
             <Badge variant="outline" className="text-xs">
@@ -258,7 +260,9 @@ const QualityDetailsContent: React.FC<{ assessment: QualityAssessment }> = ({
               </span>
             </div>
             <Progress value={metric.score} className="h-2" />
-            <p className="text-xs text-muted-foreground">{metric.description}</p>
+            <p className="text-xs text-muted-foreground">
+              {metric.description}
+            </p>
           </div>
         ))}
       </div>

@@ -128,9 +128,7 @@ export const FloatingTypingIndicator: React.FC<{
   if (typingUsers.length === 0) return null;
 
   const positionClasses =
-    position === "top"
-      ? "top-2 left-2"
-      : "bottom-2 left-2";
+    position === "top" ? "top-2 left-2" : "bottom-2 left-2";
 
   return (
     <AnimatePresence>
@@ -168,7 +166,7 @@ export const FloatingTypingIndicator: React.FC<{
 export const useTypingIndicator = (
   userId: number,
   onTypingChange?: (isTyping: boolean) => void,
-  debounceMs: number = 1000
+  debounceMs: number = 1000,
 ) => {
   const [isTyping, setIsTyping] = React.useState(false);
   const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);

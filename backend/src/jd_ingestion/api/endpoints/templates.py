@@ -21,8 +21,12 @@ template_service = TemplateGenerationService()
 
 # Pydantic Models
 class TemplateRequest(BaseModel):
-    classification: str = Field(..., description="Job classification (e.g., 'EX', 'EC')")
-    level: Optional[str] = Field(None, description="Classification level (e.g., '01', '02')")
+    classification: str = Field(
+        ..., description="Job classification (e.g., 'EX', 'EC')"
+    )
+    level: Optional[str] = Field(
+        None, description="Classification level (e.g., '01', '02')"
+    )
     language: str = Field("en", description="Template language (en or fr)")
 
 
@@ -45,8 +49,7 @@ async def get_classifications():
     except Exception as e:
         logger.error(f"Error getting classifications: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get classifications: {str(e)}"
+            status_code=500, detail=f"Failed to get classifications: {str(e)}"
         )
 
 
@@ -76,8 +79,7 @@ async def generate_template(request: TemplateRequest):
     except Exception as e:
         logger.error(f"Error generating template: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate template: {str(e)}"
+            status_code=500, detail=f"Failed to generate template: {str(e)}"
         )
 
 
@@ -113,8 +115,7 @@ async def generate_template_by_classification(
     except Exception as e:
         logger.error(f"Error generating template: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate template: {str(e)}"
+            status_code=500, detail=f"Failed to generate template: {str(e)}"
         )
 
 
@@ -144,8 +145,7 @@ async def customize_template(request: CustomizationRequest):
     except Exception as e:
         logger.error(f"Error customizing template: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to customize template: {str(e)}"
+            status_code=500, detail=f"Failed to customize template: {str(e)}"
         )
 
 
@@ -175,8 +175,7 @@ async def generate_variations(request: VariationRequest):
     except Exception as e:
         logger.error(f"Error generating variations: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate variations: {str(e)}"
+            status_code=500, detail=f"Failed to generate variations: {str(e)}"
         )
 
 
@@ -203,8 +202,7 @@ async def extract_placeholders(template: Dict[str, Any]):
     except Exception as e:
         logger.error(f"Error extracting placeholders: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to extract placeholders: {str(e)}"
+            status_code=500, detail=f"Failed to extract placeholders: {str(e)}"
         )
 
 
@@ -230,8 +228,7 @@ async def validate_template(template: Dict[str, Any]):
     except Exception as e:
         logger.error(f"Error validating template: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to validate template: {str(e)}"
+            status_code=500, detail=f"Failed to validate template: {str(e)}"
         )
 
 
@@ -264,6 +261,5 @@ async def get_bilingual_template(
     except Exception as e:
         logger.error(f"Error generating bilingual template: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate bilingual template: {str(e)}"
+            status_code=500, detail=f"Failed to generate bilingual template: {str(e)}"
         )

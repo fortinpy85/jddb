@@ -46,7 +46,8 @@
       "WebFetch(domain:wet-boew.github.io)",
       "WebFetch(domain:github.com)",
       "WebSearch",
-      "Bash(del nul)"
+      "Bash(del nul)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []

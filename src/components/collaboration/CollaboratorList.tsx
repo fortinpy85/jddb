@@ -122,9 +122,10 @@ export const CollaboratorList: React.FC<CollaboratorListProps> = ({
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => onCollaboratorClick?.(collaborator.userId)}
-                    className={`relative inline-flex items-center justify-center w-8 h-8 rounded-full border-2 border-white transition-transform hover:scale-110 hover:z-10 ${
-                      getAvatarColor(collaborator.userId, collaborator.color)
-                    } ${isCurrentUser ? "ring-2 ring-blue-400 ring-offset-2" : ""}`}
+                    className={`relative inline-flex items-center justify-center w-8 h-8 rounded-full border-2 border-white transition-transform hover:scale-110 hover:z-10 ${getAvatarColor(
+                      collaborator.userId,
+                      collaborator.color,
+                    )} ${isCurrentUser ? "ring-2 ring-blue-400 ring-offset-2" : ""}`}
                   >
                     <span className="text-xs font-medium text-white">
                       {collaborator.username.slice(0, 2).toUpperCase()}
@@ -133,7 +134,7 @@ export const CollaboratorList: React.FC<CollaboratorListProps> = ({
                     {/* Online/Activity Status Indicator */}
                     <span
                       className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${getActivityColor(
-                        collaborator
+                        collaborator,
                       )}`}
                     />
 
@@ -163,7 +164,10 @@ export const CollaboratorList: React.FC<CollaboratorListProps> = ({
 
                     {showActivity && (
                       <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <Circle className={`w-2 h-2 ${getActivityColor(collaborator).replace('animate-pulse', '')}`} fill="currentColor" />
+                        <Circle
+                          className={`w-2 h-2 ${getActivityColor(collaborator).replace("animate-pulse", "")}`}
+                          fill="currentColor"
+                        />
                         {activityStatus}
                       </div>
                     )}
@@ -189,7 +193,8 @@ export const CollaboratorList: React.FC<CollaboratorListProps> = ({
               </TooltipTrigger>
               <TooltipContent side="bottom">
                 <p className="text-xs">
-                  {hiddenCount} more {hiddenCount === 1 ? "collaborator" : "collaborators"}
+                  {hiddenCount} more{" "}
+                  {hiddenCount === 1 ? "collaborator" : "collaborators"}
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -200,9 +205,7 @@ export const CollaboratorList: React.FC<CollaboratorListProps> = ({
         {collaborators.length > 0 && (
           <div className="ml-3 flex items-center gap-1 text-xs text-gray-600">
             <Wifi className="w-3 h-3" />
-            <span>
-              {collaborators.filter((c) => c.isOnline).length} online
-            </span>
+            <span>{collaborators.filter((c) => c.isOnline).length} online</span>
           </div>
         )}
       </TooltipProvider>

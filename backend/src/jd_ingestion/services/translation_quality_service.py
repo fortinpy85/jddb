@@ -135,12 +135,16 @@ class TranslationQualityService:
         for pattern in untranslated_patterns:
             matches = re.findall(pattern, french_text)
             if matches:
-                issues.append(f"Untranslated placeholders found: {', '.join(matches[:3])}")
+                issues.append(
+                    f"Untranslated placeholders found: {', '.join(matches[:3])}"
+                )
 
         score = 100 if not issues else 50
         return {"score": score, "issues": issues}
 
-    def _check_length_ratio(self, english_text: str, french_text: str) -> Dict[str, Any]:
+    def _check_length_ratio(
+        self, english_text: str, french_text: str
+    ) -> Dict[str, Any]:
         """Check if translation length is reasonable."""
         en_len = len(english_text)
         fr_len = len(french_text)
@@ -163,9 +167,7 @@ class TranslationQualityService:
 
         return {"score": score, "issues": issues}
 
-    def _check_terminology(
-        self, english_text: str, french_text: str
-    ) -> Dict[str, Any]:
+    def _check_terminology(self, english_text: str, french_text: str) -> Dict[str, Any]:
         """Check terminology consistency."""
         issues = []
         score = 100
@@ -252,12 +254,14 @@ class TranslationQualityService:
                 ]
 
                 if inconsistent_segments:
-                    issues.append({
-                        "type": "terminology_inconsistency",
-                        "term": term,
-                        "expected_translation": expected_fr,
-                        "affected_segments": inconsistent_segments,
-                    })
+                    issues.append(
+                        {
+                            "type": "terminology_inconsistency",
+                            "term": term,
+                            "expected_translation": expected_fr,
+                            "affected_segments": inconsistent_segments,
+                        }
+                    )
 
         consistency_score = 100 - (len(issues) * 10)
 
@@ -322,11 +326,13 @@ class TranslationQualityService:
 
         # Check for common issues
         if not french_text.strip():
-            suggestions.append({
-                "type": "missing_translation",
-                "priority": "high",
-                "suggestion": "Translation is missing. Please provide French translation.",
-            })
+            suggestions.append(
+                {
+                    "type": "missing_translation",
+                    "priority": "high",
+                    "suggestion": "Translation is missing. Please provide French translation.",
+                }
+            )
             return suggestions
 
         # Check terminology
@@ -335,29 +341,35 @@ class TranslationQualityService:
                 en_term.lower() in english_text.lower()
                 and expected_fr.lower() not in french_text.lower()
             ):
-                suggestions.append({
-                    "type": "terminology",
-                    "priority": "high",
-                    "suggestion": f"Consider using '{expected_fr}' for '{en_term}'",
-                    "term": en_term,
-                    "recommended_translation": expected_fr,
-                })
+                suggestions.append(
+                    {
+                        "type": "terminology",
+                        "priority": "high",
+                        "suggestion": f"Consider using '{expected_fr}' for '{en_term}'",
+                        "term": en_term,
+                        "recommended_translation": expected_fr,
+                    }
+                )
 
         # Check length ratio
         if len(english_text) > 0:
             ratio = len(french_text) / len(english_text)
             if ratio < 0.8:
-                suggestions.append({
-                    "type": "length",
-                    "priority": "medium",
-                    "suggestion": "Translation appears shorter than expected. Review for completeness.",
-                })
+                suggestions.append(
+                    {
+                        "type": "length",
+                        "priority": "medium",
+                        "suggestion": "Translation appears shorter than expected. Review for completeness.",
+                    }
+                )
             elif ratio > 1.5:
-                suggestions.append({
-                    "type": "length",
-                    "priority": "low",
-                    "suggestion": "Translation appears longer than expected. Consider being more concise.",
-                })
+                suggestions.append(
+                    {
+                        "type": "length",
+                        "priority": "low",
+                        "suggestion": "Translation appears longer than expected. Consider being more concise.",
+                    }
+                )
 
         return suggestions
 

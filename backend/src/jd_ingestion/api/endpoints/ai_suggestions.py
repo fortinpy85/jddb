@@ -27,7 +27,9 @@ router = APIRouter(prefix="/ai", tags=["ai-suggestions"])
 class TextSuggestionRequest(BaseModel):
     """Request model for text improvement suggestions."""
 
-    text: str = Field(..., min_length=1, max_length=10000, description="Text to analyze")
+    text: str = Field(
+        ..., min_length=1, max_length=10000, description="Text to analyze"
+    )
     context: Optional[str] = Field(
         None, description="Additional context for suggestions"
     )
@@ -120,7 +122,9 @@ class BiasAnalysisResponse(BaseModel):
 class TemplateRequest(BaseModel):
     """Request model for template generation."""
 
-    classification: str = Field(..., description="Job classification (e.g., EX-01, EC-05)")
+    classification: str = Field(
+        ..., description="Job classification (e.g., EX-01, EC-05)"
+    )
     language: str = Field(default="en", description="Language (en or fr)")
     custom_requirements: Optional[Dict[str, Any]] = Field(
         None, description="Custom requirements for template"

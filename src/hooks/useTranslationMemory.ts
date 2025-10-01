@@ -8,8 +8,8 @@
  * - Usage tracking
  */
 
-import { useState, useCallback } from 'react';
-import { api } from '@/lib/api';
+import { useState, useCallback } from "react";
+import { api } from "@/lib/api";
 
 export interface TranslationMatch {
   id: number;
@@ -21,7 +21,7 @@ export interface TranslationMatch {
   usage_count: number;
   domain?: string;
   subdomain?: string;
-  match_type: 'exact' | 'fuzzy';
+  match_type: "exact" | "fuzzy";
   confidence: number;
   last_used?: string;
   created_at: string;
@@ -58,11 +58,11 @@ export interface UseTranslationMemoryReturn {
  * Hook for managing translation memory operations
  */
 export function useTranslationMemory(
-  options: UseTranslationMemoryOptions = {}
+  options: UseTranslationMemoryOptions = {},
 ): UseTranslationMemoryReturn {
   const {
-    sourceLanguage = 'en',
-    targetLanguage = 'fr',
+    sourceLanguage = "en",
+    targetLanguage = "fr",
     minSimilarity = 0.7,
     autoSearch = false,
   } = options;
@@ -87,7 +87,9 @@ export function useTranslationMemory(
           query_text: params.source_text,
           source_language: params.source_language || sourceLanguage,
           target_language: params.target_language || targetLanguage,
-          similarity_threshold: (params.min_similarity || minSimilarity).toString(),
+          similarity_threshold: (
+            params.min_similarity || minSimilarity
+          ).toString(),
           limit: (params.limit || 10).toString(),
         });
 
@@ -98,11 +100,11 @@ export function useTranslationMemory(
         const response = await fetch(
           `${api.getBaseUrl()}/translation-memory/search?${queryParams.toString()}`,
           {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (!response.ok) {
@@ -113,14 +115,14 @@ export function useTranslationMemory(
         setMatches(data.matches || []);
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : 'Failed to search translations';
+          err instanceof Error ? err.message : "Failed to search translations";
         setError(errorMessage);
-        console.error('Error searching translation memory:', err);
+        console.error("Error searching translation memory:", err);
       } finally {
         setIsLoading(false);
       }
     },
-    [sourceLanguage, targetLanguage, minSimilarity]
+    [sourceLanguage, targetLanguage, minSimilarity],
   );
 
   const addTranslation = useCallback(
@@ -133,18 +135,18 @@ export function useTranslationMemory(
         const response = await fetch(
           `${api.getBaseUrl()}/translation-memory/projects/${projectId}/translations`,
           {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               source_text: sourceText,
               target_text: targetText,
               source_language: sourceLanguage,
               target_language: targetLanguage,
-              domain: 'job_descriptions',
+              domain: "job_descriptions",
             }),
-          }
+          },
         );
 
         if (!response.ok) {
@@ -155,14 +157,14 @@ export function useTranslationMemory(
         // await searchTranslations({ source_text: sourceText });
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : 'Failed to add translation';
+          err instanceof Error ? err.message : "Failed to add translation";
         setError(errorMessage);
-        console.error('Error adding translation:', err);
+        console.error("Error adding translation:", err);
       } finally {
         setIsLoading(false);
       }
     },
-    [sourceLanguage, targetLanguage]
+    [sourceLanguage, targetLanguage],
   );
 
   const updateTranslation = useCallback(
@@ -173,24 +175,24 @@ export function useTranslationMemory(
       try {
         // Note: Update endpoint not implemented in backend yet
         // This is a placeholder for future implementation
-        console.warn('Update translation endpoint not yet implemented');
+        console.warn("Update translation endpoint not yet implemented");
 
         // Update local match optimistically
         setMatches((prev) =>
           prev.map((match) =>
-            match.id === id ? { ...match, target_text: targetText } : match
-          )
+            match.id === id ? { ...match, target_text: targetText } : match,
+          ),
         );
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : 'Failed to update translation';
+          err instanceof Error ? err.message : "Failed to update translation";
         setError(errorMessage);
-        console.error('Error updating translation:', err);
+        console.error("Error updating translation:", err);
       } finally {
         setIsLoading(false);
       }
     },
-    []
+    [],
   );
 
   const rateTranslation = useCallback(async (id: number, rating: number) => {
@@ -202,9 +204,9 @@ export function useTranslationMemory(
       const response = await fetch(
         `${api.getBaseUrl()}/translation-memory/translations/${id}/usage`,
         {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             used_translation: rating >= 3,
@@ -213,7 +215,7 @@ export function useTranslationMemory(
               timestamp: new Date().toISOString(),
             },
           }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -221,9 +223,9 @@ export function useTranslationMemory(
       }
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Failed to rate translation';
+        err instanceof Error ? err.message : "Failed to rate translation";
       setError(errorMessage);
-      console.error('Error rating translation:', err);
+      console.error("Error rating translation:", err);
     } finally {
       setIsLoading(false);
     }

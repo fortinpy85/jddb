@@ -52,7 +52,8 @@ export function EnhancedCard({
     default:
       "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-card",
     elevated: "bg-white dark:bg-slate-800 border-0 elevation-2 shadow-hover",
-    outlined: "bg-transparent border-2 border-slate-200 dark:border-slate-700 shadow-outline",
+    outlined:
+      "bg-transparent border-2 border-slate-200 dark:border-slate-700 shadow-outline",
     gradient:
       "bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 dark:from-slate-800 dark:via-slate-700/30 dark:to-slate-800/20 border border-white/20 dark:border-slate-700/20 shadow-card",
   };

@@ -95,7 +95,8 @@ export function PropertiesPanel({
       type: "accessibility",
       severity: "high",
       title: "Add alternative text descriptions",
-      description: "Include descriptions for visual elements to improve accessibility",
+      description:
+        "Include descriptions for visual elements to improve accessibility",
       section: "Organization Structure",
     },
     {
@@ -135,8 +136,15 @@ export function PropertiesPanel({
 
   if (collapsed) {
     return (
-      <div className={cn("flex flex-col items-center space-y-4 py-4", className)}>
-        <Button variant="ghost" size="sm" className="w-full p-2" title="Properties">
+      <div
+        className={cn("flex flex-col items-center space-y-4 py-4", className)}
+      >
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full p-2"
+          title="Properties"
+        >
           <FileText className="w-5 h-5" />
         </Button>
       </div>
@@ -159,11 +167,19 @@ export function PropertiesPanel({
       </div>
 
       {/* Job Metadata */}
-      <PanelSection title="Document Info" icon={FileText} collapsible defaultCollapsed={false}>
+      <PanelSection
+        title="Document Info"
+        icon={FileText}
+        collapsible
+        defaultCollapsed={false}
+      >
         <div className="space-y-2">
           <InfoRow label="Classification" value={jobMetadata.classification} />
           <InfoRow label="Language" value={jobMetadata.language} />
-          <InfoRow label="Word Count" value={jobMetadata.wordCount.toLocaleString()} />
+          <InfoRow
+            label="Word Count"
+            value={jobMetadata.wordCount.toLocaleString()}
+          />
           <InfoRow label="Last Modified" value={jobMetadata.lastModified} />
           <InfoRow label="Version" value={jobMetadata.version} />
           <InfoRow label="Author" value={jobMetadata.author} />
@@ -235,7 +251,9 @@ function InfoRow({ label, value }: InfoRowProps) {
   return (
     <div className="flex items-center justify-between text-xs">
       <span className="text-slate-600 dark:text-slate-400">{label}</span>
-      <span className="font-medium text-slate-900 dark:text-slate-100">{value}</span>
+      <span className="font-medium text-slate-900 dark:text-slate-100">
+        {value}
+      </span>
     </div>
   );
 }
@@ -284,14 +302,19 @@ function QualityMetricCard({ metric }: QualityMetricCardProps) {
         <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
           {metric.label}
         </span>
-        <span className={cn("text-xs font-bold", getStatusColor(metric.status))}>
+        <span
+          className={cn("text-xs font-bold", getStatusColor(metric.status))}
+        >
           {metric.score}%
         </span>
       </div>
       <div className="relative">
         <Progress value={metric.score} className="h-2" />
         <div
-          className={cn("absolute inset-0 h-2 rounded-full transition-all", getProgressColor(metric.status))}
+          className={cn(
+            "absolute inset-0 h-2 rounded-full transition-all",
+            getProgressColor(metric.status),
+          )}
           style={{ width: `${metric.score}%` }}
         />
       </div>
@@ -352,7 +375,13 @@ function SuggestionCard({ suggestion }: SuggestionCardProps) {
               <span className="text-xs font-medium text-slate-900 dark:text-slate-100 truncate">
                 {suggestion.title}
               </span>
-              <Badge variant="secondary" className={cn("text-xs ml-2", getSeverityColor(suggestion.severity))}>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "text-xs ml-2",
+                  getSeverityColor(suggestion.severity),
+                )}
+              >
                 {suggestion.severity}
               </Badge>
             </div>

@@ -95,7 +95,9 @@
  * Add to hoverable elements like cards and buttons
  */
 .shadow-hover {
-  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .shadow-hover:hover {
@@ -216,7 +218,9 @@
  * Table Row Shadow - Subtle hover effect
  */
 .shadow-table-row {
-  transition: box-shadow 0.15s ease, background-color 0.15s ease;
+  transition:
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .shadow-table-row:hover {

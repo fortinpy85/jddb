@@ -12,11 +12,11 @@ Since the site will be mostly accessed using desktop computers, the large format
 ## 1. Dashboard
 The dashboard is displayed as a left panel on the landing page of the application, and must show visually the overall status, statistics, and recent activities in the application. it must include
     *   **Statistics Card**: Key metrics such as the total number of jobs by categories. clicking on each categories should link to a more detailed Statistics page
-    *   **System health Card**: Key metrics on the system's performance and usage. Clicking on high-level indicators should link to a more detailed System health page that allows administrators to monitor the health and performance of the system and to identify trends and patterns in user activity. 
+    *   **System health Card**: Key metrics on the system's performance and usage. Clicking on high-level indicators should link to a more detailed System health page that allows administrators to monitor the health and performance of the system and to identify trends and patterns in user activity.
     *   **Recent Jobs List**: A list of the most recently accessed or modified job descriptions.
 
 ## 2. Jobs
-*   **Display**: The jobs screen is accessible directly from the landing page of the application, in the main center panel. when clicking the "View Jobs" button in the panel, the screen should display a detailed table of all the job descriptions in the database. Each job should be displayed as a line in the table with key metadata such as the job ID, status, high-level quality indicators, classification, and language. A button at the top of this view should allow user to upload new jobs to the database, or create new, or go to an advanced search page. clicking on each job would lead to a detailed view of the job, which each section of the job description displayed as cards. This view should include buttons to interact  with the job description: Editing, Approve, duplicate, Translate, Compare, export, archive. 
+*   **Display**: The jobs screen is accessible directly from the landing page of the application, in the main center panel. when clicking the "View Jobs" button in the panel, the screen should display a detailed table of all the job descriptions in the database. Each job should be displayed as a line in the table with key metadata such as the job ID, status, high-level quality indicators, classification, and language. A button at the top of this view should allow user to upload new jobs to the database, or create new, or go to an advanced search page. clicking on each job would lead to a detailed view of the job, which each section of the job description displayed as cards. This view should include buttons to interact  with the job description: Editing, Approve, duplicate, Translate, Compare, export, archive.
 
 ## 3. Editing
 *   **Display**: The basic editing screen is a multi card workspace where each section of the job description is displayed, separately, for users to edit, modify, and save changes to the content of the job description. This screen contains buttons to save, approve, and undo changes, as well as a button to access the advanced editing screen. the Editing view can be used collaboratively by multiple concurrent users.  It also displays:
@@ -67,6 +67,3 @@ the advanced editing screen features a dual-pane editor with the source document
 *   **Display**: The Preference screen provides a detailed overview of the user's settings. It includes role, preferred language, preferred AI model, and metrics on activity.
 
 ## 11. Modern UI This tab will be removed once the modern component of the screen will be incorporated in the other screens
-
-
-
