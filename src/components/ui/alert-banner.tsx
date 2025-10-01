@@ -36,6 +36,8 @@ export interface AlertBannerProps {
   className?: string;
   icon?: React.ComponentType<{ className?: string }>;
   showIcon?: boolean;
+  /** If true, uses relative positioning instead of fixed (for embedding in layouts) */
+  relative?: boolean;
 }
 
 const variantConfig: Record<
@@ -92,6 +94,7 @@ export function AlertBanner({
   className,
   icon: CustomIcon,
   showIcon = true,
+  relative = false,
 }: AlertBannerProps) {
   const [isVisible, setIsVisible] = useState(true);
 
@@ -108,8 +111,8 @@ export function AlertBanner({
   return (
     <div
       className={cn(
-        // Base styles
-        "fixed top-16 left-0 right-0 z-40",
+        // Base styles - conditional positioning
+        relative ? "relative w-full" : "fixed top-16 left-0 right-0 z-40",
         "border-b",
         "backdrop-blur-sm",
         "shadow-card",

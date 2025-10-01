@@ -262,19 +262,23 @@ export default function HomePage() {
       >
         <LoadingProvider initialContext="jddb">
           <ToastProvider>
-            {/* Alert Banner - Dismissible system notifications */}
-            {showAlertBanner && (
-              <AlertBanner
-                variant="info"
-                title="Phase 2.1 UI Modernization Complete"
-                message="The JDDB interface has been updated with a streamlined design, improved navigation, and enhanced accessibility features. Explore the new Statistics and Search capabilities!"
-                dismissible={true}
-                onDismiss={() => setShowAlertBanner(false)}
-              />
-            )}
-
             <TwoPanelLayout
-              header={renderHeader()}
+              header={
+                <>
+                  {renderHeader()}
+                  {/* Alert Banner - Positioned below header, full width */}
+                  {showAlertBanner && (
+                    <AlertBanner
+                      variant="info"
+                      title="Phase 2.1 UI Modernization Complete"
+                      message="The JDDB interface has been updated with a streamlined design, improved navigation, and enhanced accessibility features. Explore the new Statistics and Search capabilities!"
+                      dismissible={true}
+                      onDismiss={() => setShowAlertBanner(false)}
+                      relative={true}
+                    />
+                  )}
+                </>
+              }
               leftPanel={
                 <DashboardSidebar
                   stats={stats}

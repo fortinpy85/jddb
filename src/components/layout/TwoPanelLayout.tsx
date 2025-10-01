@@ -110,8 +110,8 @@ export function TwoPanelLayout({
       {/* Header */}
       {header && <div className="flex-shrink-0 z-50">{header}</div>}
 
-      {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* Main Content Area - Add top padding to account for fixed header (64px) */}
+      <div className="flex flex-1 overflow-hidden pt-16">
         {/* Left Panel */}
         {showLeftPanel && leftPanel && (
           <aside
