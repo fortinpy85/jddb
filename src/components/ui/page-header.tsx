@@ -30,7 +30,7 @@ export function PageHeader({
   actions,
   breadcrumb,
   className,
-  variant = "default"
+  variant = "default",
 }: PageHeaderProps) {
   const isCompact = variant === "compact";
   const isMinimal = variant === "minimal";
@@ -40,7 +40,7 @@ export function PageHeader({
       className={cn(
         "bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-700/50",
         isMinimal ? "py-2" : isCompact ? "py-3" : "py-4",
-        className
+        className,
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -55,7 +55,7 @@ export function PageHeader({
                     className={cn(
                       index === breadcrumb.length - 1
                         ? "text-slate-900 dark:text-slate-100 font-medium"
-                        : "hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer"
+                        : "hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer",
                     )}
                   >
                     {item.label}
@@ -139,7 +139,7 @@ interface PageContainerProps {
 export function PageContainer({
   children,
   className,
-  maxWidth = "full"
+  maxWidth = "full",
 }: PageContainerProps) {
   const maxWidthClass = {
     sm: "max-w-sm",
@@ -147,15 +147,17 @@ export function PageContainer({
     lg: "max-w-lg",
     xl: "max-w-xl",
     "2xl": "max-w-2xl",
-    full: "max-w-7xl"
+    full: "max-w-7xl",
   }[maxWidth];
 
   return (
-    <div className={cn(
-      "mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6",
-      maxWidthClass,
-      className
-    )}>
+    <div
+      className={cn(
+        "mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6",
+        maxWidthClass,
+        className,
+      )}
+    >
       {children}
     </div>
   );

@@ -21,7 +21,7 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Loader2
+  Loader2,
 } from "lucide-react";
 
 /**
@@ -40,27 +40,46 @@ export function LoadingState({
   message = "Loading...",
   showLogo = true,
   className,
-  variant = "spinner"
+  variant = "spinner",
 }: LoadingStateProps) {
   const sizes = {
-    sm: { container: "py-8", spinner: "w-6 h-6", logo: "w-4 h-4", text: "text-sm" },
-    md: { container: "py-16", spinner: "w-8 h-8", logo: "w-6 h-6", text: "text-base" },
-    lg: { container: "py-24", spinner: "w-12 h-12", logo: "w-8 h-8", text: "text-lg" }
+    sm: {
+      container: "py-8",
+      spinner: "w-6 h-6",
+      logo: "w-4 h-4",
+      text: "text-sm",
+    },
+    md: {
+      container: "py-16",
+      spinner: "w-8 h-8",
+      logo: "w-6 h-6",
+      text: "text-base",
+    },
+    lg: {
+      container: "py-24",
+      spinner: "w-12 h-12",
+      logo: "w-8 h-8",
+      text: "text-lg",
+    },
   };
 
   const sizeConfig = sizes[size];
 
   const renderSpinner = () => (
     <div className="relative">
-      <div className={cn(
-        "border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin",
-        sizeConfig.spinner
-      )}></div>
+      <div
+        className={cn(
+          "border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin",
+          sizeConfig.spinner,
+        )}
+      ></div>
       {showLogo && (
-        <Database className={cn(
-          "absolute inset-0 m-auto text-blue-600",
-          sizeConfig.logo
-        )} />
+        <Database
+          className={cn(
+            "absolute inset-0 m-auto text-blue-600",
+            sizeConfig.logo,
+          )}
+        />
       )}
     </div>
   );
@@ -68,8 +87,14 @@ export function LoadingState({
   const renderPulse = () => (
     <div className="flex space-x-2">
       <div className="w-3 h-3 bg-blue-600 rounded-full animate-pulse"></div>
-      <div className="w-3 h-3 bg-blue-600 rounded-full animate-pulse" style={{ animationDelay: "0.1s" }}></div>
-      <div className="w-3 h-3 bg-blue-600 rounded-full animate-pulse" style={{ animationDelay: "0.2s" }}></div>
+      <div
+        className="w-3 h-3 bg-blue-600 rounded-full animate-pulse"
+        style={{ animationDelay: "0.1s" }}
+      ></div>
+      <div
+        className="w-3 h-3 bg-blue-600 rounded-full animate-pulse"
+        style={{ animationDelay: "0.2s" }}
+      ></div>
     </div>
   );
 
@@ -82,20 +107,24 @@ export function LoadingState({
   );
 
   return (
-    <div className={cn(
-      "flex flex-col items-center justify-center text-center space-y-4",
-      sizeConfig.container,
-      className
-    )}>
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center text-center space-y-4",
+        sizeConfig.container,
+        className,
+      )}
+    >
       {variant === "spinner" && renderSpinner()}
       {variant === "pulse" && renderPulse()}
       {variant === "skeleton" && renderSkeleton()}
 
       <div className="space-y-2">
-        <p className={cn(
-          "font-medium text-slate-700 dark:text-slate-300",
-          sizeConfig.text
-        )}>
+        <p
+          className={cn(
+            "font-medium text-slate-700 dark:text-slate-300",
+            sizeConfig.text,
+          )}
+        >
           {message}
         </p>
         {showLogo && variant !== "spinner" && (
@@ -129,27 +158,27 @@ export function ErrorState({
   onAction,
   showRetry = true,
   className,
-  variant = "error"
+  variant = "error",
 }: ErrorStateProps) {
   const variants = {
     error: {
       icon: XCircle,
       iconColor: "text-red-500",
       bgColor: "bg-red-50 dark:bg-red-900/20",
-      borderColor: "border-red-200 dark:border-red-800"
+      borderColor: "border-red-200 dark:border-red-800",
     },
     warning: {
       icon: AlertCircle,
       iconColor: "text-amber-500",
       bgColor: "bg-amber-50 dark:bg-amber-900/20",
-      borderColor: "border-amber-200 dark:border-amber-800"
+      borderColor: "border-amber-200 dark:border-amber-800",
     },
     network: {
       icon: WifiOff,
       iconColor: "text-slate-500",
       bgColor: "bg-slate-50 dark:bg-slate-900/20",
-      borderColor: "border-slate-200 dark:border-slate-800"
-    }
+      borderColor: "border-slate-200 dark:border-slate-800",
+    },
   };
 
   const config = variants[variant];
@@ -157,17 +186,16 @@ export function ErrorState({
 
   return (
     <div className={cn("py-16", className)}>
-      <Card className={cn(
-        "max-w-md mx-auto p-8 text-center",
-        config.bgColor,
-        config.borderColor
-      )}>
+      <Card
+        className={cn(
+          "max-w-md mx-auto p-8 text-center elevation-2 shadow-card",
+          config.bgColor,
+          config.borderColor,
+        )}
+      >
         <div className="space-y-6">
           <div className="flex justify-center">
-            <div className={cn(
-              "p-4 rounded-full",
-              config.bgColor
-            )}>
+            <div className={cn("p-4 rounded-full", config.bgColor)}>
               <Icon className={cn("w-8 h-8", config.iconColor)} />
             </div>
           </div>
@@ -176,18 +204,12 @@ export function ErrorState({
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
               {title}
             </h3>
-            <p className="text-slate-600 dark:text-slate-400">
-              {message}
-            </p>
+            <p className="text-slate-600 dark:text-slate-400">{message}</p>
           </div>
 
           {showRetry && (
             <div className="space-y-3">
-              <Button
-                onClick={onAction}
-                className="w-full"
-                variant="outline"
-              >
+              <Button onClick={onAction} className="w-full shadow-button" variant="outline">
                 <RefreshCw className="w-4 h-4 mr-2" />
                 {actionLabel}
               </Button>
@@ -204,7 +226,6 @@ export function ErrorState({
   );
 }
 
-
 /**
  * Status Indicator Component
  */
@@ -219,39 +240,39 @@ export function StatusIndicator({
   status,
   message,
   size = "md",
-  className
+  className,
 }: StatusIndicatorProps) {
   const variants = {
     loading: {
       icon: Loader2,
       color: "text-blue-500",
       bgColor: "bg-blue-100 dark:bg-blue-900/20",
-      animate: "animate-spin"
+      animate: "animate-spin",
     },
     success: {
       icon: CheckCircle,
       color: "text-green-500",
       bgColor: "bg-green-100 dark:bg-green-900/20",
-      animate: ""
+      animate: "",
     },
     error: {
       icon: XCircle,
       color: "text-red-500",
       bgColor: "bg-red-100 dark:bg-red-900/20",
-      animate: ""
+      animate: "",
     },
     warning: {
       icon: AlertCircle,
       color: "text-amber-500",
       bgColor: "bg-amber-100 dark:bg-amber-900/20",
-      animate: ""
+      animate: "",
     },
     processing: {
       icon: Clock,
       color: "text-purple-500",
       bgColor: "bg-purple-100 dark:bg-purple-900/20",
-      animate: "animate-pulse"
-    }
+      animate: "animate-pulse",
+    },
   };
 
   const config = variants[status];
@@ -260,29 +281,23 @@ export function StatusIndicator({
   const sizes = {
     sm: { container: "p-2", icon: "w-4 h-4", text: "text-xs" },
     md: { container: "p-3", icon: "w-5 h-5", text: "text-sm" },
-    lg: { container: "p-4", icon: "w-6 h-6", text: "text-base" }
+    lg: { container: "p-4", icon: "w-6 h-6", text: "text-base" },
   };
 
   const sizeConfig = sizes[size];
 
   return (
-    <div className={cn(
-      "inline-flex items-center space-x-2 rounded-full",
-      config.bgColor,
-      sizeConfig.container,
-      className
-    )}>
-      <Icon className={cn(
-        sizeConfig.icon,
-        config.color,
-        config.animate
-      )} />
+    <div
+      className={cn(
+        "inline-flex items-center space-x-2 rounded-full",
+        config.bgColor,
+        sizeConfig.container,
+        className,
+      )}
+    >
+      <Icon className={cn(sizeConfig.icon, config.color, config.animate)} />
       {message && (
-        <span className={cn(
-          "font-medium",
-          config.color,
-          sizeConfig.text
-        )}>
+        <span className={cn("font-medium", config.color, sizeConfig.text)}>
           {message}
         </span>
       )}
@@ -304,7 +319,7 @@ export function PageSkeleton({
   showHeader = true,
   showStats = true,
   showContent = true,
-  className
+  className,
 }: PageSkeletonProps) {
   return (
     <div className={cn("space-y-6 animate-pulse", className)}>
@@ -318,7 +333,7 @@ export function PageSkeleton({
       {showStats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="p-6">
+            <Card key={i} className="p-6 elevation-1 shadow-card">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
@@ -334,7 +349,7 @@ export function PageSkeleton({
       {showContent && (
         <div className="space-y-6">
           {[...Array(3)].map((_, i) => (
-            <Card key={i} className="p-6">
+            <Card key={i} className="p-6 elevation-1 shadow-card">
               <div className="space-y-4">
                 <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/4"></div>
                 <div className="space-y-2">
@@ -347,6 +362,183 @@ export function PageSkeleton({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Table Skeleton Component
+ * For data table loading states
+ */
+interface TableSkeletonProps {
+  rows?: number;
+  columns?: number;
+  showHeader?: boolean;
+  className?: string;
+}
+
+export function TableSkeleton({
+  rows = 5,
+  columns = 5,
+  showHeader = true,
+  className,
+}: TableSkeletonProps) {
+  return (
+    <div className={cn("space-y-4", className)}>
+      {/* Table Header Skeleton */}
+      {showHeader && (
+        <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
+          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-32 animate-pulse"></div>
+          <div className="flex space-x-2">
+            <div className="h-8 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+            <div className="h-8 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+          </div>
+        </div>
+      )}
+
+      {/* Table Rows Skeleton */}
+      <div className="space-y-3">
+        {[...Array(rows)].map((_, rowIndex) => (
+          <Card
+            key={rowIndex}
+            className="p-4 elevation-1 shadow-card animate-pulse"
+          >
+            <div className="flex items-center space-x-4">
+              {/* Checkbox skeleton */}
+              <div className="h-4 w-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+
+              {/* Column data skeletons */}
+              {[...Array(columns)].map((_, colIndex) => (
+                <div
+                  key={colIndex}
+                  className={cn(
+                    "h-4 bg-slate-200 dark:bg-slate-700 rounded",
+                    colIndex === 0 && "w-20",
+                    colIndex === 1 && "w-32 flex-1",
+                    colIndex === 2 && "w-24",
+                    colIndex === 3 && "w-16",
+                    colIndex === 4 && "w-12",
+                  )}
+                ></div>
+              ))}
+
+              {/* Action buttons skeleton */}
+              <div className="h-8 w-16 bg-slate-200 dark:bg-slate-700 rounded"></div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Card Skeleton Component
+ * For dashboard cards and metric displays
+ */
+interface CardSkeletonProps {
+  count?: number;
+  variant?: "stat" | "metric" | "list";
+  className?: string;
+}
+
+export function CardSkeleton({
+  count = 4,
+  variant = "stat",
+  className,
+}: CardSkeletonProps) {
+  const renderStatCard = (index: number) => (
+    <Card key={index} className="p-3 elevation-1 shadow-card">
+      <div className="animate-pulse space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="h-8 w-8 bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+            <div className="space-y-2">
+              <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-20"></div>
+              <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded w-16"></div>
+            </div>
+          </div>
+          <div className="h-5 w-12 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+        </div>
+      </div>
+    </Card>
+  );
+
+  const renderMetricCard = (index: number) => (
+    <Card key={index} className="p-3 elevation-1 shadow-card">
+      <div className="animate-pulse space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-24"></div>
+          <div className="h-5 w-16 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+        </div>
+        <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
+      </div>
+    </Card>
+  );
+
+  const renderListCard = (index: number) => (
+    <div
+      key={index}
+      className="p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50"
+    >
+      <div className="animate-pulse flex items-start space-x-2">
+        <div className="h-4 w-4 bg-slate-200 dark:bg-slate-700 rounded mt-0.5"></div>
+        <div className="flex-1 space-y-2">
+          <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+          <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={cn("space-y-3", className)}>
+      {[...Array(count)].map((_, index) => {
+        if (variant === "stat") return renderStatCard(index);
+        if (variant === "metric") return renderMetricCard(index);
+        return renderListCard(index);
+      })}
+    </div>
+  );
+}
+
+/**
+ * Sidebar Skeleton Component
+ * For navigation and info panels
+ */
+interface SidebarSkeletonProps {
+  sections?: number;
+  className?: string;
+}
+
+export function SidebarSkeleton({
+  sections = 3,
+  className,
+}: SidebarSkeletonProps) {
+  return (
+    <div className={cn("space-y-6 p-4", className)}>
+      {/* Header skeleton */}
+      <div className="space-y-2 animate-pulse">
+        <div className="flex items-center space-x-2">
+          <div className="h-5 w-5 bg-slate-200 dark:bg-slate-700 rounded"></div>
+          <div className="h-5 bg-slate-200 dark:bg-slate-700 rounded w-32"></div>
+        </div>
+        <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-48"></div>
+      </div>
+
+      {/* Sections skeleton */}
+      {[...Array(sections)].map((_, sectionIndex) => (
+        <div key={sectionIndex} className="space-y-3">
+          {/* Section title */}
+          <div className="flex items-center space-x-2 animate-pulse">
+            <div className="h-4 w-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+            <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24"></div>
+          </div>
+
+          {/* Section content - cards */}
+          <CardSkeleton count={4} variant="stat" />
+        </div>
+      ))}
     </div>
   );
 }

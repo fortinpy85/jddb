@@ -3,16 +3,14 @@ Tests for translation memory service.
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from decimal import Decimal
-from datetime import datetime
 from sqlalchemy.orm import Session
 
 from jd_ingestion.services.translation_memory_service import TranslationMemoryService
 from jd_ingestion.database.models import (
     TranslationProject,
     TranslationMemory,
-    TranslationEmbedding,
 )
 
 

@@ -62,7 +62,7 @@ class QualityService:
                 select(JobDescription)
                 .options(
                     selectinload(JobDescription.sections),
-                    selectinload(JobDescription.metadata_entry),
+                    selectinload(JobDescription.job_metadata),
                     selectinload(JobDescription.chunks),
                 )
                 .where(JobDescription.id == job_id)
@@ -169,7 +169,7 @@ class QualityService:
         # Content completeness
         content_completeness = self._calculate_content_completeness(job)
         sections_completeness = self._calculate_sections_completeness(job)
-        metadata_completeness = self._calculate_metadata_completeness(job)
+        job_metadata_completeness = self._calculate_job_metadata_completeness(job)
 
         # Quality indicators
         has_structured_fields = self._assess_structured_fields(job)
@@ -191,7 +191,7 @@ class QualityService:
         return {
             "content_completeness_score": content_completeness,
             "sections_completeness_score": sections_completeness,
-            "metadata_completeness_score": metadata_completeness,
+            "job_metadata_completeness_score": job_metadata_completeness,
             "has_structured_fields": has_structured_fields,
             "has_all_sections": has_all_sections,
             "has_embeddings": has_embeddings,
@@ -216,8 +216,8 @@ class QualityService:
         if job.sections and len(job.sections) > 0:
             score += 1.0
 
-        # Job has metadata
-        if job.metadata_entry:
+        # Job has job_metadata
+        if job.job_metadata:
             score += 1.0
 
         # Job has content chunks
@@ -239,26 +239,26 @@ class QualityService:
         )
         return Decimal(str(round(coverage, 3)))
 
-    def _calculate_metadata_completeness(self, job: JobDescription) -> Decimal:
-        """Calculate metadata completeness score."""
-        if not job.metadata_entry:
+    def _calculate_job_metadata_completeness(self, job: JobDescription) -> Decimal:
+        """Calculate job_metadata completeness score."""
+        if not job.job_metadata:
             return Decimal("0.000")
 
-        metadata = job.metadata_entry
+        job_metadata = job.job_metadata
         fields_with_data = 0
         total_fields = 6  # reports_to, department, location, fte_count, salary_budget, effective_date
 
-        if metadata.reports_to and metadata.reports_to.strip():
+        if job_metadata.reports_to and job_metadata.reports_to.strip():
             fields_with_data += 1
-        if metadata.department and metadata.department.strip():
+        if job_metadata.department and job_metadata.department.strip():
             fields_with_data += 1
-        if metadata.location and metadata.location.strip():
+        if job_metadata.location and job_metadata.location.strip():
             fields_with_data += 1
-        if metadata.fte_count is not None:
+        if job_metadata.fte_count is not None:
             fields_with_data += 1
-        if metadata.salary_budget is not None:
+        if job_metadata.salary_budget is not None:
             fields_with_data += 1
-        if metadata.effective_date is not None:
+        if job_metadata.effective_date is not None:
             fields_with_data += 1
 
         return Decimal(str(round(fields_with_data / total_fields, 3)))
@@ -275,9 +275,9 @@ class QualityService:
         if job.classification and job.classification.strip():
             fields_present += 1
         if (
-            job.metadata_entry
-            and job.metadata_entry.department
-            and job.metadata_entry.department.strip()
+            job.job_metadata
+            and job.job_metadata.department
+            and job.job_metadata.department.strip()
         ):
             fields_present += 1
 
@@ -527,7 +527,7 @@ class QualityService:
             for key, value in metrics.items():
                 if hasattr(existing_metrics, key):
                     setattr(existing_metrics, key, value)
-            existing_metrics.last_calculated = datetime.utcnow()
+            existing_metrics.last_calculated = datetime.utcnow()  # type: ignore[assignment]
         else:
             # Create new metrics record
             quality_metrics = DataQualityMetrics(job_id=job_id, **metrics)
@@ -553,7 +553,7 @@ class QualityService:
             "completeness": {
                 "content": float(metrics.content_completeness_score or 0),
                 "sections": float(metrics.sections_completeness_score or 0),
-                "metadata": float(metrics.metadata_completeness_score or 0),
+                "job_metadata": float(metrics.job_metadata_completeness_score or 0),
             },
             "quality_indicators": {
                 "structured_fields": metrics.has_structured_fields,
@@ -596,8 +596,8 @@ class QualityService:
             func.avg(DataQualityMetrics.sections_completeness_score).label(
                 "avg_sections_completeness"
             ),
-            func.avg(DataQualityMetrics.metadata_completeness_score).label(
-                "avg_metadata_completeness"
+            func.avg(DataQualityMetrics.job_metadata_completeness_score).label(
+                "avg_job_metadata_completeness"
             ),
             func.sum(DataQualityMetrics.processing_errors_count).label(
                 "total_processing_errors"
@@ -627,18 +627,22 @@ class QualityService:
 
         return {
             "overview": {
-                "total_jobs_analyzed": stats.total_jobs or 0,
+                "total_jobs_analyzed": stats.total_jobs or 0 if stats else 0,  # type: ignore[union-attr]
                 "average_content_completeness": float(
-                    stats.avg_content_completeness or 0
+                    stats.avg_content_completeness or 0 if stats else 0  # type: ignore[union-attr]
                 ),
                 "average_sections_completeness": float(
-                    stats.avg_sections_completeness or 0
+                    stats.avg_sections_completeness or 0 if stats else 0  # type: ignore[union-attr]
                 ),
-                "average_metadata_completeness": float(
-                    stats.avg_metadata_completeness or 0
+                "average_job_metadata_completeness": float(
+                    stats.avg_job_metadata_completeness or 0 if stats else 0  # type: ignore[union-attr]
                 ),
-                "total_processing_errors": stats.total_processing_errors or 0,
-                "total_validation_errors": stats.total_validation_errors or 0,
+                "total_processing_errors": stats.total_processing_errors or 0
+                if stats
+                else 0,  # type: ignore[union-attr]
+                "total_validation_errors": stats.total_validation_errors or 0
+                if stats
+                else 0,  # type: ignore[union-attr]
             },
             "quality_distribution": [
                 {

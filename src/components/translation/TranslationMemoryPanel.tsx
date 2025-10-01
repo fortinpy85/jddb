@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,110 +16,127 @@ import {
   Languages,
   Zap,
   Clock,
+  AlertCircle,
 } from "lucide-react";
-
-interface TranslationMatch {
-  id: number;
-  source_text: string;
-  target_text: string;
-  similarity_score: number;
-  quality_score?: number;
-  confidence_score?: number;
-  usage_count: number;
-  domain?: string;
-  subdomain?: string;
-  match_type: "exact" | "fuzzy";
-  confidence: number;
-  last_used?: string;
-  created_at: string;
-}
+import {
+  useTranslationMemory,
+  TranslationMatch,
+} from "@/hooks/useTranslationMemory";
 
 interface TranslationMemoryPanelProps {
   sourceLanguage: string;
   targetLanguage: string;
   onMatchSelect?: (match: TranslationMatch) => void;
   className?: string;
+  autoSearch?: boolean;
+  initialSearchText?: string;
 }
-
-// Mock translation memory data
-const mockMatches: TranslationMatch[] = [
-  {
-    id: 1,
-    source_text: "Responsible for strategic planning and policy development",
-    target_text:
-      "Responsable de la planification stratégique et de l'élaboration des politiques",
-    similarity_score: 0.95,
-    quality_score: 0.92,
-    confidence_score: 0.89,
-    usage_count: 15,
-    domain: "government",
-    subdomain: "job_descriptions",
-    match_type: "exact",
-    confidence: 1.0,
-    last_used: "2025-09-19T14:30:00Z",
-    created_at: "2025-01-15T10:00:00Z",
-  },
-  {
-    id: 2,
-    source_text: "Strategic planning and policy formulation",
-    target_text: "Planification stratégique et formulation de politiques",
-    similarity_score: 0.87,
-    quality_score: 0.85,
-    confidence_score: 0.82,
-    usage_count: 8,
-    domain: "government",
-    subdomain: "job_descriptions",
-    match_type: "fuzzy",
-    confidence: 0.87,
-    last_used: "2025-09-18T16:45:00Z",
-    created_at: "2025-02-03T09:30:00Z",
-  },
-  {
-    id: 3,
-    source_text: "Develop and implement strategic initiatives",
-    target_text: "Développer et mettre en œuvre des initiatives stratégiques",
-    similarity_score: 0.82,
-    quality_score: 0.88,
-    confidence_score: 0.85,
-    usage_count: 12,
-    domain: "government",
-    subdomain: "job_descriptions",
-    match_type: "fuzzy",
-    confidence: 0.82,
-    last_used: "2025-09-17T11:20:00Z",
-    created_at: "2025-01-28T14:15:00Z",
-  },
-];
 
 export const TranslationMemoryPanel: React.FC<TranslationMemoryPanelProps> = ({
   sourceLanguage,
   targetLanguage,
   onMatchSelect,
   className,
+  autoSearch = false,
+  initialSearchText = "",
 }) => {
-  const [matches, setMatches] = useState<TranslationMatch[]>(mockMatches);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(initialSearchText);
   const [selectedMatch, setSelectedMatch] = useState<number | null>(null);
-
-  const filteredMatches = matches.filter(
-    (match) =>
-      match.source_text.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      match.target_text.toLowerCase().includes(searchQuery.toLowerCase()),
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(
+    null,
   );
+
+  // Use the real translation memory hook
+  const {
+    matches,
+    isLoading,
+    error,
+    searchTranslations,
+    rateTranslation,
+    clearMatches,
+  } = useTranslationMemory({
+    sourceLanguage,
+    targetLanguage,
+    minSimilarity: 0.7,
+    autoSearch,
+  });
+
+  // Debounced search function
+  const performSearch = useCallback(
+    (query: string) => {
+      if (query.trim().length < 3) {
+        clearMatches();
+        return;
+      }
+
+      searchTranslations({
+        source_text: query,
+        source_language: sourceLanguage,
+        target_language: targetLanguage,
+        min_similarity: 0.7,
+        domain: "job_descriptions",
+        limit: 20,
+      });
+    },
+    [searchTranslations, clearMatches, sourceLanguage, targetLanguage],
+  );
+
+  // Handle search query changes with debouncing
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+
+    // Clear previous timer
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+
+    // Set new timer for debounced search
+    const timer = setTimeout(() => {
+      performSearch(value);
+    }, 500); // 500ms debounce
+
+    setDebounceTimer(timer);
+  };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+    };
+  }, [debounceTimer]);
+
+  // Perform initial search if autoSearch is enabled
+  useEffect(() => {
+    if (autoSearch && initialSearchText.length >= 3) {
+      performSearch(initialSearchText);
+    }
+  }, [autoSearch, initialSearchText, performSearch]);
 
   const handleMatchSelect = (match: TranslationMatch) => {
     setSelectedMatch(match.id);
     onMatchSelect?.(match);
   };
 
-  const handleApproval = (matchId: number, approved: boolean) => {
-    // Update match with user feedback
-    console.log(`Match ${matchId} ${approved ? "approved" : "rejected"}`);
+  const handleApproval = async (matchId: number, approved: boolean) => {
+    try {
+      // Rate translation: 5 stars for approved, 1 star for rejected
+      await rateTranslation(matchId, approved ? 5 : 1);
+      console.log(`Match ${matchId} ${approved ? "approved" : "rejected"}`);
+    } catch (err) {
+      console.error("Error rating translation:", err);
+    }
   };
 
   const handleCopyTranslation = (text: string) => {
     navigator.clipboard.writeText(text);
+  };
+
+  const handleRefresh = () => {
+    if (searchQuery.trim().length >= 3) {
+      performSearch(searchQuery);
+    }
   };
 
   const formatLastUsed = (dateString?: string) => {
@@ -174,53 +191,72 @@ export const TranslationMemoryPanel: React.FC<TranslationMemoryPanelProps> = ({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
-            placeholder="Search translations..."
+            placeholder="Search translations (min 3 chars)..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-10 h-8"
           />
         </div>
 
+        {/* Error Display */}
+        {error && (
+          <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 p-2 rounded">
+            <AlertCircle className="w-3 h-3" />
+            <span>{error}</span>
+          </div>
+        )}
+
         {/* Statistics */}
-        <div className="flex items-center gap-4 text-xs text-gray-600">
-          <div className="flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            {matches.length} entries
+        {matches.length > 0 && (
+          <div className="flex items-center gap-4 text-xs text-gray-600">
+            <div className="flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" />
+              {matches.length} entries
+            </div>
+            <div className="flex items-center gap-1">
+              <Languages className="w-3 h-3" />
+              {matches.filter((m) => m.match_type === "exact").length} exact
+            </div>
+            <div className="flex items-center gap-1">
+              <Zap className="w-3 h-3" />
+              {matches.length > 0
+                ? Math.round(
+                    (matches.reduce(
+                      (sum, m) => sum + (m.quality_score || 0),
+                      0,
+                    ) /
+                      matches.length) *
+                      100,
+                  )
+                : 0}
+              % avg
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <Languages className="w-3 h-3" />
-            {matches.filter((m) => m.match_type === "exact").length} exact
-          </div>
-          <div className="flex items-center gap-1">
-            <Zap className="w-3 h-3" />
-            {Math.round(
-              (matches.reduce((sum, m) => sum + (m.quality_score || 0), 0) /
-                matches.length) *
-                100,
-            )}
-            % avg
-          </div>
-        </div>
+        )}
       </CardHeader>
 
       <CardContent className="pt-0 flex-1 flex flex-col">
         <ScrollArea className="flex-1">
           {isLoading ? (
             <div className="text-center py-8 text-gray-500">
-              <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-50 animate-pulse" />
               <p className="text-sm">Searching translation memory...</p>
             </div>
-          ) : filteredMatches.length === 0 ? (
+          ) : matches.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No translation matches found</p>
-              {searchQuery && (
-                <p className="text-xs">Try different search terms</p>
+              <p className="text-sm">
+                {searchQuery.trim().length < 3
+                  ? "Enter at least 3 characters to search"
+                  : "No translation matches found"}
+              </p>
+              {searchQuery.trim().length >= 3 && (
+                <p className="text-xs mt-1">Try different search terms</p>
               )}
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredMatches.map((match) => (
+              {matches.map((match) => (
                 <TranslationMatchCard
                   key={match.id}
                   match={match}
@@ -242,9 +278,17 @@ export const TranslationMemoryPanel: React.FC<TranslationMemoryPanelProps> = ({
         <div className="flex items-center justify-between text-xs text-gray-500">
           <div className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
-            Last updated: {formatLastUsed(matches[0]?.last_used)}
+            {matches.length > 0 && matches[0]?.last_used
+              ? `Last updated: ${formatLastUsed(matches[0].last_used)}`
+              : "No recent activity"}
           </div>
-          <Button variant="ghost" size="sm" className="h-6 text-xs">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 text-xs"
+            onClick={handleRefresh}
+            disabled={isLoading || searchQuery.trim().length < 3}
+          >
             Refresh
           </Button>
         </div>

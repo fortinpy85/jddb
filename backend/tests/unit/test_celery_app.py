@@ -1,7 +1,6 @@
 """Tests for tasks/celery_app.py module."""
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from jd_ingestion.tasks.celery_app import celery_app
 
@@ -352,9 +351,9 @@ class TestCeleryAppConfiguration:
             if "soft_time_limit" in config and "time_limit" in config:
                 soft_limit = config["soft_time_limit"]
                 hard_limit = config["time_limit"]
-                assert hard_limit > soft_limit, (
-                    f"Task {task_name} hard limit ({hard_limit}) should be greater than soft limit ({soft_limit})"
-                )
+                assert (
+                    hard_limit > soft_limit
+                ), f"Task {task_name} hard limit ({hard_limit}) should be greater than soft limit ({soft_limit})"
 
     def test_retry_backoff_progression(self):
         """Test that retry backoff values are reasonable."""
@@ -368,12 +367,12 @@ class TestCeleryAppConfiguration:
             config = celery_app.conf.task_routes[task_name]
             if "retry_backoff" in config:
                 backoff = config["retry_backoff"]
-                assert isinstance(backoff, int), (
-                    f"Retry backoff for {task_name} should be an integer"
-                )
-                assert 0 < backoff <= 60, (
-                    f"Retry backoff for {task_name} should be between 1 and 60 seconds"
-                )
+                assert isinstance(
+                    backoff, int
+                ), f"Retry backoff for {task_name} should be an integer"
+                assert (
+                    0 < backoff <= 60
+                ), f"Retry backoff for {task_name} should be between 1 and 60 seconds"
 
     @patch("jd_ingestion.tasks.celery_app.logger")
     def test_logging_configuration(self, mock_logger):
@@ -462,6 +461,6 @@ class TestCeleryAppIntegration:
                 queues.add(route_config["queue"])
 
         expected_queues = {"processing", "embeddings", "quality", "failed_tasks"}
-        assert queues == expected_queues, (
-            f"Expected queues {expected_queues}, got {queues}"
-        )
+        assert (
+            queues == expected_queues
+        ), f"Expected queues {expected_queues}, got {queues}"

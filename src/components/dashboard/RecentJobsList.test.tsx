@@ -12,7 +12,7 @@ mock.module("@/components/layout/JDDBLayout", () => ({
   ContentSection: ({
     title,
     children,
-    headerActions
+    headerActions,
   }: {
     title: string;
     children: React.ReactNode;
@@ -21,7 +21,9 @@ mock.module("@/components/layout/JDDBLayout", () => ({
     <div data-testid="content-section">
       <div data-testid="section-header">
         <h2>{title}</h2>
-        {headerActions && <div data-testid="header-actions">{headerActions}</div>}
+        {headerActions && (
+          <div data-testid="header-actions">{headerActions}</div>
+        )}
       </div>
       <div data-testid="section-content">{children}</div>
     </div>
@@ -34,7 +36,7 @@ mock.module("@/components/ui/design-system", () => ({
     onClick,
     variant,
     size,
-    color
+    color,
   }: {
     children: React.ReactNode;
     onClick: () => void;
@@ -58,19 +60,28 @@ mock.module("@/components/ui/empty-state", () => ({
   default: ({
     type,
     actions,
-    showIllustration
+    showIllustration,
   }: {
     type: string;
     actions?: Array<{ label: string; onClick: () => void; icon?: any }>;
     showIllustration?: boolean;
   }) => (
-    <div data-testid="empty-state" data-type={type} data-show-illustration={showIllustration}>
+    <div
+      data-testid="empty-state"
+      data-type={type}
+      data-show-illustration={showIllustration}
+    >
       <p>No jobs available</p>
-      {actions && actions.map((action, index) => (
-        <button key={index} onClick={action.onClick} data-testid="empty-state-action">
-          {action.label}
-        </button>
-      ))}
+      {actions &&
+        actions.map((action, index) => (
+          <button
+            key={index}
+            onClick={action.onClick}
+            data-testid="empty-state-action"
+          >
+            {action.label}
+          </button>
+        ))}
     </div>
   ),
 }));
@@ -120,11 +131,13 @@ describe("RecentJobsList Component", () => {
         onJobSelect={mockOnJobSelect}
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToUpload={mockOnNavigateToUpload}
-      />
+      />,
     );
 
     expect(screen.getByText("Recent Job Descriptions")).toBeInTheDocument();
-    expect(screen.getByText("Director of Business Analysis")).toBeInTheDocument();
+    expect(
+      screen.getByText("Director of Business Analysis"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Senior Policy Analyst")).toBeInTheDocument();
   });
 
@@ -135,11 +148,13 @@ describe("RecentJobsList Component", () => {
         onJobSelect={mockOnJobSelect}
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToUpload={mockOnNavigateToUpload}
-      />
+      />,
     );
 
     // Check job titles
-    expect(screen.getByText("Director of Business Analysis")).toBeInTheDocument();
+    expect(
+      screen.getByText("Director of Business Analysis"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Senior Policy Analyst")).toBeInTheDocument();
 
     // Check job numbers and classifications
@@ -159,7 +174,7 @@ describe("RecentJobsList Component", () => {
         onJobSelect={mockOnJobSelect}
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToUpload={mockOnNavigateToUpload}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText("Director of Business Analysis"));
@@ -176,7 +191,7 @@ describe("RecentJobsList Component", () => {
         onJobSelect={mockOnJobSelect}
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToUpload={mockOnNavigateToUpload}
-      />
+      />,
     );
 
     const viewAllButton = screen.getByText("View All");
@@ -193,7 +208,7 @@ describe("RecentJobsList Component", () => {
         onJobSelect={mockOnJobSelect}
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToUpload={mockOnNavigateToUpload}
-      />
+      />,
     );
 
     const emptyState = screen.getByTestId("empty-state");
@@ -211,7 +226,7 @@ describe("RecentJobsList Component", () => {
         onJobSelect={mockOnJobSelect}
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToUpload={mockOnNavigateToUpload}
-      />
+      />,
     );
 
     const uploadButton = screen.getByText("Upload Files");
@@ -235,7 +250,7 @@ describe("RecentJobsList Component", () => {
         onJobSelect={mockOnJobSelect}
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToUpload={mockOnNavigateToUpload}
-      />
+      />,
     );
 
     expect(screen.getByText("Not processed")).toBeInTheDocument();
@@ -255,7 +270,7 @@ describe("RecentJobsList Component", () => {
         onJobSelect={mockOnJobSelect}
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToUpload={mockOnNavigateToUpload}
-      />
+      />,
     );
 
     expect(screen.getByText("Not processed")).toBeInTheDocument();
@@ -268,7 +283,7 @@ describe("RecentJobsList Component", () => {
         onJobSelect={mockOnJobSelect}
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToUpload={mockOnNavigateToUpload}
-      />
+      />,
     );
 
     const actionButton = screen.getByTestId("action-button");
@@ -300,10 +315,12 @@ describe("RecentJobsList Component", () => {
         onJobSelect={mockOnJobSelect}
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToUpload={mockOnNavigateToUpload}
-      />
+      />,
     );
 
-    expect(screen.getByText("Director of Business Analysis")).toBeInTheDocument();
+    expect(
+      screen.getByText("Director of Business Analysis"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Senior Policy Analyst")).toBeInTheDocument();
     expect(screen.getByText("Project Manager")).toBeInTheDocument();
     expect(screen.getByText("111222 • PM-05")).toBeInTheDocument();

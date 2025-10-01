@@ -539,7 +539,7 @@ class TestQualityEndpointsValidation:
     def test_quality_metrics_request_validation(self, client):
         """Test quality metrics request validation."""
         # Valid request
-        valid_request = {"job_ids": [1, 2, 3], "recalculate": True}
+        _valid_request = {"job_ids": [1, 2, 3], "recalculate": True}
 
         # Invalid request with wrong types
         invalid_request = {

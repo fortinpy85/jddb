@@ -4,7 +4,7 @@ Tests for Phase 2 metrics monitoring module.
 
 import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime, timedelta
 from collections import deque
 

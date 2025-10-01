@@ -3,8 +3,8 @@ Tests for monitoring and logging utilities.
 """
 
 import pytest
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
-from datetime import datetime, timedelta
+from unittest.mock import Mock, patch, AsyncMock
+from datetime import datetime
 
 from jd_ingestion.utils.monitoring import SystemMonitor
 from jd_ingestion.utils.logging import get_logger, PerformanceTimer

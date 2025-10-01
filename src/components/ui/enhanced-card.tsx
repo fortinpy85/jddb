@@ -24,7 +24,10 @@ interface EnhancedCardProps {
   size?: "sm" | "md" | "lg";
   interactive?: boolean;
   actions?: React.ReactNode;
-  badges?: Array<{ label: string; variant?: "default" | "secondary" | "destructive" | "outline" }>;
+  badges?: Array<{
+    label: string;
+    variant?: "default" | "secondary" | "destructive" | "outline";
+  }>;
   onClick?: () => void;
   href?: string;
 }
@@ -43,23 +46,27 @@ export function EnhancedCard({
   actions,
   badges,
   onClick,
-  href
+  href,
 }: EnhancedCardProps) {
   const variants = {
-    default: "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700",
-    elevated: "bg-white dark:bg-slate-800 border-0 shadow-lg hover:shadow-xl",
-    outlined: "bg-transparent border-2 border-slate-200 dark:border-slate-700",
-    gradient: "bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 dark:from-slate-800 dark:via-slate-700/30 dark:to-slate-800/20 border border-white/20 dark:border-slate-700/20"
+    default:
+      "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-card",
+    elevated: "bg-white dark:bg-slate-800 border-0 elevation-2 shadow-hover",
+    outlined: "bg-transparent border-2 border-slate-200 dark:border-slate-700 shadow-outline",
+    gradient:
+      "bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/20 dark:from-slate-800 dark:via-slate-700/30 dark:to-slate-800/20 border border-white/20 dark:border-slate-700/20 shadow-card",
   };
 
   const sizes = {
     sm: "p-4",
     md: "p-6",
-    lg: "p-8"
+    lg: "p-8",
   };
 
   const CardWrapper = href ? "a" : "div";
-  const cardProps = href ? { href, target: "_blank", rel: "noopener noreferrer" } : {};
+  const cardProps = href
+    ? { href, target: "_blank", rel: "noopener noreferrer" }
+    : {};
 
   return (
     <CardWrapper
@@ -67,10 +74,9 @@ export function EnhancedCard({
       className={cn(
         "group relative overflow-hidden rounded-xl transition-all duration-300",
         variants[variant],
-        interactive && "hover:scale-[1.02] cursor-pointer",
-        interactive && variant === "elevated" && "hover:shadow-2xl",
+        interactive && "hover:scale-[1.02] cursor-pointer shadow-transition",
         interactive && "hover:border-blue-200 dark:hover:border-blue-400",
-        className
+        className,
       )}
       onClick={onClick}
     >
@@ -97,7 +103,7 @@ export function EnhancedCard({
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-start space-x-3 flex-1 min-w-0">
               {Icon && (
-                <div className="flex-shrink-0 p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                <div className="flex-shrink-0 p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg elevation-2 shadow-glow-blue transition-shadow duration-300">
                   <Icon className="w-5 h-5 text-white" />
                 </div>
               )}
@@ -141,11 +147,7 @@ export function EnhancedCard({
         )}
 
         {/* Content */}
-        {children && (
-          <div className="space-y-4">
-            {children}
-          </div>
-        )}
+        {children && <div className="space-y-4">{children}</div>}
 
         {/* Interactive Indicator */}
         {(interactive || href) && (
@@ -184,7 +186,7 @@ export function FeatureCard({
   icon: Icon,
   features,
   action,
-  className
+  className,
 }: FeatureCardProps) {
   return (
     <EnhancedCard
@@ -197,7 +199,7 @@ export function FeatureCard({
       <div className="text-center space-y-6">
         {/* Icon */}
         <div className="flex justify-center">
-          <div className="p-4 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+          <div className="p-4 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl elevation-3 shadow-glow-blue transition-shadow duration-300">
             <Icon className="w-8 h-8 text-white" />
           </div>
         </div>
@@ -216,7 +218,10 @@ export function FeatureCard({
         {features && features.length > 0 && (
           <div className="space-y-2">
             {features.map((feature, index) => (
-              <div key={index} className="flex items-center justify-center text-sm text-slate-600 dark:text-slate-400">
+              <div
+                key={index}
+                className="flex items-center justify-center text-sm text-slate-600 dark:text-slate-400"
+              >
                 <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></div>
                 {feature}
               </div>
@@ -228,7 +233,7 @@ export function FeatureCard({
         {action && (
           <Button
             variant="outline"
-            className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-colors duration-200"
+            className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 shadow-button transition-colors duration-200"
           >
             {action.label}
           </Button>
@@ -260,34 +265,34 @@ export function MetricCard({
   change,
   icon: Icon,
   color = "blue",
-  className
+  className,
 }: MetricCardProps) {
   const colors = {
     blue: {
       text: "text-blue-600",
       bg: "bg-blue-50",
-      border: "border-blue-200"
+      border: "border-blue-200",
     },
     emerald: {
       text: "text-emerald-600",
       bg: "bg-emerald-50",
-      border: "border-emerald-200"
+      border: "border-emerald-200",
     },
     amber: {
       text: "text-amber-600",
       bg: "bg-amber-50",
-      border: "border-amber-200"
+      border: "border-amber-200",
     },
     red: {
       text: "text-red-600",
       bg: "bg-red-50",
-      border: "border-red-200"
+      border: "border-red-200",
     },
     violet: {
       text: "text-violet-600",
       bg: "bg-violet-50",
-      border: "border-violet-200"
-    }
+      border: "border-violet-200",
+    },
   };
 
   const colorConfig = colors[color];
@@ -307,20 +312,25 @@ export function MetricCard({
             {value}
           </p>
           {change && (
-            <p className={cn(
-              "text-xs font-medium mt-2",
-              change.value >= 0 ? "text-emerald-600" : "text-red-600"
-            )}>
-              {change.value >= 0 ? "+" : ""}{change.value}% from {change.period}
+            <p
+              className={cn(
+                "text-xs font-medium mt-2",
+                change.value >= 0 ? "text-emerald-600" : "text-red-600",
+              )}
+            >
+              {change.value >= 0 ? "+" : ""}
+              {change.value}% from {change.period}
             </p>
           )}
         </div>
-        <div className={cn(
-          "p-3 rounded-xl group-hover:scale-110 transition-transform duration-300",
-          colorConfig.bg,
-          "border",
-          colorConfig.border
-        )}>
+        <div
+          className={cn(
+            "p-3 rounded-xl group-hover:scale-110 transition-transform duration-300",
+            colorConfig.bg,
+            "border",
+            colorConfig.border,
+          )}
+        >
           <Icon className={cn("w-6 h-6", colorConfig.text)} />
         </div>
       </div>

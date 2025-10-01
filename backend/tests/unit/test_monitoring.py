@@ -3,7 +3,6 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timedelta
-from typing import Dict, Any
 
 from jd_ingestion.utils.monitoring import (
     SystemMonitor,
@@ -724,7 +723,7 @@ class TestGlobalInstances:
 
     def test_global_instances_exist(self):
         """Test that global instances are created."""
-        from jd_ingestion.utils.monitoring import system_monitor, alert_manager
+        from jd_ingestion.utils.monitoring import system_monitor
 
         assert system_monitor is not None
         assert alert_manager is not None
@@ -742,8 +741,6 @@ class TestGlobalInstances:
         import jd_ingestion.utils.monitoring
 
         importlib.reload(jd_ingestion.utils.monitoring)
-
-        from jd_ingestion.utils.monitoring import system_monitor
 
         # The global instance should have been created with Redis client
         # (Note: This might be None if Redis connection failed during import)

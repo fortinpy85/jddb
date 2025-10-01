@@ -72,7 +72,7 @@ async def list_jobs(
     if language:
         base_query = base_query.where(JobDescription.language == language)
     if department:
-        base_query = base_query.join(JobDescription.metadata_entry).where(
+        base_query = base_query.join(JobDescription.job_metadata).where(
             JobMetadata.department.ilike(f"%{department}%")
         )
 
@@ -93,7 +93,7 @@ async def list_jobs(
     if language:
         count_query = count_query.where(JobDescription.language == language)
     if department:
-        count_query = count_query.join(JobDescription.metadata_entry).where(
+        count_query = count_query.join(JobDescription.job_metadata).where(
             JobMetadata.department.ilike(f"%{department}%")
         )
 
@@ -291,7 +291,7 @@ async def _get_job_details(
     if include_sections:
         query = query.options(selectinload(JobDescription.sections))
     if include_metadata:
-        query = query.options(selectinload(JobDescription.metadata_entry))
+        query = query.options(selectinload(JobDescription.job_metadata))
 
     result = await db.execute(query)
     job = result.scalar_one_or_none()
@@ -328,20 +328,20 @@ async def _get_job_details(
             for section in job.sections
         ]
 
-    if include_metadata and job.metadata_entry:
+    if include_metadata and job.job_metadata:
         response["metadata"] = {
-            "reports_to": job.metadata_entry.reports_to,
-            "department": job.metadata_entry.department,
-            "location": job.metadata_entry.location,
-            "fte_count": job.metadata_entry.fte_count,
+            "reports_to": job.job_metadata.reports_to,
+            "department": job.job_metadata.department,
+            "location": job.job_metadata.location,
+            "fte_count": job.job_metadata.fte_count,
             "salary_budget": (
-                float(job.metadata_entry.salary_budget)
-                if job.metadata_entry.salary_budget
+                float(job.job_metadata.salary_budget)
+                if job.job_metadata.salary_budget
                 else None
             ),
             "effective_date": (
-                job.metadata_entry.effective_date.isoformat()
-                if job.metadata_entry.effective_date
+                job.job_metadata.effective_date.isoformat()
+                if job.job_metadata.effective_date
                 else None
             ),
         }
@@ -517,7 +517,7 @@ async def bulk_export_jobs(
         # Build query based on job_ids or filters
         query = select(JobDescription).options(
             selectinload(JobDescription.sections),
-            selectinload(JobDescription.metadata_entry),
+            selectinload(JobDescription.job_metadata),
         )
         if job_ids:
             query = query.where(JobDescription.id.in_(job_ids))
@@ -530,7 +530,7 @@ async def bulk_export_jobs(
             if filters.get("language"):
                 query = query.where(JobDescription.language.in_(filters["language"]))
             if filters.get("department") and include_metadata:
-                query = query.join(JobDescription.metadata_entry).where(
+                query = query.join(JobDescription.job_metadata).where(
                     JobMetadata.department.in_(filters["department"])
                 )
 
@@ -568,13 +568,13 @@ async def bulk_export_jobs(
                     for s in job.sections
                 ]
 
-            if include_metadata and job.metadata_entry:
+            if include_metadata and job.job_metadata:
                 job_data["metadata"] = {
-                    "department": job.metadata_entry.department,
-                    "reports_to": job.metadata_entry.reports_to,
-                    "location": job.metadata_entry.location,
-                    "fte_count": job.metadata_entry.fte_count,
-                    "salary_budget": job.metadata_entry.salary_budget,
+                    "department": job.job_metadata.department,
+                    "reports_to": job.job_metadata.reports_to,
+                    "location": job.job_metadata.location,
+                    "fte_count": job.job_metadata.fte_count,
+                    "salary_budget": job.job_metadata.salary_budget,
                 }
 
             jobs_data.append(job_data)

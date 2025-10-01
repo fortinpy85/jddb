@@ -2,13 +2,6 @@
 Tests for database models.
 """
 
-import pytest
-from datetime import datetime, date
-from decimal import Decimal
-from unittest.mock import Mock, patch
-from sqlalchemy import Column, Integer, String, Text
-from sqlalchemy.orm import Session
-
 from jd_ingestion.database.models import (
     Base,
     JobDescription,

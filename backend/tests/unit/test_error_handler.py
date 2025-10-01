@@ -1,6 +1,6 @@
 import pytest
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 from datetime import datetime
 from fastapi import Request
 from sqlalchemy.exc import IntegrityError, OperationalError, DisconnectionError
@@ -8,7 +8,6 @@ from sqlalchemy.exc import IntegrityError, OperationalError, DisconnectionError
 from jd_ingestion.utils.error_handler import ErrorHandler
 from jd_ingestion.utils.exceptions import (
     DatabaseConnectionException,
-    DatabaseException,
     DatabaseQueryException,
     ExternalAPIException,
     FileProcessingException,

@@ -11,7 +11,7 @@ mock.module("@/components/layout/JDDBLayout", () => ({
   ContentSection: ({
     title,
     children,
-    variant
+    variant,
   }: {
     title: string;
     children: React.ReactNode;
@@ -31,7 +31,7 @@ mock.module("@/components/ui/design-system", () => ({
     variant,
     color,
     icon,
-    className
+    className,
   }: {
     children: React.ReactNode;
     onClick: () => void;
@@ -72,7 +72,7 @@ describe("QuickActionsGrid Component", () => {
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToSearch={mockOnNavigateToSearch}
         onNavigateToCompare={mockOnNavigateToCompare}
-      />
+      />,
     );
 
     expect(screen.getByText("Quick Actions")).toBeInTheDocument();
@@ -85,7 +85,7 @@ describe("QuickActionsGrid Component", () => {
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToSearch={mockOnNavigateToSearch}
         onNavigateToCompare={mockOnNavigateToCompare}
-      />
+      />,
     );
 
     expect(screen.getByText("Upload Files")).toBeInTheDocument();
@@ -101,7 +101,7 @@ describe("QuickActionsGrid Component", () => {
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToSearch={mockOnNavigateToSearch}
         onNavigateToCompare={mockOnNavigateToCompare}
-      />
+      />,
     );
 
     const actionButtons = screen.getAllByTestId("action-button");
@@ -115,7 +115,7 @@ describe("QuickActionsGrid Component", () => {
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToSearch={mockOnNavigateToSearch}
         onNavigateToCompare={mockOnNavigateToCompare}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText("Upload Files"));
@@ -129,7 +129,7 @@ describe("QuickActionsGrid Component", () => {
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToSearch={mockOnNavigateToSearch}
         onNavigateToCompare={mockOnNavigateToCompare}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText("Browse Jobs"));
@@ -143,7 +143,7 @@ describe("QuickActionsGrid Component", () => {
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToSearch={mockOnNavigateToSearch}
         onNavigateToCompare={mockOnNavigateToCompare}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText("Search Jobs"));
@@ -157,7 +157,7 @@ describe("QuickActionsGrid Component", () => {
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToSearch={mockOnNavigateToSearch}
         onNavigateToCompare={mockOnNavigateToCompare}
-      />
+      />,
     );
 
     fireEvent.click(screen.getByText("Compare Jobs"));
@@ -171,7 +171,7 @@ describe("QuickActionsGrid Component", () => {
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToSearch={mockOnNavigateToSearch}
         onNavigateToCompare={mockOnNavigateToCompare}
-      />
+      />,
     );
 
     const contentSection = screen.getByTestId("content-section");
@@ -185,34 +185,34 @@ describe("QuickActionsGrid Component", () => {
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToSearch={mockOnNavigateToSearch}
         onNavigateToCompare={mockOnNavigateToCompare}
-      />
+      />,
     );
 
     const actionButtons = screen.getAllByTestId("action-button");
 
     // Upload button should have primary variant
-    const uploadButton = actionButtons.find(button =>
-      button.textContent?.includes("Upload Files")
+    const uploadButton = actionButtons.find((button) =>
+      button.textContent?.includes("Upload Files"),
     );
     expect(uploadButton).toHaveAttribute("data-variant", "primary");
 
     // Browse Jobs button should have outline variant and emerald color
-    const browseButton = actionButtons.find(button =>
-      button.textContent?.includes("Browse Jobs")
+    const browseButton = actionButtons.find((button) =>
+      button.textContent?.includes("Browse Jobs"),
     );
     expect(browseButton).toHaveAttribute("data-variant", "outline");
     expect(browseButton).toHaveAttribute("data-color", "emerald");
 
     // Search Jobs button should have outline variant and blue color
-    const searchButton = actionButtons.find(button =>
-      button.textContent?.includes("Search Jobs")
+    const searchButton = actionButtons.find((button) =>
+      button.textContent?.includes("Search Jobs"),
     );
     expect(searchButton).toHaveAttribute("data-variant", "outline");
     expect(searchButton).toHaveAttribute("data-color", "blue");
 
     // Compare Jobs button should have outline variant and amber color
-    const compareButton = actionButtons.find(button =>
-      button.textContent?.includes("Compare Jobs")
+    const compareButton = actionButtons.find((button) =>
+      button.textContent?.includes("Compare Jobs"),
     );
     expect(compareButton).toHaveAttribute("data-variant", "outline");
     expect(compareButton).toHaveAttribute("data-color", "amber");
@@ -225,7 +225,7 @@ describe("QuickActionsGrid Component", () => {
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToSearch={mockOnNavigateToSearch}
         onNavigateToCompare={mockOnNavigateToCompare}
-      />
+      />,
     );
 
     // The grid container should be present (we can't test CSS classes directly with our mock,
@@ -241,7 +241,7 @@ describe("QuickActionsGrid Component", () => {
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToSearch={mockOnNavigateToSearch}
         onNavigateToCompare={mockOnNavigateToCompare}
-      />
+      />,
     );
 
     const uploadButton = screen.getByText("Upload Files");
@@ -261,7 +261,7 @@ describe("QuickActionsGrid Component", () => {
         onNavigateToJobs={mockOnNavigateToJobs}
         onNavigateToSearch={mockOnNavigateToSearch}
         onNavigateToCompare={mockOnNavigateToCompare}
-      />
+      />,
     );
 
     // Click all buttons to ensure all callbacks work

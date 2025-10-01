@@ -2,9 +2,8 @@
 Tests for custom exception classes.
 """
 
-import pytest
 from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from fastapi import HTTPException
 
 from jd_ingestion.utils.exceptions import (

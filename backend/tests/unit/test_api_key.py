@@ -3,8 +3,8 @@ Tests for API key authentication module.
 """
 
 import pytest
-from fastapi import HTTPException, Security
-from unittest.mock import Mock, patch
+from fastapi import HTTPException
+from unittest.mock import patch
 
 from jd_ingestion.auth.api_key import get_api_key, API_KEY_HEADER
 

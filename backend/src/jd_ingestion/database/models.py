@@ -42,7 +42,6 @@ class User(Base):
 
     sessions = relationship("UserSession", back_populates="user")
     permissions = relationship("UserPermission", back_populates="user")
-    preferences = relationship("UserPreference", back_populates="user")
 
 
 class UserSession(Base):
@@ -79,13 +78,41 @@ class UserPreference(Base):
     __tablename__ = "user_preferences"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(
+        String, nullable=True
+    )  # Allow string IDs to match SavedSearch pattern
+    session_id = Column(
+        String, nullable=True
+    )  # Add session_id for session-based preferences
+    preference_type = Column(
+        String, nullable=False
+    )  # Add preference type (ui, search, etc.)
     preference_key = Column(String, nullable=False)
     preference_value = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, onupdate=datetime.utcnow, nullable=True)
 
-    user = relationship("User", back_populates="preferences")
+
+class SavedSearch(Base):
+    __tablename__ = "saved_searches"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    user_id = Column(String, nullable=True)
+    session_id = Column(String, nullable=True)
+    search_query = Column(Text, nullable=True)
+    search_type = Column(String, default="general", nullable=False)
+    search_filters = Column(JSONB, nullable=True)
+    is_public = Column(String, default="false", nullable=False)
+    is_favorite = Column(String, default="false", nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow, nullable=True)
+    last_used = Column(DateTime, nullable=True)
+    use_count = Column(Integer, default=0, nullable=False)
+    last_result_count = Column(Integer, nullable=True)
+    last_execution_time_ms = Column(Integer, nullable=True)
+    search_metadata = Column(JSONB, nullable=True)
 
 
 # Core job description models
@@ -107,7 +134,7 @@ class JobDescription(Base):
     # Relationships
     sections = relationship("JobSection", back_populates="job")
     chunks = relationship("ContentChunk", back_populates="job")
-    metadata = relationship("JobMetadata", back_populates="job", uselist=False)
+    job_metadata = relationship("JobMetadata", back_populates="job", uselist=False)
     quality_metrics = relationship(
         "DataQualityMetrics", back_populates="job", uselist=False
     )
@@ -140,7 +167,7 @@ class JobMetadata(Base):
     effective_date = Column(Date, nullable=True)
 
     # Relationships
-    job = relationship("JobDescription", back_populates="metadata")
+    job = relationship("JobDescription", back_populates="job_metadata")
 
 
 class ContentChunk(Base):

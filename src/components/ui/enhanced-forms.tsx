@@ -21,7 +21,7 @@ import {
   FileText,
   AlertCircle,
   Eye,
-  EyeOff
+  EyeOff,
 } from "lucide-react";
 
 /**
@@ -56,7 +56,7 @@ export function EnhancedSearch({
   activeFilters = [],
   onFilterChange,
   className,
-  size = "md"
+  size = "md",
 }: EnhancedSearchProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -76,7 +76,7 @@ export function EnhancedSearch({
 
   const handleFilterToggle = (filterId: string) => {
     const newFilters = activeFilters.includes(filterId)
-      ? activeFilters.filter(f => f !== filterId)
+      ? activeFilters.filter((f) => f !== filterId)
       : [...activeFilters, filterId];
     onFilterChange?.(newFilters);
   };
@@ -89,7 +89,7 @@ export function EnhancedSearch({
   const sizeClasses = {
     sm: "h-8 text-sm",
     md: "h-10 text-sm",
-    lg: "h-12 text-base"
+    lg: "h-12 text-base",
   };
 
   return (
@@ -112,7 +112,7 @@ export function EnhancedSearch({
           className={cn(
             "pl-10 pr-20 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700",
             "focus:border-blue-500 focus:ring-blue-500",
-            sizeClasses[size]
+            sizeClasses[size],
           )}
         />
 
@@ -135,7 +135,7 @@ export function EnhancedSearch({
               onClick={() => setShowFilters(!showFilters)}
               className={cn(
                 "h-6 w-6 p-0 hover:bg-slate-100 dark:hover:bg-slate-700",
-                activeFilters.length > 0 && "text-blue-600 bg-blue-50"
+                activeFilters.length > 0 && "text-blue-600 bg-blue-50",
               )}
             >
               <Filter className="w-3 h-3" />
@@ -185,7 +185,7 @@ export function EnhancedSearch({
                     "w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors duration-150",
                     isActive
                       ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
-                      : "hover:bg-slate-50 dark:hover:bg-slate-700"
+                      : "hover:bg-slate-50 dark:hover:bg-slate-700",
                   )}
                 >
                   <div className="flex items-center space-x-2">
@@ -229,7 +229,7 @@ export function EnhancedFileUpload({
   maxFiles = 5,
   onFilesChange,
   preview = true,
-  className
+  className,
 }: EnhancedFileUploadProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
@@ -251,7 +251,7 @@ export function EnhancedFileUpload({
     const newErrors: string[] = [];
 
     // Validate each file
-    fileArray.forEach(file => {
+    fileArray.forEach((file) => {
       const error = validateFile(file);
       if (error) {
         newErrors.push(error);
@@ -312,7 +312,7 @@ export function EnhancedFileUpload({
           "relative border-2 border-dashed rounded-lg p-6 text-center transition-colors duration-200",
           dragActive
             ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20"
-            : "border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500"
+            : "border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500",
         )}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -343,7 +343,10 @@ export function EnhancedFileUpload({
       {errors.length > 0 && (
         <div className="space-y-2">
           {errors.map((error, index) => (
-            <div key={index} className="flex items-center space-x-2 text-sm text-red-600 dark:text-red-400">
+            <div
+              key={index}
+              className="flex items-center space-x-2 text-sm text-red-600 dark:text-red-400"
+            >
               <AlertCircle className="w-4 h-4" />
               <span>{error}</span>
             </div>
@@ -426,7 +429,7 @@ export function EnhancedInput({
   helpText,
   icon: Icon,
   className,
-  size = "md"
+  size = "md",
 }: EnhancedInputProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -478,7 +481,7 @@ export function EnhancedInput({
   const sizeClasses = {
     sm: "h-8 text-sm",
     md: "h-10 text-sm",
-    lg: "h-12 text-base"
+    lg: "h-12 text-base",
   };
 
   return (
@@ -505,8 +508,9 @@ export function EnhancedInput({
           className={cn(
             Icon && "pl-10",
             type === "password" && "pr-10",
-            hasError && "border-red-500 focus:border-red-500 focus:ring-red-500",
-            sizeClasses[size]
+            hasError &&
+              "border-red-500 focus:border-red-500 focus:ring-red-500",
+            sizeClasses[size],
           )}
         />
         {type === "password" && (
@@ -529,11 +533,17 @@ export function EnhancedInput({
       {/* Help Text or Error */}
       {(helpText || hasError) && (
         <div className="flex items-start space-x-1">
-          {hasError && <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />}
-          <p className={cn(
-            "text-xs",
-            hasError ? "text-red-600 dark:text-red-400" : "text-slate-500 dark:text-slate-400"
-          )}>
+          {hasError && (
+            <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+          )}
+          <p
+            className={cn(
+              "text-xs",
+              hasError
+                ? "text-red-600 dark:text-red-400"
+                : "text-slate-500 dark:text-slate-400",
+            )}
+          >
             {hasError ? error : helpText}
           </p>
         </div>

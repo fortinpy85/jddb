@@ -1,42 +1,17 @@
-# Developer Documentation
+# Development Documentation
 
-Welcome to the developer documentation for the JDDB project. This folder contains all the technical documentation needed to understand, run, and contribute to the project.
+This directory contains documentation related to the development phases of the JDDB project.
 
----
+## Structure:
 
-## 1. Getting Started
+*   **`phase-1/`**: Documentation for Phase 1 (Core Infrastructure and Features).
+*   **`phase-2/`**: Documentation for Phase 2 (Collaborative Editing and AI-Powered Assistance).
+    *   **`historical/`**: Historical documents related to Phase 2.
+*   **`future/`**: Documentation and backlog for future development phases.
+    *   **`backlog.md`**: Detailed backlog for Phase 3, Phase 4, and general future tasks.
+*   **`requirements/`**: Product requirements and user stories.
+*   **`research/`**: Research documents.
+*   **`phase-2-status.md`**: Current status and progress update for Phase 2.
+*   **`todo.md`**: Original comprehensive todo list (kept for reference).
 
-If you are a new developer on this project, start here.
-
-- **[./local_development_setup.md](./local_development_setup.md)**: A step-by-step guide to setting up your local environment and running the application.
-
----
-
-## 2. Architecture Guides
-
-These documents provide a high-level overview of the technical architecture of the different parts of the system.
-
-- **[./backend_architecture.md](./backend_architecture.md)**: An overview of the FastAPI backend, including project structure, request lifecycle, and database interaction.
-
-- **[./frontend_architecture.md](./frontend_architecture.md)**: An overview of the React frontend, including component structure, state management, and styling.
-
-- **[./api_guide.md](./api_guide.md)**: A guide to using the backend API, covering authentication, error handling, and key endpoints.
-
----
-
-## 3. Key Feature Implementations
-
-These documents provide deep dives into the implementation of specific, complex features.
-
-- **[./SEMANTIC_MATCHING_IMPLEMENTATION.md](./SEMANTIC_MATCHING_IMPLEMENTATION.md)**: A guide to the AI-powered semantic search and job matching features.
-
-- **[./real_time_collaboration_guide.md](./real_time_collaboration_guide.md)**: A technical guide to the WebSocket-based real-time collaboration features for Phase 2.
-
----
-
-## 4. Misplaced Documents
-
-Some documents were previously in this folder but have been moved to more appropriate locations.
-
-- **Dependency Analysis:** This is now located at **[../dependency_analysis.md](../dependency_analysis.md)**.
-- **Phase 2 Vision:** This is a planning document and is now located at **[../planning/phase_2_vision.md](../planning/phase_2_vision.md)**.
+Each phase directory contains a `README.md` summarizing the phase, along with other relevant documentation files.

@@ -31,7 +31,7 @@ export function ContentSection({
   children,
   className,
   headerActions,
-  variant = "default"
+  variant = "default",
 }: ContentSectionProps) {
   const isCompact = variant === "compact";
   const isHighlighted = variant === "highlighted";
@@ -40,12 +40,15 @@ export function ContentSection({
     <Card
       className={cn(
         "bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all duration-300",
-        isHighlighted && "hover:shadow-xl border-blue-200/50 dark:border-blue-400/50",
-        className
+        isHighlighted &&
+          "hover:shadow-xl border-blue-200/50 dark:border-blue-400/50",
+        className,
       )}
     >
       {(title || subtitle || headerActions) && (
-        <CardHeader className={cn("relative overflow-hidden", isCompact && "pb-3")}>
+        <CardHeader
+          className={cn("relative overflow-hidden", isCompact && "pb-3")}
+        >
           {isHighlighted && (
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-50/30 to-indigo-50/20 rounded-full -mr-12 -mt-12"></div>
           )}
@@ -70,16 +73,12 @@ export function ContentSection({
               </div>
             </div>
             {headerActions && (
-              <div className="flex items-center space-x-2">
-                {headerActions}
-              </div>
+              <div className="flex items-center space-x-2">{headerActions}</div>
             )}
           </div>
         </CardHeader>
       )}
-      <CardContent className={cn(isCompact && "pt-3")}>
-        {children}
-      </CardContent>
+      <CardContent className={cn(isCompact && "pt-3")}>{children}</CardContent>
     </Card>
   );
 }
@@ -106,34 +105,34 @@ export function StatsCard({
   trend,
   tooltip,
   onClick,
-  className
+  className,
 }: StatsCardProps) {
   const colorConfig = {
     blue: {
       text: "text-blue-600",
       bg: "bg-gradient-to-br from-blue-50 to-indigo-50",
-      hover: "hover:border-blue-200/50 dark:hover:border-blue-400/50"
+      hover: "hover:border-blue-200/50 dark:hover:border-blue-400/50",
     },
     emerald: {
       text: "text-emerald-600",
       bg: "bg-gradient-to-br from-emerald-50 to-green-50",
-      hover: "hover:border-emerald-200/50 dark:hover:border-emerald-400/50"
+      hover: "hover:border-emerald-200/50 dark:hover:border-emerald-400/50",
     },
     amber: {
       text: "text-amber-600",
       bg: "bg-gradient-to-br from-amber-50 to-orange-50",
-      hover: "hover:border-amber-200/50 dark:hover:border-amber-400/50"
+      hover: "hover:border-amber-200/50 dark:hover:border-amber-400/50",
     },
     violet: {
       text: "text-violet-600",
       bg: "bg-gradient-to-br from-violet-50 to-purple-50",
-      hover: "hover:border-violet-200/50 dark:hover:border-violet-400/50"
+      hover: "hover:border-violet-200/50 dark:hover:border-violet-400/50",
     },
     red: {
       text: "text-red-600",
       bg: "bg-gradient-to-br from-red-50 to-pink-50",
-      hover: "hover:border-red-200/50 dark:hover:border-red-400/50"
-    }
+      hover: "hover:border-red-200/50 dark:hover:border-red-400/50",
+    },
   }[color];
 
   return (
@@ -142,7 +141,7 @@ export function StatsCard({
         "group hover-lift cursor-pointer border border-white/20 dark:border-slate-700/20 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all duration-300",
         colorConfig.hover,
         onClick && "hover:scale-105",
-        className
+        className,
       )}
       title={tooltip}
       onClick={onClick}
@@ -163,9 +162,19 @@ export function StatsCard({
               </p>
             )}
           </div>
-          <div className={cn("p-4 rounded-xl group-hover:scale-110 transition-all duration-300 shadow-lg group-hover:shadow-xl relative", colorConfig.bg)}>
+          <div
+            className={cn(
+              "p-4 rounded-xl group-hover:scale-110 transition-all duration-300 shadow-lg group-hover:shadow-xl relative",
+              colorConfig.bg,
+            )}
+          >
             <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
-            <Icon className={cn("relative w-6 h-6 group-hover:rotate-12 transition-transform duration-500", colorConfig.text)} />
+            <Icon
+              className={cn(
+                "relative w-6 h-6 group-hover:rotate-12 transition-transform duration-500",
+                colorConfig.text,
+              )}
+            />
           </div>
         </div>
       </CardContent>
@@ -195,45 +204,58 @@ export function ActionButton({
   color = "blue",
   icon: Icon,
   className,
-  disabled
+  disabled,
 }: ActionButtonProps) {
   const colorConfig = {
     blue: {
-      primary: "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white",
+      primary:
+        "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white",
       secondary: "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200",
-      outline: "border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300",
-      ghost: "text-blue-700 hover:bg-blue-50"
+      outline:
+        "border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300",
+      ghost: "text-blue-700 hover:bg-blue-50",
     },
     emerald: {
-      primary: "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white",
-      secondary: "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200",
-      outline: "border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300",
-      ghost: "text-emerald-700 hover:bg-emerald-50"
+      primary:
+        "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white",
+      secondary:
+        "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200",
+      outline:
+        "border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300",
+      ghost: "text-emerald-700 hover:bg-emerald-50",
     },
     amber: {
-      primary: "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white",
-      secondary: "bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200",
-      outline: "border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300",
-      ghost: "text-amber-700 hover:bg-amber-50"
+      primary:
+        "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white",
+      secondary:
+        "bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200",
+      outline:
+        "border-amber-200 text-amber-700 hover:bg-amber-50 hover:border-amber-300",
+      ghost: "text-amber-700 hover:bg-amber-50",
     },
     red: {
-      primary: "bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white",
+      primary:
+        "bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white",
       secondary: "bg-red-50 hover:bg-red-100 text-red-700 border-red-200",
-      outline: "border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300",
-      ghost: "text-red-700 hover:bg-red-50"
+      outline:
+        "border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300",
+      ghost: "text-red-700 hover:bg-red-50",
     },
     violet: {
-      primary: "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white",
-      secondary: "bg-violet-50 hover:bg-violet-100 text-violet-700 border-violet-200",
-      outline: "border-violet-200 text-violet-700 hover:bg-violet-50 hover:border-violet-300",
-      ghost: "text-violet-700 hover:bg-violet-50"
-    }
+      primary:
+        "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white",
+      secondary:
+        "bg-violet-50 hover:bg-violet-100 text-violet-700 border-violet-200",
+      outline:
+        "border-violet-200 text-violet-700 hover:bg-violet-50 hover:border-violet-300",
+      ghost: "text-violet-700 hover:bg-violet-50",
+    },
   }[color][variant];
 
   const sizeClass = {
     sm: "h-8 px-3 text-sm",
     md: "h-10 px-4",
-    lg: "h-12 px-6 text-lg"
+    lg: "h-12 px-6 text-lg",
   }[size];
 
   return (
@@ -246,7 +268,7 @@ export function ActionButton({
         "transition-all duration-200 hover:scale-105 hover:shadow-md group",
         colorConfig,
         sizeClass,
-        className
+        className,
       )}
     >
       {Icon && (
@@ -283,7 +305,7 @@ export function JobCard({
   onExport,
   onDelete,
   showActions = true,
-  className
+  className,
 }: JobCardProps) {
   const getLanguageName = (lang: string) => {
     return lang === "en" ? "English" : lang === "fr" ? "French" : lang;
@@ -302,20 +324,29 @@ export function JobCard({
     <Card
       className={cn(
         "group h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:scale-[1.02] border border-white/20 dark:border-slate-700/20 hover:border-blue-200/50 dark:hover:border-blue-400/50 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-slate-800/90",
-        className
+        className,
       )}
     >
       <CardContent className="p-6 flex-1 flex flex-col">
         {/* Header with badges */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors">
+            <Badge
+              variant="secondary"
+              className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 transition-colors"
+            >
               {job.job_number}
             </Badge>
-            <Badge variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-colors">
+            <Badge
+              variant="outline"
+              className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 transition-colors"
+            >
               {job.classification}
             </Badge>
-            <Badge variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50 transition-colors">
+            <Badge
+              variant="outline"
+              className="border-blue-200 text-blue-700 hover:bg-blue-50 transition-colors"
+            >
               {getLanguageName(job.language)}
             </Badge>
             {job.relevance_score && (

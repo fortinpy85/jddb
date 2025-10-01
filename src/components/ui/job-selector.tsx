@@ -49,7 +49,7 @@ export function JobSelector({
   variant = "primary",
   showSuggestions = [] as JobDescription[],
   onClearSelection,
-  maxHeight = "400px"
+  maxHeight = "400px",
 }: JobSelectorProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -65,7 +65,7 @@ export function JobSelector({
           bg: "bg-blue-50",
           accent: "text-blue-700",
           selectedBg: "bg-blue-100",
-          selectedBorder: "border-blue-300"
+          selectedBorder: "border-blue-300",
         };
       case "secondary":
         return {
@@ -73,7 +73,7 @@ export function JobSelector({
           bg: "bg-green-50",
           accent: "text-green-700",
           selectedBg: "bg-green-100",
-          selectedBorder: "border-green-300"
+          selectedBorder: "border-green-300",
         };
       case "comparison":
         return {
@@ -81,7 +81,7 @@ export function JobSelector({
           bg: "bg-purple-50",
           accent: "text-purple-700",
           selectedBg: "bg-purple-100",
-          selectedBorder: "border-purple-300"
+          selectedBorder: "border-purple-300",
         };
     }
   };
@@ -96,10 +96,14 @@ export function JobSelector({
         job.job_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
         job.classification.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesClassification = !classificationFilter ||
-        job.classification.toLowerCase().includes(classificationFilter.toLowerCase());
+      const matchesClassification =
+        !classificationFilter ||
+        job.classification
+          .toLowerCase()
+          .includes(classificationFilter.toLowerCase());
 
-      const matchesLanguage = !languageFilter ||
+      const matchesLanguage =
+        !languageFilter ||
         job.language.toLowerCase().includes(languageFilter.toLowerCase());
 
       return matchesSearch && matchesClassification && matchesLanguage;
@@ -107,14 +111,14 @@ export function JobSelector({
   }, [jobs, searchTerm, classificationFilter, languageFilter]);
 
   // Get unique values for filters
-  const uniqueClassifications = useMemo(() =>
-    [...new Set(jobs.map(job => job.classification))].sort(),
-    [jobs]
+  const uniqueClassifications = useMemo(
+    () => [...new Set(jobs.map((job) => job.classification))].sort(),
+    [jobs],
   );
 
-  const uniqueLanguages = useMemo(() =>
-    [...new Set(jobs.map(job => job.language))].sort(),
-    [jobs]
+  const uniqueLanguages = useMemo(
+    () => [...new Set(jobs.map((job) => job.language))].sort(),
+    [jobs],
   );
 
   const clearFilters = () => {
@@ -156,7 +160,9 @@ export function JobSelector({
 
       {/* Selected Job Display */}
       {selectedJob && (
-        <Card className={cn("border-2", styles.selectedBorder, styles.selectedBg)}>
+        <Card
+          className={cn("border-2", styles.selectedBorder, styles.selectedBg)}
+        >
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div className="flex-1">
@@ -249,7 +255,7 @@ export function JobSelector({
                 className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700"
               >
                 <option value="">All Classifications</option>
-                {uniqueClassifications.map(classification => (
+                {uniqueClassifications.map((classification) => (
                   <option key={classification} value={classification}>
                     {classification}
                   </option>
@@ -266,7 +272,7 @@ export function JobSelector({
                 className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700"
               >
                 <option value="">All Languages</option>
-                {uniqueLanguages.map(language => (
+                {uniqueLanguages.map((language) => (
                   <option key={language} value={language}>
                     {language}
                   </option>
@@ -317,15 +323,19 @@ export function JobSelector({
         <ScrollArea style={{ height: maxHeight }}>
           <div className="space-y-2 pr-4">
             {filteredJobs.length > 0 ? (
-              filteredJobs.slice(0, 10).map((job: JobDescription) => (
-                <JobCard
-                  key={job.id}
-                  job={job}
-                  onClick={() => handleJobClick(job)}
-                  isSelected={selectedJob !== null && job.id === selectedJob.id}
-                  variant={variant}
-                />
-              ))
+              filteredJobs
+                .slice(0, 10)
+                .map((job: JobDescription) => (
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    onClick={() => handleJobClick(job)}
+                    isSelected={
+                      selectedJob !== null && job.id === selectedJob.id
+                    }
+                    variant={variant}
+                  />
+                ))
             ) : (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -355,26 +365,32 @@ interface JobCardProps {
   size?: "default" | "compact";
 }
 
-function JobCard({ job, onClick, isSelected, variant, size = "default" }: JobCardProps) {
+function JobCard({
+  job,
+  onClick,
+  isSelected,
+  variant,
+  size = "default",
+}: JobCardProps) {
   const getVariantStyles = () => {
     switch (variant) {
       case "primary":
         return {
           border: "border-blue-200 hover:border-blue-300",
           selectedBorder: "border-blue-400 bg-blue-50",
-          accent: "text-blue-600"
+          accent: "text-blue-600",
         };
       case "secondary":
         return {
           border: "border-green-200 hover:border-green-300",
           selectedBorder: "border-green-400 bg-green-50",
-          accent: "text-green-600"
+          accent: "text-green-600",
         };
       case "comparison":
         return {
           border: "border-purple-200 hover:border-purple-300",
           selectedBorder: "border-purple-400 bg-purple-50",
-          accent: "text-purple-600"
+          accent: "text-purple-600",
         };
     }
   };
@@ -386,10 +402,8 @@ function JobCard({ job, onClick, isSelected, variant, size = "default" }: JobCar
     <Card
       className={cn(
         "cursor-pointer transition-all duration-200 hover:shadow-md",
-        isSelected
-          ? styles.selectedBorder
-          : `border ${styles.border}`,
-        "hover:scale-[1.02]"
+        isSelected ? styles.selectedBorder : `border ${styles.border}`,
+        "hover:scale-[1.02]",
       )}
       onClick={onClick}
     >
@@ -398,20 +412,26 @@ function JobCard({ job, onClick, isSelected, variant, size = "default" }: JobCar
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2 mb-1">
               {isSelected && (
-                <CheckCircle className={cn("w-4 h-4 flex-shrink-0", styles.accent)} />
+                <CheckCircle
+                  className={cn("w-4 h-4 flex-shrink-0", styles.accent)}
+                />
               )}
-              <h4 className={cn(
-                "font-semibold text-gray-900 dark:text-gray-100 truncate",
-                isCompact ? "text-sm" : "text-base"
-              )}>
+              <h4
+                className={cn(
+                  "font-semibold text-gray-900 dark:text-gray-100 truncate",
+                  isCompact ? "text-sm" : "text-base",
+                )}
+              >
                 {job.title}
               </h4>
             </div>
 
-            <div className={cn(
-              "flex items-center space-x-3 text-gray-600 dark:text-gray-400",
-              isCompact ? "text-xs" : "text-sm"
-            )}>
+            <div
+              className={cn(
+                "flex items-center space-x-3 text-gray-600 dark:text-gray-400",
+                isCompact ? "text-xs" : "text-sm",
+              )}
+            >
               <div className="flex items-center space-x-1">
                 <FileText className="w-3 h-3" />
                 <span className="truncate">{job.job_number}</span>
@@ -428,9 +448,7 @@ function JobCard({ job, onClick, isSelected, variant, size = "default" }: JobCar
             {!isCompact && job.created_at && (
               <div className="flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-400 mt-1">
                 <Calendar className="w-3 h-3" />
-                <span>
-                  {new Date(job.created_at).toLocaleDateString()}
-                </span>
+                <span>{new Date(job.created_at).toLocaleDateString()}</span>
               </div>
             )}
           </div>

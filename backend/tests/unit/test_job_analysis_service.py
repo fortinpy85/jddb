@@ -1,8 +1,6 @@
 import pytest
 import json
-import numpy as np
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
-from datetime import datetime
+from unittest.mock import AsyncMock, Mock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jd_ingestion.services.job_analysis_service import JobAnalysisService

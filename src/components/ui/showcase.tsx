@@ -10,12 +10,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ContentSection } from "@/components/layout/JDDBLayout";
-import { LoadingState, ErrorState, StatusIndicator } from "@/components/ui/states";
+import {
+  LoadingState,
+  ErrorState,
+  StatusIndicator,
+} from "@/components/ui/states";
 import EmptyState from "@/components/ui/empty-state";
-import { FadeTransition, StaggerAnimation, HoverTransition } from "@/components/ui/transitions";
-import { EnhancedCard, FeatureCard, MetricCard } from "@/components/ui/enhanced-card";
-import { EnhancedNavigation, EnhancedBreadcrumb } from "@/components/ui/enhanced-navigation";
-import { EnhancedSearch, EnhancedFileUpload, EnhancedInput } from "@/components/ui/enhanced-forms";
+import {
+  FadeTransition,
+  StaggerAnimation,
+  HoverTransition,
+} from "@/components/ui/transitions";
+import {
+  EnhancedCard,
+  FeatureCard,
+  MetricCard,
+} from "@/components/ui/enhanced-card";
+import {
+  EnhancedNavigation,
+  EnhancedBreadcrumb,
+} from "@/components/ui/enhanced-navigation";
+import {
+  EnhancedSearch,
+  EnhancedFileUpload,
+  EnhancedInput,
+} from "@/components/ui/enhanced-forms";
 import { ActionButton, StatsCard } from "@/components/ui/design-system";
 import { cn } from "@/lib/utils";
 import {
@@ -38,7 +57,7 @@ import {
   Shield,
   Smartphone,
   Monitor,
-  Globe
+  Globe,
 } from "lucide-react";
 
 export function UIShowcase() {
@@ -68,48 +87,54 @@ export function UIShowcase() {
           </h1>
         </div>
         <p className="text-lg text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
-          Enhanced user interface with consistent layout, modern design patterns, and improved accessibility
+          Enhanced user interface with consistent layout, modern design
+          patterns, and improved accessibility
         </p>
       </div>
 
-      <StaggerAnimation staggerDelay={100} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <StaggerAnimation
+        staggerDelay={100}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      >
         {[
           {
             title: "Consistent Layout System",
-            description: "Unified header, navigation, and content structure across all pages",
+            description:
+              "Unified header, navigation, and content structure across all pages",
             icon: Monitor,
-            color: "blue"
+            color: "blue",
           },
           {
             title: "Enhanced Components",
-            description: "Modern cards, forms, navigation with improved interactions",
+            description:
+              "Modern cards, forms, navigation with improved interactions",
             icon: Palette,
-            color: "emerald"
+            color: "emerald",
           },
           {
             title: "Visual Continuity",
             description: "JDDB branding maintained throughout the application",
             icon: Database,
-            color: "violet"
+            color: "violet",
           },
           {
             title: "Responsive Design",
             description: "Optimized for mobile, tablet, and desktop devices",
             icon: Smartphone,
-            color: "amber"
+            color: "amber",
           },
           {
             title: "Smooth Transitions",
             description: "Animated page changes and micro-interactions",
             icon: Zap,
-            color: "red"
+            color: "red",
           },
           {
             title: "Best Practices",
             description: "Accessibility, performance, and usability focused",
             icon: Shield,
-            color: "green"
-          }
+            color: "green",
+          },
         ].map((feature, index) => (
           <FeatureCard
             key={index}
@@ -132,7 +157,9 @@ export function UIShowcase() {
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-4">
-            <h4 className="font-semibold text-slate-900 dark:text-slate-100">Header Components</h4>
+            <h4 className="font-semibold text-slate-900 dark:text-slate-100">
+              Header Components
+            </h4>
             <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               <li>• Consistent JDDB logo and branding</li>
               <li>• Theme toggle integration</li>
@@ -141,7 +168,9 @@ export function UIShowcase() {
             </ul>
           </div>
           <div className="space-y-4">
-            <h4 className="font-semibold text-slate-900 dark:text-slate-100">Navigation System</h4>
+            <h4 className="font-semibold text-slate-900 dark:text-slate-100">
+              Navigation System
+            </h4>
             <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               <li>• Tab-based navigation with icons</li>
               <li>• Keyboard navigation support</li>
@@ -250,7 +279,7 @@ export function UIShowcase() {
             description="Try adjusting your search criteria"
             action={{
               label: "Clear Filters",
-              onClick: () => console.log("Clear filters")
+              onClick: () => console.log("Clear filters"),
             }}
           />
         </Card>
@@ -284,10 +313,7 @@ export function UIShowcase() {
             >
               Toggle Loading Demo
             </Button>
-            <Button
-              onClick={() => setShowError(!showError)}
-              variant="outline"
-            >
+            <Button onClick={() => setShowError(!showError)} variant="outline">
               Toggle Error Demo
             </Button>
           </div>
@@ -310,7 +336,10 @@ export function UIShowcase() {
         </div>
       </ContentSection>
 
-      <StaggerAnimation staggerDelay={200} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <StaggerAnimation
+        staggerDelay={200}
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+      >
         {["First Item", "Second Item", "Third Item"].map((item, index) => (
           <Card key={index} className="p-6 text-center">
             <h5 className="font-medium">{item}</h5>
@@ -332,7 +361,9 @@ export function UIShowcase() {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-4">
-            <h4 className="font-semibold text-slate-900 dark:text-slate-100">Mobile Optimizations</h4>
+            <h4 className="font-semibold text-slate-900 dark:text-slate-100">
+              Mobile Optimizations
+            </h4>
             <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               <li>• Touch-friendly tap targets (44px minimum)</li>
               <li>• Optimized navigation for small screens</li>
@@ -342,7 +373,9 @@ export function UIShowcase() {
             </ul>
           </div>
           <div className="space-y-4">
-            <h4 className="font-semibold text-slate-900 dark:text-slate-100">Accessibility Features</h4>
+            <h4 className="font-semibold text-slate-900 dark:text-slate-100">
+              Accessibility Features
+            </h4>
             <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               <li>• Keyboard navigation support</li>
               <li>• Screen reader compatibility</li>
@@ -358,22 +391,30 @@ export function UIShowcase() {
         <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
           <Monitor className="w-8 h-8 mx-auto mb-2 text-green-600" />
           <p className="text-sm font-medium">Desktop</p>
-          <p className="text-xs text-slate-600 dark:text-slate-400">Full experience</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            Full experience
+          </p>
         </div>
         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
           <div className="w-8 h-8 mx-auto mb-2 bg-blue-600 rounded"></div>
           <p className="text-sm font-medium">Tablet</p>
-          <p className="text-xs text-slate-600 dark:text-slate-400">Optimized layout</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            Optimized layout
+          </p>
         </div>
         <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-center">
           <Smartphone className="w-8 h-8 mx-auto mb-2 text-purple-600" />
           <p className="text-sm font-medium">Mobile</p>
-          <p className="text-xs text-slate-600 dark:text-slate-400">Touch-optimized</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            Touch-optimized
+          </p>
         </div>
         <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-center">
           <Globe className="w-8 h-8 mx-auto mb-2 text-amber-600" />
           <p className="text-sm font-medium">Universal</p>
-          <p className="text-xs text-slate-600 dark:text-slate-400">Accessible</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            Accessible
+          </p>
         </div>
       </div>
     </div>
@@ -419,9 +460,7 @@ export function UIShowcase() {
       </Card>
 
       {/* Content */}
-      <FadeTransition show={true}>
-        {renderContent()}
-      </FadeTransition>
+      <FadeTransition show={true}>{renderContent()}</FadeTransition>
 
       {/* Footer */}
       <Card className="p-6 text-center">
@@ -430,7 +469,8 @@ export function UIShowcase() {
           <span className="font-semibold">JDDB - Job Description Database</span>
         </div>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Enhanced user interface with modern design patterns and consistent branding
+          Enhanced user interface with modern design patterns and consistent
+          branding
         </p>
       </Card>
     </div>

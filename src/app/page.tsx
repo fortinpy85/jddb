@@ -1,49 +1,51 @@
 /**
  * JDDB Main Application Page
- * Enhanced with consistent layout system and modern UI patterns
+ * Modernized with Two-Panel layout architecture
+ * Dashboard sidebar (left) + Main content (center) + Optional panels (right)
  */
 
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { JDDBLayout, PageContainer } from "@/components/layout/JDDBLayout";
-import JobList from "@/components/JobList";
+import { TwoPanelLayout } from "@/components/layout/TwoPanelLayout";
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
+import { AppHeader, type AppView } from "@/components/layout/AppHeader";
+import { JobsTable } from "@/components/jobs/JobsTable";
+import { JobDetailView } from "@/components/jobs/JobDetailView";
 import BulkUpload from "@/components/BulkUpload";
-import JobDetails from "@/components/JobDetails";
 import SearchInterface from "@/components/SearchInterface";
 import JobComparison from "@/components/JobComparison";
 import StatsDashboard from "@/components/StatsDashboard";
-import { EditingWorkspace } from "@/components/editing/EditingWorkspace";
+import { BasicEditingView } from "@/components/editing/BasicEditingView";
 import { EnhancedDualPaneEditor } from "@/components/editing/EnhancedDualPaneEditor";
-import { ModernDashboard } from "@/components/layout/ModernDashboard";
-import { Dashboard } from "@/components/dashboard/Dashboard";
 import type { JobDescription } from "@/lib/types";
 import { apiClient } from "@/lib/api";
 import { useStore } from "@/lib/store";
-import { TAB_ORDER, TAB_NAMES } from "@/lib/constants";
-import { Layers } from "lucide-react";
+import { Database, Settings, HelpCircle } from "lucide-react";
 import { ToastProvider } from "@/components/ui/toast";
 import { ErrorBoundaryWrapper } from "@/components/ui/error-boundary";
-import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { ThemeProvider } from "@/components/ui/theme-provider";
-import { LoadingProvider, useLoadingMessage } from "@/contexts/LoadingContext";
+import { LoadingProvider } from "@/contexts/LoadingContext";
 import { useJDDBKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import {
   KeyboardShortcutsModal,
   useKeyboardShortcutsModal,
 } from "@/components/ui/keyboard-shortcuts-modal";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ThemeToggle from "@/components/ui/theme-toggle";
 import { LoadingState, ErrorState } from "@/components/ui/states";
 import {
   PageTransition,
-  FadeTransition,
-  StaggerAnimation,
 } from "@/components/ui/transitions";
+import { AlertBanner } from "@/components/ui/alert-banner";
+
+// View types for routing
+type ViewType = "home" | "job-details" | "upload" | "search" | "editing" | "compare" | "statistics" | "system-health" | "preferences";
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeView, setActiveView] = useState<ViewType>("home");
+  const [previousView, setPreviousView] = useState<ViewType | undefined>(undefined);
+  const [showAlertBanner, setShowAlertBanner] = useState(true);
   const {
     stats,
     jobs,
@@ -55,6 +57,12 @@ export default function HomePage() {
     error,
   } = useStore();
 
+  // Track view changes for transitions
+  const handleViewChange = (newView: ViewType) => {
+    setPreviousView(activeView);
+    setActiveView(newView);
+  };
+
   // Keyboard shortcuts modal
   const {
     isOpen: shortcutsModalOpen,
@@ -62,129 +70,119 @@ export default function HomePage() {
     closeModal: closeShortcutsModal,
   } = useKeyboardShortcutsModal();
 
-  // Search input reference for focus
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
   // Keyboard shortcuts handlers
   const { shortcuts } = useJDDBKeyboardShortcuts({
-    onNavigateToJobs: () => setActiveTab("jobs"),
-    onNavigateToUpload: () => setActiveTab("upload"),
-    onNavigateToSearch: () => setActiveTab("search"),
-    onNavigateToCompare: () => setActiveTab("compare"),
-    onNavigateToStats: () => setActiveTab("statistics"),
+    onNavigateToJobs: () => handleViewChange("home"),
+    onNavigateToUpload: () => handleViewChange("upload"),
+    onNavigateToSearch: () => handleViewChange("search"),
+    onNavigateToCompare: () => handleViewChange("compare"),
+    onNavigateToStats: () => handleViewChange("statistics"),
     onFocusSearch: () => {
-      setActiveTab("search");
-      // Focus search input after tab switch
-      setTimeout(() => {
-        const searchInput = document.querySelector(
-          'input[placeholder*="search"], input[type="search"]',
-        ) as HTMLInputElement;
-        if (searchInput) {
-          searchInput.focus();
-        }
-      }, 100);
+      handleViewChange("search");
     },
-    onNewUpload: () => setActiveTab("upload"),
+    onNewUpload: () => handleViewChange("upload"),
     onShowShortcuts: openShortcutsModal,
   });
 
-  // Initialize API client with API key
-  useEffect(() => {
-    apiClient.setApiKey("your_api_key");
-  }, []);
-
-  const recentJobs = jobs.slice(0, 5);
-
-  // Tab navigation order from constants
-  const currentTabIndex = TAB_ORDER.indexOf(activeTab as any);
-
-  // Keyboard navigation
-  useKeyboardNavigation({
-    onArrowLeft: () => {
-      if (currentTabIndex > 0) {
-        setActiveTab(TAB_ORDER[currentTabIndex - 1]);
-      }
-    },
-    onArrowRight: () => {
-      if (currentTabIndex < TAB_ORDER.length - 1) {
-        setActiveTab(TAB_ORDER[currentTabIndex + 1]);
-      }
-    },
-    onCtrlF: () => {
-      setActiveTab("search");
-    },
-    onCtrlK: () => {
-      setActiveTab("search");
-    },
-    onEscape: () => {
-      if (selectedJob) {
-        handleBackFromDetails();
-      }
-    },
-  });
-
-  // Load dashboard data
+  // Initialize API client and load data
   useEffect(() => {
     apiClient.setApiKey("your_api_key");
     fetchJobs(true);
     fetchStats();
   }, [fetchJobs, fetchStats]);
 
-  // Handle tab changes
-  const handleTabChange = (newTab: string) => {
-    setActiveTab(newTab);
-  };
-
-  // Auto-focus search input when navigating to search tab
-  useEffect(() => {
-    if (activeTab === "search") {
-      // Use requestAnimationFrame to ensure the SearchInterface component has rendered
-      requestAnimationFrame(() => {
-        const searchInput = document.querySelector(
-          'input[placeholder*="Search"]',
-        ) as HTMLInputElement;
-        if (searchInput) {
-          searchInput.focus();
-        }
-      });
-    }
-  }, [activeTab]);
-
   // Handle job selection
   const handleJobSelect = (job: JobDescription) => {
     selectJob(job);
-    handleTabChange("job-details");
+    handleViewChange("job-details");
   };
 
   // Handle back from job details
   const handleBackFromDetails = () => {
     selectJob(null);
-    handleTabChange("jobs");
+    handleViewChange("home");
   };
 
   // Handle upload completion
   const handleUploadComplete = () => {
-    // Refresh stats after upload
     fetchStats();
-    handleTabChange("jobs"); // Navigate to jobs list
+    handleViewChange("home");
   };
 
-  // Dashboard content is now handled by the Dashboard component
+  // Map internal ViewType to AppHeader's AppView type
+  const getHeaderView = (): AppView => {
+    switch (activeView) {
+      case "home":
+        return "dashboard";
+      case "job-details":
+        return "jobs";
+      case "editing":
+        return "translate";
+      default:
+        return activeView as AppView;
+    }
+  };
 
-  // Main content renderer based on active tab
-  const renderContent = () => {
-    switch (activeTab) {
+  // Handle navigation from AppHeader
+  const handleHeaderNavigation = (view: AppView) => {
+    switch (view) {
       case "dashboard":
+      case "jobs":
+        handleViewChange("home");
+        break;
+      case "translate":
+        if (selectedJob) {
+          handleViewChange("editing");
+        } else {
+          handleViewChange("home");
+        }
+        break;
+      default:
+        handleViewChange(view as ViewType);
+    }
+  };
+
+  // Determine if dashboard sidebar should be shown
+  const showDashboardSidebar = ["home", "job-details"].includes(activeView);
+
+  // Determine if we should show left panel collapsed
+  const leftPanelCollapsed = !showDashboardSidebar;
+
+  // Main content renderer based on active view
+  const renderContent = () => {
+    switch (activeView) {
+      case "home":
         return (
-          <Dashboard
-            stats={stats}
-            recentJobs={recentJobs}
+          <JobsTable
             onJobSelect={handleJobSelect}
-            onNavigateToTab={setActiveTab}
+            onNavigateToUpload={() => handleViewChange("upload")}
+            onNavigateToSearch={() => handleViewChange("search")}
+            onCreateNew={() => {
+              // TODO: Implement create new job workflow
+              console.log("Create new job");
+            }}
           />
         );
-      case "jobs":
-        return <JobList onJobSelect={handleJobSelect} showFilters={true} />;
+      case "job-details":
+        return selectedJob ? (
+          <JobDetailView
+            jobId={selectedJob.id}
+            onBack={handleBackFromDetails}
+            onEdit={() => handleViewChange("editing")}
+            onTranslate={() => {
+              // TODO: Implement translation workflow
+              console.log("Translate job", selectedJob.id);
+            }}
+            onCompare={() => handleViewChange("compare")}
+          />
+        ) : (
+          <ErrorState
+            title="No job selected"
+            message="Please select a job from the list"
+            onAction={handleBackFromDetails}
+            actionLabel="Back to Jobs"
+          />
+        );
       case "upload":
         return (
           <BulkUpload
@@ -196,68 +194,91 @@ export default function HomePage() {
       case "search":
         return <SearchInterface onJobSelect={handleJobSelect} />;
       case "editing":
-        return <EditingWorkspace />;
+        return (
+          <BasicEditingView
+            jobId={selectedJob?.id}
+            onBack={() => handleViewChange(selectedJob ? "job-details" : "home")}
+            onAdvancedEdit={() => {
+              // TODO: Add lock warning modal
+              console.log("Opening advanced editor");
+            }}
+          />
+        );
       case "compare":
         return <JobComparison />;
       case "statistics":
         return <StatsDashboard />;
-      case "modern":
+      case "system-health":
         return (
-          <div className="space-y-8">
-            <ModernDashboard />
-            <div className="text-center">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                Enhanced UI Components
-              </h2>
-              <p className="text-lg text-gray-600 dark:text-gray-400">
-                Modern interfaces with JDDB branding
-              </p>
-            </div>
-            <Card className="overflow-hidden">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Layers className="w-5 h-5" />
-                  <span>Enhanced Dual-Pane Editor</span>
-                  <Badge variant="secondary">Professional</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="h-[600px]">
-                  <EnhancedDualPaneEditor
-                    mode="translation"
-                    initialLeftContent="The Business Development Representative supports sales activities through qualifying leads generated from other teams, and committing to developing those leads into new business."
-                    initialRightContent="Le représentant du développement commercial soutient les activités de vente en qualifiant les prospects générés par d'autres équipes et en s'engageant à développer ces prospects en nouvelles affaires."
-                  />
-                </div>
-              </CardContent>
-            </Card>
+          <div className="space-y-6">
+            <h1 className="text-3xl font-bold">System Health</h1>
+            <p>System health monitoring page coming soon...</p>
           </div>
         );
-      case "job-details":
-        return selectedJob ? (
-          <JobDetails jobId={selectedJob.id} onBack={handleBackFromDetails} />
-        ) : null;
+      case "preferences":
+        return (
+          <div className="space-y-6">
+            <h1 className="text-3xl font-bold">Preferences</h1>
+            <p>User preferences page coming soon...</p>
+          </div>
+        );
       default:
         return (
-          <Dashboard
-            stats={stats}
-            recentJobs={recentJobs}
+          <JobsTable
             onJobSelect={handleJobSelect}
-            onNavigateToTab={setActiveTab}
+            onNavigateToUpload={() => handleViewChange("upload")}
+            onNavigateToSearch={() => handleViewChange("search")}
           />
         );
     }
   };
+
+  // Render modern AppHeader
+  const renderHeader = () => (
+    <AppHeader
+      currentView={getHeaderView()}
+      onNavigate={handleHeaderNavigation}
+      userName="Admin User"
+      notificationCount={0}
+      jobCount={stats?.total_jobs}
+    />
+  );
 
   return (
     <ThemeProvider defaultTheme="system" enableSystem>
       <ErrorBoundaryWrapper
         showDetails={process.env.NODE_ENV === "development"}
       >
-        <LoadingProvider initialContext="dashboard">
+        <LoadingProvider initialContext="jddb">
           <ToastProvider>
-            <JDDBLayout activeTab={activeTab} onTabChange={handleTabChange}>
-              <PageTransition currentPage={activeTab} previousPage={undefined}>
+            {/* Alert Banner - Dismissible system notifications */}
+            {showAlertBanner && (
+              <AlertBanner
+                variant="info"
+                title="Phase 2.1 UI Modernization Complete"
+                message="The JDDB interface has been updated with a streamlined design, improved navigation, and enhanced accessibility features. Explore the new Statistics and Search capabilities!"
+                dismissible={true}
+                onDismiss={() => setShowAlertBanner(false)}
+              />
+            )}
+
+            <TwoPanelLayout
+              header={renderHeader()}
+              leftPanel={
+                <DashboardSidebar
+                  stats={stats}
+                  onNavigateToStatistics={() => handleViewChange("statistics")}
+                  onNavigateToSystemHealth={() => handleViewChange("system-health")}
+                  collapsed={leftPanelCollapsed}
+                />
+              }
+              showLeftPanel={showDashboardSidebar}
+              leftPanelCollapsible={false}
+              hideLeftPanelOnMobile={false}
+              leftPanelWidth={300}
+              className="pt-16"
+            >
+              <PageTransition currentPage={activeView} previousPage={previousView}>
                 {error ? (
                   <ErrorState
                     title="Failed to load JDDB"
@@ -271,7 +292,7 @@ export default function HomePage() {
                   renderContent()
                 )}
               </PageTransition>
-            </JDDBLayout>
+            </TwoPanelLayout>
 
             {/* Keyboard Shortcuts Modal */}
             <KeyboardShortcutsModal

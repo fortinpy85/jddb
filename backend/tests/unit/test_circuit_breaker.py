@@ -1,7 +1,6 @@
 import pytest
 import asyncio
 import time
-from unittest.mock import AsyncMock, Mock, patch
 
 from jd_ingestion.utils.circuit_breaker import (
     CircuitBreaker,

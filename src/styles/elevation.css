@@ -1,0 +1,382 @@
+/**
+ * JDDB Modern Elevation System
+ * Professional depth and shadow styles for light and dark themes
+ * Inspired by Material Design and modern UI best practices
+ */
+
+/* ========================================
+   BASE ELEVATION LEVELS
+   ======================================== */
+
+/**
+ * Elevation Level 0 - Flat (no shadow)
+ * Use for: Background surfaces, embedded content
+ */
+.elevation-0 {
+  box-shadow: none;
+}
+
+/**
+ * Elevation Level 1 - Minimal lift
+ * Use for: Cards at rest, input fields, inactive tabs
+ */
+.elevation-1 {
+  box-shadow:
+    0px 0.5px 1px rgba(0, 0, 0, 0.1),
+    0px 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.dark .elevation-1 {
+  box-shadow:
+    0px 0.5px 1px rgba(0, 0, 0, 0.3),
+    0px 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/**
+ * Elevation Level 2 - Standard lift
+ * Use for: Cards with hover, raised buttons, dropdowns
+ */
+.elevation-2 {
+  box-shadow:
+    0px 2px 4px rgba(0, 0, 0, 0.1),
+    0px 4px 8px rgba(0, 0, 0, 0.08),
+    inset 0px 1px 0px rgba(255, 255, 255, 0.1);
+}
+
+.dark .elevation-2 {
+  box-shadow:
+    0px 2px 4px rgba(0, 0, 0, 0.4),
+    0px 4px 8px rgba(0, 0, 0, 0.3),
+    inset 0px 1px 0px rgba(255, 255, 255, 0.05);
+}
+
+/**
+ * Elevation Level 3 - Prominent lift
+ * Use for: Active cards, modals, popovers, floating action buttons
+ */
+.elevation-3 {
+  box-shadow:
+    rgba(50, 50, 93, 0.15) 0px 10px 25px -5px,
+    rgba(0, 0, 0, 0.1) 0px 5px 10px -3px,
+    inset 0px -2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.dark .elevation-3 {
+  box-shadow:
+    rgba(0, 0, 0, 0.5) 0px 10px 25px -5px,
+    rgba(0, 0, 0, 0.4) 0px 5px 10px -3px,
+    inset 0px -2px 4px rgba(255, 255, 255, 0.02);
+}
+
+/**
+ * Elevation Level 4 - Maximum lift
+ * Use for: Dialogs, drawers, navigation bars, tooltips
+ */
+.elevation-4 {
+  box-shadow:
+    rgba(50, 50, 93, 0.25) 0px 50px 100px -20px,
+    rgba(0, 0, 0, 0.3) 0px 30px 60px -30px,
+    rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
+}
+
+.dark .elevation-4 {
+  box-shadow:
+    rgba(0, 0, 0, 0.6) 0px 50px 100px -20px,
+    rgba(0, 0, 0, 0.5) 0px 30px 60px -30px,
+    rgba(255, 255, 255, 0.05) 0px -2px 6px 0px inset;
+}
+
+/* ========================================
+   INTERACTIVE SHADOWS
+   ======================================== */
+
+/**
+ * Hover State - Interactive lift
+ * Add to hoverable elements like cards and buttons
+ */
+.shadow-hover {
+  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.shadow-hover:hover {
+  box-shadow:
+    rgba(50, 50, 93, 0.2) 0px 15px 35px -10px,
+    rgba(0, 0, 0, 0.15) 0px 8px 15px -5px;
+  transform: translateY(-2px);
+}
+
+.dark .shadow-hover:hover {
+  box-shadow:
+    rgba(0, 0, 0, 0.5) 0px 15px 35px -10px,
+    rgba(0, 0, 0, 0.4) 0px 8px 15px -5px;
+}
+
+/**
+ * Focus State - Attention ring
+ * Use for keyboard navigation and form focus
+ */
+.shadow-focus {
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+.shadow-focus:focus,
+.shadow-focus:focus-within {
+  box-shadow:
+    inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2),
+    0px 0.5px 1px rgba(0, 0, 0, 0.1),
+    0px 0px 0px 3.5px rgba(59, 130, 246, 0.5);
+  outline: 0;
+}
+
+.dark .shadow-focus:focus,
+.dark .shadow-focus:focus-within {
+  box-shadow:
+    inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.1),
+    0px 0.5px 1px rgba(0, 0, 0, 0.3),
+    0px 0px 0px 3.5px rgba(96, 165, 250, 0.5);
+}
+
+/**
+ * Active/Pressed State - Depressed effect
+ */
+.shadow-active:active {
+  box-shadow:
+    inset 0px 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0px 1px 2px rgba(0, 0, 0, 0.08);
+  transform: translateY(1px);
+}
+
+.dark .shadow-active:active {
+  box-shadow:
+    inset 0px 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0px 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* ========================================
+   COMPONENT-SPECIFIC SHADOWS
+   ======================================== */
+
+/**
+ * Card Shadow - Glassmorphism effect
+ * Translucent cards with subtle depth
+ */
+.shadow-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  box-shadow:
+    0px 0.5px 1px rgba(0, 0, 0, 0.1),
+    0px 1px 2px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.dark .shadow-card {
+  background: rgba(30, 41, 59, 0.7);
+  box-shadow:
+    0px 0.5px 1px rgba(0, 0, 0, 0.3),
+    0px 1px 2px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(51, 65, 85, 0.4);
+}
+
+/**
+ * Button Shadow - Professional button styling
+ * Based on box-shadow.md examples
+ */
+.shadow-button {
+  box-shadow:
+    0px 0.5px 1px rgba(0, 0, 0, 0.1),
+    inset 0px 0.5px 0.5px rgba(255, 255, 255, 0.5),
+    0px 0px 0px 0.5px rgba(0, 0, 0, 0.12);
+}
+
+.dark .shadow-button {
+  box-shadow:
+    0px 0.5px 1px rgba(0, 0, 0, 0.3),
+    inset 0px 0.5px 0.5px rgba(255, 255, 255, 0.2),
+    0px 0px 0px 0.5px rgba(255, 255, 255, 0.1);
+}
+
+/**
+ * Input Shadow - Subtle inset for form fields
+ */
+.shadow-input {
+  box-shadow:
+    inset 0px 1px 2px rgba(0, 0, 0, 0.05),
+    0px 1px 1px rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(203, 213, 225, 0.8);
+}
+
+.dark .shadow-input {
+  box-shadow:
+    inset 0px 1px 2px rgba(0, 0, 0, 0.2),
+    0px 1px 1px rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(71, 85, 105, 0.6);
+}
+
+/**
+ * Table Row Shadow - Subtle hover effect
+ */
+.shadow-table-row {
+  transition: box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.shadow-table-row:hover {
+  box-shadow:
+    inset 0px 0px 0px 1px rgba(59, 130, 246, 0.1),
+    0px 1px 2px rgba(0, 0, 0, 0.05);
+  background-color: rgba(59, 130, 246, 0.02);
+}
+
+.dark .shadow-table-row:hover {
+  box-shadow:
+    inset 0px 0px 0px 1px rgba(96, 165, 250, 0.2),
+    0px 1px 2px rgba(0, 0, 0, 0.2);
+  background-color: rgba(96, 165, 250, 0.05);
+}
+
+/**
+ * Dropdown/Menu Shadow - Elevated menus
+ */
+.shadow-dropdown {
+  box-shadow:
+    0px 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0px 2px 4px -1px rgba(0, 0, 0, 0.06),
+    0px 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.dark .shadow-dropdown {
+  box-shadow:
+    0px 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0px 2px 4px -1px rgba(0, 0, 0, 0.25),
+    0px 10px 15px -3px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(71, 85, 105, 0.6);
+}
+
+/**
+ * Modal/Dialog Shadow - Maximum prominence
+ */
+.shadow-modal {
+  box-shadow:
+    rgba(50, 50, 93, 0.25) 0px 50px 100px -20px,
+    rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;
+}
+
+.dark .shadow-modal {
+  box-shadow:
+    rgba(0, 0, 0, 0.6) 0px 50px 100px -20px,
+    rgba(0, 0, 0, 0.5) 0px 30px 60px -30px;
+}
+
+/**
+ * Toast/Notification Shadow - Floating notifications
+ */
+.shadow-toast {
+  box-shadow:
+    0px 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0px 4px 6px -2px rgba(0, 0, 0, 0.05),
+    inset 0px 1px 0px rgba(255, 255, 255, 0.1);
+}
+
+.dark .shadow-toast {
+  box-shadow:
+    0px 10px 15px -3px rgba(0, 0, 0, 0.4),
+    0px 4px 6px -2px rgba(0, 0, 0, 0.3),
+    inset 0px 1px 0px rgba(255, 255, 255, 0.05);
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+/**
+ * Inner Shadow - Inset depth
+ */
+.shadow-inner {
+  box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.dark .shadow-inner {
+  box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/**
+ * Outline Shadow - Stroke effect
+ */
+.shadow-outline {
+  box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.05);
+}
+
+.dark .shadow-outline {
+  box-shadow: 0px 0px 0px 1px rgba(255, 255, 255, 0.1);
+}
+
+/**
+ * Glow Effect - Colored highlights
+ */
+.shadow-glow-blue {
+  box-shadow: 0px 0px 20px rgba(59, 130, 246, 0.3);
+}
+
+.shadow-glow-green {
+  box-shadow: 0px 0px 20px rgba(34, 197, 94, 0.3);
+}
+
+.shadow-glow-red {
+  box-shadow: 0px 0px 20px rgba(239, 68, 68, 0.3);
+}
+
+.shadow-glow-yellow {
+  box-shadow: 0px 0px 20px rgba(251, 191, 36, 0.3);
+}
+
+/**
+ * No Shadow - Explicit removal
+ */
+.shadow-none {
+  box-shadow: none !important;
+}
+
+/* ========================================
+   ANIMATION UTILITIES
+   ======================================== */
+
+/**
+ * Smooth Shadow Transitions
+ */
+.shadow-transition {
+  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.shadow-transition-fast {
+  transition: box-shadow 0.1s ease-in-out;
+}
+
+.shadow-transition-slow {
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+/* ========================================
+   ACCESSIBILITY
+   ======================================== */
+
+/**
+ * Reduced Motion Support
+ * Disable shadow transitions for users who prefer reduced motion
+ */
+@media (prefers-reduced-motion: reduce) {
+  .shadow-transition,
+  .shadow-transition-fast,
+  .shadow-transition-slow,
+  .shadow-hover,
+  .shadow-focus {
+    transition: none;
+  }
+
+  .shadow-hover:hover {
+    transform: none;
+  }
+
+  .shadow-active:active {
+    transform: none;
+  }
+}

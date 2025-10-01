@@ -5,10 +5,10 @@
 
 "use client";
 
-import React from 'react';
-import { cn } from '@/lib/utils';
-import { X } from 'lucide-react';
-import { Button } from './button';
+import React from "react";
+import { cn } from "@/lib/utils";
+import { X } from "lucide-react";
+import { Button } from "./button";
 
 interface DialogProps {
   open: boolean;
@@ -19,7 +19,7 @@ interface DialogProps {
 interface DialogContentProps {
   className?: string;
   children: React.ReactNode;
-  'data-testid'?: string;
+  "data-testid"?: string;
 }
 
 interface DialogHeaderProps {
@@ -46,19 +46,21 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
         onClick={() => onOpenChange(false)}
       />
       {/* Modal */}
-      <div className="relative">
-        {children}
-      </div>
+      <div className="relative">{children}</div>
     </div>
   );
 }
 
-export function DialogContent({ className, children, 'data-testid': testId }: DialogContentProps) {
+export function DialogContent({
+  className,
+  children,
+  "data-testid": testId,
+}: DialogContentProps) {
   return (
     <div
       className={cn(
         "relative bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-lg w-full mx-4 p-6",
-        className
+        className,
       )}
       data-testid={testId}
     >
@@ -68,16 +70,17 @@ export function DialogContent({ className, children, 'data-testid': testId }: Di
 }
 
 export function DialogHeader({ children }: DialogHeaderProps) {
-  return (
-    <div className="mb-4">
-      {children}
-    </div>
-  );
+  return <div className="mb-4">{children}</div>;
 }
 
 export function DialogTitle({ children, className }: DialogTitleProps) {
   return (
-    <h2 className={cn("text-lg font-semibold text-gray-900 dark:text-gray-100", className)}>
+    <h2
+      className={cn(
+        "text-lg font-semibold text-gray-900 dark:text-gray-100",
+        className,
+      )}
+    >
       {children}
     </h2>
   );
@@ -85,8 +88,6 @@ export function DialogTitle({ children, className }: DialogTitleProps) {
 
 export function DialogDescription({ children }: DialogDescriptionProps) {
   return (
-    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-      {children}
-    </p>
+    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{children}</p>
   );
 }

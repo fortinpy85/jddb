@@ -44,52 +44,52 @@ const NAVIGATION_TABS: NavigationTab[] = [
     id: "dashboard",
     label: "Dashboard",
     icon: BarChart3,
-    description: "Overview and quick actions"
+    description: "Overview and quick actions",
   },
   {
     id: "jobs",
     label: "Jobs",
     icon: FileText,
-    description: "Browse job descriptions"
+    description: "Browse job descriptions",
   },
   {
     id: "upload",
     label: "Upload",
     icon: Upload,
-    description: "Upload new files"
+    description: "Upload new files",
   },
   {
     id: "search",
     label: "Search",
     icon: Search,
-    description: "Search and filter jobs"
+    description: "Search and filter jobs",
   },
   {
     id: "editing",
     label: "Editing",
     shortLabel: "Edit",
     icon: Edit3,
-    description: "Edit job descriptions"
+    description: "Edit job descriptions",
   },
   {
     id: "compare",
     label: "Compare",
     icon: GitCompare,
-    description: "Compare job descriptions"
+    description: "Compare job descriptions",
   },
   {
     id: "statistics",
     label: "Statistics",
     shortLabel: "Stats",
     icon: Activity,
-    description: "Analytics and reports"
+    description: "Analytics and reports",
   },
   {
     id: "modern",
     label: "Modern UI",
     shortLabel: "Modern",
     icon: Palette,
-    description: "Enhanced components"
+    description: "Enhanced components",
   },
 ];
 
@@ -114,7 +114,7 @@ export function JDDBLayout({
   showBackButton = false,
   onBack,
   className,
-  contentClassName
+  contentClassName,
 }: JDDBLayoutProps) {
   // Get stats and loading from store directly instead of props
   const { stats, loading } = useStore();
@@ -125,8 +125,9 @@ export function JDDBLayout({
       data-testid="jddb-layout"
       className={cn(
         "min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900/20 transition-colors duration-300",
-        className
-      )}>
+        className,
+      )}
+    >
       {/* Fixed Header */}
       <JDDBHeader
         title={title}
@@ -146,10 +147,12 @@ export function JDDBLayout({
       <main className="pt-28">
         <div className="flex">
           {/* Left Sidebar (minimal) */}
-          <aside className={cn(
-            "transition-all duration-300 flex-shrink-0 bg-slate-50/50 dark:bg-slate-900/50 border-r border-slate-200/50 dark:border-slate-700/50",
-            sidebarCollapsed ? "w-12" : "w-16 sm:w-20 lg:w-24"
-          )}>
+          <aside
+            className={cn(
+              "transition-all duration-300 flex-shrink-0 bg-slate-50/50 dark:bg-slate-900/50 border-r border-slate-200/50 dark:border-slate-700/50",
+              sidebarCollapsed ? "w-12" : "w-16 sm:w-20 lg:w-24",
+            )}
+          >
             <div className="p-2">
               <Button
                 variant="ghost"
@@ -157,7 +160,11 @@ export function JDDBLayout({
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                 className="w-full p-2"
               >
-                {sidebarCollapsed ? <Menu className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                {sidebarCollapsed ? (
+                  <Menu className="w-4 h-4" />
+                ) : (
+                  <X className="w-4 h-4" />
+                )}
               </Button>
             </div>
           </aside>
@@ -188,7 +195,12 @@ interface JDDBHeaderProps {
   onBack?: () => void;
 }
 
-function JDDBHeader({ title, subtitle, showBackButton, onBack }: JDDBHeaderProps) {
+function JDDBHeader({
+  title,
+  subtitle,
+  showBackButton,
+  onBack,
+}: JDDBHeaderProps) {
   // Get stats from store directly instead of props
   const { stats } = useStore();
   return (
@@ -219,7 +231,9 @@ function JDDBHeader({ title, subtitle, showBackButton, onBack }: JDDBHeaderProps
                 <h1 className="text-sm sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-slate-100 dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300 truncate">
                   {title || (
                     <>
-                      <span className="hidden sm:inline">Job Description Database</span>
+                      <span className="hidden sm:inline">
+                        Job Description Database
+                      </span>
                       <span className="sm:hidden">JDDB</span>
                     </>
                   )}
@@ -260,7 +274,12 @@ function JDDBHeader({ title, subtitle, showBackButton, onBack }: JDDBHeaderProps
               <Button variant="ghost" size="sm" className="p-2" title="Help">
                 <HelpCircle className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="sm" className="p-2" title="Settings">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-2"
+                title="Settings"
+              >
                 <Settings className="w-4 h-4" />
               </Button>
             </div>
@@ -291,12 +310,14 @@ function JDDBNavigation({ tabs, activeTab, onTabChange }: JDDBNavigationProps) {
                 key={tab.id}
                 onClick={() => onTabChange?.(tab.id)}
                 disabled={tab.disabled}
-                data-testid={activeTab === tab.id ? "active-tab" : `tab-${tab.id}`}
+                data-testid={
+                  activeTab === tab.id ? "active-tab" : `tab-${tab.id}`
+                }
                 className={cn(
                   "flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed",
                   activeTab === tab.id
                     ? "bg-white/80 dark:bg-slate-800/80 text-blue-600 dark:text-blue-400 shadow-md border border-blue-200/50 dark:border-blue-400/50"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200",
                 )}
                 title={tab.description}
               >
@@ -358,7 +379,7 @@ export function PageContainer({
   title,
   subtitle,
   headerActions,
-  loading
+  loading,
 }: PageContainerProps) {
   if (loading) {
     return <LoadingScreen />;
@@ -381,15 +402,11 @@ export function PageContainer({
             )}
           </div>
           {headerActions && (
-            <div className="flex items-center space-x-2">
-              {headerActions}
-            </div>
+            <div className="flex items-center space-x-2">{headerActions}</div>
           )}
         </div>
       )}
-      <div className="space-y-6">
-        {children}
-      </div>
+      <div className="space-y-6">{children}</div>
     </div>
   );
 }
@@ -417,14 +434,19 @@ export function ContentSection({
   className,
   headerActions,
   variant = "default",
-  loading = false
+  loading = false,
 }: ContentSectionProps) {
   const isCompact = variant === "compact";
   const isHighlighted = variant === "highlighted";
 
   if (loading) {
     return (
-      <div className={cn("bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 rounded-xl p-6", className)}>
+      <div
+        className={cn(
+          "bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 rounded-xl p-6",
+          className,
+        )}
+      >
         <div className="animate-pulse space-y-4">
           <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-1/4"></div>
           <div className="space-y-2">
@@ -441,12 +463,15 @@ export function ContentSection({
     <div
       className={cn(
         "bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border border-white/20 dark:border-slate-700/20 hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all duration-300 rounded-xl",
-        isHighlighted && "hover:shadow-xl border-blue-200/50 dark:border-blue-400/50",
-        className
+        isHighlighted &&
+          "hover:shadow-xl border-blue-200/50 dark:border-blue-400/50",
+        className,
       )}
     >
       {(title || subtitle || headerActions) && (
-        <div className={cn("p-6 relative overflow-hidden", isCompact && "pb-3")}>
+        <div
+          className={cn("p-6 relative overflow-hidden", isCompact && "pb-3")}
+        >
           {isHighlighted && (
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-50/30 to-indigo-50/20 rounded-full -mr-12 -mt-12"></div>
           )}
@@ -471,14 +496,18 @@ export function ContentSection({
               </div>
             </div>
             {headerActions && (
-              <div className="flex items-center space-x-2">
-                {headerActions}
-              </div>
+              <div className="flex items-center space-x-2">{headerActions}</div>
             )}
           </div>
         </div>
       )}
-      <div className={cn("p-6", isCompact && "pt-3", (title || subtitle || headerActions) && "pt-0")}>
+      <div
+        className={cn(
+          "p-6",
+          isCompact && "pt-3",
+          (title || subtitle || headerActions) && "pt-0",
+        )}
+      >
         {children}
       </div>
     </div>

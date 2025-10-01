@@ -22,7 +22,7 @@ export function FadeTransition({
   children,
   show,
   duration = 300,
-  className
+  className,
 }: FadeTransitionProps) {
   const [shouldRender, setShouldRender] = useState(show);
 
@@ -42,7 +42,7 @@ export function FadeTransition({
       className={cn(
         "transition-all ease-in-out",
         show ? "opacity-100 scale-100" : "opacity-0 scale-95",
-        className
+        className,
       )}
       style={{ transitionDuration: `${duration}ms` }}
     >
@@ -67,7 +67,7 @@ export function SlideTransition({
   show,
   direction = "right",
   duration = 300,
-  className
+  className,
 }: SlideTransitionProps) {
   const [shouldRender, setShouldRender] = useState(show);
 
@@ -105,11 +105,11 @@ export function SlideTransition({
       className={cn(
         "transition-all ease-in-out",
         show ? "opacity-100" : "opacity-0",
-        className
+        className,
       )}
       style={{
         transitionDuration: `${duration}ms`,
-        transform: getTransform()
+        transform: getTransform(),
       }}
     >
       {children}
@@ -131,7 +131,7 @@ export function PageTransition({
   children,
   currentPage,
   previousPage,
-  className
+  className,
 }: PageTransitionProps) {
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -148,7 +148,7 @@ export function PageTransition({
       className={cn(
         "transition-all duration-300 ease-in-out",
         isTransitioning ? "opacity-0 scale-98" : "opacity-100 scale-100",
-        className
+        className,
       )}
     >
       {children}
@@ -170,7 +170,7 @@ export function StaggerAnimation({
   children,
   staggerDelay = 100,
   initialDelay = 0,
-  className
+  className,
 }: StaggerAnimationProps) {
   const [visibleItems, setVisibleItems] = useState<number[]>([]);
 
@@ -178,9 +178,12 @@ export function StaggerAnimation({
     const timeouts: NodeJS.Timeout[] = [];
 
     children.forEach((_, index) => {
-      const timeout = setTimeout(() => {
-        setVisibleItems(prev => [...prev, index]);
-      }, initialDelay + (index * staggerDelay));
+      const timeout = setTimeout(
+        () => {
+          setVisibleItems((prev) => [...prev, index]);
+        },
+        initialDelay + index * staggerDelay,
+      );
       timeouts.push(timeout);
     });
 
@@ -198,7 +201,7 @@ export function StaggerAnimation({
             "transition-all duration-500 ease-out",
             visibleItems.includes(index)
               ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-4"
+              : "opacity-0 translate-y-4",
           )}
         >
           {child}
@@ -223,13 +226,13 @@ interface TabTransitionProps {
 export function TabTransition({
   activeTab,
   tabs,
-  className
+  className,
 }: TabTransitionProps) {
   const [currentContent, setCurrentContent] = useState<React.ReactNode>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
-    const newTab = tabs.find(tab => tab.id === activeTab);
+    const newTab = tabs.find((tab) => tab.id === activeTab);
     if (newTab && newTab.content !== currentContent) {
       setIsTransitioning(true);
 
@@ -245,7 +248,7 @@ export function TabTransition({
       className={cn(
         "transition-all duration-300 ease-in-out min-h-[200px]",
         isTransitioning ? "opacity-0 scale-98" : "opacity-100 scale-100",
-        className
+        className,
       )}
     >
       {currentContent}
@@ -267,20 +270,20 @@ export function LoadingTransition({
   children,
   loading,
   loadingComponent,
-  className
+  className,
 }: LoadingTransitionProps) {
   return (
     <div className={cn("relative", className)}>
-      <FadeTransition show={!loading}>
-        {children}
-      </FadeTransition>
+      <FadeTransition show={!loading}>{children}</FadeTransition>
 
       <FadeTransition show={loading}>
         <div className="absolute inset-0 flex items-center justify-center">
           {loadingComponent || (
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm text-slate-600 dark:text-slate-400">Loading...</span>
+              <span className="text-sm text-slate-600 dark:text-slate-400">
+                Loading...
+              </span>
             </div>
           )}
         </div>
@@ -303,7 +306,7 @@ export function ModalTransition({
   children,
   show,
   onClose,
-  className
+  className,
 }: ModalTransitionProps) {
   const [shouldRender, setShouldRender] = useState(show);
 
@@ -328,7 +331,7 @@ export function ModalTransition({
       <div
         className={cn(
           "absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300",
-          show ? "opacity-100" : "opacity-0"
+          show ? "opacity-100" : "opacity-0",
         )}
         onClick={onClose}
       />
@@ -340,7 +343,7 @@ export function ModalTransition({
           show
             ? "opacity-100 scale-100 translate-y-0"
             : "opacity-0 scale-95 translate-y-4",
-          className
+          className,
         )}
       >
         {children}
@@ -363,7 +366,7 @@ export function HoverTransition({
   children,
   hoverContent,
   className,
-  duration = 200
+  duration = 200,
 }: HoverTransitionProps) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -384,7 +387,7 @@ export function HoverTransition({
         <div
           className={cn(
             "absolute inset-0 transition-all ease-in-out",
-            isHovered ? "opacity-100" : "opacity-0 pointer-events-none"
+            isHovered ? "opacity-100" : "opacity-0 pointer-events-none",
           )}
           style={{ transitionDuration: `${duration}ms` }}
         >
@@ -409,7 +412,7 @@ export function ScrollReveal({
   children,
   threshold = 0.1,
   rootMargin = "0px",
-  className
+  className,
 }: ScrollRevealProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [element, setElement] = useState<HTMLDivElement | null>(null);
@@ -424,7 +427,7 @@ export function ScrollReveal({
           observer.unobserve(element);
         }
       },
-      { threshold, rootMargin }
+      { threshold, rootMargin },
     );
 
     observer.observe(element);
@@ -439,10 +442,8 @@ export function ScrollReveal({
       ref={setElement}
       className={cn(
         "transition-all duration-700 ease-out",
-        isVisible
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-8",
-        className
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8",
+        className,
       )}
     >
       {children}

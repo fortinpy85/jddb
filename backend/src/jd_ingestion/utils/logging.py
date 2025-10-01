@@ -1,7 +1,7 @@
 import structlog
 import logging
 import logging.handlers
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Dict, MutableMapping, Optional, Union, cast
 from pathlib import Path
 from datetime import datetime
 import sys
@@ -68,7 +68,7 @@ def configure_logging() -> None:
     )
 
     # Configure structlog processors based on environment
-    processors = [
+    processors: list[Any] = [
         structlog.stdlib.filter_by_level,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
@@ -80,14 +80,17 @@ def configure_logging() -> None:
     ]
 
     # Add environment-specific context
-    processors.append(
-        lambda logger, method_name, event_dict: {
+    def add_context(
+        logger: Any, method_name: str, event_dict: MutableMapping[str, Any]
+    ) -> MutableMapping[str, Any]:
+        return {
             **event_dict,
             "environment": settings.environment,
             "service": "jd-ingestion",
             "pid": os.getpid(),
         }
-    )
+
+    processors.append(add_context)
 
     # Choose renderer based on environment
     if settings.is_development and not settings.debug:

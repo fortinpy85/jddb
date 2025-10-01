@@ -115,9 +115,9 @@ class SearchAnalyticsService:
             search_record = result.scalar_one_or_none()
 
             if search_record:
-                search_record.clicked_results = clicked_results
+                search_record.clicked_results = clicked_results  # type: ignore[assignment]
                 if satisfaction_rating:
-                    search_record.user_satisfaction = satisfaction_rating
+                    search_record.user_satisfaction = satisfaction_rating  # type: ignore[assignment]
 
                 await db.commit()
                 logger.info("User feedback recorded", search_id=search_id)
@@ -196,10 +196,14 @@ class SearchAnalyticsService:
                 "total_searches": total_searches,
                 "search_types": search_types,
                 "performance": {
-                    "avg_execution_time_ms": round(perf_stats[0] or 0, 2),
-                    "max_execution_time_ms": perf_stats[1] or 0,
-                    "min_execution_time_ms": perf_stats[2] or 0,
-                    "p95_execution_time_ms": round(perf_stats[3] or 0, 2),
+                    "avg_execution_time_ms": round(perf_stats[0] or 0, 2)
+                    if perf_stats
+                    else 0,  # type: ignore[index]
+                    "max_execution_time_ms": perf_stats[1] or 0 if perf_stats else 0,  # type: ignore[index]
+                    "min_execution_time_ms": perf_stats[2] or 0 if perf_stats else 0,  # type: ignore[index]
+                    "p95_execution_time_ms": round(perf_stats[3] or 0, 2)
+                    if perf_stats
+                    else 0,  # type: ignore[index]
                 },
                 "success_rates": result_stats,
                 "popular_queries": popular_queries,

@@ -4,7 +4,6 @@ Tests for analytics API endpoints.
 
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
-from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
 
 from jd_ingestion.api.main import app

@@ -3,10 +3,9 @@ Tests for database connection module.
 """
 
 import pytest
-from unittest.mock import Mock, patch, AsyncMock, MagicMock, call
+from unittest.mock import Mock, patch, AsyncMock
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
-from sqlalchemy.orm import declarative_base
 
 from jd_ingestion.database.connection import (
     async_engine,
@@ -125,7 +124,6 @@ class TestBaseModel:
     def test_base_is_declarative_base(self):
         """Test that Base is a proper declarative base."""
         # Import the actual Base, not mocked
-        from jd_ingestion.database.connection import Base
 
         assert hasattr(Base, "metadata")
         assert hasattr(Base, "registry")
@@ -133,7 +131,6 @@ class TestBaseModel:
     def test_base_can_be_used_for_model_creation(self):
         """Test that Base can be used to create models."""
         # Import the actual Base
-        from jd_ingestion.database.connection import Base
         from sqlalchemy import Column, Integer, String
 
         # Create a test model
@@ -215,7 +212,7 @@ class TestAsyncSessionDependency:
             session_generator = get_async_session()
 
             with pytest.raises(Exception, match="Database error"):
-                session = await session_generator.__anext__()
+                _session = await session_generator.__anext__()
                 # Simulate exception during session usage
                 await session_generator.athrow(Exception("Database error"))
 
@@ -234,7 +231,7 @@ class TestAsyncSessionDependency:
             mock_session_factory.return_value.__aexit__.return_value = None
 
             session_generator = get_async_session()
-            session = await session_generator.__anext__()
+            _session = await session_generator.__anext__()
 
             # Manually close the generator to trigger finally block
             try:
@@ -334,10 +331,6 @@ class TestConnectionModuleIntegration:
     def test_all_components_are_properly_exported(self):
         """Test that all expected components are exported."""
         from jd_ingestion.database.connection import (
-            async_engine,
-            AsyncSessionLocal,
-            sync_engine,
-            SessionLocal,
             Base,
             configure_mappers,
             get_async_session,
@@ -380,7 +373,6 @@ class TestConnectionModuleIntegration:
 
     def test_base_model_inheritance_chain(self):
         """Test that Base has proper inheritance chain for SQLAlchemy models."""
-        from jd_ingestion.database.connection import Base
         from sqlalchemy.orm import DeclarativeMeta
 
         # Base should be instance of DeclarativeMeta

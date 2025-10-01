@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,24 +32,43 @@ import {
   ChevronDown,
   Globe,
   Zap,
+  Users,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
+import { useCollaborativeEditor } from "@/hooks/useCollaborativeEditor";
+import {
+  CollaboratorList,
+  type CollaboratorInfo,
+} from "@/components/collaboration/CollaboratorList";
+import {
+  TypingIndicator,
+  useTypingIndicator,
+  type TypingUser,
+} from "@/components/collaboration/TypingIndicator";
 
 interface EnhancedDualPaneEditorProps {
   jobId?: number;
   sessionId?: string;
+  userId?: number;
   mode: "editing" | "translation" | "comparison";
   readonly?: boolean;
   initialLeftContent?: string;
   initialRightContent?: string;
+  enableCollaboration?: boolean;
   onContentChange?: (pane: "left" | "right", content: string) => void;
   onSave?: (leftContent: string, rightContent: string) => void;
 }
 
 export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
+  jobId,
+  sessionId,
+  userId = 1, // Default user ID for demo purposes
   mode,
   readonly = false,
   initialLeftContent = "",
   initialRightContent = "",
+  enableCollaboration = false,
   onContentChange,
   onSave,
 }) => {
@@ -61,17 +80,103 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
   const [sourceLanguage, setSourceLanguage] = useState("en");
   const [targetLanguage, setTargetLanguage] = useState("fr");
   const [formality, setFormality] = useState("default");
+  const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
 
   const leftEditorRef = useRef<HTMLTextAreaElement>(null);
   const rightEditorRef = useRef<HTMLTextAreaElement>(null);
 
+  // Typing indicator hook for current user
+  const { startTyping, stopTyping } = useTypingIndicator(
+    userId,
+    (isTyping) => {
+      // Send typing status to other collaborators via WebSocket
+      if (enableCollaboration && collaboration?.isConnected) {
+        // TODO: Send typing_start or typing_stop message
+        console.log(`User ${userId} typing:`, isTyping);
+      }
+    },
+    1000,
+  );
+
+  // Initialize collaborative editing if enabled
+  const collaboration = useCollaborativeEditor(
+    enableCollaboration && sessionId && jobId
+      ? {
+          sessionId,
+          userId,
+          jobId,
+          onDocumentChange: (content) => {
+            setLeftPaneContent(content);
+            onContentChange?.("left", content);
+          },
+          onParticipantsChange: (participants) => {
+            console.log("Participants updated:", participants);
+          },
+        }
+      : null,
+  );
+
+  // Update content when collaborative changes arrive
+  useEffect(() => {
+    if (enableCollaboration && collaboration?.sessionState?.documentState) {
+      setLeftPaneContent(collaboration.sessionState.documentState);
+    }
+  }, [enableCollaboration, collaboration?.sessionState?.documentState]);
+
   const handleContentChange = (pane: "left" | "right", content: string) => {
+    // Trigger typing indicator
+    startTyping();
+
     if (pane === "left") {
+      // Calculate diff and send operation if collaborative mode is enabled
+      if (enableCollaboration && collaboration && leftPaneContent !== content) {
+        const oldContent = leftPaneContent;
+        const newContent = content;
+
+        // Simple diff detection (insert or delete)
+        if (newContent.length > oldContent.length) {
+          // Insertion detected
+          const insertIndex = findDiffIndex(oldContent, newContent);
+          const insertedText = newContent.slice(
+            insertIndex,
+            insertIndex + (newContent.length - oldContent.length),
+          );
+
+          collaboration.applyOperation({
+            type: "insert",
+            position: insertIndex,
+            text: insertedText,
+          });
+        } else if (newContent.length < oldContent.length) {
+          // Deletion detected
+          const deleteStart = findDiffIndex(oldContent, newContent);
+          const deleteEnd =
+            deleteStart + (oldContent.length - newContent.length);
+
+          collaboration.applyOperation({
+            type: "delete",
+            start: deleteStart,
+            end: deleteEnd,
+          });
+        }
+      }
+
       setLeftPaneContent(content);
     } else {
       setRightPaneContent(content);
     }
     onContentChange?.(pane, content);
+  };
+
+  // Helper function to find the index where strings differ
+  const findDiffIndex = (str1: string, str2: string): number => {
+    const minLength = Math.min(str1.length, str2.length);
+    for (let i = 0; i < minLength; i++) {
+      if (str1[i] !== str2[i]) {
+        return i;
+      }
+    }
+    return minLength;
   };
 
   const handleScroll = (source: "left" | "right") => {
@@ -122,23 +227,77 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
     <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       {/* Top Navigation Tabs */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex px-6 py-4">
-          {getModeTabs().map((tab) => (
-            <button
-              key={tab.id}
-              className={`px-4 py-3 rounded-lg flex items-center space-x-3 mr-4 transition-all ${
-                tab.active
-                  ? "bg-blue-50 border border-blue-200 text-blue-700"
-                  : "text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              {tab.icon}
-              <div className="text-left">
-                <div className="font-medium">{tab.label}</div>
-                <div className="text-xs text-gray-500">{tab.subtitle}</div>
+        <div className="flex px-6 py-4 justify-between items-center">
+          <div className="flex">
+            {getModeTabs().map((tab) => (
+              <button
+                key={tab.id}
+                className={`px-4 py-3 rounded-lg flex items-center space-x-3 mr-4 transition-all ${
+                  tab.active
+                    ? "bg-blue-50 border border-blue-200 text-blue-700"
+                    : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {tab.icon}
+                <div className="text-left">
+                  <div className="font-medium">{tab.label}</div>
+                  <div className="text-xs text-gray-500">{tab.subtitle}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Collaboration Status */}
+          {enableCollaboration && (
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                {collaboration?.isConnected ? (
+                  <>
+                    <Wifi className="w-4 h-4 text-green-500" />
+                    <span className="text-xs text-green-600 font-medium">
+                      Connected
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="w-4 h-4 text-gray-400" />
+                    <span className="text-xs text-gray-500">Disconnected</span>
+                  </>
+                )}
               </div>
-            </button>
-          ))}
+
+              {/* Collaborator List */}
+              {collaboration?.sessionState &&
+                collaboration.sessionState.participants.length > 0 && (
+                  <CollaboratorList
+                    collaborators={collaboration.sessionState.participants.map(
+                      (userId) => ({
+                        userId,
+                        username: `User ${userId}`,
+                        role:
+                          userId === collaboration.sessionState?.jobId
+                            ? "owner"
+                            : "editor",
+                        isOnline: true,
+                        isTyping: typingUsers.some(
+                          (tu) => tu.userId === userId,
+                        ),
+                        lastActivity: new Date().toISOString(),
+                      }),
+                    )}
+                    currentUserId={userId}
+                    maxVisible={3}
+                    showRoles={true}
+                    showActivity={true}
+                  />
+                )}
+
+              {/* Typing Indicator */}
+              {typingUsers.length > 0 && (
+                <TypingIndicator typingUsers={typingUsers} maxVisible={2} />
+              )}
+            </div>
+          )}
         </div>
       </div>
 

@@ -4,7 +4,6 @@ Tests for WebSocket endpoints and real-time collaboration functionality.
 
 import pytest
 import json
-import asyncio
 from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime
 from fastapi.testclient import TestClient
@@ -669,7 +668,7 @@ class TestWebSocketErrorHandling:
         """Test that connection manager maintains consistent state."""
         session_id = "consistency_test"
         websocket_1 = Mock()
-        websocket_2 = Mock()
+        _websocket_2 = Mock()
 
         # Manually create inconsistent state
         connection_manager.active_connections[session_id] = [websocket_1]

@@ -4,7 +4,7 @@ Tests for the main FastAPI application module.
 
 import os
 import pytest
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock, Mock, patch
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from contextlib import asynccontextmanager
@@ -154,9 +154,9 @@ class TestRouterInclusion:
         for endpoint in endpoints_to_test:
             response = client.get(endpoint)
             # Should not be 404 (route not found)
-            assert response.status_code != 404, (
-                f"Router for {endpoint} not properly included"
-            )
+            assert (
+                response.status_code != 404
+            ), f"Router for {endpoint} not properly included"
 
 
 class TestStatusEndpoint:

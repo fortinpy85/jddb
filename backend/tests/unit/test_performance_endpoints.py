@@ -3,7 +3,7 @@ Tests for performance monitoring API endpoints.
 """
 
 import pytest
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock, Mock, patch
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
@@ -554,9 +554,9 @@ class TestPerformanceEndpointsIntegration:
         for endpoint in endpoints_to_test:
             response = client.get(endpoint)
             # Should not be 404 (route not found) - could be auth/db related errors
-            assert response.status_code != 404, (
-                f"Endpoint {endpoint} not properly routed"
-            )
+            assert (
+                response.status_code != 404
+            ), f"Endpoint {endpoint} not properly routed"
 
     def test_performance_benchmark_post_routing(self):
         """Test that benchmark POST endpoint is properly routed."""
@@ -672,7 +672,7 @@ class TestPerformanceEndpointsSecurity:
         # This is a structural test to ensure no user input is directly interpolated
 
         # Mock check that all database queries use safe patterns
-        unsafe_patterns = ["DROP", "DELETE FROM", "UPDATE SET", "INSERT INTO"]
+        _unsafe_patterns = ["DROP", "DELETE FROM", "UPDATE SET", "INSERT INTO"]
 
         # In the actual implementation, verify queries are safe
         # For example, the ANALYZE commands are static strings

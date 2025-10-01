@@ -9,11 +9,21 @@ import type { ProcessingStats } from "@/lib/types";
 
 // Mock the UI components to focus on component logic
 mock.module("@/components/ui/animated-counter", () => ({
-  AnimatedCounter: ({ end }: { end: number }) => <span data-testid="animated-counter">{end}</span>,
+  AnimatedCounter: ({ end }: { end: number }) => (
+    <span data-testid="animated-counter">{end}</span>
+  ),
 }));
 
 mock.module("@/components/ui/design-system", () => ({
-  StatsCard: ({ title, value, tooltip }: { title: string; value: React.ReactNode; tooltip: string }) => (
+  StatsCard: ({
+    title,
+    value,
+    tooltip,
+  }: {
+    title: string;
+    value: React.ReactNode;
+    tooltip: string;
+  }) => (
     <div data-testid="stats-card" aria-label={tooltip}>
       <h3>{title}</h3>
       <div>{value}</div>
@@ -22,8 +32,16 @@ mock.module("@/components/ui/design-system", () => ({
 }));
 
 mock.module("@/components/ui/transitions", () => ({
-  StaggerAnimation: ({ children, className }: { children: React.ReactNode; className: string }) => (
-    <div className={className} data-testid="stagger-animation">{children}</div>
+  StaggerAnimation: ({
+    children,
+    className,
+  }: {
+    children: React.ReactNode;
+    className: string;
+  }) => (
+    <div className={className} data-testid="stagger-animation">
+      {children}
+    </div>
   ),
 }));
 
@@ -48,7 +66,6 @@ const mockStats: ProcessingStats = {
 };
 
 describe("StatsOverview Component", () => {
-
   test("renders with valid stats", () => {
     render(<StatsOverview stats={mockStats} />);
 
@@ -85,7 +102,7 @@ describe("StatsOverview Component", () => {
 
     // Should show 0 for all values when stats is null
     const counters = screen.getAllByTestId("animated-counter");
-    counters.forEach(counter => {
+    counters.forEach((counter) => {
       expect(counter).toHaveTextContent("0");
     });
   });
@@ -124,7 +141,13 @@ describe("StatsOverview Component", () => {
 
     const staggerWrapper = screen.getByTestId("stagger-animation");
     expect(staggerWrapper).toBeInTheDocument();
-    expect(staggerWrapper).toHaveClass("grid", "grid-cols-1", "md:grid-cols-2", "lg:grid-cols-4", "gap-6");
+    expect(staggerWrapper).toHaveClass(
+      "grid",
+      "grid-cols-1",
+      "md:grid-cols-2",
+      "lg:grid-cols-4",
+      "gap-6",
+    );
   });
 
   test("renders correct number of StatsCard components", () => {
@@ -137,10 +160,24 @@ describe("StatsOverview Component", () => {
   test("includes proper tooltips for accessibility", () => {
     render(<StatsOverview stats={mockStats} />);
 
-    expect(screen.getByLabelText("Total number of job descriptions in the database")).toBeInTheDocument();
-    expect(screen.getByLabelText("Jobs that have been fully processed and are ready for use")).toBeInTheDocument();
-    expect(screen.getByLabelText("Jobs that require manual review due to processing issues")).toBeInTheDocument();
-    expect(screen.getByLabelText("Jobs currently being processed or pending processing")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Total number of job descriptions in the database"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(
+        "Jobs that have been fully processed and are ready for use",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(
+        "Jobs that require manual review due to processing issues",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(
+        "Jobs currently being processed or pending processing",
+      ),
+    ).toBeInTheDocument();
   });
 
   test("handles zero values correctly", () => {
@@ -160,7 +197,7 @@ describe("StatsOverview Component", () => {
     render(<StatsOverview stats={zeroStats} />);
 
     const counters = screen.getAllByTestId("animated-counter");
-    counters.forEach(counter => {
+    counters.forEach((counter) => {
       expect(counter).toHaveTextContent("0");
     });
   });

@@ -14,8 +14,6 @@ from jd_ingestion.auth.service import (
     PreferenceService,
     create_access_token,
     verify_access_token,
-    AuthenticationError,
-    AuthorizationError,
 )
 from jd_ingestion.auth.models import User, UserSession, UserPermission, UserPreference
 

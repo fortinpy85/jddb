@@ -14,7 +14,7 @@ export function QuickActionsGrid({
   onNavigateToUpload,
   onNavigateToJobs,
   onNavigateToSearch,
-  onNavigateToCompare
+  onNavigateToCompare,
 }: QuickActionsGridProps) {
   return (
     <ContentSection

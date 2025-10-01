@@ -1,9 +1,7 @@
 """Tests for tasks/quality_tasks.py module."""
 
 import pytest
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Dict, Any, List, Optional
 
 from jd_ingestion.tasks.quality_tasks import (
     calculate_quality_metrics_task,
@@ -793,7 +791,7 @@ class TestTaskIntegration:
                 return_value=mock_metrics
             )
 
-            mock_task = MagicMock()
+            _mock_task = MagicMock()
 
             # This would be called within the async function
             # We're testing the conversion logic

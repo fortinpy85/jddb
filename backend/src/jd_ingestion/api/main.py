@@ -15,9 +15,11 @@ from ..database.connection import configure_mappers, get_async_session
 from ..middleware.analytics_middleware import AnalyticsMiddleware
 from ..utils.logging import configure_logging, get_logger
 from .endpoints import (
+    ai_suggestions,
     analysis,
     analytics,
     auth,
+    bilingual_documents,
     health,
     ingestion,
     jobs,
@@ -29,7 +31,9 @@ from .endpoints import (
     search,
     # search_analytics consolidated into analytics.py
     tasks,
+    templates,
     translation_memory,
+    translation_quality,
     websocket,
 )
 
@@ -143,6 +147,14 @@ app.include_router(auth.router, prefix="/api", tags=["authentication"])
 app.include_router(phase2_monitoring.router, prefix="/api", tags=["phase2-monitoring"])
 app.include_router(
     translation_memory.router, prefix="/api", tags=["translation-memory"]
+)
+app.include_router(ai_suggestions.router, prefix="/api", tags=["ai-suggestions"])
+app.include_router(templates.router, prefix="/api", tags=["templates"])
+app.include_router(
+    bilingual_documents.router, prefix="/api", tags=["bilingual-documents"]
+)
+app.include_router(
+    translation_quality.router, prefix="/api", tags=["translation-quality"]
 )
 
 # Mount static files for serving the frontend

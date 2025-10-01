@@ -61,7 +61,7 @@ class JobAnalysisService:
             select(JobDescription)
             .options(
                 selectinload(JobDescription.sections),
-                selectinload(JobDescription.metadata_entry),
+                selectinload(JobDescription.job_metadata),
                 selectinload(JobDescription.chunks),
             )
             .where(JobDescription.id.in_([job_a_id, job_b_id]))
@@ -139,7 +139,7 @@ class JobAnalysisService:
 
         # Compare metadata
         metadata_comparison = self._compare_metadata(
-            job_a.metadata_entry, job_b.metadata_entry
+            job_a.job_metadata, job_b.job_metadata
         )
 
         # Generate key differences using GPT

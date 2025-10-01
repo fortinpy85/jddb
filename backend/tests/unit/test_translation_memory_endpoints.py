@@ -3,7 +3,7 @@ Tests for translation memory API endpoints.
 """
 
 import pytest
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import Mock, patch
 from datetime import datetime
 from fastapi.testclient import TestClient
 
@@ -60,16 +60,16 @@ def sample_translation_data():
 @pytest.fixture
 def mock_project():
     """Mock project object."""
-    project = Mock()
-    project.id = 1
-    project.name = "Test Project"
-    project.description = "Test Description"
-    project.source_language = "en"
-    project.target_language = "fr"
-    project.project_type = "job_descriptions"
-    project.status = "active"
-    project.created_at = datetime(2024, 1, 1, 12, 0, 0)
-    return project
+    return {
+        "id": 1,
+        "name": "Test Project",
+        "description": "Test Description",
+        "source_language": "en",
+        "target_language": "fr",
+        "project_type": "job_descriptions",
+        "status": "active",
+        "created_at": datetime(2024, 1, 1, 12, 0, 0),
+    }
 
 
 @pytest.fixture
@@ -98,7 +98,9 @@ class TestTranslationProjectEndpoints:
         self, mock_service, client, sample_project_data, mock_project
     ):
         """Test successful project creation."""
-        mock_service.create_project.return_value = mock_project
+        from unittest.mock import AsyncMock
+
+        mock_service.create_project = AsyncMock(return_value=mock_project)
 
         response = client.post(
             "/api/translation-memory/projects", json=sample_project_data
@@ -276,6 +278,8 @@ class TestTranslationSuggestionsEndpoints:
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
     def test_get_translation_suggestions_success(self, mock_service, client):
         """Test successful translation suggestions retrieval."""
+        from unittest.mock import AsyncMock
+
         mock_suggestions = [
             {
                 "id": 1,
@@ -294,7 +298,9 @@ class TestTranslationSuggestionsEndpoints:
                 "usage_count": 5,
             },
         ]
-        mock_service.get_translation_suggestions.return_value = mock_suggestions
+        mock_service.get_translation_suggestions = AsyncMock(
+            return_value=mock_suggestions
+        )
 
         request_data = {
             "source_text": "Senior Data Scientist",
@@ -477,6 +483,10 @@ class TestTranslationUsageEndpoints:
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
     def test_update_translation_usage_success(self, mock_service, client):
         """Test successful translation usage update."""
+        from unittest.mock import AsyncMock
+
+        mock_service.update_usage_stats = AsyncMock(return_value=None)
+
         request_data = {
             "used_translation": True,
             "user_feedback": {"rating": 5, "comment": "Excellent translation"},
@@ -679,14 +689,22 @@ class TestTranslationMemoryEndpointsIntegration:
         self, mock_service, mock_get_db, client, sample_project_data
     ):
         """Test proper database session handling."""
+        from unittest.mock import AsyncMock
+
         mock_db = Mock()
         mock_get_db.return_value = mock_db
 
-        mock_project = Mock()
-        mock_project.id = 1
-        mock_project.name = "Test"
-        mock_project.created_at = datetime.now()
-        mock_service.create_project.return_value = mock_project
+        mock_project_dict = {
+            "id": 1,
+            "name": "Test",
+            "description": None,
+            "source_language": "en",
+            "target_language": "fr",
+            "project_type": "job_descriptions",
+            "status": "active",
+            "created_at": datetime.now(),
+        }
+        mock_service.create_project = AsyncMock(return_value=mock_project_dict)
 
         response = client.post(
             "/api/translation-memory/projects", json=sample_project_data

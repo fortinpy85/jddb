@@ -3,8 +3,8 @@ Tests for ingestion API endpoints.
 """
 
 import pytest
-from unittest.mock import Mock, patch, AsyncMock, MagicMock
-from datetime import datetime, timedelta
+from unittest.mock import Mock, patch, AsyncMock
+from datetime import datetime
 from pathlib import Path
 from fastapi.testclient import TestClient
 from fastapi import UploadFile
@@ -13,9 +13,6 @@ import os
 
 from jd_ingestion.api.main import app
 from jd_ingestion.database.models import (
-    JobDescription,
-    JobSection,
-    JobMetadata,
     ContentChunk,
 )
 

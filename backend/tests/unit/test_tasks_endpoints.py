@@ -5,7 +5,6 @@ Tests for task management API endpoints.
 import pytest
 from unittest.mock import Mock, patch, AsyncMock, mock_open
 from fastapi.testclient import TestClient
-from fastapi import UploadFile
 from pathlib import Path
 import tempfile
 import os
@@ -86,7 +85,7 @@ class TestUploadAndProcessEndpoint:
             tmp_file.flush()
 
             try:
-                with patch("builtins.open", mock_open()) as mock_file:
+                with patch("builtins.open", mock_open()) as _mock_file:
                     with patch("pathlib.Path.mkdir"):
                         with open(tmp_file.name, "rb") as file:
                             response = client.post(
@@ -151,7 +150,7 @@ class TestUploadAndProcessEndpoint:
 
             try:
                 # Mock the UploadFile to have a size attribute
-                with patch("fastapi.UploadFile") as mock_upload_file:
+                with patch("fastapi.UploadFile") as _mock_upload_file:
                     mock_file = Mock()
                     mock_file.filename = "large.txt"
                     mock_file.size = 2 * 1024 * 1024  # 2MB

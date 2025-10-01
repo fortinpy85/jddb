@@ -16,7 +16,7 @@ export function RecentJobsList({
   jobs,
   onJobSelect,
   onNavigateToJobs,
-  onNavigateToUpload
+  onNavigateToUpload,
 }: RecentJobsListProps) {
   return (
     <ContentSection
@@ -52,7 +52,9 @@ export function RecentJobsList({
               </div>
               <div className="text-right relative z-10">
                 <p className="text-sm text-slate-500 bg-slate-100/50 px-2 py-1 rounded-full group-hover:bg-violet-100/50 group-hover:text-violet-600 transition-all duration-200 font-medium">
-                  {job.processed_date ? new Date(job.processed_date).toLocaleDateString() : "Not processed"}
+                  {job.processed_date
+                    ? new Date(job.processed_date).toLocaleDateString()
+                    : "Not processed"}
                 </p>
               </div>
               <div className="absolute inset-0 bg-gradient-to-r from-violet-500/5 to-purple-500/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

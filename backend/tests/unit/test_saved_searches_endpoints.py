@@ -790,7 +790,7 @@ class TestGetPopularPublicSearches:
 
     def test_get_popular_public_searches_error(self, client, mock_db_session):
         """Test error handling for popular public searches."""
-        mock_db = AsyncMock()
+        _mock_db = AsyncMock()
         mock_db_session.execute.side_effect = Exception("Database error")
 
         response = client.get("/api/saved-searches/public/popular")
@@ -942,7 +942,7 @@ class TestSavedSearchesEdgeCases:
         self, mock_analytics_service, client, sample_saved_search, mock_db_session
     ):
         """Test permission logic for session-only users."""
-        mock_db = AsyncMock()
+        _mock_db = AsyncMock()
 
         # Make search owned by session only
         sample_saved_search.user_id = None
@@ -967,7 +967,7 @@ class TestSavedSearchesEdgeCases:
         self, mock_analytics_service, client, mock_db_session
     ):
         """Test search filtering logic in list endpoint."""
-        mock_db = AsyncMock()
+        _mock_db = AsyncMock()
 
         # Mock empty results for filters test
         mock_result = Mock()
@@ -998,7 +998,7 @@ class TestSavedSearchesEdgeCases:
         self, mock_analytics_service, client, sample_saved_search, mock_db_session
     ):
         """Test that analytics tracking is called with correct parameters."""
-        mock_db = AsyncMock()
+        _mock_db = AsyncMock()
 
         mock_result = Mock()
         mock_result.scalar_one_or_none.return_value = sample_saved_search

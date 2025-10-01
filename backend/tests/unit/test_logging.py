@@ -4,13 +4,8 @@ Tests for logging utility module.
 
 import pytest
 import logging
-import structlog
-import os
-import sys
-from unittest.mock import Mock, patch, MagicMock, call
-from pathlib import Path
+from unittest.mock import Mock, patch
 from datetime import datetime
-from typing import Dict, Any
 
 from jd_ingestion.utils.logging import (
     configure_logging,
@@ -54,7 +49,7 @@ class TestConfigureLogging:
         # Verify structlog configuration
         mock_structlog_config.assert_called_once()
         structlog_kwargs = mock_structlog_config.call_args[1]
-        assert structlog_kwargs["context_class"] == dict
+        assert structlog_kwargs["context_class"] is dict
         assert structlog_kwargs["cache_logger_on_first_use"] is True
 
         # Directory creation should not be called in development
@@ -508,8 +503,8 @@ class TestLoggingIntegration:
         mock_get_logger.return_value = mock_logger
 
         # Test different logger creation methods return same instance
-        logger1 = get_logger("test")
-        logger2 = get_task_logger("test_task")
+        _logger1 = get_logger("test")
+        _logger2 = get_task_logger("test_task")
 
         assert mock_get_logger.call_count == 2
         mock_get_logger.assert_any_call("test")

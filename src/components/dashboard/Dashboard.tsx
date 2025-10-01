@@ -16,7 +16,7 @@ export function Dashboard({
   stats,
   recentJobs,
   onJobSelect,
-  onNavigateToTab
+  onNavigateToTab,
 }: DashboardProps) {
   // Navigation handlers
   const handleNavigateToJobs = () => onNavigateToTab("jobs");

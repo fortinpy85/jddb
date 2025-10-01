@@ -4,7 +4,6 @@ import pytest
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import HTTPException
-from fastapi.testclient import TestClient
 
 from jd_ingestion.api.endpoints.phase2_monitoring import router
 

@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 from jd_ingestion.utils.cache import CacheService, cached
 
@@ -180,7 +179,7 @@ class TestCacheService:
         """Test getting cached search results."""
         cache_service.redis_client = mock_redis_client
         cached_results = [{"id": 1, "title": "Test Job"}]
-        mock_redis_client.get.return_value = f'[{{"id": 1, "title": "Test Job"}}]'
+        mock_redis_client.get.return_value = '[{"id": 1, "title": "Test Job"}]'
 
         query = "test query"
         filters = {"type": "job"}

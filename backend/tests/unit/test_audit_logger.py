@@ -1,10 +1,8 @@
 """Tests for audit/logger.py module."""
 
 import pytest
-import json
-import hashlib
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from jd_ingestion.audit.logger import (
     AuditEvent,

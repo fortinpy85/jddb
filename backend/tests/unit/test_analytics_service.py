@@ -2,7 +2,7 @@ import pytest
 import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from jd_ingestion.services.analytics_service import AnalyticsService
@@ -10,9 +10,6 @@ from jd_ingestion.database.models import (
     UsageAnalytics,
     SystemMetrics,
     AIUsageTracking,
-    JobDescription,
-    ContentChunk,
-    DataQualityMetrics,
 )
 
 

@@ -4,9 +4,8 @@ Tests for rate limiting service.
 
 import pytest
 import asyncio
-import time
 from unittest.mock import Mock, AsyncMock, patch
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
 
 from jd_ingestion.services.rate_limiting_service import (

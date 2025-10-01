@@ -19,6 +19,12 @@ import uuid
 
 from ...database.connection import get_async_session
 from ...utils.logging import get_logger
+from ...utils.operational_transform import (
+    Operation,
+    apply_operation,
+    transform_against_history,
+    validate_operation,
+)
 
 logger = get_logger(__name__)
 
@@ -51,6 +57,7 @@ class ConnectionManager:
                 "participants": set(),
                 "document_state": "",
                 "operation_count": 0,
+                "operation_history": [],  # Track all operations for OT
             }
 
         # Add connection to session
@@ -147,66 +154,87 @@ class ConnectionManager:
         user_info = self.user_sessions.get(websocket, {})
         user_id = user_info.get("user_id")
 
-        # Generate operation ID and increment counter
-        operation_id = str(uuid.uuid4())
-        session["operation_count"] += 1
+        try:
+            # Convert dict to Operation object
+            op = Operation.from_dict(operation)
 
-        # Enhance operation with metadata
-        enhanced_operation = {
-            **operation,
-            "operation_id": operation_id,
-            "user_id": user_id,
-            "timestamp": datetime.utcnow().isoformat(),
-            "sequence_number": session["operation_count"],
-        }
+            # Validate operation
+            if not validate_operation(op, len(session["document_state"])):
+                logger.error(f"Invalid operation received: {operation}")
+                await self.send_personal_message(
+                    {
+                        "type": "operation_error",
+                        "error": "Invalid operation",
+                    },
+                    websocket,
+                )
+                return
 
-        # Apply simple document state update (basic implementation)
-        if operation.get("type") == "insert":
-            # This is a simplified implementation - real OT would be more complex
-            session["document_state"] = self._apply_insert_operation(
-                session["document_state"], operation
-            )
-        elif operation.get("type") == "delete":
-            session["document_state"] = self._apply_delete_operation(
-                session["document_state"], operation
-            )
+            # Transform operation against concurrent operations if needed
+            # If client has pending operations, transform against them
+            client_sequence = operation.get("base_sequence", session["operation_count"])
+            if client_sequence < session["operation_count"]:
+                # Client is behind - transform against missed operations
+                missed_ops = session["operation_history"][client_sequence:]
+                op = transform_against_history(op, missed_ops)
+                logger.info(
+                    f"Transformed operation against {len(missed_ops)} concurrent operations"
+                )
 
-        logger.info(f"Applied operation {operation_id} in session {session_id}")
+            # Apply operation to document
+            session["document_state"] = apply_operation(session["document_state"], op)
 
-        # Broadcast operation to other participants
-        await self.broadcast_to_session(
-            session_id,
-            {"type": "operation", "operation": enhanced_operation},
-            exclude=websocket,
-        )
+            # Generate operation ID and increment counter
+            operation_id = str(uuid.uuid4())
+            session["operation_count"] += 1
 
-        # Acknowledge operation to sender
-        await self.send_personal_message(
-            {
-                "type": "operation_ack",
+            # Store operation in history
+            session["operation_history"].append(op)
+
+            # Keep history manageable (last 1000 operations)
+            if len(session["operation_history"]) > 1000:
+                session["operation_history"] = session["operation_history"][-1000:]
+
+            # Enhance operation with metadata
+            enhanced_operation = {
+                **op.to_dict(),
                 "operation_id": operation_id,
+                "user_id": user_id,
+                "timestamp": datetime.utcnow().isoformat(),
                 "sequence_number": session["operation_count"],
-            },
-            websocket,
-        )
+            }
 
-    def _apply_insert_operation(self, document: str, operation: dict) -> str:
-        """Apply an insert operation to the document state."""
-        position = operation.get("position", 0)
-        text = operation.get("text", "")
+            logger.info(
+                f"Applied operation {operation_id} in session {session_id} "
+                f"(seq: {session['operation_count']})"
+            )
 
-        if position <= len(document):
-            return document[:position] + text + document[position:]
-        return document
+            # Broadcast operation to other participants
+            await self.broadcast_to_session(
+                session_id,
+                {"type": "operation", "operation": enhanced_operation},
+                exclude=websocket,
+            )
 
-    def _apply_delete_operation(self, document: str, operation: dict) -> str:
-        """Apply a delete operation to the document state."""
-        start = operation.get("start", 0)
-        end = operation.get("end", start + 1)
+            # Acknowledge operation to sender
+            await self.send_personal_message(
+                {
+                    "type": "operation_ack",
+                    "operation_id": operation_id,
+                    "sequence_number": session["operation_count"],
+                },
+                websocket,
+            )
 
-        if start <= len(document) and end <= len(document) and start <= end:
-            return document[:start] + document[end:]
-        return document
+        except Exception as e:
+            logger.error(f"Error applying operation: {e}")
+            await self.send_personal_message(
+                {
+                    "type": "operation_error",
+                    "error": str(e),
+                },
+                websocket,
+            )
 
 
 # Global connection manager instance

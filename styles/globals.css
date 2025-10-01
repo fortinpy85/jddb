@@ -591,3 +591,6 @@
     transform: translateX(100%);
   }
 }
+
+/* Modern Elevation System */
+@import '../src/styles/elevation.css';

@@ -2,20 +2,14 @@
 Tests for search API endpoints.
 """
 
+import asyncio
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
-from datetime import datetime, timedelta, date
+from datetime import datetime, date
 from decimal import Decimal
 from fastapi.testclient import TestClient
-from fastapi import Request
 
 from jd_ingestion.api.main import app
-from jd_ingestion.database.models import (
-    JobDescription,
-    JobSection,
-    JobMetadata,
-    ContentChunk,
-)
 
 
 @pytest.fixture

@@ -6,7 +6,6 @@ sys.path.append("src")
 
 from sqlalchemy import text
 from jd_ingestion.database.connection import get_sync_session
-from jd_ingestion.database.models import JobDescription, JobSection
 
 
 def check_database():

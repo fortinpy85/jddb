@@ -1,10 +1,8 @@
 """Tests for tasks/processing_tasks.py module."""
 
 import pytest
-import asyncio
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch, mock_open
-from typing import Dict, Any
 
 from jd_ingestion.tasks.processing_tasks import (
     process_single_file_task,
@@ -403,13 +401,13 @@ class TestProcessSingleFileAsync:
             ) as mock_job_desc_cls,
             patch(
                 "jd_ingestion.tasks.processing_tasks.JobSection"
-            ) as mock_job_section_cls,
+            ) as _mock_job_section_cls,
             patch(
                 "jd_ingestion.tasks.processing_tasks.JobMetadata"
-            ) as mock_job_metadata_cls,
+            ) as _mock_job_metadata_cls,
             patch(
                 "jd_ingestion.tasks.processing_tasks.ContentChunk"
-            ) as mock_content_chunk_cls,
+            ) as _mock_content_chunk_cls,
         ):
             mock_job_desc = MagicMock()
             mock_job_desc.id = 123
@@ -661,10 +659,6 @@ class TestTaskIntegration:
                 "jd_ingestion.tasks.processing_tasks.batch_generate_embeddings_task"
             ) as mock_batch_task:
                 # Import check - these should not fail
-                from jd_ingestion.tasks.processing_tasks import (
-                    _process_single_file_async,
-                    batch_process_files_task,
-                )
 
                 # Verify tasks can be mocked (indicating proper import structure)
                 assert mock_task is not None
@@ -676,7 +670,6 @@ class TestTaskIntegration:
             "jd_ingestion.tasks.processing_tasks.calculate_quality_metrics_task"
         ) as mock_task:
             # Import check
-            from jd_ingestion.tasks.processing_tasks import _process_single_file_async
 
             # Verify task can be mocked
             assert mock_task is not None

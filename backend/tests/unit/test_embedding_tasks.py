@@ -1,9 +1,7 @@
 """Tests for tasks/embedding_tasks.py module."""
 
 import pytest
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch, create_autospec
-from typing import List, Dict, Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from jd_ingestion.tasks.embedding_tasks import (
     generate_embeddings_for_job_task,

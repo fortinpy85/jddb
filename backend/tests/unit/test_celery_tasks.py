@@ -2,9 +2,7 @@
 Tests for Celery tasks and configuration.
 """
 
-import pytest
-from unittest.mock import Mock, patch, AsyncMock
-from pathlib import Path
+from unittest.mock import patch
 
 from jd_ingestion.tasks.celery_app import celery_app
 

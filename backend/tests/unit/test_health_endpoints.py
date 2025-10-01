@@ -6,7 +6,6 @@ import pytest
 from unittest.mock import AsyncMock, Mock, patch
 from datetime import datetime
 from fastapi.testclient import TestClient
-from fastapi import HTTPException
 
 from jd_ingestion.api.main import app
 
@@ -133,9 +132,7 @@ class TestHealthEndpoints:
         assert "Invalid component" in response.json()["detail"]
 
     @patch("jd_ingestion.api.endpoints.health.get_health_status")
-    def test_component_health_valid_component(
-        self, mock_health_status, client, mock_health_status
-    ):
+    def test_component_health_valid_component(self, mock_health_status, client):
         """Test component health with valid component."""
         mock_health_status.return_value = mock_health_status
 
@@ -156,7 +153,7 @@ class TestHealthEndpoints:
         assert "Component not found" in response.json()["detail"]
 
     @patch("jd_ingestion.api.endpoints.health.get_health_status")
-    def test_system_metrics(self, mock_health_status, client, mock_health_status):
+    def test_system_metrics(self, mock_health_status, client):
         """Test system metrics endpoint."""
         mock_health_status.return_value = mock_health_status
 
@@ -169,7 +166,7 @@ class TestHealthEndpoints:
         assert data["metrics"]["cpu_percent"] == 45.2
 
     @patch("jd_ingestion.api.endpoints.health.get_health_status")
-    def test_application_metrics(self, mock_health_status, client, mock_health_status):
+    def test_application_metrics(self, mock_health_status, client):
         """Test application metrics endpoint."""
         mock_health_status.return_value = mock_health_status
 

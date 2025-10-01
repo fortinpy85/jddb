@@ -1,8 +1,7 @@
 # Standard library imports
-from typing import Optional
 
 # Third-party imports
-from fastapi import Depends, HTTPException, Security
+from fastapi import HTTPException, Security
 from fastapi.security import APIKeyHeader
 
 # Local imports

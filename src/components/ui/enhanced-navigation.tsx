@@ -19,7 +19,7 @@ import {
   Settings,
   HelpCircle,
   Menu,
-  X
+  X,
 } from "lucide-react";
 
 interface NavigationItem {
@@ -58,7 +58,7 @@ export function EnhancedNavigation({
   activeId,
   onItemClick,
   className,
-  allowCollapse = false
+  allowCollapse = false,
 }: EnhancedNavigationProps) {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -98,32 +98,34 @@ export function EnhancedNavigation({
         "w-full text-left": orientation === "vertical" || variant === "sidebar",
         "cursor-pointer": !item.isDisabled,
         "opacity-50 cursor-not-allowed": item.isDisabled,
-      }
+      },
     );
 
     const variantClasses = {
       default: cn(
         "border border-transparent hover:border-slate-200 dark:hover:border-slate-700",
-        isActive && "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-400 text-blue-700 dark:text-blue-400"
+        isActive &&
+          "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-400 text-blue-700 dark:text-blue-400",
       ),
       pills: cn(
         "rounded-full px-4 py-2",
-        isActive && "bg-blue-600 text-white shadow-lg"
+        isActive && "bg-blue-600 text-white shadow-lg",
       ),
       minimal: cn(
         "border-b-2 border-transparent hover:border-slate-300 dark:hover:border-slate-600",
-        isActive && "border-blue-500"
+        isActive && "border-blue-500",
       ),
       sidebar: cn(
         "rounded-lg px-3 py-2 mx-2",
-        isActive && "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-      )
+        isActive &&
+          "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
+      ),
     };
 
     const sizeClasses = {
       sm: "text-sm gap-2 min-h-[2rem]",
       md: "text-sm gap-3 min-h-[2.5rem]",
-      lg: "text-base gap-3 min-h-[3rem]"
+      lg: "text-base gap-3 min-h-[3rem]",
     };
 
     const indentClass = level > 0 ? `ml-${level * 4}` : "";
@@ -135,7 +137,7 @@ export function EnhancedNavigation({
             baseClasses,
             variantClasses[variant],
             sizeClasses[size],
-            "w-full px-3 py-2"
+            "w-full px-3 py-2",
           )}
           onClick={() => handleItemClick(item)}
           disabled={item.isDisabled}
@@ -143,19 +145,33 @@ export function EnhancedNavigation({
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
             {/* Icon */}
-            <Icon className={cn(
-              "flex-shrink-0",
-              size === "sm" ? "w-4 h-4" : size === "lg" ? "w-6 h-6" : "w-5 h-5",
-              isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-600 dark:text-slate-400"
-            )} />
+            <Icon
+              className={cn(
+                "flex-shrink-0",
+                size === "sm"
+                  ? "w-4 h-4"
+                  : size === "lg"
+                    ? "w-6 h-6"
+                    : "w-5 h-5",
+                isActive
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-slate-600 dark:text-slate-400",
+              )}
+            />
 
             {/* Label */}
             {(!isCollapsed || variant !== "sidebar") && (
-              <span className={cn(
-                "font-medium truncate",
-                isActive ? "text-blue-700 dark:text-blue-400" : "text-slate-700 dark:text-slate-300"
-              )}>
-                {orientation === "horizontal" && item.shortLabel ? item.shortLabel : item.label}
+              <span
+                className={cn(
+                  "font-medium truncate",
+                  isActive
+                    ? "text-blue-700 dark:text-blue-400"
+                    : "text-slate-700 dark:text-slate-300",
+                )}
+              >
+                {orientation === "horizontal" && item.shortLabel
+                  ? item.shortLabel
+                  : item.label}
               </span>
             )}
 
@@ -172,32 +188,40 @@ export function EnhancedNavigation({
 
           {/* Expand/Collapse Indicator */}
           {hasChildren && (!isCollapsed || variant !== "sidebar") && (
-            <ChevronRight className={cn(
-              "w-4 h-4 flex-shrink-0 transition-transform duration-200",
-              isExpanded && "rotate-90",
-              isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-400"
-            )} />
+            <ChevronRight
+              className={cn(
+                "w-4 h-4 flex-shrink-0 transition-transform duration-200",
+                isExpanded && "rotate-90",
+                isActive
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-slate-400",
+              )}
+            />
           )}
         </button>
 
         {/* Children */}
-        {hasChildren && isExpanded && (!isCollapsed || variant !== "sidebar") && (
-          <div className="space-y-1 mt-1">
-            {item.children!.map((child) => renderNavItem(child, level + 1))}
-          </div>
-        )}
+        {hasChildren &&
+          isExpanded &&
+          (!isCollapsed || variant !== "sidebar") && (
+            <div className="space-y-1 mt-1">
+              {item.children!.map((child) => renderNavItem(child, level + 1))}
+            </div>
+          )}
       </div>
     );
   };
 
   return (
-    <nav className={cn(
-      "relative",
-      orientation === "horizontal" ? "flex items-center" : "space-y-1",
-      variant === "sidebar" && "w-64 transition-all duration-300",
-      variant === "sidebar" && isCollapsed && "w-16",
-      className
-    )}>
+    <nav
+      className={cn(
+        "relative",
+        orientation === "horizontal" ? "flex items-center" : "space-y-1",
+        variant === "sidebar" && "w-64 transition-all duration-300",
+        variant === "sidebar" && isCollapsed && "w-16",
+        className,
+      )}
+    >
       {/* Collapse Toggle (Sidebar only) */}
       {allowCollapse && variant === "sidebar" && (
         <div className="flex items-center justify-between p-2 mb-4">
@@ -212,15 +236,23 @@ export function EnhancedNavigation({
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="p-2"
           >
-            {isCollapsed ? <Menu className="w-4 h-4" /> : <X className="w-4 h-4" />}
+            {isCollapsed ? (
+              <Menu className="w-4 h-4" />
+            ) : (
+              <X className="w-4 h-4" />
+            )}
           </Button>
         </div>
       )}
 
       {/* Navigation Items */}
-      <div className={cn(
-        orientation === "horizontal" ? "flex items-center space-x-1" : "space-y-1"
-      )}>
+      <div
+        className={cn(
+          orientation === "horizontal"
+            ? "flex items-center space-x-1"
+            : "space-y-1",
+        )}
+      >
         {items.map((item) => renderNavItem(item))}
       </div>
     </nav>
@@ -247,10 +279,13 @@ interface EnhancedBreadcrumbProps {
 export function EnhancedBreadcrumb({
   items,
   separator = <ChevronRight className="w-4 h-4 text-slate-400" />,
-  className
+  className,
 }: EnhancedBreadcrumbProps) {
   return (
-    <nav className={cn("flex items-center space-x-2 text-sm", className)} aria-label="Breadcrumb">
+    <nav
+      className={cn("flex items-center space-x-2 text-sm", className)}
+      aria-label="Breadcrumb"
+    >
       {items.map((item, index) => {
         const isLast = index === items.length - 1;
         const Icon = item.icon;
@@ -259,9 +294,7 @@ export function EnhancedBreadcrumb({
           <React.Fragment key={index}>
             {index > 0 && separator}
             <div className="flex items-center space-x-1">
-              {Icon && (
-                <Icon className="w-4 h-4 text-slate-500" />
-              )}
+              {Icon && <Icon className="w-4 h-4 text-slate-500" />}
               {isLast ? (
                 <span className="font-medium text-slate-900 dark:text-slate-100">
                   {item.label}
@@ -304,27 +337,23 @@ interface QuickActionBarProps {
 export function QuickActionBar({
   actions,
   position = "bottom-right",
-  className
+  className,
 }: QuickActionBarProps) {
   const positionClasses = {
     "bottom-right": "bottom-6 right-6",
     "bottom-left": "bottom-6 left-6",
-    "bottom-center": "bottom-6 left-1/2 transform -translate-x-1/2"
+    "bottom-center": "bottom-6 left-1/2 transform -translate-x-1/2",
   };
 
   const colors = {
     blue: "bg-blue-600 hover:bg-blue-700 text-white",
     emerald: "bg-emerald-600 hover:bg-emerald-700 text-white",
     amber: "bg-amber-600 hover:bg-amber-700 text-white",
-    red: "bg-red-600 hover:bg-red-700 text-white"
+    red: "bg-red-600 hover:bg-red-700 text-white",
   };
 
   return (
-    <div className={cn(
-      "fixed z-50",
-      positionClasses[position],
-      className
-    )}>
+    <div className={cn("fixed z-50", positionClasses[position], className)}>
       <div className="flex items-center space-x-3 bg-white dark:bg-slate-800 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 p-2">
         {actions.map((action) => {
           const Icon = action.icon;
@@ -335,7 +364,7 @@ export function QuickActionBar({
               disabled={action.disabled}
               className={cn(
                 "rounded-full w-12 h-12 p-0 shadow-lg hover:scale-110 transition-all duration-200",
-                colors[action.color || "blue"]
+                colors[action.color || "blue"],
               )}
               title={action.label}
             >

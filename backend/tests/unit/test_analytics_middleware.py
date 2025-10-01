@@ -3,11 +3,9 @@ Tests for analytics middleware.
 """
 
 import pytest
-import asyncio
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock, Mock, patch
 from fastapi import Request, Response, FastAPI
 from fastapi.testclient import TestClient
-from starlette.responses import JSONResponse
 
 from jd_ingestion.middleware.analytics_middleware import (
     AnalyticsMiddleware,

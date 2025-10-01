@@ -89,9 +89,8 @@ class CircuitBreaker:
 
         try:
             # Execute operation with timeout
-            async with asyncio.timeout(self.config.timeout):
-                self.metrics.total_requests += 1
-                yield
+            self.metrics.total_requests += 1
+            yield
 
             # Success
             execution_time = time.time() - start_time
