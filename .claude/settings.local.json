@@ -47,7 +47,8 @@
       "WebFetch(domain:github.com)",
       "WebSearch",
       "Bash(del nul)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []
