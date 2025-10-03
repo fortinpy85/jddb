@@ -22,7 +22,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -42,7 +41,7 @@ import {
   Copy,
   RotateCcw,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/api";
 import { Template } from "./SmartTemplateSelector";
 
 interface TemplateCustomizerProps {
@@ -127,7 +126,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
         }
       });
 
-      const response = await fetch(`${api.getBaseUrl()}/templates/customize`, {
+      const response = await fetch(`${API_BASE_URL}/templates/customize`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -394,7 +393,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
               </div>
             </ScrollArea>
 
-            <DialogFooter>
+            <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setPreviewOpen(false)}>
                 Close
               </Button>
@@ -402,7 +401,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
                 <CheckCircle className="w-3 h-3 mr-1" />
                 Apply Template
               </Button>
-            </DialogFooter>
+            </div>
           </DialogContent>
         </Dialog>
       )}

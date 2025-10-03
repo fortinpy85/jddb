@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { api } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/api";
 
 export interface TranslationMatch {
   id: number;
@@ -98,7 +98,7 @@ export function useTranslationMemory(
         }
 
         const response = await fetch(
-          `${api.getBaseUrl()}/translation-memory/search?${queryParams.toString()}`,
+          `${API_BASE_URL}/translation-memory/search?${queryParams.toString()}`,
           {
             method: "POST",
             headers: {
@@ -133,7 +133,7 @@ export function useTranslationMemory(
       try {
         // Use project-based endpoint: POST /projects/{project_id}/translations
         const response = await fetch(
-          `${api.getBaseUrl()}/translation-memory/projects/${projectId}/translations`,
+          `${API_BASE_URL}/translation-memory/projects/${projectId}/translations`,
           {
             method: "POST",
             headers: {
@@ -202,7 +202,7 @@ export function useTranslationMemory(
     try {
       // Use usage tracking endpoint: PUT /translations/{tm_id}/usage
       const response = await fetch(
-        `${api.getBaseUrl()}/translation-memory/translations/${id}/usage`,
+        `${API_BASE_URL}/translation-memory/translations/${id}/usage`,
         {
           method: "PUT",
           headers: {

@@ -44,9 +44,6 @@ import {
 import { LoadingState, ErrorState } from "@/components/ui/states";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
-import { QualityDashboard } from "@/components/ai/QualityDashboard";
-import { ContentGeneratorModal } from "@/components/ai/ContentGeneratorModal";
-import { useAISuggestions } from "@/hooks/useAISuggestions";
 
 interface JobDetailViewProps {
   jobId: number;
@@ -69,7 +66,6 @@ export function JobDetailView({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { addToast } = useToast();
-  const { qualityScore, calculateQuality, loading: qualityLoading } = useAISuggestions();
 
   // Load job details
   useEffect(() => {
@@ -82,15 +78,6 @@ export function JobDetailView({
     try {
       const jobData = await apiClient.getJob(jobId);
       setJob(jobData);
-
-      // Calculate quality score if sections are available
-      if (jobData.sections && jobData.sections.length > 0) {
-        const sectionsMap: Record<string, string> = {};
-        jobData.sections.forEach((section) => {
-          sectionsMap[section.section_type] = section.section_content;
-        });
-        await calculateQuality(sectionsMap, jobData.raw_content);
-      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to load job details",
@@ -342,15 +329,6 @@ export function JobDetailView({
         />
       </div>
 
-      {/* Quality Dashboard */}
-      {qualityScore && (
-        <QualityDashboard
-          qualityScore={qualityScore}
-          loading={qualityLoading}
-          className="mb-6"
-        />
-      )}
-
       {/* Job Sections */}
       <div className="grid grid-cols-1 gap-6">
         {job.sections && job.sections.length > 0 ? (
@@ -359,22 +337,6 @@ export function JobDetailView({
               key={index}
               title={section.section_type}
               content={section.section_content}
-              jobNumber={job.job_number}
-              classification={job.classification}
-              onContentUpdate={(newContent) => {
-                // Update section content
-                setJob((prev) => ({
-                  ...prev!,
-                  sections: prev!.sections.map((s, i) =>
-                    i === index ? { ...s, section_content: newContent } : s
-                  ),
-                }));
-                addToast({
-                  title: "Content Updated",
-                  description: `Section "${section.section_type}" has been updated`,
-                  type: "success",
-                });
-              }}
             />
           ))
         ) : (
@@ -492,62 +454,27 @@ function MetadataCard({
 interface JobSectionCardProps {
   title: string;
   content: string;
-  jobNumber?: string;
-  classification?: string;
-  onContentUpdate?: (newContent: string) => void;
   className?: string;
 }
 
-function JobSectionCard({
-  title,
-  content,
-  jobNumber,
-  classification,
-  onContentUpdate,
-  className,
-}: JobSectionCardProps) {
-  const [showGenerator, setShowGenerator] = useState(false);
-
-  const handleGenerate = (generatedContent: string) => {
-    if (onContentUpdate) {
-      onContentUpdate(generatedContent);
-    }
-    setShowGenerator(false);
-  };
-
+function JobSectionCard({ title, content, className }: JobSectionCardProps) {
   return (
-    <>
-      <Card className={cn("hover:shadow-md transition-shadow", className)}>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span className="capitalize">{title.replace(/_/g, " ")}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowGenerator(true)}
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="prose prose-sm dark:prose-invert max-w-none">
-            <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-              {content}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <ContentGeneratorModal
-        open={showGenerator}
-        onClose={() => setShowGenerator(false)}
-        onGenerate={handleGenerate}
-        sectionType={title}
-        currentContent={content}
-        jobNumber={jobNumber}
-        classification={classification}
-      />
-    </>
+    <Card className={cn("hover:shadow-md transition-shadow", className)}>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span className="capitalize">{title.replace(/_/g, " ")}</span>
+          <Button variant="ghost" size="sm">
+            <Edit className="w-4 h-4" />
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="prose prose-sm dark:prose-invert max-w-none">
+          <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+            {content}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

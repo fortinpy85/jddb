@@ -13,7 +13,9 @@ from jd_ingestion.services.rate_limiting_service import (
     RateLimitType,
     RateLimit,
     RateLimitStatus,
-    RateLimitExceeded,
+)
+from jd_ingestion.utils.exceptions import (
+    RateLimitExceededException as RateLimitExceeded,
 )
 
 

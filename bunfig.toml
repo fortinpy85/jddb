@@ -5,3 +5,4 @@ env = "BUN_PUBLIC_*"
 [test]
 preload = ["./src/test-setup.ts"]
 coverage = true
+root = "./src"

@@ -113,7 +113,7 @@ export function AlertBanner({
       className={cn(
         // Base styles - conditional positioning
         relative ? "relative w-full" : "fixed top-16 left-0 right-0 z-40",
-        "border-b",
+        "border",
         "backdrop-blur-sm",
         "shadow-card",
         "animate-in slide-in-from-top duration-300",
@@ -123,7 +123,7 @@ export function AlertBanner({
       role="alert"
       aria-live="polite"
     >
-      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex items-start gap-3">
           {/* Icon */}
           {showIcon && (

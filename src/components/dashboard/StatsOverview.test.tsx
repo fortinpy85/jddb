@@ -14,22 +14,30 @@ mock.module("@/components/ui/animated-counter", () => ({
   ),
 }));
 
-mock.module("@/components/ui/design-system", () => ({
-  StatsCard: ({
-    title,
-    value,
-    tooltip,
-  }: {
+mock.module("@/components/ui/design-system", () => {
+  interface MockStatsCardProps {
     title: string;
     value: React.ReactNode;
     tooltip: string;
-  }) => (
-    <div data-testid="stats-card" aria-label={tooltip}>
-      <h3>{title}</h3>
-      <div>{value}</div>
-    </div>
-  ),
-}));
+    icon: React.ElementType;
+    color: string;
+  }
+  return {
+    StatsCard: ({
+      title,
+      value,
+      tooltip,
+      icon: Icon,
+      color,
+    }: MockStatsCardProps) => (
+      <div data-testid="stats-card" aria-label={tooltip} data-color={color}>
+        {Icon && <Icon data-testid="stats-card-icon" />}
+        <h3>{title}</h3>
+        <div>{value}</div>
+      </div>
+    ),
+  };
+});
 
 mock.module("@/components/ui/transitions", () => ({
   StaggerAnimation: ({
@@ -63,6 +71,21 @@ const mockStats: ProcessingStats = {
     EN: 100,
     FR: 50,
   },
+  last_updated: "2024-01-17T12:00:00Z",
+};
+
+const emptyStats: ProcessingStats = {
+  total_jobs: 0,
+  processing_status: {
+    completed: 0,
+    processing: 0,
+    pending: 0,
+    needs_review: 0,
+    failed: 0,
+  },
+  by_classification: {},
+  by_language: {},
+  last_updated: "",
 };
 
 describe("StatsOverview Component", () => {
@@ -92,8 +115,8 @@ describe("StatsOverview Component", () => {
     expect(screen.getByText("25")).toBeInTheDocument();
   });
 
-  test("handles null stats gracefully", () => {
-    render(<StatsOverview stats={null} />);
+  test("handles empty stats gracefully", () => {
+    render(<StatsOverview stats={emptyStats} />);
 
     expect(screen.getByText("Total Jobs")).toBeInTheDocument();
     expect(screen.getByText("Completed")).toBeInTheDocument();
@@ -181,20 +204,7 @@ describe("StatsOverview Component", () => {
   });
 
   test("handles zero values correctly", () => {
-    const zeroStats = {
-      total_jobs: 0,
-      processing_status: {
-        completed: 0,
-        processing: 0,
-        pending: 0,
-        needs_review: 0,
-        failed: 0,
-      },
-      by_classification: {},
-      by_language: {},
-    };
-
-    render(<StatsOverview stats={zeroStats} />);
+    render(<StatsOverview stats={emptyStats} />);
 
     const counters = screen.getAllByTestId("animated-counter");
     counters.forEach((counter) => {

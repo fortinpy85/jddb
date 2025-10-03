@@ -7,10 +7,10 @@ import { describe, test, expect, beforeEach, afterEach, mock } from "bun:test";
 import { JobList } from "./JobList";
 
 // Mock the store module
-const mockFetchJobs = mock();
-const mockFetchStats = mock();
-const mockSetFilters = mock();
-const mockSearchJobs = mock();
+const mockFetchJobs = mock(() => Promise.resolve());
+const mockFetchStats = mock(() => Promise.resolve());
+const mockSetFilters = mock(() => {});
+const mockSearchJobs = mock(() => Promise.resolve());
 
 // Create a mock store state that we can modify in tests
 let mockStoreState: any;
@@ -70,10 +70,11 @@ const mockJobsResponse = {
 
 describe("JobList Component", () => {
   beforeEach(() => {
-    mockFetchJobs.mockReset();
-    mockFetchStats.mockReset();
-    mockSetFilters.mockReset();
-    mockSearchJobs.mockReset();
+    // Reset mocks
+    if (mockFetchJobs.mockReset) mockFetchJobs.mockReset();
+    if (mockFetchStats.mockReset) mockFetchStats.mockReset();
+    if (mockSetFilters.mockReset) mockSetFilters.mockReset();
+    if (mockSearchJobs.mockReset) mockSearchJobs.mockReset();
 
     // Reset to default state
     mockStoreState = {
@@ -100,10 +101,10 @@ describe("JobList Component", () => {
         },
       },
       filters: {},
-      fetchJobs: mockFetchJobs,
-      fetchStats: mockFetchStats,
-      setFilters: mockSetFilters,
-      searchJobs: mockSearchJobs,
+      fetchJobs: mockFetchJobs as any,
+      fetchStats: mockFetchStats as any,
+      setFilters: mockSetFilters as any,
+      searchJobs: mockSearchJobs as any,
     };
     mockUseStore.mockReturnValue(mockStoreState);
 
@@ -187,15 +188,18 @@ describe("JobList Component", () => {
 
     render(<JobList />);
 
-    // Check that empty state is correctly indicated by the job count in header
-    expect(screen.getByText(/job descriptions \(0\)/i)).toBeInTheDocument();
+    // When component first renders with no jobs, it shows initialization UI
+    // Check for the initialization UI elements instead
+    expect(screen.getByText("Job Descriptions")).toBeInTheDocument();
+    expect(screen.getByText(/click the button below to load job data/i)).toBeInTheDocument();
+    expect(screen.getByText("Load Job Data")).toBeInTheDocument();
   });
 
   test("handles error gracefully", async () => {
-    // Mock error state
+    // Mock error state - with jobs loaded first so it shows main UI
     mockStoreState = {
       ...mockStoreState,
-      jobs: [],
+      jobs: mockJobs, // Need jobs so it doesn't show init UI
       error: "Failed to load jobs",
       stats: {
         ...mockStoreState.stats,
@@ -348,16 +352,31 @@ describe("JobList Component", () => {
 
     render(<JobList />);
 
-    // When loading and no jobs, it should show skeleton loader (no specific text)
-    // The loading state is indicated by skeleton placeholders
-    expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
+    // When loading with no jobs, component shows initialization UI with disabled button
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
   });
 
-  test("calls initial fetch and stats on mount", async () => {
+  test("calls fetch and stats when Load Job Data button is clicked", async () => {
+    // Start with empty jobs to show init UI
+    mockStoreState = {
+      ...mockStoreState,
+      jobs: [],
+      loading: false,
+      error: null,
+    };
+    mockUseStore.mockReturnValue(mockStoreState);
+
     render(<JobList />);
 
-    expect(mockFetchJobs).toHaveBeenCalledWith(true);
-    expect(mockFetchStats).toHaveBeenCalled();
+    // Find and click the Load Job Data button
+    const loadButton = screen.getByText("Load Job Data");
+    fireEvent.click(loadButton);
+
+    // Now the fetch functions should be called
+    await waitFor(() => {
+      expect(mockFetchJobs).toHaveBeenCalledWith(true);
+      expect(mockFetchStats).toHaveBeenCalled();
+    });
   });
 
   test("displays formatted dates", async () => {

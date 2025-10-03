@@ -53,16 +53,16 @@ mock.module("@/components/ui/design-system", () => ({
 }));
 
 describe("QuickActionsGrid Component", () => {
-  const mockOnNavigateToUpload = mock();
-  const mockOnNavigateToJobs = mock();
-  const mockOnNavigateToSearch = mock();
-  const mockOnNavigateToCompare = mock();
+  const mockOnNavigateToUpload = mock(() => {});
+  const mockOnNavigateToJobs = mock(() => {});
+  const mockOnNavigateToSearch = mock(() => {});
+  const mockOnNavigateToCompare = mock(() => {});
 
   beforeEach(() => {
-    mockOnNavigateToUpload.mockReset();
-    mockOnNavigateToJobs.mockReset();
-    mockOnNavigateToSearch.mockReset();
-    mockOnNavigateToCompare.mockReset();
+    if (mockOnNavigateToUpload.mockReset) mockOnNavigateToUpload.mockReset();
+    if (mockOnNavigateToJobs.mockReset) mockOnNavigateToJobs.mockReset();
+    if (mockOnNavigateToSearch.mockReset) mockOnNavigateToSearch.mockReset();
+    if (mockOnNavigateToCompare.mockReset) mockOnNavigateToCompare.mockReset();
   });
 
   test("renders with correct title", () => {

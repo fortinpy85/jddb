@@ -8,9 +8,10 @@ from jd_ingestion.tasks.processing_tasks import (
     process_single_file_task,
     batch_process_files_task,
     _process_single_file_async,
-    _is_retryable_error,
     _handle_task_failure,
+    # _is_retryable_error,  # Moved to retry_utils
 )
+from jd_ingestion.utils.retry_utils import is_retryable_error as _is_retryable_error
 
 
 class TestRetryableErrorDetection:

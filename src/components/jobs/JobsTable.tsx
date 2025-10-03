@@ -67,7 +67,7 @@ interface JobsTableProps {
 
 type SortField =
   | "id"
-  | "job_code"
+  | "job_number"
   | "classification"
   | "language"
   | "created_at";
@@ -104,8 +104,8 @@ export function JobsTable({
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (job) =>
-          job.job_code?.toLowerCase().includes(query) ||
-          job.original_filename?.toLowerCase().includes(query) ||
+          job.job_number?.toLowerCase().includes(query) ||
+          job.file_path?.toLowerCase().includes(query) ||
           job.classification?.toLowerCase().includes(query),
       );
     }
@@ -122,10 +122,6 @@ export function JobsTable({
       filtered = filtered.filter((job) => job.language === filterLanguage);
     }
 
-    // Status filter
-    if (filterStatus !== "all") {
-      filtered = filtered.filter((job) => job.status === filterStatus);
-    }
 
     // Sorting
     filtered.sort((a, b) => {
@@ -136,9 +132,9 @@ export function JobsTable({
           aVal = a.id;
           bVal = b.id;
           break;
-        case "job_code":
-          aVal = a.job_code || "";
-          bVal = b.job_code || "";
+        case "job_number":
+          aVal = a.job_number || "";
+          bVal = b.job_number || "";
           break;
         case "classification":
           aVal = a.classification || "";
@@ -149,8 +145,8 @@ export function JobsTable({
           bVal = b.language || "";
           break;
         case "created_at":
-          aVal = new Date(a.created_at).getTime();
-          bVal = new Date(b.created_at).getTime();
+          aVal = new Date(a.created_at || 0).getTime();
+          bVal = new Date(b.created_at || 0).getTime();
           break;
         default:
           return 0;
@@ -167,7 +163,6 @@ export function JobsTable({
     searchQuery,
     filterClassification,
     filterLanguage,
-    filterStatus,
     sortField,
     sortDirection,
   ]);
@@ -220,7 +215,7 @@ export function JobsTable({
     addToast({
       title: "Bulk Action",
       description: `${action} ${selectedJobs.length} jobs`,
-      variant: "default",
+      type: "info",
     });
     setSelectedJobs([]);
   };
@@ -228,8 +223,8 @@ export function JobsTable({
   const handleJobAction = (job: JobDescription, action: string) => {
     addToast({
       title: action,
-      description: `${action} job ${job.job_code}`,
-      variant: "default",
+      description: `${action} job ${job.job_number}`,
+      type: "info",
     });
   };
 
@@ -345,13 +340,13 @@ export function JobsTable({
       {/* Filters and Search */}
       <Card className="elevation-1 shadow-card">
         <CardContent className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="flex flex-col gap-3">
             {/* Search */}
-            <div className="sm:col-span-2">
+            <div className="w-full">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
-                  placeholder="Search by job code, filename, or classification..."
+                  placeholder="Search by job number, filename, or classification..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 shadow-input"
@@ -359,51 +354,54 @@ export function JobsTable({
               </div>
             </div>
 
-            {/* Classification Filter */}
-            <Select
-              value={filterClassification}
-              onValueChange={setFilterClassification}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Classification" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Classifications</SelectItem>
-                {classifications.map((c) => (
-                  <SelectItem key={c} value={c!}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Filters Row */}
+            <div className="flex flex-wrap gap-3">
+              {/* Classification Filter */}
+              <Select
+                value={filterClassification}
+                onValueChange={setFilterClassification}
+              >
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Classification" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Classifications</SelectItem>
+                  {classifications.map((c) => (
+                    <SelectItem key={c} value={c!}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            {/* Language Filter */}
-            <Select value={filterLanguage} onValueChange={setFilterLanguage}>
-              <SelectTrigger>
-                <SelectValue placeholder="Language" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Languages</SelectItem>
-                {languages.map((lang) => (
-                  <SelectItem key={lang} value={lang!}>
-                    {getLanguageName(lang!)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {/* Language Filter */}
+              <Select value={filterLanguage} onValueChange={setFilterLanguage}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Languages</SelectItem>
+                  {languages.map((lang) => (
+                    <SelectItem key={lang} value={lang!}>
+                      {getLanguageName(lang!)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            {/* Status Filter */}
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger>
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-              </SelectContent>
-            </Select>
+              {/* Status Filter */}
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Bulk Actions */}
@@ -461,12 +459,17 @@ export function JobsTable({
                   </th>
                   <th className="px-4 py-3 text-left">
                     <button
-                      onClick={() => handleSort("job_code")}
+                      onClick={() => handleSort("job_number")}
                       className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider hover:text-slate-900 dark:hover:text-slate-100"
                     >
-                      Job Code
-                      {renderSortIcon("job_code")}
+                      Job Number
+                      {renderSortIcon("job_number")}
                     </button>
+                  </th>
+                  <th className="px-4 py-3 text-left">
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                      Job Title
+                    </span>
                   </th>
                   <th className="px-4 py-3 text-left">
                     <button
@@ -534,9 +537,14 @@ export function JobsTable({
                       <div className="flex items-center space-x-2">
                         <FileText className="w-4 h-4 text-slate-400" />
                         <span className="font-medium text-slate-900 dark:text-slate-100">
-                          {job.job_code || "N/A"}
+                          {job.job_number || "N/A"}
                         </span>
                       </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-sm text-slate-700 dark:text-slate-300">
+                        {job.title || "N/A"}
+                      </span>
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant="outline" className="font-mono">
@@ -552,8 +560,8 @@ export function JobsTable({
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge className={getStatusColor(job.status)}>
-                        {job.status}
+                      <Badge className={getStatusColor("N/A")}>
+                        N/A
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
@@ -571,7 +579,7 @@ export function JobsTable({
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-sm text-slate-600 dark:text-slate-400">
-                        {new Date(job.created_at).toLocaleDateString()}
+                        {new Date(job.created_at || Date.now()).toLocaleDateString()}
                       </span>
                     </td>
                     <td

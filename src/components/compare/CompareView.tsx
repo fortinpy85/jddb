@@ -22,7 +22,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -105,8 +104,8 @@ export function CompareView({
     setLoading(true);
     try {
       const [j1, j2] = await Promise.all([
-        apiClient.getJobById(selectedJobId1),
-        apiClient.getJobById(selectedJobId2),
+        apiClient.getJob(selectedJobId1),
+        apiClient.getJob(selectedJobId2),
       ]);
       setJob1(j1);
       setJob2(j2);
@@ -114,7 +113,7 @@ export function CompareView({
       addToast({
         title: "Failed to load jobs",
         description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
+        type: "error",
       });
     } finally {
       setLoading(false);
@@ -130,7 +129,7 @@ export function CompareView({
     addToast({
       title: "Merge Initiated",
       description: `Creating merged job description with strategy: ${mergeStrategy}`,
-      variant: "default",
+      type: "info",
     });
     setShowMergeDialog(false);
     // TODO: Navigate to editing view with merged content
@@ -181,8 +180,7 @@ export function CompareView({
   if (loading) {
     return (
       <LoadingState
-        title="Loading jobs"
-        description="Preparing comparison view"
+        message="Loading jobs..."
       />
     );
   }
@@ -226,7 +224,7 @@ export function CompareView({
                   <SelectContent>
                     {jobs.map((job) => (
                       <SelectItem key={job.id} value={job.id.toString()}>
-                        {job.job_code || `Job #${job.id}`} -{" "}
+                        {job.job_number || `Job #${job.id}`} -{" "}
                         {job.classification}
                       </SelectItem>
                     ))}
@@ -248,7 +246,7 @@ export function CompareView({
                       .filter((j) => j.id !== selectedJobId1)
                       .map((job) => (
                         <SelectItem key={job.id} value={job.id.toString()}>
-                          {job.job_code || `Job #${job.id}`} -{" "}
+                          {job.job_number || `Job #${job.id}`} -{" "}
                           {job.classification}
                         </SelectItem>
                       ))}
@@ -305,7 +303,7 @@ export function CompareView({
               <SelectContent>
                 {jobs.map((job) => (
                   <SelectItem key={job.id} value={job.id.toString()}>
-                    {job.job_code || `Job #${job.id}`} - {job.classification}
+                    {job.job_number || `Job #${job.id}`} - {job.classification}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -323,7 +321,7 @@ export function CompareView({
                   .filter((j) => j.id !== selectedJobId1)
                   .map((job) => (
                     <SelectItem key={job.id} value={job.id.toString()}>
-                      {job.job_code || `Job #${job.id}`} - {job.classification}
+                      {job.job_number || `Job #${job.id}`} - {job.classification}
                     </SelectItem>
                   ))}
               </SelectContent>
@@ -359,7 +357,7 @@ export function CompareView({
             <Card className="border-2 border-blue-200 dark:border-blue-800">
               <CardHeader className="bg-blue-50 dark:bg-blue-900/20">
                 <CardTitle className="text-lg">
-                  {job1.job_code || "Job 1"}
+                  {job1.job_number || "Job 1"}
                 </CardTitle>
                 <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
                   <Badge variant="outline">{job1.classification}</Badge>
@@ -373,7 +371,7 @@ export function CompareView({
                   <JobSectionComparison
                     key={index}
                     title={section.section_type}
-                    content={section.content}
+                    content={section.section_content}
                     side="left"
                   />
                 ))}
@@ -386,7 +384,7 @@ export function CompareView({
             <Card className="border-2 border-green-200 dark:border-green-800">
               <CardHeader className="bg-green-50 dark:bg-green-900/20">
                 <CardTitle className="text-lg">
-                  {job2.job_code || "Job 2"}
+                  {job2.job_number || "Job 2"}
                 </CardTitle>
                 <div className="flex items-center space-x-2 text-sm text-slate-600 dark:text-slate-400">
                   <Badge variant="outline">{job2.classification}</Badge>
@@ -400,7 +398,7 @@ export function CompareView({
                   <JobSectionComparison
                     key={index}
                     title={section.section_type}
-                    content={section.content}
+                    content={section.section_content}
                     side="right"
                   />
                 ))}
@@ -495,7 +493,7 @@ export function CompareView({
             </RadioGroup>
           </div>
 
-          <DialogFooter>
+          <div className="flex justify-end space-x-2">
             <Button variant="outline" onClick={() => setShowMergeDialog(false)}>
               Cancel
             </Button>
@@ -503,7 +501,7 @@ export function CompareView({
               <GitMerge className="w-4 h-4 mr-2" />
               Proceed with Merge
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

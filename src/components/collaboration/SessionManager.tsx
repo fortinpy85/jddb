@@ -27,11 +27,9 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+} from "../ui/dialog";
 import {
   Users,
   UserPlus,
@@ -183,16 +181,14 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
           <div className="space-y-2">
             <Label className="text-xs">Invite Collaborators</Label>
             <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="flex-1" onClick={() => setInviteDialogOpen(true)}>
+                <UserPlus className="w-3 h-3 mr-1" />
+                Invite User
+              </Button>
               <Dialog
                 open={inviteDialogOpen}
                 onOpenChange={setInviteDialogOpen}
               >
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <UserPlus className="w-3 h-3 mr-1" />
-                    Invite User
-                  </Button>
-                </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Invite User to Session</DialogTitle>
@@ -242,7 +238,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
                     </div>
                   </div>
 
-                  <DialogFooter>
+                  <div className="flex justify-end space-x-2">
                     <Button
                       variant="outline"
                       onClick={() => setInviteDialogOpen(false)}
@@ -255,7 +251,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
                     >
                       {isInviting ? "Sending..." : "Send Invitation"}
                     </Button>
-                  </DialogFooter>
+                  </div>
                 </DialogContent>
               </Dialog>
 

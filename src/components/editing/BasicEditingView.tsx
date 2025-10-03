@@ -155,13 +155,13 @@ export function BasicEditingView({
       addToast({
         title: "Changes Saved",
         description: "Your edits have been saved successfully",
-        variant: "default",
+        type: "success",
       });
     } catch (error) {
       addToast({
         title: "Save Failed",
         description: "Failed to save changes. Please try again.",
-        variant: "destructive",
+        type: "error",
       });
     } finally {
       setSaving(false);
@@ -173,7 +173,7 @@ export function BasicEditingView({
     addToast({
       title: "Job Approved",
       description: "This job description has been approved",
-      variant: "default",
+      type: "success",
     });
   };
 
@@ -182,7 +182,7 @@ export function BasicEditingView({
     addToast({
       title: "Changes Reverted",
       description: "Your last change has been undone",
-      variant: "default",
+      type: "info",
     });
   };
 
@@ -244,7 +244,7 @@ export function BasicEditingView({
           )}
           {showAIPanel && (
             <div>
-              <AIAssistantPanel jobId={jobId} />
+              <AIAssistantPanel suggestions={[]} overallScore={null} />
             </div>
           )}
         </div>
@@ -255,8 +255,7 @@ export function BasicEditingView({
   if (loading) {
     return (
       <LoadingState
-        title="Loading job description"
-        description="Preparing editing workspace"
+        message="Loading job description..."
       />
     );
   }

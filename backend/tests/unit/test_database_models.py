@@ -10,8 +10,8 @@ from jd_ingestion.database.models import (
     JobMetadata,
     JobComparison,
     JobSkill,
-    CareerPath,
-    ClassificationBenchmark,
+    # CareerPath,  # Removed
+    # ClassificationBenchmark,  # Removed
     DataQualityMetrics,
     AIUsageTracking,
     UsageAnalytics,
@@ -19,9 +19,9 @@ from jd_ingestion.database.models import (
     SavedSearch,
     UserPreference,
     SearchAnalytics,
-    TranslationProject,
-    TranslationMemory,
-    TranslationEmbedding,
+    # TranslationProject,  # Removed
+    # TranslationMemory,  # Removed
+    # TranslationEmbedding,  # Removed
 )
 
 
@@ -37,8 +37,8 @@ class TestBaseModel:
             JobMetadata,
             JobComparison,
             JobSkill,
-            CareerPath,
-            ClassificationBenchmark,
+            # CareerPath,  # Removed
+            # ClassificationBenchmark,  # Removed
             DataQualityMetrics,
             AIUsageTracking,
             UsageAnalytics,
@@ -46,9 +46,9 @@ class TestBaseModel:
             SavedSearch,
             UserPreference,
             SearchAnalytics,
-            TranslationProject,
-            TranslationMemory,
-            TranslationEmbedding,
+            # TranslationProject,  # Removed
+            # TranslationMemory,  # Removed
+            # TranslationEmbedding,  # Removed
         ]
 
         for model in models:

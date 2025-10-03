@@ -7,7 +7,9 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { TwoPanelLayout } from "@/components/layout/TwoPanelLayout";
+import { ThreeColumnLayout } from "@/components/layout/ThreeColumnLayout";
+import { ProfileHeader } from "@/components/layout/ProfileHeader";
+import { AIAssistantPanel } from "@/components/ai/AIAssistantPanel";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { AppHeader, type AppView } from "@/components/layout/AppHeader";
 import { JobsTable } from "@/components/jobs/JobsTable";
@@ -36,6 +38,7 @@ import ThemeToggle from "@/components/ui/theme-toggle";
 import { LoadingState, ErrorState } from "@/components/ui/states";
 import { PageTransition } from "@/components/ui/transitions";
 import { AlertBanner } from "@/components/ui/alert-banner";
+import AIDemo from "@/app/ai-demo/page";
 
 // View types for routing
 type ViewType =
@@ -47,7 +50,8 @@ type ViewType =
   | "compare"
   | "statistics"
   | "system-health"
-  | "preferences";
+  | "preferences"
+  | "ai-demo";
 
 export default function HomePage() {
   const [activeView, setActiveView] = useState<ViewType>("home");
@@ -233,6 +237,8 @@ export default function HomePage() {
             <p>User preferences page coming soon...</p>
           </div>
         );
+      case "ai-demo":
+        return <AIDemo />;
       default:
         return (
           <JobsTable
@@ -251,7 +257,6 @@ export default function HomePage() {
       onNavigate={handleHeaderNavigation}
       userName="Admin User"
       notificationCount={0}
-      jobCount={stats?.total_jobs}
     />
   );
 
@@ -260,24 +265,32 @@ export default function HomePage() {
       <ErrorBoundaryWrapper
         showDetails={process.env.NODE_ENV === "development"}
       >
-        <LoadingProvider initialContext="jddb">
-          <ToastProvider>
-            <TwoPanelLayout
-              header={
-                <>
-                  {renderHeader()}
-                  {/* Alert Banner - Positioned below header, full width */}
-                  {showAlertBanner && (
-                    <AlertBanner
-                      variant="info"
-                      title="Phase 2.1 UI Modernization Complete"
-                      message="The JDDB interface has been updated with a streamlined design, improved navigation, and enhanced accessibility features. Explore the new Statistics and Search capabilities!"
-                      dismissible={true}
-                      onDismiss={() => setShowAlertBanner(false)}
-                      relative={true}
-                    />
-                  )}
-                </>
+                  <LoadingProvider initialContext="generic">          <ToastProvider>
+            <ThreeColumnLayout
+              header={renderHeader()}
+              profileHeader={
+                <ProfileHeader
+                  breadcrumbs={[
+                    { label: "Home", href: "#" },
+                    { label: "Dashboard" },
+                  ]}
+                  openTabs={[
+                    { id: "tab1", title: "Job 1", active: true },
+                    { id: "tab2", title: "Job 2", active: false },
+                  ]}
+                />
+              }
+              alertBanner={
+                showAlertBanner ? (
+                  <AlertBanner
+                    variant="info"
+                    title="Phase 3: AI Content Intelligence Now Available"
+                    message="Advanced AI features are now integrated! Explore bias detection, quality scoring, content generation, and intelligent suggestions. Visit the AI Demo page to see them in action."
+                    dismissible={true}
+                    onDismiss={() => setShowAlertBanner(false)}
+                    relative={true}
+                  />
+                ) : null
               }
               leftPanel={
                 <DashboardSidebar
@@ -289,11 +302,7 @@ export default function HomePage() {
                   collapsed={leftPanelCollapsed}
                 />
               }
-              showLeftPanel={showDashboardSidebar}
-              leftPanelCollapsible={false}
-              hideLeftPanelOnMobile={false}
-              leftPanelWidth={300}
-              className="pt-16"
+              middlePanel={<AIAssistantPanel suggestions={[]} overallScore={null} />}
             >
               <PageTransition
                 currentPage={activeView}
@@ -312,7 +321,7 @@ export default function HomePage() {
                   renderContent()
                 )}
               </PageTransition>
-            </TwoPanelLayout>
+            </ThreeColumnLayout>
 
             {/* Keyboard Shortcuts Modal */}
             <KeyboardShortcutsModal

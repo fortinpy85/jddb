@@ -28,7 +28,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -41,7 +40,7 @@ import {
   ChevronRight,
   Search,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/api";
 
 export interface Template {
   classification: string;
@@ -58,6 +57,7 @@ export interface Template {
     created_at: string;
     version: string;
     source: string;
+    customizations_applied?: number;
   };
 }
 
@@ -95,7 +95,7 @@ export const SmartTemplateSelector: React.FC<SmartTemplateSelectorProps> = ({
   const loadClassifications = async () => {
     try {
       const response = await fetch(
-        `${api.getBaseUrl()}/templates/classifications`,
+        `${API_BASE_URL}/templates/classifications`,
       );
       const data = await response.json();
       setClassifications(data);
@@ -115,7 +115,7 @@ export const SmartTemplateSelector: React.FC<SmartTemplateSelectorProps> = ({
       });
 
       const response = await fetch(
-        `${api.getBaseUrl()}/templates/generate/${selectedClassification}?${params}`,
+        `${API_BASE_URL}/templates/generate/${selectedClassification}?${params}`,
       );
       const data = await response.json();
 
@@ -371,7 +371,7 @@ export const SmartTemplateSelector: React.FC<SmartTemplateSelectorProps> = ({
               </div>
             </ScrollArea>
 
-            <DialogFooter>
+            <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setPreviewOpen(false)}>
                 Close
               </Button>
@@ -379,7 +379,7 @@ export const SmartTemplateSelector: React.FC<SmartTemplateSelectorProps> = ({
                 <Check className="w-3 h-3 mr-1" />
                 Use Template
               </Button>
-            </DialogFooter>
+            </div>
           </DialogContent>
         </Dialog>
       )}

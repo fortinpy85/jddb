@@ -20,6 +20,7 @@ from .endpoints import (
     analytics,
     auth,
     bilingual_documents,
+    content_generation,
     health,
     ingestion,
     jobs,
@@ -149,6 +150,9 @@ app.include_router(
     translation_memory.router, prefix="/api", tags=["translation-memory"]
 )
 app.include_router(ai_suggestions.router, prefix="/api", tags=["ai-suggestions"])
+app.include_router(
+    content_generation.router, prefix="/api", tags=["content-generation"]
+)
 app.include_router(templates.router, prefix="/api", tags=["templates"])
 app.include_router(
     bilingual_documents.router, prefix="/api", tags=["bilingual-documents"]

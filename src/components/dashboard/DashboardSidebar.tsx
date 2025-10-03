@@ -157,7 +157,7 @@ function StatisticsCards({
     },
     {
       label: "Completed",
-      value: stats?.jobs_completed ?? 0,
+      value: stats?.processing_status.completed ?? 0,
       icon: CheckCircle,
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-50 dark:bg-green-900/20",
@@ -165,7 +165,7 @@ function StatisticsCards({
     },
     {
       label: "In Progress",
-      value: stats?.jobs_in_progress ?? 0,
+      value: stats?.processing_status.processing ?? 0,
       icon: Clock,
       color: "text-yellow-600 dark:text-yellow-400",
       bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
@@ -173,7 +173,7 @@ function StatisticsCards({
     },
     {
       label: "Failed",
-      value: stats?.jobs_failed ?? 0,
+      value: stats?.processing_status.failed ?? 0,
       icon: AlertCircle,
       color: "text-red-600 dark:text-red-400",
       bgColor: "bg-red-50 dark:bg-red-900/20",

@@ -31,6 +31,7 @@ import {
   LogOut,
   Bell,
   Command,
+  Sparkles,
 } from "lucide-react";
 import ThemeToggle from "@/components/ui/theme-toggle";
 
@@ -44,7 +45,8 @@ export type AppView =
   | "translate"
   | "statistics"
   | "system-health"
-  | "preferences";
+  | "preferences"
+  | "ai-demo";
 
 interface AppHeaderProps {
   currentView?: AppView;
@@ -99,6 +101,12 @@ const primaryNavItems: NavItem[] = [
     label: "Translate",
     icon: Languages,
     description: "Bilingual editor",
+  },
+  {
+    id: "ai-demo",
+    label: "AI Demo",
+    icon: Sparkles,
+    description: "AI features showcase",
   },
   {
     id: "statistics",
@@ -246,34 +254,6 @@ export function AppHeader({
               RIGHT SECTION - Controls & User Menu
               ======================================== */}
           <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* Job Count Badge */}
-            {jobCount !== undefined && (
-              <div className="hidden sm:flex items-center px-3 py-1.5 rounded-full bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
-                <Database className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 mr-1.5" />
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {jobCount}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400 ml-1">
-                  jobs
-                </span>
-              </div>
-            )}
-
-            {/* Quick Search Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleNavigation("search")}
-              className="hidden md:flex items-center gap-2 px-3 h-9 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 shadow-focus"
-              title="Quick search (⌘K)"
-            >
-              <Search className="w-4 h-4" />
-              <span className="text-xs">Search</span>
-              <kbd className="hidden lg:inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded">
-                <Command className="w-2.5 h-2.5" />K
-              </kbd>
-            </Button>
-
             {/* Notifications */}
             <Button
               variant="ghost"

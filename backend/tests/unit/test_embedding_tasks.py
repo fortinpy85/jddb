@@ -10,8 +10,8 @@ from jd_ingestion.tasks.embedding_tasks import (
     _generate_embeddings_for_job_async,
     _batch_generate_embeddings_async,
     _generate_missing_embeddings_async,
-    _is_retryable_error,
 )
+from jd_ingestion.utils.retry_utils import is_retryable_error as _is_retryable_error
 from jd_ingestion.database.models import ContentChunk
 
 

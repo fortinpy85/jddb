@@ -21,7 +21,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { AlertCircle, CheckCircle2, Info, TrendingUp } from "lucide-react";
@@ -145,30 +144,30 @@ export const QualityIndicator: React.FC<QualityIndicatorProps> = ({
   // Compact view for inline display
   if (compact) {
     return (
-      <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogTrigger asChild>
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80">
-            <div className={`w-2 h-2 rounded-full ${status.color}`} />
-            <span
-              className={`font-semibold ${getScoreColor(assessment.overall_score)}`}
-            >
-              {assessment.overall_score}%
-            </span>
-            <Badge variant="outline" className="text-xs">
-              {status.label}
-            </Badge>
-          </div>
-        </DialogTrigger>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Quality Assessment Details</DialogTitle>
-            <DialogDescription>
-              Comprehensive translation quality breakdown
-            </DialogDescription>
-          </DialogHeader>
-          <QualityDetailsContent assessment={assessment} />
-        </DialogContent>
-      </Dialog>
+      <>
+        <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={() => setShowDetails(true)}>
+          <div className={`w-2 h-2 rounded-full ${status.color}`} />
+          <span
+            className={`font-semibold ${getScoreColor(assessment.overall_score)}`}
+          >
+            {assessment.overall_score}%
+          </span>
+          <Badge variant="outline" className="text-xs">
+            {status.label}
+          </Badge>
+        </div>
+        <Dialog open={showDetails} onOpenChange={setShowDetails}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Quality Assessment Details</DialogTitle>
+              <DialogDescription>
+                Comprehensive translation quality breakdown
+              </DialogDescription>
+            </DialogHeader>
+            <QualityDetailsContent assessment={assessment} />
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 

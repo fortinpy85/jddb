@@ -1,44 +1,52 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, createContext, useContext } from "react";
 import { cn } from "@/lib/utils";
 
-interface TooltipProps {
-  content: string;
+// Context for tooltip state (for Radix UI-style API compatibility)
+const TooltipContext = createContext<{
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  delayDuration: number;
+}>({
+  isOpen: false,
+  setIsOpen: () => {},
+  delayDuration: 700,
+});
+
+// TooltipProvider - Provides context for nested components
+export function TooltipProvider({
+  children,
+  delayDuration = 700,
+}: {
   children: React.ReactNode;
-  side?: "top" | "bottom" | "left" | "right";
-  align?: "start" | "center" | "end";
   delayDuration?: number;
-  disabled?: boolean;
-  className?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <TooltipContext.Provider value={{ isOpen, setIsOpen, delayDuration }}>
+      {children}
+    </TooltipContext.Provider>
+  );
 }
 
-export function Tooltip({
-  content,
-  children,
-  side = "top",
-  align = "center",
-  delayDuration = 700,
-  disabled = false,
-  className = "",
-}: TooltipProps) {
-  const [isVisible, setIsVisible] = useState(false);
-  const [shouldShow, setShouldShow] = useState(false);
+// TooltipTrigger - The element that triggers the tooltip
+export const TooltipTrigger = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { asChild?: boolean }
+>(({ children, asChild, ...props }, ref) => {
+  const { setIsOpen, delayDuration } = useContext(TooltipContext);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const triggerRef = useRef<HTMLDivElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
 
   const showTooltip = () => {
-    if (disabled) return;
-    setShouldShow(true);
     timeoutRef.current = setTimeout(() => {
-      setIsVisible(true);
+      setIsOpen(true);
     }, delayDuration);
   };
 
   const hideTooltip = () => {
-    setShouldShow(false);
-    setIsVisible(false);
+    setIsOpen(false);
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -52,8 +60,56 @@ export function Tooltip({
     };
   }, []);
 
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(children as React.ReactElement<any>, {
+      ...props,
+      ref,
+      onMouseEnter: (e: React.MouseEvent) => {
+        showTooltip();
+        (children as any).props?.onMouseEnter?.(e);
+      },
+      onMouseLeave: (e: React.MouseEvent) => {
+        hideTooltip();
+        (children as any).props?.onMouseLeave?.(e);
+      },
+      onFocus: (e: React.FocusEvent) => {
+        showTooltip();
+        (children as any).props?.onFocus?.(e);
+      },
+      onBlur: (e: React.FocusEvent) => {
+        hideTooltip();
+        (children as any).props?.onBlur?.(e);
+      },
+    });
+  }
+
+  return (
+    <div
+      ref={ref}
+      {...props}
+      onMouseEnter={showTooltip}
+      onMouseLeave={hideTooltip}
+      onFocus={showTooltip}
+      onBlur={hideTooltip}
+    >
+      {children}
+    </div>
+  );
+});
+TooltipTrigger.displayName = "TooltipTrigger";
+
+// TooltipContent - The tooltip content that appears
+export const TooltipContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    side?: "top" | "bottom" | "left" | "right";
+    align?: "start" | "center" | "end";
+  }
+>(({ children, className, side = "top", align = "center", ...props }, ref) => {
+  const { isOpen } = useContext(TooltipContext);
+
   const getPositionClasses = () => {
-    const baseClasses = "absolute z-50 text-xs px-2 py-1 max-w-xs";
+    const baseClasses = "absolute z-50 text-sm px-3 py-1.5";
 
     switch (side) {
       case "top":
@@ -81,63 +137,57 @@ export function Tooltip({
     }
   };
 
-  const getArrowClasses = () => {
-    const arrowBase = "absolute w-2 h-2 rotate-45";
-
-    switch (side) {
-      case "top":
-        return cn(arrowBase, "top-full left-1/2 -translate-x-1/2 -mt-1", {
-          "left-2 translate-x-0": align === "start",
-          "right-2 left-auto translate-x-0": align === "end",
-        });
-      case "bottom":
-        return cn(arrowBase, "bottom-full left-1/2 -translate-x-1/2 -mb-1", {
-          "left-2 translate-x-0": align === "start",
-          "right-2 left-auto translate-x-0": align === "end",
-        });
-      case "left":
-        return cn(arrowBase, "left-full top-1/2 -translate-y-1/2 -ml-1", {
-          "top-2 translate-y-0": align === "start",
-          "bottom-2 top-auto translate-y-0": align === "end",
-        });
-      case "right":
-        return cn(arrowBase, "right-full top-1/2 -translate-y-1/2 -mr-1", {
-          "top-2 translate-y-0": align === "start",
-          "bottom-2 top-auto translate-y-0": align === "end",
-        });
-      default:
-        return arrowBase;
-    }
-  };
+  if (!isOpen) return null;
 
   return (
     <div
-      ref={triggerRef}
-      className="relative inline-block"
-      onMouseEnter={showTooltip}
-      onMouseLeave={hideTooltip}
-      onFocus={showTooltip}
-      onBlur={hideTooltip}
+      ref={ref}
+      role="tooltip"
+      className={cn(
+        getPositionClasses(),
+        "bg-popover text-popover-foreground border rounded-md shadow-md",
+        "animate-scale-in",
+        className,
+      )}
+      {...props}
     >
       {children}
-      {isVisible && content && (
-        <div
-          ref={tooltipRef}
-          role="tooltip"
-          className={cn(
-            getPositionClasses(),
-            "bg-popover text-popover-foreground border rounded-md shadow-md",
-            "animate-scale-in",
-            className,
-          )}
-        >
-          {content}
-          <div
-            className={cn(getArrowClasses(), "bg-popover border-l border-t")}
-          />
-        </div>
-      )}
     </div>
+  );
+});
+TooltipContent.displayName = "TooltipContent";
+
+// Original Tooltip component (for backwards compatibility)
+interface TooltipProps {
+  content: React.ReactNode;
+  children: React.ReactNode;
+  side?: "top" | "bottom" | "left" | "right";
+  align?: "start" | "center" | "end";
+  delayDuration?: number;
+  disabled?: boolean;
+  className?: string;
+}
+
+export function Tooltip({
+  content,
+  children,
+  side = "top",
+  align = "center",
+  delayDuration = 700,
+  disabled = false,
+  className = "",
+}: TooltipProps) {
+  return (
+    <TooltipProvider delayDuration={delayDuration}>
+      <div className="relative inline-block">
+        <TooltipTrigger>{children}</TooltipTrigger>
+        {!disabled && (
+          <TooltipContent side={side} align={align} className={className}>
+            {content}
+          </TooltipContent>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }
 

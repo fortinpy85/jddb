@@ -12,8 +12,9 @@ from jd_ingestion.tasks.quality_tasks import (
     _batch_calculate_quality_metrics_async,
     _generate_quality_report_async,
     _validate_job_content_async,
-    _is_retryable_error,
+    # _is_retryable_error,  # Moved to retry_utils
 )
+from jd_ingestion.utils.retry_utils import is_retryable_error as _is_retryable_error
 
 
 class TestRetryableErrorDetection:

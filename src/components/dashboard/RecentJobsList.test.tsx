@@ -94,10 +94,10 @@ const mockJobs: JobDescription[] = [
     classification: "EX-01",
     language: "EN",
     processed_date: "2024-01-15T10:00:00Z",
-    sections_count: 5,
-    description: "Test job description",
     sections: [],
-    metadata: null,
+    metadata: undefined,
+    file_path: "test/path/1",
+    file_hash: "hash1",
   },
   {
     id: 2,
@@ -106,10 +106,10 @@ const mockJobs: JobDescription[] = [
     classification: "EX-02",
     language: "FR",
     processed_date: "2024-01-16T11:00:00Z",
-    sections_count: 3,
-    description: "Test job description 2",
     sections: [],
-    metadata: null,
+    metadata: undefined,
+    file_path: "test/path/2",
+    file_hash: "hash2",
   },
 ];
 
@@ -240,7 +240,7 @@ describe("RecentJobsList Component", () => {
     const jobsWithoutDate = [
       {
         ...mockJobs[0],
-        processed_date: null,
+        processed_date: undefined,
       },
     ];
 
@@ -302,10 +302,10 @@ describe("RecentJobsList Component", () => {
         classification: "PM-05",
         language: "EN",
         processed_date: "2024-01-17T12:00:00Z",
-        sections_count: 4,
-        description: "Test job description 3",
         sections: [],
-        metadata: null,
+        metadata: undefined,
+        file_path: "test/path/3",
+        file_hash: "hash3",
       },
     ];
 

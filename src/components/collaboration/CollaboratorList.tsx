@@ -12,12 +12,7 @@
 
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip } from "@/components/ui/tooltip";
 import { Crown, Edit3, Eye, Wifi, Circle } from "lucide-react";
 import type { UserRole } from "./SessionManager";
 
@@ -111,43 +106,15 @@ export const CollaboratorList: React.FC<CollaboratorListProps> = ({
 
   return (
     <div className={`flex items-center ${className}`}>
-      <TooltipProvider>
         <div className="flex items-center -space-x-2">
           {visibleCollaborators.map((collaborator) => {
             const isCurrentUser = collaborator.userId === currentUserId;
             const activityStatus = getActivityStatus(collaborator);
 
             return (
-              <Tooltip key={collaborator.userId}>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => onCollaboratorClick?.(collaborator.userId)}
-                    className={`relative inline-flex items-center justify-center w-8 h-8 rounded-full border-2 border-white transition-transform hover:scale-110 hover:z-10 ${getAvatarColor(
-                      collaborator.userId,
-                      collaborator.color,
-                    )} ${isCurrentUser ? "ring-2 ring-blue-400 ring-offset-2" : ""}`}
-                  >
-                    <span className="text-xs font-medium text-white">
-                      {collaborator.username.slice(0, 2).toUpperCase()}
-                    </span>
-
-                    {/* Online/Activity Status Indicator */}
-                    <span
-                      className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${getActivityColor(
-                        collaborator,
-                      )}`}
-                    />
-
-                    {/* Typing Indicator */}
-                    {collaborator.isTyping && (
-                      <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
-                      </span>
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs">
+              <Tooltip
+                key={collaborator.userId}
+                content={
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <p className="font-medium">
@@ -178,25 +145,54 @@ export const CollaboratorList: React.FC<CollaboratorListProps> = ({
                       </p>
                     )}
                   </div>
-                </TooltipContent>
+                }
+                side="bottom"
+                className="max-w-xs"
+              >
+                <button
+                  onClick={() => onCollaboratorClick?.(collaborator.userId)}
+                  className={`relative inline-flex items-center justify-center w-8 h-8 rounded-full border-2 border-white transition-transform hover:scale-110 hover:z-10 ${getAvatarColor(
+                    collaborator.userId,
+                    collaborator.color,
+                  )} ${isCurrentUser ? "ring-2 ring-blue-400 ring-offset-2" : ""}`}
+                >
+                  <span className="text-xs font-medium text-white">
+                    {collaborator.username.slice(0, 2).toUpperCase()}
+                  </span>
+
+                  {/* Online/Activity Status Indicator */}
+                  <span
+                    className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${getActivityColor(
+                      collaborator,
+                    )}`}
+                  />
+
+                  {/* Typing Indicator */}
+                  {collaborator.isTyping && (
+                    <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+                    </span>
+                  )}
+                </button>
               </Tooltip>
             );
           })}
 
           {/* Hidden Count Badge */}
           {hiddenCount > 0 && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="relative inline-flex items-center justify-center w-8 h-8 rounded-full border-2 border-white bg-gray-200 text-gray-600">
-                  <span className="text-xs font-medium">+{hiddenCount}</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
+            <Tooltip
+              content={
                 <p className="text-xs">
                   {hiddenCount} more{" "}
                   {hiddenCount === 1 ? "collaborator" : "collaborators"}
                 </p>
-              </TooltipContent>
+              }
+              side="bottom"
+            >
+              <div className="relative inline-flex items-center justify-center w-8 h-8 rounded-full border-2 border-white bg-gray-200 text-gray-600">
+                <span className="text-xs font-medium">+{hiddenCount}</span>
+              </div>
             </Tooltip>
           )}
         </div>
@@ -208,7 +204,6 @@ export const CollaboratorList: React.FC<CollaboratorListProps> = ({
             <span>{collaborators.filter((c) => c.isOnline).length} online</span>
           </div>
         )}
-      </TooltipProvider>
     </div>
   );
 };

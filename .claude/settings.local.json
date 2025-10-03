@@ -48,7 +48,10 @@
       "WebSearch",
       "Bash(del nul)",
       "Bash(git restore:*)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(tee:*)",
+      "Bash(make:*)",
+      "Bash(poetry install:*)"
     ],
     "deny": [],
     "ask": []

@@ -175,8 +175,6 @@
   }
 
   body {
-    display: grid;
-    place-items: center;
     min-width: 320px;
     min-height: 100vh;
     position: relative;
@@ -1177,21 +1175,74 @@
     color: rgb(234 88 12);
   }
 
+  /* Display utility classes */
+  .block {
+    display: block;
+  }
+
+  .inline-block {
+    display: inline-block;
+  }
+
+  .inline {
+    display: inline;
+  }
+
+  .hidden {
+    display: none;
+  }
+
   /* Flex utility classes */
   .flex {
     display: flex;
+  }
+
+  .inline-flex {
+    display: inline-flex;
+  }
+
+  .flex-col {
+    flex-direction: column;
+  }
+
+  .flex-row {
+    flex-direction: row;
   }
 
   .flex-1 {
     flex: 1 1 0%;
   }
 
+  .flex-shrink-0 {
+    flex-shrink: 0;
+  }
+
+  .items-start {
+    align-items: flex-start;
+  }
+
   .items-center {
     align-items: center;
   }
 
+  .items-end {
+    align-items: flex-end;
+  }
+
+  .justify-start {
+    justify-content: flex-start;
+  }
+
+  .justify-center {
+    justify-content: center;
+  }
+
   .justify-between {
     justify-content: space-between;
+  }
+
+  .justify-end {
+    justify-content: flex-end;
   }
 
   .space-x-3 > :not([hidden]) ~ :not([hidden]) {
@@ -1216,6 +1267,73 @@
     cursor: pointer;
   }
 
+  /* Position */
+  .static {
+    position: static;
+  }
+
+  .fixed {
+    position: fixed;
+  }
+
+  .absolute {
+    position: absolute;
+  }
+
+  .relative {
+    position: relative;
+  }
+
+  .sticky {
+    position: sticky;
+  }
+
+  /* Top/Right/Bottom/Left */
+  .top-0 {
+    top: 0;
+  }
+
+  .top-16 {
+    top: 4rem;
+  }
+
+  .top-32 {
+    top: 8rem;
+  }
+
+  .left-0 {
+    left: 0;
+  }
+
+  .right-0 {
+    right: 0;
+  }
+
+  .bottom-0 {
+    bottom: 0;
+  }
+
+  /* Z-index */
+  .z-10 {
+    z-index: 10;
+  }
+
+  .z-20 {
+    z-index: 20;
+  }
+
+  .z-30 {
+    z-index: 30;
+  }
+
+  .z-40 {
+    z-index: 40;
+  }
+
+  .z-50 {
+    z-index: 50;
+  }
+
   /* Pointer events */
   .pointer-events-none {
     pointer-events: none;
@@ -1227,8 +1345,24 @@
   }
 
   /* Overflow */
+  .overflow-hidden {
+    overflow: hidden;
+  }
+
+  .overflow-x-hidden {
+    overflow-x: hidden;
+  }
+
   .overflow-y-auto {
     overflow-y: auto;
+  }
+
+  .overflow-y-hidden {
+    overflow-y: hidden;
+  }
+
+  .overflow-x-auto {
+    overflow-x: auto;
   }
 
   .truncate {
@@ -1246,9 +1380,120 @@
     min-width: 8rem;
   }
 
+  /* Min height */
+  .min-h-0 {
+    min-height: 0px;
+  }
+
+  .min-h-screen {
+    min-height: 100vh;
+  }
+
   /* Max height */
   .max-h-96 {
     max-height: 24rem;
+  }
+
+  /* Height */
+  .h-16 {
+    height: 4rem;
+  }
+
+  .h-full {
+    height: 100%;
+  }
+
+  /* Width */
+  .w-full {
+    width: 100%;
+  }
+
+  /* Margin */
+  .m-0 {
+    margin: 0;
+  }
+
+  .mt-0 {
+    margin-top: 0;
+  }
+
+  .mt-1 {
+    margin-top: 0.25rem;
+  }
+
+  .mt-2 {
+    margin-top: 0.5rem;
+  }
+
+  .mt-4 {
+    margin-top: 1rem;
+  }
+
+  .mt-8 {
+    margin-top: 2rem;
+  }
+
+  .mt-16 {
+    margin-top: 4rem;
+  }
+
+  .mt-32 {
+    margin-top: 8rem;
+  }
+
+  .mb-0 {
+    margin-bottom: 0;
+  }
+
+  .mb-4 {
+    margin-bottom: 1rem;
+  }
+
+  .ml-0 {
+    margin-left: 0;
+  }
+
+  .mr-0 {
+    margin-right: 0;
+  }
+
+  /* Padding */
+  .p-0 {
+    padding: 0;
+  }
+
+  .pt-0 {
+    padding-top: 0;
+  }
+
+  .pt-4 {
+    padding-top: 1rem;
+  }
+
+  .pt-8 {
+    padding-top: 2rem;
+  }
+
+  .pt-16 {
+    padding-top: 4rem;
+  }
+
+  .pt-32 {
+    padding-top: 8rem;
+  }
+
+  .pb-0 {
+    padding-bottom: 0;
+  }
+
+  .px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .py-4 {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
   }
 
   /* Grid */
@@ -1387,6 +1632,70 @@
     100% {
       background-position: -200% 0;
     }
+  }
+}
+
+/* Responsive utilities - Large screens (lg: 1024px+) */
+@media (min-width: 1024px) {
+  .lg\:flex {
+    display: flex;
+  }
+
+  .lg\:block {
+    display: block;
+  }
+
+  .lg\:hidden {
+    display: none;
+  }
+
+  .lg\:inline-flex {
+    display: inline-flex;
+  }
+}
+
+/* Responsive utilities - Max large screens (max-lg: <1024px) */
+@media (max-width: 1023px) {
+  .max-lg\:hidden {
+    display: none;
+  }
+
+  .max-lg\:block {
+    display: block;
+  }
+
+  .max-lg\:flex {
+    display: flex;
+  }
+}
+
+/* Responsive utilities - Small screens (sm: 640px+) */
+@media (min-width: 640px) {
+  .sm\:flex {
+    display: flex;
+  }
+
+  .sm\:block {
+    display: block;
+  }
+
+  .sm\:hidden {
+    display: none;
+  }
+}
+
+/* Responsive utilities - Medium screens (md: 768px+) */
+@media (min-width: 768px) {
+  .md\:flex {
+    display: flex;
+  }
+
+  .md\:block {
+    display: block;
+  }
+
+  .md\:hidden {
+    display: none;
   }
 }
 

@@ -20,7 +20,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -38,7 +37,7 @@ import {
   BarChart3,
   BookOpen,
 } from "lucide-react";
-import { BilingualEditor, BilingualDocument } from "./BilingualEditor";
+import { BilingualEditor, BilingualDocument, BilingualSegment } from "./BilingualEditor";
 import { QualityIndicator, QualityAssessment } from "./QualityIndicator";
 
 export interface TranslationReviewWorkflowProps {
@@ -259,11 +258,17 @@ export const TranslationReviewWorkflow: React.FC<
    */
   const confirmApprove = () => {
     // Update all segments to approved
-    const updatedDocument = {
-      ...document,
-      segments: document.segments.map((s) => ({
-        ...s,
+    const updatedDocument: BilingualDocument = {
+      id: document.id,
+      job_id: document.job_id,
+      title: document.title,
+      metadata: document.metadata,
+      segments: document.segments.map((s: BilingualSegment) => ({
+        id: s.id,
+        english: s.english,
+        french: s.french,
         status: "approved" as const,
+        lastModified: s.lastModified,
       })),
     };
 
@@ -514,7 +519,7 @@ export const TranslationReviewWorkflow: React.FC<
               </ul>
             </AlertDescription>
           </Alert>
-          <DialogFooter>
+          <div className="flex justify-end space-x-2">
             <Button
               variant="outline"
               onClick={() => setShowSubmitDialog(false)}
@@ -525,7 +530,7 @@ export const TranslationReviewWorkflow: React.FC<
               <Send className="h-4 w-4 mr-2" />
               Submit
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -550,7 +555,7 @@ export const TranslationReviewWorkflow: React.FC<
               </ul>
             </AlertDescription>
           </Alert>
-          <DialogFooter>
+          <div className="flex justify-end space-x-2">
             <Button
               variant="outline"
               onClick={() => setShowApproveDialog(false)}
@@ -561,7 +566,7 @@ export const TranslationReviewWorkflow: React.FC<
               <CheckCircle2 className="h-4 w-4 mr-2" />
               Approve
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

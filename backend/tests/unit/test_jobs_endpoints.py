@@ -12,7 +12,7 @@ from jd_ingestion.api.main import app
 from jd_ingestion.database.models import JobDescription, JobSection
 from jd_ingestion.api.endpoints.jobs import (
     list_jobs,
-    get_job_status,
+    get_processing_status,  # Was: get_processing_status
     get_job_stats,
     get_comprehensive_stats,
     get_job,
@@ -191,7 +191,7 @@ class TestJobStatus:
     """Test job status endpoint."""
 
     @pytest.mark.asyncio
-    async def test_get_job_status_success(self):
+    async def test_get_processing_status_success(self):
         """Test successful job status retrieval."""
         mock_session = AsyncMock()
 
@@ -200,7 +200,7 @@ class TestJobStatus:
         count_result.scalar.return_value = 100
         mock_session.execute.return_value = count_result
 
-        result = await get_job_status(db=mock_session, api_key="test_key")
+        result = await get_processing_status(db=mock_session, api_key="test_key")
 
         assert "total_jobs" in result
         assert "status" in result
@@ -209,13 +209,13 @@ class TestJobStatus:
         assert result["status"] == "operational"
 
     @pytest.mark.asyncio
-    async def test_get_job_status_database_error(self):
+    async def test_get_processing_status_database_error(self):
         """Test job status with database error."""
         mock_session = AsyncMock()
         mock_session.execute.side_effect = Exception("Database error")
 
         with pytest.raises(HTTPException) as exc_info:
-            await get_job_status(db=mock_session, api_key="test_key")
+            await get_processing_status(db=mock_session, api_key="test_key")
 
         assert exc_info.value.status_code == 500
 

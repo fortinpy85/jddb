@@ -37,7 +37,10 @@ import {
   Eye,
   Split,
   ArrowLeftRight,
+  Sparkles,
 } from "lucide-react";
+import { BiasDetector } from "@/components/ai/BiasDetector";
+import { useAISuggestions } from "@/hooks/useAISuggestions";
 
 export type TranslationStatus = "draft" | "review" | "approved";
 
@@ -52,6 +55,7 @@ export interface BilingualSegment {
 
 export interface BilingualDocument {
   id: string;
+  job_id: number;
   title: string;
   segments: BilingualSegment[];
   metadata: {
@@ -89,6 +93,9 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
   const [linkedScrolling, setLinkedScrolling] = useState(true);
   const [viewMode, setViewMode] = useState<"split" | "tabs">("split");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showBiasAnalysis, setShowBiasAnalysis] = useState(false);
+  const [analyzingSegment, setAnalyzingSegment] = useState<string | null>(null);
+  const { biasAnalysis, analyzeBias, loading: biasLoading } = useAISuggestions();
 
   const englishScrollRef = useRef<HTMLDivElement>(null);
   const frenchScrollRef = useRef<HTMLDivElement>(null);
@@ -173,6 +180,16 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
     }
   };
 
+  // Handle bias analysis for a segment
+  const handleAnalyzeBias = async (segmentId: string, language: "en" | "fr") => {
+    const segment = document.segments.find((seg) => seg.id === segmentId);
+    if (!segment) return;
+
+    const content = language === "en" ? segment.english : segment.french;
+    setAnalyzingSegment(segmentId);
+    await analyzeBias(content, true);
+  };
+
   // Synchronized scrolling
   const handleScroll = (
     source: "en" | "fr",
@@ -248,22 +265,36 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
           </div>
 
           {isActive && (
-            <Select
-              value={segment.status}
-              onValueChange={(value) =>
-                handleStatusChange(segment.id, value as TranslationStatus)
-              }
-              disabled={readOnly}
-            >
-              <SelectTrigger className="h-7 w-[120px] text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="review">Review</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleAnalyzeBias(segment.id, language)}
+                disabled={readOnly || biasLoading}
+                className="h-7 text-xs"
+              >
+                <Sparkles className="w-3 h-3 mr-1" />
+                {biasLoading && analyzingSegment === segment.id
+                  ? "Analyzing..."
+                  : "Check Bias"}
+              </Button>
+              <Select
+                value={segment.status}
+                onValueChange={(value) =>
+                  handleStatusChange(segment.id, value as TranslationStatus)
+                }
+                disabled={readOnly}
+              >
+                <SelectTrigger className="h-7 w-[120px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="review">Review</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           )}
         </div>
 
@@ -283,6 +314,24 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
           <div className="mt-2 text-xs text-gray-500">
             Last modified: {segment.lastModified.toLocaleString()}
             {segment.modifiedBy && ` by ${segment.modifiedBy}`}
+          </div>
+        )}
+
+        {/* Bias Analysis Results */}
+        {isActive && analyzingSegment === segment.id && biasAnalysis && (
+          <div className="mt-3">
+            <BiasDetector
+              text={content}
+              biasAnalysis={biasAnalysis}
+              onReplace={(original, replacement) => {
+                handleSegmentChange(
+                  segment.id,
+                  language,
+                  content.replace(original, replacement),
+                );
+              }}
+              compact
+            />
           </div>
         )}
       </div>
