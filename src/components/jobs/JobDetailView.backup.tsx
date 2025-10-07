@@ -122,11 +122,7 @@ export function JobDetailView({
 
   // Loading state
   if (loading) {
-    return (
-      <LoadingState
-        message="Loading job details..."
-      />
-    );
+    return <LoadingState message="Loading job details..." />;
   }
 
   // Error state
@@ -319,7 +315,11 @@ export function JobDetailView({
         <MetadataCard
           icon={Calendar}
           label="Created"
-          value={job.created_at ? new Date(job.created_at).toLocaleDateString() : 'N/A'}
+          value={
+            job.created_at
+              ? new Date(job.created_at).toLocaleDateString()
+              : "N/A"
+          }
         />
         <MetadataCard
           icon={FileText}
@@ -387,7 +387,7 @@ export function JobDetailView({
                     Budget Authority
                   </label>
                   <p className="text-sm text-slate-900 dark:text-slate-100 mt-1">
-                    ${job.metadata.salary_budget?.toLocaleString() ?? 'N/A'}
+                    ${job.metadata.salary_budget?.toLocaleString() ?? "N/A"}
                   </p>
                 </div>
               )}

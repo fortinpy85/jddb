@@ -92,7 +92,6 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
       // Send typing status to other collaborators via WebSocket
       if (enableCollaboration && collaboration?.isConnected) {
         // TODO: Send typing_start or typing_stop message
-        console.log(`User ${userId} typing:`, isTyping);
       }
     },
     1000,
@@ -109,8 +108,8 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
             setLeftPaneContent(content);
             onContentChange?.("left", content);
           },
-          onParticipantsChange: (participants) => {
-            console.log("Participants updated:", participants);
+          onParticipantsChange: (_participants) => {
+            // Participants updated
           },
         }
       : null,

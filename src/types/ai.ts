@@ -7,8 +7,14 @@
 // Bias Analysis Types
 // ============================================================================
 
-export type BiasSeverity = 'critical' | 'high' | 'medium' | 'low';
-export type BiasType = 'gender' | 'age' | 'disability' | 'cultural' | 'gender_coded_masculine' | 'gender_coded_feminine';
+export type BiasSeverity = "critical" | "high" | "medium" | "low";
+export type BiasType =
+  | "gender"
+  | "age"
+  | "disability"
+  | "cultural"
+  | "gender_coded_masculine"
+  | "gender_coded_feminine";
 
 export interface BiasIssue {
   type: BiasType;
@@ -36,8 +42,8 @@ export interface BiasAnalysisResponse {
 // Quality Scoring Types
 // ============================================================================
 
-export type QualityLevel = 'Excellent' | 'Good' | 'Fair' | 'Needs Improvement';
-export type QualityColor = 'green' | 'blue' | 'yellow' | 'red';
+export type QualityLevel = "Excellent" | "Good" | "Fair" | "Needs Improvement";
+export type QualityColor = "green" | "blue" | "yellow" | "red";
 
 export interface ReadabilityDetails {
   flesch_reading_ease: number | null;
@@ -89,7 +95,12 @@ export interface ClarityDetails {
 export interface QualityDimension {
   score: number;
   weight: string;
-  details: ReadabilityDetails | CompletenessDetails | ClarityDetails | BiasAnalysisResponse | any;
+  details:
+    | ReadabilityDetails
+    | CompletenessDetails
+    | ClarityDetails
+    | BiasAnalysisResponse
+    | any;
 }
 
 export interface QualityScoreRequest {
@@ -119,24 +130,24 @@ export interface QualityScoreResponse {
 // ============================================================================
 
 export type SectionType =
-  | 'general_accountability'
-  | 'organization_structure'
-  | 'key_responsibilities'
-  | 'qualifications'
-  | 'nature_and_scope';
+  | "general_accountability"
+  | "organization_structure"
+  | "key_responsibilities"
+  | "qualifications"
+  | "nature_and_scope";
 
 export type EnhancementType =
-  | 'clarity'
-  | 'active_voice'
-  | 'conciseness'
-  | 'formality'
-  | 'bias_free';
+  | "clarity"
+  | "active_voice"
+  | "conciseness"
+  | "formality"
+  | "bias_free";
 
 export interface SectionCompletionRequest {
   section_type: SectionType;
   partial_content: string;
   classification: string;
-  language?: 'en' | 'fr';
+  language?: "en" | "fr";
   context?: {
     department?: string;
     reporting_to?: string;
@@ -154,7 +165,7 @@ export interface SectionCompletionResponse {
 export interface ContentEnhancementRequest {
   text: string;
   enhancement_types: EnhancementType[];
-  language?: 'en' | 'fr';
+  language?: "en" | "fr";
 }
 
 export interface ContentEnhancementResponse {
@@ -186,7 +197,12 @@ export interface InlineSuggestionsResponse {
 // Text Suggestions Types
 // ============================================================================
 
-export type SuggestionType = 'grammar' | 'style' | 'clarity' | 'bias' | 'compliance';
+export type SuggestionType =
+  | "grammar"
+  | "style"
+  | "clarity"
+  | "bias"
+  | "compliance";
 
 export interface Suggestion {
   id: string;
@@ -215,7 +231,10 @@ export interface SuggestionsResponse {
 // Compliance Types
 // ============================================================================
 
-export type ComplianceFramework = 'treasury_board' | 'accessibility' | 'bilingual';
+export type ComplianceFramework =
+  | "treasury_board"
+  | "accessibility"
+  | "bilingual";
 
 export interface ComplianceIssue {
   framework: string;
@@ -243,7 +262,7 @@ export interface ComplianceResponse {
 
 export interface TemplateRequest {
   classification: string;
-  language?: 'en' | 'fr';
+  language?: "en" | "fr";
   custom_requirements?: Record<string, any>;
 }
 
@@ -294,7 +313,7 @@ export interface QualityScoreBadgeProps {
   score: number;
   level: QualityLevel;
   color: QualityColor;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   showLabel?: boolean;
 }
 
@@ -324,43 +343,51 @@ export const DEFAULT_AI_CONFIG: AIFeatureConfig = {
 
 // Helper type guards
 export const isBiasIssue = (obj: any): obj is BiasIssue => {
-  return obj && typeof obj.type === 'string' && typeof obj.severity === 'string';
+  return (
+    obj && typeof obj.type === "string" && typeof obj.severity === "string"
+  );
 };
 
-export const isQualityScoreResponse = (obj: any): obj is QualityScoreResponse => {
-  return obj && typeof obj.overall_score === 'number' && typeof obj.quality_level === 'string';
+export const isQualityScoreResponse = (
+  obj: any,
+): obj is QualityScoreResponse => {
+  return (
+    obj &&
+    typeof obj.overall_score === "number" &&
+    typeof obj.quality_level === "string"
+  );
 };
 
 // Severity color mapping
 export const SEVERITY_COLORS: Record<BiasSeverity, string> = {
-  critical: 'rgb(220, 38, 38)', // red-600
-  high: 'rgb(239, 68, 68)',     // red-500
-  medium: 'rgb(251, 146, 60)',  // orange-400
-  low: 'rgb(250, 204, 21)',     // yellow-400
+  critical: "rgb(220, 38, 38)", // red-600
+  high: "rgb(239, 68, 68)", // red-500
+  medium: "rgb(251, 146, 60)", // orange-400
+  low: "rgb(250, 204, 21)", // yellow-400
 };
 
 // Quality score color mapping
 export const QUALITY_COLORS: Record<QualityColor, string> = {
-  green: 'rgb(34, 197, 94)',    // green-500
-  blue: 'rgb(59, 130, 246)',    // blue-500
-  yellow: 'rgb(234, 179, 8)',   // yellow-500
-  red: 'rgb(239, 68, 68)',      // red-500
+  green: "rgb(34, 197, 94)", // green-500
+  blue: "rgb(59, 130, 246)", // blue-500
+  yellow: "rgb(234, 179, 8)", // yellow-500
+  red: "rgb(239, 68, 68)", // red-500
 };
 
 // Section display names
 export const SECTION_NAMES: Record<SectionType, string> = {
-  general_accountability: 'General Accountability',
-  organization_structure: 'Organization Structure',
-  key_responsibilities: 'Key Responsibilities',
-  qualifications: 'Qualifications',
-  nature_and_scope: 'Nature and Scope',
+  general_accountability: "General Accountability",
+  organization_structure: "Organization Structure",
+  key_responsibilities: "Key Responsibilities",
+  qualifications: "Qualifications",
+  nature_and_scope: "Nature and Scope",
 };
 
 // Enhancement type labels
 export const ENHANCEMENT_LABELS: Record<EnhancementType, string> = {
-  clarity: 'Clarity',
-  active_voice: 'Active Voice',
-  conciseness: 'Conciseness',
-  formality: 'Formality',
-  bias_free: 'Bias-Free Language',
+  clarity: "Clarity",
+  active_voice: "Active Voice",
+  conciseness: "Conciseness",
+  formality: "Formality",
+  bias_free: "Bias-Free Language",
 };

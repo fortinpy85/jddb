@@ -5,14 +5,9 @@
  * AI-powered section creation and content enhancement
  */
 
-import React, { useState } from 'react';
-import { api } from '@/lib/api';
-import type {
-  SectionType,
-  EnhancementType,
-  SECTION_NAMES,
-  ENHANCEMENT_LABELS,
-} from '@/types/ai';
+import React, { useState, useEffect } from "react";
+import { api } from "@/lib/api";
+import type { SectionType, EnhancementType } from "@/types/ai";
 import {
   Dialog,
   DialogContent,
@@ -20,46 +15,77 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Sparkles, Loader2, Copy, Check, AlertCircle, RefreshCw } from 'lucide-react';
+} from "@/components/ui/select";
+import {
+  Sparkles,
+  Loader2,
+  Copy,
+  Check,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
 
 interface ContentGeneratorModalProps {
   open: boolean;
   onClose: () => void;
   onInsert?: (content: string) => void;
-  mode: 'complete' | 'enhance';
+  mode: "complete" | "enhance";
   initialContent?: string;
   classification?: string;
-  language?: 'en' | 'fr';
+  language?: "en" | "fr";
 }
 
 const SECTION_OPTIONS: Array<{ value: SectionType; label: string }> = [
-  { value: 'general_accountability', label: 'General Accountability' },
-  { value: 'organization_structure', label: 'Organization Structure' },
-  { value: 'key_responsibilities', label: 'Key Responsibilities' },
-  { value: 'qualifications', label: 'Qualifications' },
-  { value: 'nature_and_scope', label: 'Nature and Scope' },
+  { value: "general_accountability", label: "General Accountability" },
+  { value: "organization_structure", label: "Organization Structure" },
+  { value: "key_responsibilities", label: "Key Responsibilities" },
+  { value: "qualifications", label: "Qualifications" },
+  { value: "nature_and_scope", label: "Nature and Scope" },
 ];
 
-const ENHANCEMENT_OPTIONS: Array<{ value: EnhancementType; label: string; description: string }> = [
-  { value: 'clarity', label: 'Clarity', description: 'Simplify complex sentences' },
-  { value: 'active_voice', label: 'Active Voice', description: 'Convert passive to active voice' },
-  { value: 'conciseness', label: 'Conciseness', description: 'Remove redundancy' },
-  { value: 'formality', label: 'Formality', description: 'Adjust tone for government standards' },
-  { value: 'bias_free', label: 'Bias-Free', description: 'Remove biased language' },
+const ENHANCEMENT_OPTIONS: Array<{
+  value: EnhancementType;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "clarity",
+    label: "Clarity",
+    description: "Simplify complex sentences",
+  },
+  {
+    value: "active_voice",
+    label: "Active Voice",
+    description: "Convert passive to active voice",
+  },
+  {
+    value: "conciseness",
+    label: "Conciseness",
+    description: "Remove redundancy",
+  },
+  {
+    value: "formality",
+    label: "Formality",
+    description: "Adjust tone for government standards",
+  },
+  {
+    value: "bias_free",
+    label: "Bias-Free",
+    description: "Remove biased language",
+  },
 ];
 
 /**
@@ -70,9 +96,9 @@ export function ContentGeneratorModal({
   onClose,
   onInsert,
   mode,
-  initialContent = '',
-  classification = 'EX-01',
-  language = 'en',
+  initialContent = "",
+  classification = "EX-01",
+  language = "en",
 }: ContentGeneratorModalProps) {
   const [content, setContent] = useState(initialContent);
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
@@ -82,16 +108,24 @@ export function ContentGeneratorModal({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Sync content state with initialContent prop when modal opens
+  useEffect(() => {
+    if (open && initialContent) {
+      setContent(initialContent);
+    }
+  }, [open, initialContent]);
+
   // Section completion state
-  const [sectionType, setSectionType] = useState<SectionType>('general_accountability');
-  const [department, setDepartment] = useState('');
-  const [reportingTo, setReportingTo] = useState('');
+  const [sectionType, setSectionType] = useState<SectionType>(
+    "general_accountability",
+  );
+  const [department, setDepartment] = useState("");
+  const [reportingTo, setReportingTo] = useState("");
 
   // Enhancement state
-  const [selectedEnhancements, setSelectedEnhancements] = useState<EnhancementType[]>([
-    'clarity',
-    'active_voice',
-  ]);
+  const [selectedEnhancements, setSelectedEnhancements] = useState<
+    EnhancementType[]
+  >(["clarity", "active_voice"]);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -101,7 +135,7 @@ export function ContentGeneratorModal({
     setConfidence(null);
 
     try {
-      if (mode === 'complete') {
+      if (mode === "complete") {
         const result = await api.completeSection({
           section_type: sectionType,
           partial_content: content,
@@ -126,8 +160,8 @@ export function ContentGeneratorModal({
         setChanges(result.changes);
       }
     } catch (err: any) {
-      console.error('Content generation failed:', err);
-      setError(err.message || 'Failed to generate content');
+      console.error("Content generation failed:", err);
+      setError(err.message || "Failed to generate content");
     } finally {
       setLoading(false);
     }
@@ -150,7 +184,7 @@ export function ContentGeneratorModal({
 
   const toggleEnhancement = (type: EnhancementType) => {
     setSelectedEnhancements((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
     );
   };
 
@@ -160,25 +194,29 @@ export function ContentGeneratorModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-blue-600" />
-            {mode === 'complete' ? 'AI Section Completion' : 'AI Content Enhancement'}
+            {mode === "complete"
+              ? "AI Section Completion"
+              : "AI Content Enhancement"}
           </DialogTitle>
           <DialogDescription>
-            {mode === 'complete'
-              ? 'Let AI complete your section based on context and best practices'
-              : 'Enhance your content for clarity, active voice, and professionalism'}
+            {mode === "complete"
+              ? "Let AI complete your section based on context and best practices"
+              : "Enhance your content for clarity, active voice, and professionalism"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {/* Configuration */}
           <div className="grid grid-cols-2 gap-4">
-            {mode === 'complete' ? (
+            {mode === "complete" ? (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="section-type">Section Type</Label>
                   <Select
                     value={sectionType}
-                    onValueChange={(value) => setSectionType(value as SectionType)}
+                    onValueChange={(value) =>
+                      setSectionType(value as SectionType)
+                    }
                   >
                     <SelectTrigger id="section-type">
                       <SelectValue />
@@ -232,7 +270,11 @@ export function ContentGeneratorModal({
                   {ENHANCEMENT_OPTIONS.map((option) => (
                     <Badge
                       key={option.value}
-                      variant={selectedEnhancements.includes(option.value) ? 'default' : 'outline'}
+                      variant={
+                        selectedEnhancements.includes(option.value)
+                          ? "default"
+                          : "outline"
+                      }
                       className="cursor-pointer"
                       onClick={() => toggleEnhancement(option.value)}
                     >
@@ -247,16 +289,16 @@ export function ContentGeneratorModal({
           {/* Input Content */}
           <div className="space-y-2">
             <Label htmlFor="content">
-              {mode === 'complete' ? 'Partial Content' : 'Original Content'}
+              {mode === "complete" ? "Partial Content" : "Original Content"}
             </Label>
             <Textarea
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={
-                mode === 'complete'
-                  ? 'Start typing your content and AI will complete it...'
-                  : 'Paste your content here to enhance it...'
+                mode === "complete"
+                  ? "Start typing your content and AI will complete it..."
+                  : "Paste your content here to enhance it..."
               }
               className="min-h-[120px] font-mono text-sm"
             />
@@ -276,7 +318,7 @@ export function ContentGeneratorModal({
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                Generate {mode === 'complete' ? 'Completion' : 'Enhancement'}
+                Generate {mode === "complete" ? "Completion" : "Enhancement"}
               </>
             )}
           </Button>
@@ -341,7 +383,7 @@ export function ContentGeneratorModal({
               )}
 
               {/* Diff View */}
-              {mode === 'enhance' && (
+              {mode === "enhance" && (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs text-gray-500">Before</Label>
@@ -370,9 +412,7 @@ export function ContentGeneratorModal({
             Cancel
           </Button>
           {generatedContent && onInsert && (
-            <Button onClick={handleInsert}>
-              Insert Content
-            </Button>
+            <Button onClick={handleInsert}>Insert Content</Button>
           )}
         </DialogFooter>
       </DialogContent>

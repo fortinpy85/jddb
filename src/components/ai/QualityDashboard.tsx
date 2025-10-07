@@ -5,12 +5,11 @@
  * Displays comprehensive quality metrics with visual breakdown
  */
 
-import React from 'react';
-import type { QualityScoreResponse } from '@/types/ai';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import React from "react";
+import type { QualityScoreResponse } from "@/types/ai";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   CheckCircle2,
   AlertCircle,
@@ -20,7 +19,7 @@ import {
   Target,
   Users,
   Shield,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface QualityDashboardProps {
   qualityScore: QualityScoreResponse | null;
@@ -30,24 +29,24 @@ interface QualityDashboardProps {
 }
 
 const QualityColorMap = {
-  green: 'bg-green-500',
-  blue: 'bg-blue-500',
-  yellow: 'bg-yellow-500',
-  red: 'bg-red-500',
+  green: "bg-green-500",
+  blue: "bg-blue-500",
+  yellow: "bg-yellow-500",
+  red: "bg-red-500",
 };
 
 const QualityTextColorMap = {
-  green: 'text-green-700',
-  blue: 'text-blue-700',
-  yellow: 'text-yellow-700',
-  red: 'text-red-700',
+  green: "text-green-700",
+  blue: "text-blue-700",
+  yellow: "text-yellow-700",
+  red: "text-red-700",
 };
 
 const QualityBgColorMap = {
-  green: 'bg-green-50',
-  blue: 'bg-blue-50',
-  yellow: 'bg-yellow-50',
-  red: 'bg-red-50',
+  green: "bg-green-50",
+  blue: "bg-blue-50",
+  yellow: "bg-yellow-50",
+  red: "bg-red-50",
 };
 
 const DimensionIcons = {
@@ -65,7 +64,7 @@ export function QualityDashboard({
   qualityScore,
   loading = false,
   compact = false,
-  className = '',
+  className = "",
 }: QualityDashboardProps) {
   if (loading) {
     return (
@@ -97,7 +96,9 @@ export function QualityDashboard({
   }
 
   if (compact) {
-    return <CompactQualityView qualityScore={qualityScore} className={className} />;
+    return (
+      <CompactQualityView qualityScore={qualityScore} className={className} />
+    );
   }
 
   return (
@@ -121,14 +122,14 @@ export function QualityDashboard({
 
         {/* Dimension Scores */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-700">Dimension Breakdown</h4>
-          {Object.entries(qualityScore.dimension_scores).map(([key, dimension]) => (
-            <DimensionScore
-              key={key}
-              name={key}
-              dimension={dimension}
-            />
-          ))}
+          <h4 className="text-sm font-medium text-gray-700">
+            Dimension Breakdown
+          </h4>
+          {Object.entries(qualityScore.dimension_scores).map(
+            ([key, dimension]) => (
+              <DimensionScore key={key} name={key} dimension={dimension} />
+            ),
+          )}
         </div>
 
         {/* Top Recommendations */}
@@ -140,7 +141,10 @@ export function QualityDashboard({
             </h4>
             <ul className="space-y-1.5">
               {qualityScore.top_recommendations.slice(0, 5).map((rec, idx) => (
-                <li key={idx} className="text-sm text-gray-600 flex items-start gap-2">
+                <li
+                  key={idx}
+                  className="text-sm text-gray-600 flex items-start gap-2"
+                >
                   <span className="text-blue-500 mt-0.5">•</span>
                   <span>{rec}</span>
                 </li>
@@ -154,11 +158,17 @@ export function QualityDashboard({
           <div className="pt-4 border-t">
             <div className="flex items-center gap-2 mb-2">
               <AlertTriangle className="h-4 w-4 text-yellow-600" />
-              <h4 className="text-sm font-medium text-gray-700">Priority Areas</h4>
+              <h4 className="text-sm font-medium text-gray-700">
+                Priority Areas
+              </h4>
             </div>
             <div className="flex flex-wrap gap-2">
               {qualityScore.improvement_priority.map((area, idx) => (
-                <Badge key={idx} variant="outline" className="text-yellow-700 border-yellow-300">
+                <Badge
+                  key={idx}
+                  variant="outline"
+                  className="text-yellow-700 border-yellow-300"
+                >
                   {area}
                 </Badge>
               ))}
@@ -177,31 +187,31 @@ export function QualityScoreBadge({
   score,
   level,
   color,
-  size = 'md',
+  size = "md",
   showLabel = true,
 }: {
   score: number;
   level: string;
-  color: 'green' | 'blue' | 'yellow' | 'red';
-  size?: 'sm' | 'md' | 'lg';
+  color: "green" | "blue" | "yellow" | "red";
+  size?: "sm" | "md" | "lg";
   showLabel?: boolean;
 }) {
   const sizeClasses = {
-    sm: 'w-12 h-12 text-lg',
-    md: 'w-16 h-16 text-2xl',
-    lg: 'w-24 h-24 text-3xl',
+    sm: "w-12 h-12 text-lg",
+    md: "w-16 h-16 text-2xl",
+    lg: "w-24 h-24 text-3xl",
   };
 
   const labelSizeClasses = {
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-base',
+    sm: "text-xs",
+    md: "text-sm",
+    lg: "text-base",
   };
 
   return (
     <div className="flex flex-col items-center gap-2">
       <div
-        className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-bold ${QualityBgColorMap[color]} ${QualityTextColorMap[color]} border-4 ${QualityColorMap[color].replace('bg-', 'border-')}`}
+        className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-bold ${QualityBgColorMap[color]} ${QualityTextColorMap[color]} border-4 ${QualityColorMap[color].replace("bg-", "border-")}`}
       >
         {Math.round(score)}
       </div>
@@ -228,21 +238,22 @@ function DimensionScore({
   dimension: { score: number; weight: string };
 }) {
   const Icon = DimensionIcons[name as keyof typeof DimensionIcons] || FileText;
-  const displayName = name.charAt(0).toUpperCase() + name.slice(1).replace('_', ' ');
+  const displayName =
+    name.charAt(0).toUpperCase() + name.slice(1).replace("_", " ");
 
   // Determine color based on score
   const getScoreColor = (score: number): string => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 75) return 'text-blue-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 90) return "text-green-600";
+    if (score >= 75) return "text-blue-600";
+    if (score >= 60) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getProgressColor = (score: number): string => {
-    if (score >= 90) return 'bg-green-500';
-    if (score >= 75) return 'bg-blue-500';
-    if (score >= 60) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (score >= 90) return "bg-green-500";
+    if (score >= 75) return "bg-blue-500";
+    if (score >= 60) return "bg-yellow-500";
+    return "bg-red-500";
   };
 
   return (
@@ -250,12 +261,16 @@ function DimensionScore({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Icon className="h-4 w-4 text-gray-500" />
-          <span className="text-sm font-medium text-gray-700">{displayName}</span>
+          <span className="text-sm font-medium text-gray-700">
+            {displayName}
+          </span>
           <Badge variant="outline" className="text-xs">
             {dimension.weight}
           </Badge>
         </div>
-        <span className={`text-sm font-semibold ${getScoreColor(dimension.score)}`}>
+        <span
+          className={`text-sm font-semibold ${getScoreColor(dimension.score)}`}
+        >
           {Math.round(dimension.score)}%
         </span>
       </div>
@@ -276,13 +291,15 @@ function DimensionScore({
  */
 function CompactQualityView({
   qualityScore,
-  className = '',
+  className = "",
 }: {
   qualityScore: QualityScoreResponse;
   className?: string;
 }) {
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg border ${QualityBgColorMap[qualityScore.quality_color]} ${className}`}>
+    <div
+      className={`flex items-center gap-3 p-3 rounded-lg border ${QualityBgColorMap[qualityScore.quality_color]} ${className}`}
+    >
       <QualityScoreBadge
         score={qualityScore.overall_score}
         level={qualityScore.quality_level}
@@ -297,7 +314,7 @@ function CompactQualityView({
         <div className="text-xs text-gray-600 truncate">
           {qualityScore.improvement_priority.length > 0
             ? `Focus on: ${qualityScore.improvement_priority[0]}`
-            : 'All dimensions meeting standards'}
+            : "All dimensions meeting standards"}
         </div>
       </div>
     </div>
@@ -309,7 +326,7 @@ function CompactQualityView({
  * TODO: Implement once historical data is available
  */
 export function QualityTrendChart({
-  historicalScores,
+  historicalScores: _historicalScores,
 }: {
   historicalScores: Array<{ date: string; score: number }>;
 }) {

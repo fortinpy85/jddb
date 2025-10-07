@@ -89,12 +89,12 @@ export function PageHeader({
                   <Database className="relative w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mr-2 sm:mr-3 group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <div>
-                  <h1 className="text-sm sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-slate-100 dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300">
+                  <h2 className="text-sm sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-slate-100 dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300">
                     <span className="hidden sm:inline">
                       Job Description Database
                     </span>
                     <span className="sm:hidden">JDDB</span>
-                  </h1>
+                  </h2>
                   {subtitle && (
                     <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium">
                       {subtitle}

@@ -6,7 +6,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { ThreeColumnLayout } from "@/components/layout/ThreeColumnLayout";
 import { ProfileHeader } from "@/components/layout/ProfileHeader";
 import { AIAssistantPanel } from "@/components/ai/AIAssistantPanel";
@@ -14,16 +14,10 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { AppHeader, type AppView } from "@/components/layout/AppHeader";
 import { JobsTable } from "@/components/jobs/JobsTable";
 import { JobDetailView } from "@/components/jobs/JobDetailView";
-import BulkUpload from "@/components/BulkUpload";
-import SearchInterface from "@/components/SearchInterface";
-import JobComparison from "@/components/JobComparison";
-import StatsDashboard from "@/components/StatsDashboard";
-import { BasicEditingView } from "@/components/editing/BasicEditingView";
-import { EnhancedDualPaneEditor } from "@/components/editing/EnhancedDualPaneEditor";
+import { CreateJobModal } from "@/components/jobs/CreateJobModal";
 import type { JobDescription } from "@/lib/types";
 import { apiClient } from "@/lib/api";
 import { useStore } from "@/lib/store";
-import { Database, Settings, HelpCircle } from "lucide-react";
 import { ToastProvider } from "@/components/ui/toast";
 import { ErrorBoundaryWrapper } from "@/components/ui/error-boundary";
 import { ThemeProvider } from "@/components/ui/theme-provider";
@@ -33,20 +27,52 @@ import {
   KeyboardShortcutsModal,
   useKeyboardShortcutsModal,
 } from "@/components/ui/keyboard-shortcuts-modal";
-import { Button } from "@/components/ui/button";
-import ThemeToggle from "@/components/ui/theme-toggle";
 import { LoadingState, ErrorState } from "@/components/ui/states";
 import { PageTransition } from "@/components/ui/transitions";
 import { AlertBanner } from "@/components/ui/alert-banner";
-import AIDemo from "@/app/ai-demo/page";
+
+// Lazy load route-level components for better performance
+const BulkUpload = lazy(() => import("@/components/BulkUpload"));
+const SearchInterface = lazy(() => import("@/components/SearchInterface"));
+const JobComparison = lazy(() => import("@/components/JobComparison"));
+const StatsDashboard = lazy(() => import("@/components/StatsDashboard"));
+const BasicEditingView = lazy(() =>
+  import("@/components/editing/BasicEditingView").then((m) => ({
+    default: m.BasicEditingView,
+  })),
+);
+const ImprovementView = lazy(() =>
+  import("@/components/improvement/ImprovementView").then((m) => ({
+    default: m.ImprovementView,
+  })),
+);
+const SystemHealthPage = lazy(() =>
+  import("@/components/system/SystemHealthPage").then((m) => ({
+    default: m.SystemHealthPage,
+  })),
+);
+const UserPreferencesPage = lazy(() =>
+  import("@/components/preferences/UserPreferencesPage").then((m) => ({
+    default: m.UserPreferencesPage,
+  })),
+);
+const BilingualEditor = lazy(() =>
+  import("@/components/translation/BilingualEditor").then((m) => ({
+    default: m.BilingualEditor,
+  }))
+);
+const AIDemo = lazy(() => import("@/app/ai-demo/page"));
 
 // View types for routing
 type ViewType =
+  | "dashboard"
   | "home"
   | "job-details"
   | "upload"
   | "search"
   | "editing"
+  | "improvement"
+  | "translate"
   | "compare"
   | "statistics"
   | "system-health"
@@ -59,16 +85,9 @@ export default function HomePage() {
     undefined,
   );
   const [showAlertBanner, setShowAlertBanner] = useState(true);
-  const {
-    stats,
-    jobs,
-    selectedJob,
-    fetchJobs,
-    fetchStats,
-    selectJob,
-    loading,
-    error,
-  } = useStore();
+  const [showCreateJobModal, setShowCreateJobModal] = useState(false);
+  const { stats, selectedJob, fetchJobs, fetchStats, selectJob, error } =
+    useStore();
 
   // Track view changes for transitions
   const handleViewChange = (newView: ViewType) => {
@@ -89,7 +108,7 @@ export default function HomePage() {
     onNavigateToUpload: () => handleViewChange("upload"),
     onNavigateToSearch: () => handleViewChange("search"),
     onNavigateToCompare: () => handleViewChange("compare"),
-    onNavigateToStats: () => handleViewChange("statistics"),
+    onNavigateToStats: () => handleViewChange("dashboard"),
     onFocusSearch: () => {
       handleViewChange("search");
     },
@@ -125,10 +144,14 @@ export default function HomePage() {
   // Map internal ViewType to AppHeader's AppView type
   const getHeaderView = (): AppView => {
     switch (activeView) {
-      case "home":
+      case "dashboard":
         return "dashboard";
+      case "home":
+        return "jobs";
       case "job-details":
         return "jobs";
+      case "improvement":
+        return "improve";
       case "editing":
         return "translate";
       default:
@@ -140,23 +163,55 @@ export default function HomePage() {
   const handleHeaderNavigation = (view: AppView) => {
     switch (view) {
       case "dashboard":
+        selectJob(null); // Clear selection when navigating away from job details
+        handleViewChange("dashboard");
+        break;
       case "jobs":
+        selectJob(null); // Clear selection when navigating to jobs list
         handleViewChange("home");
+        break;
+      case "upload":
+        selectJob(null); // Clear selection when navigating to upload
+        handleViewChange("upload");
+        break;
+      case "search":
+        selectJob(null); // Clear selection when navigating to search
+        handleViewChange("search");
+        break;
+      case "compare":
+        handleViewChange("compare");
+        break;
+      case "improve":
+        if (selectedJob) {
+          handleViewChange("improvement");
+        } else {
+          // If no job selected, go to jobs list and show message
+          handleViewChange("home");
+        }
         break;
       case "translate":
         if (selectedJob) {
-          handleViewChange("editing");
+          handleViewChange("translate");
         } else {
           handleViewChange("home");
         }
+        break;
+      case "ai-demo":
+        selectJob(null); // Clear selection when navigating to AI demo
+        handleViewChange("ai-demo");
+        break;
+      case "statistics":
+        selectJob(null); // Clear selection when navigating to statistics
+        handleViewChange("statistics");
         break;
       default:
         handleViewChange(view as ViewType);
     }
   };
 
-  // Determine if dashboard sidebar should be shown
-  const showDashboardSidebar = ["home", "job-details"].includes(activeView);
+  // Determine if dashboard sidebar should be shown - ONLY on dashboard view
+  // This is critical for usability: dashboard stats should not clutter other views
+  const showDashboardSidebar = activeView === "dashboard";
 
   // Determine if we should show left panel collapsed
   const leftPanelCollapsed = !showDashboardSidebar;
@@ -164,6 +219,24 @@ export default function HomePage() {
   // Main content renderer based on active view
   const renderContent = () => {
     switch (activeView) {
+      case "dashboard":
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold">Dashboard</h2>
+                <p className="text-muted-foreground mt-2">
+                  Overview of your job description database
+                </p>
+              </div>
+            </div>
+            <Suspense
+              fallback={<LoadingState message="Loading dashboard..." />}
+            >
+              <StatsDashboard />
+            </Suspense>
+          </div>
+        );
       case "home":
         return (
           <JobsTable
@@ -171,8 +244,7 @@ export default function HomePage() {
             onNavigateToUpload={() => handleViewChange("upload")}
             onNavigateToSearch={() => handleViewChange("search")}
             onCreateNew={() => {
-              // TODO: Implement create new job workflow
-              console.log("Create new job");
+              setShowCreateJobModal(true);
             }}
           />
         );
@@ -181,10 +253,9 @@ export default function HomePage() {
           <JobDetailView
             jobId={selectedJob.id}
             onBack={handleBackFromDetails}
-            onEdit={() => handleViewChange("editing")}
+            onEdit={() => handleViewChange("improvement")}
             onTranslate={() => {
-              // TODO: Implement translation workflow
-              console.log("Translate job", selectedJob.id);
+              handleViewChange("translate");
             }}
             onCompare={() => handleViewChange("compare")}
           />
@@ -198,47 +269,120 @@ export default function HomePage() {
         );
       case "upload":
         return (
-          <BulkUpload
-            onUploadComplete={handleUploadComplete}
-            maxFileSize={50}
-            acceptedFileTypes={[".txt", ".doc", ".docx", ".pdf"]}
-          />
+          <Suspense
+            fallback={<LoadingState message="Loading upload interface..." />}
+          >
+            <BulkUpload
+              onUploadComplete={handleUploadComplete}
+              maxFileSize={50}
+              acceptedFileTypes={[".txt", ".doc", ".docx", ".pdf"]}
+            />
+          </Suspense>
         );
       case "search":
-        return <SearchInterface onJobSelect={handleJobSelect} />;
+        return (
+          <Suspense fallback={<LoadingState message="Loading search..." />}>
+            <SearchInterface onJobSelect={handleJobSelect} />
+          </Suspense>
+        );
       case "editing":
         return (
-          <BasicEditingView
-            jobId={selectedJob?.id}
-            onBack={() =>
-              handleViewChange(selectedJob ? "job-details" : "home")
-            }
-            onAdvancedEdit={() => {
-              // TODO: Add lock warning modal
-              console.log("Opening advanced editor");
-            }}
+          <Suspense fallback={<LoadingState message="Loading editor..." />}>
+            <BasicEditingView
+              jobId={selectedJob?.id}
+              onBack={() =>
+                handleViewChange(selectedJob ? "job-details" : "home")
+              }
+              onAdvancedEdit={() => {
+                // TODO: Add lock warning modal
+              }}
+            />
+          </Suspense>
+        );
+      case "improvement":
+        return (
+          <Suspense
+            fallback={<LoadingState message="Loading improvement tools..." />}
+          >
+            <ImprovementView
+              jobId={selectedJob?.id}
+              initialOriginalText={
+                selectedJob?.sections?.find(
+                  (s) => s.section_type === "general_accountability",
+                )?.section_content || ""
+              }
+              onBack={() =>
+                handleViewChange(selectedJob ? "job-details" : "home")
+              }
+              onSave={(finalText) => {
+                handleViewChange(selectedJob ? "job-details" : "home");
+              }}
+            />
+          </Suspense>
+        );
+      case "translate":
+        return selectedJob ? (
+          <Suspense fallback={<LoadingState message="Loading translator..." />}>
+            <BilingualEditor
+              jobId={selectedJob.id}
+              sourceLanguage={selectedJob.language === "fr" ? "fr" : "en"}
+              targetLanguage={selectedJob.language === "fr" ? "en" : "fr"}
+              onBack={() => handleViewChange("job-details")}
+            />
+          </Suspense>
+        ) : (
+          <ErrorState
+            title="No Job Selected"
+            message="Please select a job description to translate"
+            onAction={() => handleViewChange("home")}
           />
         );
       case "compare":
-        return <JobComparison />;
+        return (
+          <Suspense fallback={<LoadingState message="Loading comparison..." />}>
+            <JobComparison />
+          </Suspense>
+        );
       case "statistics":
-        return <StatsDashboard />;
-      case "system-health":
         return (
           <div className="space-y-6">
-            <h1 className="text-3xl font-bold">System Health</h1>
-            <p>System health monitoring page coming soon...</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold">Statistics</h2>
+                <p className="text-muted-foreground mt-2">
+                  In-depth analysis of your job description data
+                </p>
+              </div>
+            </div>
+            <Suspense
+              fallback={<LoadingState message="Loading statistics..." />}
+            >
+              <StatsDashboard />
+            </Suspense>
           </div>
+        );
+      case "system-health":
+        return (
+          <Suspense
+            fallback={<LoadingState message="Loading system health..." />}
+          >
+            <SystemHealthPage />
+          </Suspense>
         );
       case "preferences":
         return (
-          <div className="space-y-6">
-            <h1 className="text-3xl font-bold">Preferences</h1>
-            <p>User preferences page coming soon...</p>
-          </div>
+          <Suspense
+            fallback={<LoadingState message="Loading preferences..." />}
+          >
+            <UserPreferencesPage />
+          </Suspense>
         );
       case "ai-demo":
-        return <AIDemo />;
+        return (
+          <Suspense fallback={<LoadingState message="Loading AI demo..." />}>
+            <AIDemo />
+          </Suspense>
+        );
       default:
         return (
           <JobsTable
@@ -257,6 +401,7 @@ export default function HomePage() {
       onNavigate={handleHeaderNavigation}
       userName="Admin User"
       notificationCount={0}
+      hasSelectedJob={!!selectedJob}
     />
   );
 
@@ -265,7 +410,9 @@ export default function HomePage() {
       <ErrorBoundaryWrapper
         showDetails={process.env.NODE_ENV === "development"}
       >
-                  <LoadingProvider initialContext="generic">          <ToastProvider>
+        <LoadingProvider initialContext="generic">
+          {" "}
+          <ToastProvider>
             <ThreeColumnLayout
               header={renderHeader()}
               profileHeader={
@@ -284,8 +431,8 @@ export default function HomePage() {
                 showAlertBanner ? (
                   <AlertBanner
                     variant="info"
-                    title="Phase 3: AI Content Intelligence Now Available"
-                    message="Advanced AI features are now integrated! Explore bias detection, quality scoring, content generation, and intelligent suggestions. Visit the AI Demo page to see them in action."
+                    title="Phase 5: Skills Intelligence Now Available"
+                    message="Automated skills extraction powered by Lightcast API is now live! Upload job descriptions to see extracted skills, explore the Skills Analytics dashboard, and filter jobs by required skills."
                     dismissible={true}
                     onDismiss={() => setShowAlertBanner(false)}
                     relative={true}
@@ -302,7 +449,9 @@ export default function HomePage() {
                   collapsed={leftPanelCollapsed}
                 />
               }
-              middlePanel={<AIAssistantPanel suggestions={[]} overallScore={null} />}
+              middlePanel={
+                <AIAssistantPanel suggestions={[]} overallScore={null} />
+              }
             >
               <PageTransition
                 currentPage={activeView}
@@ -328,6 +477,22 @@ export default function HomePage() {
               isOpen={shortcutsModalOpen}
               onClose={closeShortcutsModal}
               shortcuts={shortcuts}
+            />
+
+            {/* Create Job Modal */}
+            <CreateJobModal
+              isOpen={showCreateJobModal}
+              onClose={() => setShowCreateJobModal(false)}
+              onJobCreated={(jobId) => {
+                setShowCreateJobModal(false);
+                fetchJobs(true);
+                fetchStats();
+                // Optionally navigate to the new job
+                apiClient.getJob(jobId).then((job) => {
+                  selectJob(job);
+                  handleViewChange("job-details");
+                });
+              }}
             />
           </ToastProvider>
         </LoadingProvider>

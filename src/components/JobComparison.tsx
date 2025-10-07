@@ -72,7 +72,7 @@ interface JobComparisonProps {
   onJobSelect?: (job: JobDescription) => void;
 }
 
-function JobComparison({ onJobSelect }: JobComparisonProps) {
+function JobComparison(_props: JobComparisonProps) {
   const { jobs } = useStore();
   const [selectedJobA, setSelectedJobA] = useState<JobDescription | null>(null);
   const [selectedJobB, setSelectedJobB] = useState<JobDescription | null>(null);
@@ -80,8 +80,7 @@ function JobComparison({ onJobSelect }: JobComparisonProps) {
     useState<ComparisonResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [suggestedJobsB, setSuggestedJobsB] = useState<JobDescription[]>([]);
-  const { createComparisonProgress, createAnalysisProgress } =
-    useProgressUtils();
+  const { createComparisonProgress } = useProgressUtils();
 
   // Load similar jobs when Job A is selected
   const loadSimilarJobs = async (jobId: number) => {
@@ -161,13 +160,6 @@ function JobComparison({ onJobSelect }: JobComparisonProps) {
     if (score >= 0.8) return "text-green-600 bg-green-100";
     if (score >= 0.6) return "text-blue-600 bg-blue-100";
     if (score >= 0.4) return "text-yellow-600 bg-yellow-100";
-    return "text-red-600 bg-red-100";
-  };
-
-  const getMatchColor = (score: number) => {
-    if (score >= 0.85) return "text-green-600 bg-green-100";
-    if (score >= 0.7) return "text-blue-600 bg-blue-100";
-    if (score >= 0.5) return "text-yellow-600 bg-yellow-100";
     return "text-red-600 bg-red-100";
   };
 

@@ -137,6 +137,7 @@ export function StatsCard({
 
   return (
     <Card
+      data-testid="stats-card"
       className={cn(
         "group hover-lift cursor-pointer border border-white/20 dark:border-slate-700/20 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm hover:bg-white/90 dark:hover:bg-slate-800/90 transition-all duration-300",
         colorConfig.hover,
@@ -170,6 +171,7 @@ export function StatsCard({
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
             <Icon
+              data-testid="stats-card-icon"
               className={cn(
                 "relative w-6 h-6 group-hover:rotate-12 transition-transform duration-500",
                 colorConfig.text,
@@ -272,7 +274,10 @@ export function ActionButton({
       )}
     >
       {Icon && (
-        <Icon className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
+        <Icon
+          data-testid="action-button-icon"
+          className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-200"
+        />
       )}
       {children}
     </Button>
@@ -315,7 +320,7 @@ export function JobCard({
     const match = classification.match(/(\w+)-(\d+)/);
     if (match) {
       const [, group, level] = match;
-      return `Level ${level} (${group})`;
+      return `Level ${parseInt(level, 10)} (${group})`;
     }
     return classification;
   };

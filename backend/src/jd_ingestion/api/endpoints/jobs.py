@@ -11,6 +11,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
+from pydantic import BaseModel, Field
+from datetime import datetime
 
 # Local imports
 from ...database.connection import get_async_session
@@ -18,6 +20,7 @@ from ...database.models import (
     JobDescription,
     JobMetadata,
     JobSection,
+    job_description_skills,
 )
 from ...auth.api_key import get_api_key
 
@@ -28,6 +31,20 @@ from ...utils.logging import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter()
+
+
+# Request/Response Models
+class JobDescriptionCreate(BaseModel):
+    """Model for creating a new job description manually"""
+
+    job_number: str = Field(..., description="Job number/ID")
+    title: str = Field(..., description="Job title")
+    classification: str = Field(..., description="Classification level (e.g., EX-01)")
+    language: str = Field(default="en", description="Language code (en/fr)")
+    department: Optional[str] = Field(None, description="Department name")
+    reports_to: Optional[str] = Field(None, description="Reports to position")
+    content: Optional[str] = Field(None, description="Full job description content")
+    sections: Optional[Dict[str, str]] = Field(None, description="Job sections by type")
 
 
 @router.get("/")
@@ -43,6 +60,10 @@ async def list_jobs(
     ),
     language: Optional[str] = Query(None, description="Filter by language (en/fr)"),
     department: Optional[str] = Query(None, description="Filter by department"),
+    skill_ids: Optional[str] = Query(
+        None,
+        description="Comma-separated skill IDs to filter by (jobs must have ALL specified skills)",
+    ),
     db: AsyncSession = Depends(get_async_session),
     api_key: str = Security(get_api_key),
 ):
@@ -58,8 +79,10 @@ async def list_jobs(
             detail="Both 'page' and 'size' parameters must be provided together",
         )
 
-    # Build base query
-    base_query = select(JobDescription)
+    # Build base query - load quality_metrics relationship
+    base_query = select(JobDescription).options(
+        selectinload(JobDescription.quality_metrics)
+    )
 
     # Apply filters
     if search:
@@ -75,6 +98,24 @@ async def list_jobs(
         base_query = base_query.join(JobDescription.job_metadata).where(
             JobMetadata.department.ilike(f"%{department}%")
         )
+
+    # Skill filtering - jobs must have ALL specified skills (AND logic)
+    if skill_ids:
+        skill_id_list = [
+            int(sid.strip()) for sid in skill_ids.split(",") if sid.strip()
+        ]
+        if skill_id_list:
+            # For each skill ID, we need to ensure the job has it
+            # We use a subquery that counts how many of the required skills each job has
+            # and only keep jobs that have all required skills
+            for skill_id in skill_id_list:
+                base_query = base_query.where(
+                    JobDescription.id.in_(
+                        select(job_description_skills.c.job_id).where(
+                            job_description_skills.c.skill_id == skill_id
+                        )
+                    )
+                )
 
     # Get total count and paginated results in a single query if possible, or two efficient queries
     # For simplicity and broad compatibility, we'll stick to two queries, but ensure they are efficient.
@@ -96,6 +137,21 @@ async def list_jobs(
         count_query = count_query.join(JobDescription.job_metadata).where(
             JobMetadata.department.ilike(f"%{department}%")
         )
+
+    # Apply same skill filtering to count query
+    if skill_ids:
+        skill_id_list = [
+            int(sid.strip()) for sid in skill_ids.split(",") if sid.strip()
+        ]
+        if skill_id_list:
+            for skill_id in skill_id_list:
+                count_query = count_query.where(
+                    JobDescription.id.in_(
+                        select(job_description_skills.c.job_id).where(
+                            job_description_skills.c.skill_id == skill_id
+                        )
+                    )
+                )
 
     total_result = await db.execute(count_query)
     total_count = total_result.scalar_one()
@@ -137,6 +193,11 @@ async def list_jobs(
                     job.processed_date.isoformat() if job.processed_date else None
                 ),
                 "file_path": job.file_path,
+                "quality_score": (
+                    float(job.quality_metrics.content_completeness_score)
+                    if job.quality_metrics and job.quality_metrics.content_completeness_score
+                    else 0.0
+                ),
             }
             for job in jobs
         ],
@@ -285,6 +346,7 @@ async def _get_job_details(
     include_content: bool = False,
     include_sections: bool = True,
     include_metadata: bool = True,
+    include_skills: bool = True,
 ) -> dict:
     """Get detailed information about a specific job description."""
     query = select(JobDescription).where(JobDescription.id == job_id)
@@ -292,6 +354,8 @@ async def _get_job_details(
         query = query.options(selectinload(JobDescription.sections))
     if include_metadata:
         query = query.options(selectinload(JobDescription.job_metadata))
+    if include_skills:
+        query = query.options(selectinload(JobDescription.skills))
 
     result = await db.execute(query)
     job = result.scalar_one_or_none()
@@ -348,6 +412,34 @@ async def _get_job_details(
     else:
         response["metadata"] = None
 
+    if include_skills:
+        # Get skills with confidence scores from the association table
+        from sqlalchemy import select as sql_select
+        from ...database.models import job_description_skills
+
+        # Query to get skills with confidence scores
+        skills_query = sql_select(
+            job_description_skills.c.skill_id,
+            job_description_skills.c.confidence,
+        ).where(job_description_skills.c.job_id == job_id)
+
+        skills_result = await db.execute(skills_query)
+        skill_confidence_map = {row[0]: row[1] for row in skills_result.fetchall()}
+
+        response["skills"] = [
+            {
+                "id": skill.id,
+                "lightcast_id": skill.lightcast_id,
+                "name": skill.name,
+                "skill_type": skill.skill_type,
+                "category": skill.category,
+                "confidence": skill_confidence_map.get(skill.id, 0.0),
+            }
+            for skill in job.skills
+        ]
+    else:
+        response["skills"] = []
+
     return response
 
 
@@ -357,6 +449,7 @@ async def get_job(
     include_content: bool = Query(False, description="Include full raw content"),
     include_sections: bool = Query(True, description="Include parsed sections"),
     include_metadata: bool = Query(True, description="Include job metadata"),
+    include_skills: bool = Query(True, description="Include extracted skills"),
     db: AsyncSession = Depends(get_async_session),
     api_key: str = Security(get_api_key),
 ):
@@ -368,6 +461,7 @@ async def get_job(
             include_content=include_content,
             include_sections=include_sections,
             include_metadata=include_metadata,
+            include_skills=include_skills,
         )
     except HTTPException:
         raise
@@ -437,6 +531,127 @@ async def get_job_section(
             error=str(e),
         )
         raise HTTPException(status_code=500, detail="Failed to retrieve section")
+
+
+@router.post("/", status_code=201)
+async def create_job(
+    job_data: JobDescriptionCreate,
+    db: AsyncSession = Depends(get_async_session),
+    api_key: str = Security(get_api_key),
+):
+    """Create a new job description manually."""
+    try:
+        # Create job description
+        new_job = JobDescription(
+            job_number=job_data.job_number,
+            title=job_data.title,
+            classification=job_data.classification,
+            language=job_data.language,
+            file_path=f"manual/{job_data.job_number}.txt",
+            processed_date=datetime.utcnow(),
+            full_text_content=job_data.content or "",
+        )
+
+        db.add(new_job)
+        await db.flush()  # Get the job ID
+
+        # Create metadata if provided
+        if job_data.department or job_data.reports_to:
+            metadata = JobMetadata(
+                job_id=new_job.id,
+                department=job_data.department,
+                reports_to=job_data.reports_to,
+            )
+            db.add(metadata)
+
+        # Create sections if provided
+        if job_data.sections:
+            for section_type, section_content in job_data.sections.items():
+                section = JobSection(
+                    job_id=new_job.id,
+                    section_type=section_type,
+                    section_content=section_content,
+                )
+                db.add(section)
+
+        await db.commit()
+        await db.refresh(new_job)
+
+        logger.info(
+            "Job description created manually",
+            job_id=new_job.id,
+            job_number=new_job.job_number,
+        )
+
+        return {
+            "status": "success",
+            "message": f"Job description {new_job.job_number} created successfully",
+            "job_id": new_job.id,
+            "job": {
+                "id": new_job.id,
+                "job_number": new_job.job_number,
+                "title": new_job.title,
+                "classification": new_job.classification,
+                "language": new_job.language,
+            },
+        }
+
+    except SQLAlchemyError as e:
+        logger.error("Database error creating job", error=str(e))
+        await db.rollback()
+        raise HTTPException(
+            status_code=500, detail="Database error creating job description"
+        )
+    except Exception as e:
+        logger.error("Unexpected error creating job", error=str(e))
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to create job description")
+
+
+@router.post("/{job_id}/reprocess")
+async def reprocess_job(
+    job_id: int,
+    db: AsyncSession = Depends(get_async_session),
+    api_key: str = Security(get_api_key),
+):
+    """Reprocess a job description (re-run extraction and analysis)."""
+    try:
+        # Get job to verify it exists
+        query = select(JobDescription).where(JobDescription.id == job_id)
+        result = await db.execute(query)
+        job = result.scalar_one_or_none()
+
+        if not job:
+            raise HTTPException(status_code=404, detail="Job description not found")
+
+        # Update processed date to mark as reprocessed
+        job.processed_date = datetime.utcnow()
+        await db.commit()
+
+        logger.info(
+            "Job description reprocessed", job_id=job_id, job_number=job.job_number
+        )
+
+        return {
+            "status": "success",
+            "message": f"Job description {job.job_number} queued for reprocessing",
+            "job_id": job.id,
+        }
+
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error("Database error reprocessing job", job_id=job_id, error=str(e))
+        await db.rollback()
+        raise HTTPException(
+            status_code=500, detail="Database error reprocessing job description"
+        )
+    except Exception as e:
+        logger.error("Unexpected error reprocessing job", job_id=job_id, error=str(e))
+        await db.rollback()
+        raise HTTPException(
+            status_code=500, detail="Failed to reprocess job description"
+        )
 
 
 @router.delete("/{job_id}")

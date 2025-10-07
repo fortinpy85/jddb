@@ -175,7 +175,7 @@ export function StaggerAnimation({
   const [visibleItems, setVisibleItems] = useState<number[]>([]);
 
   useEffect(() => {
-    const timeouts: NodeJS.Timeout[] = [];
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
 
     children.forEach((_, index) => {
       const timeout = setTimeout(

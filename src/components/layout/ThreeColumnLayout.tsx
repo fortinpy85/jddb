@@ -1,7 +1,6 @@
-
 /**
  * Three-Column Layout Component
- * New layout structure with a permanent narrow left panel, a collapsible middle panel, 
+ * New layout structure with a permanent narrow left panel, a collapsible middle panel,
  * and a main content area on the right.
  */
 
@@ -78,8 +77,12 @@ export function ThreeColumnLayout({
       )}
     >
       {header && <div className="flex-shrink-0 relative z-50">{header}</div>}
-      {profileHeader && <div className="flex-shrink-0 relative z-40">{profileHeader}</div>}
-      {alertBanner && <div className="flex-shrink-0 relative z-30 mt-32">{alertBanner}</div>}
+      {profileHeader && (
+        <div className="flex-shrink-0 relative z-40">{profileHeader}</div>
+      )}
+      {alertBanner && (
+        <div className="flex-shrink-0 relative z-30 mt-32">{alertBanner}</div>
+      )}
 
       <div className="flex flex-1 overflow-hidden pt-32">
         {/* Left Panel (Permanent) */}
@@ -118,7 +121,12 @@ export function ThreeColumnLayout({
                 size="sm"
                 onClick={handleMiddlePanelToggle}
                 className="absolute top-4 right-2 z-10 h-8 w-8 p-0 hover:bg-slate-100 dark:hover:bg-slate-700 shadow-button"
-                title={middlePanelCollapsed ? "Expand AI Panel" : "Collapse AI Panel"}
+                title={
+                  middlePanelCollapsed ? "Expand AI Panel" : "Collapse AI Panel"
+                }
+                aria-label={
+                  middlePanelCollapsed ? "Expand AI Panel" : "Collapse AI Panel"
+                }
               >
                 {middlePanelCollapsed ? (
                   <PanelLeftOpen className="h-4 w-4" />
@@ -126,7 +134,12 @@ export function ThreeColumnLayout({
                   <PanelRightClose className="h-4 w-4" />
                 )}
               </Button>
-              <div className={cn("h-full", middlePanelCollapsed && "overflow-hidden")}>
+              <div
+                className={cn(
+                  "h-full",
+                  middlePanelCollapsed && "overflow-hidden",
+                )}
+              >
                 {!middlePanelCollapsed && middlePanel}
               </div>
             </div>

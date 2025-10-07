@@ -169,7 +169,7 @@ export const useTypingIndicator = (
   debounceMs: number = 1000,
 ) => {
   const [isTyping, setIsTyping] = React.useState(false);
-  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startTyping = React.useCallback(() => {
     if (!isTyping) {

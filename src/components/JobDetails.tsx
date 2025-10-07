@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { JobDescription } from "@/lib/types";
 import { apiClient } from "@/lib/api";
 import {
   getClassificationLevel,
@@ -28,7 +27,7 @@ import {
   Users,
 } from "lucide-react";
 import EmptyState from "@/components/ui/empty-state";
-import SkeletonLoader from "@/components/ui/skeleton";
+import { ErrorBoundaryWrapper } from "@/components/ui/error-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
@@ -228,7 +227,7 @@ export function JobDetails({ jobId, onBack }: JobDetailsProps) {
 
               <div className="space-y-2">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className="text-2xl font-bold">{selectedJob.title}</h1>
+                  <h2 className="text-2xl font-bold">{selectedJob.title}</h2>
                   <Badge variant="secondary">{selectedJob.job_number}</Badge>
                   <Badge variant="outline">{selectedJob.classification}</Badge>
                   <Badge variant="outline">
@@ -432,17 +431,16 @@ export function JobDetails({ jobId, onBack }: JobDetailsProps) {
                   label: "Reprocess Job",
                   onClick: async () => {
                     try {
+                      const result = await apiClient.reprocessJob(
+                        selectedJob.id,
+                      );
                       addToast({
-                        title: "Reprocessing job",
-                        description:
-                          "Starting reprocessing of job description...",
-                        type: "info",
+                        title: "Reprocessing started",
+                        description: result.message,
+                        type: "success",
                         duration: 4000,
                       });
-                      // TODO: Implement actual reprocess API call
-                      // await apiClient.reprocessJob(selectedJob.id);
-                      console.log("Reprocess job", selectedJob.id);
-                    } catch (err) {
+                    } catch {
                       addToast({
                         title: "Reprocess failed",
                         description:
@@ -603,4 +601,11 @@ export function JobDetails({ jobId, onBack }: JobDetailsProps) {
   );
 }
 
-export default React.memo(JobDetails);
+// Wrap with error boundary for reliability
+const JobDetailsWithErrorBoundary = (props: JobDetailsProps) => (
+  <ErrorBoundaryWrapper>
+    <JobDetails {...props} />
+  </ErrorBoundaryWrapper>
+);
+
+export default React.memo(JobDetailsWithErrorBoundary);

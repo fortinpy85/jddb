@@ -28,6 +28,7 @@ import { apiClient } from "@/lib/api";
 import { formatFileSize, getStatusColor } from "@/lib/utils";
 import { useToast } from "@/components/ui/toast";
 import { useProgressUtils, ProgressController } from "@/hooks/useProgressToast";
+import type { UploadResponse } from "@/types/api";
 
 interface FileUploadStatus {
   file: File;
@@ -40,7 +41,7 @@ interface FileUploadStatus {
     | "needs_review";
   progress: number;
   error?: string;
-  result?: any;
+  result?: UploadResponse;
 }
 
 interface BulkUploadProps {
@@ -399,7 +400,7 @@ export function BulkUpload({
       case "processing":
         return <RefreshCw className="w-4 h-4 text-blue-600 animate-spin" />;
       default:
-        return <File className="w-4 h-4 text-gray-400" />;
+        return <File className="w-4 h-4 text-gray-600 dark:text-gray-400" />;
     }
   };
 
@@ -431,7 +432,7 @@ export function BulkUpload({
               ${
                 dragActive
                   ? "border-blue-500 bg-blue-50 border-solid shadow-lg scale-[1.02]"
-                  : "border-gray-400 hover:border-blue-400 hover:bg-gray-50"
+                  : "border-gray-500 dark:border-gray-600 hover:border-blue-400 hover:bg-gray-50"
               }
               ${isUploading ? "pointer-events-none opacity-50" : "cursor-pointer hover:shadow-md"}
             `}
@@ -461,14 +462,14 @@ export function BulkUpload({
               </div>
             ) : (
               <div className="text-gray-700">
-                <FolderOpen className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+                <FolderOpen className="w-16 h-16 mx-auto mb-4 text-gray-600 dark:text-gray-400" />
                 <p className="text-xl font-semibold mb-2">
                   Drag and drop files here, or click to select
                 </p>
-                <p className="text-sm text-gray-500 mb-3">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                   Supported formats: {acceptedFileTypes.join(", ")}
                 </p>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   Max size: {maxFileSize}MB per file
                 </p>
               </div>

@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Phase 2 Backend API Testing', () => {
 
   test('should have working backend API server', async ({ page }) => {
-    // Test root endpoint
-    const response = await page.request.get('http://localhost:8000/');
+    // Test status endpoint (actual root endpoint is /status, not /)
+    const response = await page.request.get('http://localhost:8000/status');
     expect(response.status()).toBe(200);
 
     const data = await response.json();
@@ -163,8 +163,8 @@ test.describe('Phase 2 API Integration Tests', () => {
 test.describe('Phase 2 Service Health Validation', () => {
 
   test('should validate service configuration', async ({ page }) => {
-    // Test root endpoint for service configuration
-    const response = await page.request.get('http://localhost:8000/');
+    // Test status endpoint for service configuration
+    const response = await page.request.get('http://localhost:8000/status');
     const data = await response.json();
 
     // Verify Phase 2 features are listed
@@ -176,9 +176,9 @@ test.describe('Phase 2 Service Health Validation', () => {
 
   test('should have proper CORS configuration', async ({ page }) => {
     // Test CORS headers
-    const response = await page.request.get('http://localhost:8000/', {
+    const response = await page.request.get('http://localhost:8000/status', {
       headers: {
-        'Origin': 'http://localhost:3000'
+        'Origin': 'http://localhost:3002'
       }
     });
 

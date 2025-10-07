@@ -116,9 +116,9 @@ export const DualPaneEditor: React.FC<DualPaneEditorProps> = ({
   return (
     <div className="p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-slate-900 min-h-screen">
       <header className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
           Dual-Pane Editor
-        </h1>
+        </h2>
         <div className="flex items-center gap-4">
           <Button variant="outline">
             <Share2 className="h-4 w-4 mr-2" />

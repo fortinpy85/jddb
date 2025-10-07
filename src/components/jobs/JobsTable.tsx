@@ -11,7 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ClassificationBadge } from "@/components/ui/classification-badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FilterBar, type FilterConfig } from "@/components/ui/filter-bar";
 import {
   Select,
   SelectContent,
@@ -73,7 +75,7 @@ type SortField =
   | "created_at";
 type SortDirection = "asc" | "desc";
 
-export function JobsTable({
+function JobsTable({
   onJobSelect,
   onNavigateToUpload,
   onNavigateToSearch,
@@ -92,6 +94,7 @@ export function JobsTable({
     useState<string>("all");
   const [filterLanguage, setFilterLanguage] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterSkills, setFilterSkills] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
@@ -122,6 +125,14 @@ export function JobsTable({
       filtered = filtered.filter((job) => job.language === filterLanguage);
     }
 
+    // Skill filter - jobs must have ALL selected skills
+    if (filterSkills.length > 0) {
+      filtered = filtered.filter((job) => {
+        if (!job.skills || job.skills.length === 0) return false;
+        const jobSkillIds = job.skills.map((skill) => skill.id);
+        return filterSkills.every((skillId) => jobSkillIds.includes(skillId));
+      });
+    }
 
     // Sorting
     filtered.sort((a, b) => {
@@ -163,6 +174,7 @@ export function JobsTable({
     searchQuery,
     filterClassification,
     filterLanguage,
+    filterSkills,
     sortField,
     sortDirection,
   ]);
@@ -184,6 +196,21 @@ export function JobsTable({
     () => Array.from(new Set(jobs.map((j) => j.language).filter(Boolean))),
     [jobs],
   );
+
+  // Get all unique skills across all jobs
+  const availableSkills = useMemo(() => {
+    const skillMap = new Map();
+    jobs.forEach((job) => {
+      job.skills?.forEach((skill) => {
+        if (!skillMap.has(skill.id)) {
+          skillMap.set(skill.id, skill);
+        }
+      });
+    });
+    return Array.from(skillMap.values()).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+  }, [jobs]);
 
   // Handlers
   const handleSort = (field: SortField) => {
@@ -273,23 +300,27 @@ export function JobsTable({
   }
 
   if (jobs.length === 0) {
-    return (
-      <EmptyState
-        type="no-jobs"
-        actions={
-          onNavigateToUpload
-            ? [
-                {
-                  label: "Upload Jobs",
-                  onClick: onNavigateToUpload,
-                  variant: "default" as const,
-                  icon: Upload,
-                },
-              ]
-            : []
-        }
-      />
-    );
+    const actions = [];
+
+    if (onNavigateToUpload) {
+      actions.push({
+        label: "Upload Jobs",
+        onClick: onNavigateToUpload,
+        variant: "default" as const,
+        icon: Upload,
+      });
+    }
+
+    if (onCreateNew) {
+      actions.push({
+        label: "Create New",
+        onClick: onCreateNew,
+        variant: "outline" as const,
+        icon: Plus,
+      });
+    }
+
+    return <EmptyState type="no-jobs" actions={actions} />;
   }
 
   return (
@@ -297,9 +328,9 @@ export function JobsTable({
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
             Job Descriptions
-          </h1>
+          </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
             {filteredJobs.length} of {jobs.length} jobs
           </p>
@@ -338,108 +369,161 @@ export function JobsTable({
       </div>
 
       {/* Filters and Search */}
-      <Card className="elevation-1 shadow-card">
-        <CardContent className="p-4">
-          <div className="flex flex-col gap-3">
-            {/* Search */}
-            <div className="w-full">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  placeholder="Search by job number, filename, or classification..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 shadow-input"
-                />
-              </div>
-            </div>
-
-            {/* Filters Row */}
-            <div className="flex flex-wrap gap-3">
-              {/* Classification Filter */}
-              <Select
-                value={filterClassification}
-                onValueChange={setFilterClassification}
-              >
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Classification" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Classifications</SelectItem>
-                  {classifications.map((c) => (
-                    <SelectItem key={c} value={c!}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Language Filter */}
-              <Select value={filterLanguage} onValueChange={setFilterLanguage}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Languages</SelectItem>
-                  {languages.map((lang) => (
-                    <SelectItem key={lang} value={lang!}>
-                      {getLanguageName(lang!)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Status Filter */}
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      <FilterBar
+        searchValue={searchQuery}
+        searchPlaceholder="Search by job number, filename, or classification..."
+        onSearchChange={setSearchQuery}
+        filters={[
+          {
+            id: "classification",
+            label: "Classification",
+            placeholder: "All Classifications",
+            value: filterClassification,
+            options: [
+              { value: "all", label: "All Classifications" },
+              ...classifications.map((c) => ({ value: c!, label: c! })),
+            ],
+            onChange: setFilterClassification,
+          },
+          {
+            id: "language",
+            label: "Language",
+            placeholder: "All Languages",
+            value: filterLanguage,
+            options: [
+              { value: "all", label: "All Languages" },
+              ...languages.map((lang) => ({
+                value: lang!,
+                label: getLanguageName(lang!),
+              })),
+            ],
+            onChange: setFilterLanguage,
+          },
+          {
+            id: "status",
+            label: "Status",
+            placeholder: "All Statuses",
+            value: filterStatus,
+            options: [
+              { value: "all", label: "All Statuses" },
+              { value: "completed", label: "Completed" },
+              { value: "in_progress", label: "In Progress" },
+              { value: "failed", label: "Failed" },
+            ],
+            onChange: setFilterStatus,
+          },
+        ]}
+        onClearAll={() => {
+          setSearchQuery("");
+          setFilterClassification("all");
+          setFilterLanguage("all");
+          setFilterStatus("all");
+          setFilterSkills([]);
+        }}
+      >
+        {/* Bulk Actions */}
+        {selectedJobs.length > 0 && (
+          <div className="mt-3 flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+              {selectedJobs.length} selected
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleBulkAction("Export")}
+              className="shadow-button"
+            >
+              <Download className="w-4 h-4 mr-1" />
+              Export
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleBulkAction("Delete")}
+              className="shadow-button"
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              Delete
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedJobs([])}
+              className="ml-auto shadow-button"
+            >
+              Clear
+            </Button>
           </div>
+        )}
+      </FilterBar>
 
-          {/* Bulk Actions */}
-          {selectedJobs.length > 0 && (
-            <div className="mt-3 flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                {selectedJobs.length} selected
-              </span>
+      {/* Skills Filter */}
+      {availableSkills.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            Filter by Skills:
+          </span>
+          {filterSkills.length > 0 && (
+            <div className="flex items-center gap-1 flex-wrap">
+              {filterSkills.map((skillId) => {
+                const skill = availableSkills.find((s) => s.id === skillId);
+                if (!skill) return null;
+                return (
+                  <Badge
+                    key={skillId}
+                    variant="default"
+                    className="cursor-pointer hover:bg-primary/80"
+                    onClick={() =>
+                      setFilterSkills(
+                        filterSkills.filter((id) => id !== skillId),
+                      )
+                    }
+                  >
+                    {skill.name} ×
+                  </Badge>
+                );
+              })}
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleBulkAction("Export")}
-                className="shadow-button"
-              >
-                <Download className="w-4 h-4 mr-1" />
-                Export
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleBulkAction("Delete")}
-                className="shadow-button"
-              >
-                <Trash2 className="w-4 h-4 mr-1" />
-                Delete
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedJobs([])}
-                className="ml-auto shadow-button"
+                onClick={() => setFilterSkills([])}
+                className="h-6 px-2 text-xs"
               >
                 Clear
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
+          <Select
+            value=""
+            onValueChange={(value) => {
+              const skillId = parseInt(value);
+              if (!filterSkills.includes(skillId)) {
+                setFilterSkills([...filterSkills, skillId]);
+              }
+            }}
+          >
+            <SelectTrigger className="w-[250px] h-8 text-sm">
+              <SelectValue placeholder="Add skill filter..." />
+            </SelectTrigger>
+            <SelectContent>
+              {availableSkills.map((skill) => (
+                <SelectItem
+                  key={skill.id}
+                  value={skill.id.toString()}
+                  disabled={filterSkills.includes(skill.id)}
+                >
+                  {skill.name}
+                  {skill.skill_type && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      ({skill.skill_type})
+                    </span>
+                  )}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {/* Table */}
       <Card className="elevation-1 shadow-card">
@@ -521,6 +605,15 @@ export function JobsTable({
                     key={job.id}
                     className="shadow-table-row cursor-pointer"
                     onClick={() => onJobSelect?.(job)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onJobSelect?.(job);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`View job ${job.job_number || "N/A"}: ${job.title || "Untitled"}`}
                   >
                     <td
                       className="px-4 py-3"
@@ -531,6 +624,7 @@ export function JobsTable({
                         onCheckedChange={(checked) =>
                           handleSelectJob(job.id, checked as boolean)
                         }
+                        aria-label={`Select job ${job.job_number || job.id}`}
                       />
                     </td>
                     <td className="px-4 py-3">
@@ -547,9 +641,16 @@ export function JobsTable({
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge variant="outline" className="font-mono">
-                        {job.classification || "N/A"}
-                      </Badge>
+                      {job.classification ? (
+                        <ClassificationBadge
+                          code={job.classification}
+                          showHelpIcon
+                        />
+                      ) : (
+                        <Badge variant="outline" className="font-mono">
+                          N/A
+                        </Badge>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center space-x-1">
@@ -560,26 +661,34 @@ export function JobsTable({
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge className={getStatusColor("N/A")}>
-                        N/A
-                      </Badge>
+                      <Badge className={getStatusColor("N/A")}>N/A</Badge>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center space-x-1">
                         <div className="w-16 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-green-500"
-                            style={{ width: "85%" }}
+                            className={`h-full ${
+                              (job.quality_score || 0) >= 0.7
+                                ? "bg-green-500"
+                                : (job.quality_score || 0) >= 0.4
+                                ? "bg-yellow-500"
+                                : "bg-red-500"
+                            }`}
+                            style={{
+                              width: `${Math.round((job.quality_score || 0) * 100)}%`,
+                            }}
                           />
                         </div>
                         <span className="text-xs text-slate-600 dark:text-slate-400">
-                          85%
+                          {Math.round((job.quality_score || 0) * 100)}%
                         </span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-sm text-slate-600 dark:text-slate-400">
-                        {new Date(job.created_at || Date.now()).toLocaleDateString()}
+                        {new Date(
+                          job.created_at || Date.now(),
+                        ).toLocaleDateString()}
                       </span>
                     </td>
                     <td
@@ -592,6 +701,7 @@ export function JobsTable({
                             variant="ghost"
                             size="sm"
                             className="h-8 w-8 p-0"
+                            aria-label={`Actions for job ${job.job_number || job.id}`}
                           >
                             <MoreVertical className="w-4 h-4" />
                           </Button>
@@ -683,3 +793,7 @@ export function JobsTable({
     </div>
   );
 }
+
+// Export memoized component for performance
+export default React.memo(JobsTable);
+export { JobsTable };

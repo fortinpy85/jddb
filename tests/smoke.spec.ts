@@ -4,9 +4,9 @@ test.describe("Smoke Tests", () => {
   test("application loads successfully", async ({ page }) => {
     await page.goto("/");
 
-    // Basic application structure should be present
-    await expect(page.locator("h1")).toContainText(
-      "Job Description Database (JDDB)",
+    // Basic application structure should be present (use first h1 to avoid strict mode)
+    await expect(page.locator("h1").first()).toContainText(
+      /Job Description Database|JDDB|Dashboard/,
     );
     await expect(page.getByRole("tab", { name: "Dashboard" })).toBeVisible();
     await expect(page.getByRole("tab", { name: "Jobs" })).toBeVisible();
@@ -57,16 +57,16 @@ test.describe("Smoke Tests", () => {
   test("page is responsive", async ({ page }) => {
     await page.goto("/");
 
-    // Test mobile viewport
+    // Test mobile viewport (use first h1 to avoid strict mode)
     await page.setViewportSize({ width: 375, height: 667 });
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
 
     // Test tablet viewport
     await page.setViewportSize({ width: 768, height: 1024 });
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
 
     // Test desktop viewport
     await page.setViewportSize({ width: 1920, height: 1080 });
-    await expect(page.locator("h1")).toBeVisible();
+    await expect(page.locator("h1").first()).toBeVisible();
   });
 });

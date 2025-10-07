@@ -23,5 +23,5 @@
     "types": ["@testing-library/jest-dom"]
   },
   "include": ["**/*.ts", "**/*.tsx", "src/types/**/*"],
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["dist", "node_modules", "archive"]
 }

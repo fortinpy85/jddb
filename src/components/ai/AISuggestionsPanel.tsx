@@ -5,13 +5,13 @@
  * Real-time AI suggestions display with accept/reject actions
  */
 
-import React, { useState, useMemo } from 'react';
-import type { AISuggestion } from '@/hooks/useAISuggestions';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import React, { useState, useMemo } from "react";
+import type { AISuggestion } from "@/hooks/useAISuggestions";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sparkles,
   Check,
@@ -24,7 +24,7 @@ import {
   Filter,
   ChevronDown,
   ChevronUp,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface AISuggestionsPanelProps {
   suggestions: AISuggestion[];
@@ -37,11 +37,11 @@ interface AISuggestionsPanelProps {
 }
 
 const SUGGESTION_TYPE_LABELS = {
-  grammar: 'Grammar',
-  style: 'Style',
-  clarity: 'Clarity',
-  bias: 'Bias',
-  compliance: 'Compliance',
+  grammar: "Grammar",
+  style: "Style",
+  clarity: "Clarity",
+  bias: "Bias",
+  compliance: "Compliance",
 };
 
 const SUGGESTION_TYPE_ICONS = {
@@ -53,11 +53,11 @@ const SUGGESTION_TYPE_ICONS = {
 };
 
 const SUGGESTION_TYPE_COLORS = {
-  grammar: 'text-red-600 bg-red-50',
-  style: 'text-blue-600 bg-blue-50',
-  clarity: 'text-purple-600 bg-purple-50',
-  bias: 'text-yellow-600 bg-yellow-50',
-  compliance: 'text-green-600 bg-green-50',
+  grammar: "text-red-600 bg-red-50",
+  style: "text-blue-600 bg-blue-50",
+  clarity: "text-purple-600 bg-purple-50",
+  bias: "text-yellow-600 bg-yellow-50",
+  compliance: "text-green-600 bg-green-50",
 };
 
 /**
@@ -70,14 +70,14 @@ export function AISuggestionsPanel({
   onAccept,
   onReject,
   onClear,
-  className = '',
+  className = "",
 }: AISuggestionsPanelProps) {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([
-    'grammar',
-    'style',
-    'clarity',
-    'bias',
-    'compliance',
+    "grammar",
+    "style",
+    "clarity",
+    "bias",
+    "compliance",
   ]);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -100,7 +100,7 @@ export function AISuggestionsPanel({
 
   const toggleType = (type: string) => {
     setSelectedTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
     );
   };
 
@@ -155,7 +155,7 @@ export function AISuggestionsPanel({
               return (
                 <Badge
                   key={type}
-                  variant={selectedTypes.includes(type) ? 'default' : 'outline'}
+                  variant={selectedTypes.includes(type) ? "default" : "outline"}
                   className="cursor-pointer"
                   onClick={() => toggleType(type)}
                 >
@@ -175,15 +175,17 @@ export function AISuggestionsPanel({
           <EmptyState hasFilters={selectedTypes.length < 5} />
         ) : (
           <div className="space-y-4">
-            {Object.entries(groupedSuggestions).map(([type, typeSuggestions]) => (
-              <SuggestionTypeGroup
-                key={type}
-                type={type as AISuggestion['type']}
-                suggestions={typeSuggestions}
-                onAccept={onAccept}
-                onReject={onReject}
-              />
-            ))}
+            {Object.entries(groupedSuggestions).map(
+              ([type, typeSuggestions]) => (
+                <SuggestionTypeGroup
+                  key={type}
+                  type={type as AISuggestion["type"]}
+                  suggestions={typeSuggestions}
+                  onAccept={onAccept}
+                  onReject={onReject}
+                />
+              ),
+            )}
           </div>
         )}
       </ScrollArea>
@@ -200,7 +202,7 @@ function SuggestionTypeGroup({
   onAccept,
   onReject,
 }: {
-  type: AISuggestion['type'];
+  type: AISuggestion["type"];
   suggestions: AISuggestion[];
   onAccept?: (suggestion: AISuggestion) => void;
   onReject?: (suggestion: AISuggestion) => void;
@@ -263,13 +265,17 @@ function SuggestionCard({
         {/* Original vs Suggested */}
         <div className="space-y-1">
           <div className="flex items-start gap-2">
-            <span className="text-xs text-gray-500 mt-0.5 shrink-0">Original:</span>
+            <span className="text-xs text-gray-500 mt-0.5 shrink-0">
+              Original:
+            </span>
             <code className="text-xs font-mono text-gray-700 bg-white px-2 py-0.5 rounded flex-1">
               {suggestion.original_text}
             </code>
           </div>
           <div className="flex items-start gap-2">
-            <span className="text-xs text-gray-500 mt-0.5 shrink-0">Suggested:</span>
+            <span className="text-xs text-gray-500 mt-0.5 shrink-0">
+              Suggested:
+            </span>
             <code className="text-xs font-mono text-green-700 bg-green-50 px-2 py-0.5 rounded flex-1 border border-green-200">
               {suggestion.suggested_text}
             </code>
@@ -339,8 +345,8 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
       <AlertCircle className="h-4 w-4" />
       <AlertDescription>
         {hasFilters
-          ? 'No suggestions match your filters. Try adjusting your filter selection.'
-          : 'No suggestions available. AI will analyze your content and provide improvement suggestions.'}
+          ? "No suggestions match your filters. Try adjusting your filter selection."
+          : "No suggestions available. AI will analyze your content and provide improvement suggestions."}
       </AlertDescription>
     </Alert>
   );
@@ -350,10 +356,10 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
  * Get badge color based on score
  */
 function getScoreBadgeColor(score: number): string {
-  if (score >= 0.9) return 'bg-green-100 text-green-700';
-  if (score >= 0.75) return 'bg-blue-100 text-blue-700';
-  if (score >= 0.6) return 'bg-yellow-100 text-yellow-700';
-  return 'bg-red-100 text-red-700';
+  if (score >= 0.9) return "bg-green-100 text-green-700";
+  if (score >= 0.75) return "bg-blue-100 text-blue-700";
+  if (score >= 0.6) return "bg-yellow-100 text-yellow-700";
+  return "bg-red-100 text-red-700";
 }
 
 /**
@@ -371,8 +377,10 @@ export function CompactSuggestionsBadge({
   return (
     <Badge className="gap-1 bg-blue-100 text-blue-700">
       <Sparkles className="h-3 w-3" />
-      {count} {count === 1 ? 'suggestion' : 'suggestions'}
-      {score !== null && score !== undefined && ` (${Math.round(score * 100)}%)`}
+      {count} {count === 1 ? "suggestion" : "suggestions"}
+      {score !== null &&
+        score !== undefined &&
+        ` (${Math.round(score * 100)}%)`}
     </Badge>
   );
 }

@@ -6,7 +6,7 @@
 
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,6 +16,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
@@ -32,6 +40,9 @@ import {
   Bell,
   Command,
   Sparkles,
+  Wand2,
+  Menu,
+  X,
 } from "lucide-react";
 import ThemeToggle from "@/components/ui/theme-toggle";
 
@@ -40,6 +51,7 @@ export type AppView =
   | "dashboard"
   | "jobs"
   | "upload"
+  | "improve"
   | "search"
   | "compare"
   | "translate"
@@ -54,6 +66,7 @@ interface AppHeaderProps {
   userName?: string;
   notificationCount?: number;
   jobCount?: number;
+  hasSelectedJob?: boolean;
   className?: string;
 }
 
@@ -83,6 +96,12 @@ const primaryNavItems: NavItem[] = [
     label: "Upload",
     icon: Upload,
     description: "Upload new files",
+  },
+  {
+    id: "improve",
+    label: "Improve",
+    icon: Wand2,
+    description: "AI-powered improvements",
   },
   {
     id: "search",
@@ -122,12 +141,17 @@ export function AppHeader({
   userName = "Admin User",
   notificationCount = 0,
   jobCount,
+  hasSelectedJob = false,
   className,
 }: AppHeaderProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const handleNavigation = (view: AppView) => {
     if (onNavigate) {
       onNavigate(view);
     }
+    // Close mobile menu when navigating
+    setMobileMenuOpen(false);
   };
 
   // Get initials for avatar
@@ -195,17 +219,93 @@ export function AppHeader({
           {/* ========================================
               CENTER SECTION - Primary Navigation
               ======================================== */}
-          <nav className="lg:flex items-center space-x-1 max-lg:hidden">
+          {/* Mobile Menu Button */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
+                aria-label="Open navigation menu"
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[280px] sm:w-[320px]">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <Database className="w-5 h-5 text-blue-600" />
+                  JDDB Navigation
+                </SheetTitle>
+                <SheetDescription>
+                  Navigate through the application
+                </SheetDescription>
+              </SheetHeader>
+              <nav className="mt-6 flex flex-col space-y-1">
+                {primaryNavItems.map((item) => {
+                  const isActive = currentView === item.id;
+                  const Icon = item.icon;
+                  const requiresJob = item.id === "translate" || item.id === "improve";
+                  const isDisabled = requiresJob && !hasSelectedJob;
+                  const tooltipText = isDisabled
+                    ? `Select a job to ${item.id === "translate" ? "translate" : "improve"}`
+                    : item.description;
+
+                  return (
+                    <Button
+                      key={item.id}
+                      variant={isActive ? "secondary" : "ghost"}
+                      onClick={() => !isDisabled && handleNavigation(item.id)}
+                      disabled={isDisabled}
+                      className={cn(
+                        "w-full justify-start gap-3 h-11",
+                        isActive && "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
+                        isDisabled && "opacity-50 cursor-not-allowed"
+                      )}
+                      title={tooltipText}
+                      aria-label={item.label}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <div className="flex-1 text-left">
+                        <div className="font-medium">{item.label}</div>
+                        {item.description && (
+                          <div className="text-xs text-muted-foreground">
+                            {item.description}
+                          </div>
+                        )}
+                      </div>
+                      {item.badge && item.badge > 0 && (
+                        <Badge variant="destructive" className="ml-auto">
+                          {item.badge > 9 ? "9+" : item.badge}
+                        </Badge>
+                      )}
+                    </Button>
+                  );
+                })}
+              </nav>
+            </SheetContent>
+          </Sheet>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center space-x-1">
             {primaryNavItems.map((item) => {
               const isActive = currentView === item.id;
               const Icon = item.icon;
+
+              // Disable translate and improve when no job is selected
+              const requiresJob = item.id === "translate" || item.id === "improve";
+              const isDisabled = requiresJob && !hasSelectedJob;
+              const tooltipText = isDisabled
+                ? `Select a job to ${item.id === "translate" ? "translate" : "improve"}`
+                : item.description;
 
               return (
                 <Button
                   key={item.id}
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleNavigation(item.id)}
+                  onClick={() => !isDisabled && handleNavigation(item.id)}
+                  disabled={isDisabled}
                   className={cn(
                     // Base styles
                     "relative px-3 py-2 h-auto",
@@ -213,8 +313,8 @@ export function AppHeader({
                     "transition-all duration-200",
 
                     // Hover state
-                    "hover:bg-slate-100/80 dark:hover:bg-slate-800/80",
-                    "hover:shadow-button",
+                    !isDisabled && "hover:bg-slate-100/80 dark:hover:bg-slate-800/80",
+                    !isDisabled && "hover:shadow-button",
 
                     // Active state
                     isActive && [
@@ -224,9 +324,12 @@ export function AppHeader({
                     ],
 
                     // Inactive state
-                    !isActive && "text-slate-600 dark:text-slate-400",
+                    !isActive && !isDisabled && "text-slate-600 dark:text-slate-400",
+
+                    // Disabled state
+                    isDisabled && "opacity-50 cursor-not-allowed",
                   )}
-                  title={item.description}
+                  title={tooltipText}
                 >
                   <Icon className="w-4 h-4" />
                   <span className="text-xs font-medium">{item.label}</span>
@@ -260,6 +363,7 @@ export function AppHeader({
               size="sm"
               className="relative p-2 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-focus"
               title="Notifications"
+              aria-label="Notifications"
             >
               <Bell className="w-4 h-4" />
               {notificationCount > 0 && (

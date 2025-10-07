@@ -102,6 +102,15 @@ class Settings(BaseSettings):
     celery_result_serializer: str = "json"
     celery_accept_content: str = "json"  # Comma-separated
 
+    # Lightcast API Configuration
+    lightcast_client_id: str = ""
+    lightcast_client_secret: str = ""
+    lightcast_scope: str = "emsi_open"
+    lightcast_api_base_url: str = "https://auth.emsicloud.com"
+    lightcast_token_cache_ttl: int = 3600  # Access token TTL in seconds
+    lightcast_request_timeout: int = 30
+    lightcast_max_retries: int = 3
+
     @property
     def supported_extensions_list(self) -> List[str]:
         """Convert comma-separated extensions string to list."""

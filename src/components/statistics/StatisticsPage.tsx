@@ -121,9 +121,9 @@ export function StatisticsPage({ onBack, className }: StatisticsPageProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
             Statistics & Analytics
-          </h1>
+          </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
             Comprehensive metrics and insights for job descriptions
           </p>

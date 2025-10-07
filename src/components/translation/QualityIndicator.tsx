@@ -145,7 +145,10 @@ export const QualityIndicator: React.FC<QualityIndicatorProps> = ({
   if (compact) {
     return (
       <>
-        <div className="flex items-center gap-2 cursor-pointer hover:opacity-80" onClick={() => setShowDetails(true)}>
+        <div
+          className="flex items-center gap-2 cursor-pointer hover:opacity-80"
+          onClick={() => setShowDetails(true)}
+        >
           <div className={`w-2 h-2 rounded-full ${status.color}`} />
           <span
             className={`font-semibold ${getScoreColor(assessment.overall_score)}`}

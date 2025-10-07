@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ClassificationBadge } from "@/components/ui/classification-badge";
+import { FilterBar } from "@/components/ui/filter-bar";
 import type { SearchQuery, SearchResult, JobDescription } from "@/lib/types";
 import { apiClient } from "@/lib/api";
 import {
@@ -14,8 +16,6 @@ import {
 } from "@/lib/utils";
 import {
   Search,
-  Filter,
-  X,
   Loader2,
   AlertCircle,
   Eye,
@@ -24,6 +24,8 @@ import {
   Lightbulb,
   TrendingUp,
 } from "lucide-react";
+import { ErrorBoundaryWrapper } from "@/components/ui/error-boundary";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface SearchInterfaceProps {
   onJobSelect?: (job: JobDescription) => void;
@@ -40,7 +42,7 @@ interface SearchSuggestions {
   suggestions: string[];
 }
 
-export function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
+function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFilters, setSearchFilters] = useState<{
     classification?: string;
@@ -253,86 +255,50 @@ export function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
             </div>
 
             {/* Filters */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Filter className="w-4 h-4 mr-2 text-gray-400" />
-                  <span className="text-sm font-medium">Filters</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearFilters}
-                  className="text-gray-500"
-                >
-                  <X className="w-4 h-4 mr-1" />
-                  Clear All
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Classification Filter */}
-                <div>
-                  <label className="text-sm font-medium text-gray-600 mb-2 block">
-                    Classification
-                  </label>
-                  <select
-                    aria-label="Classification"
-                    title="Classification"
-                    value={searchFilters.classification || ""}
-                    onChange={(e) =>
-                      handleFilterChange("classification", e.target.value)
-                    }
-                    className="w-full border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Classifications</option>
-                    {facets?.classifications.map((classification) => (
-                      <option
-                        key={classification.value}
-                        value={classification.value}
-                      >
-                        {classification.value} ({classification.count})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Language Filter */}
-                <div>
-                  <label className="text-sm font-medium text-gray-600 mb-2 block">
-                    Language
-                  </label>
-                  <select
-                    aria-label="Language"
-                    title="Language"
-                    value={searchFilters.language || ""}
-                    onChange={(e) =>
-                      handleFilterChange("language", e.target.value)
-                    }
-                    className="w-full border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Languages</option>
-                    {facets?.languages.map((language) => (
-                      <option key={language.value} value={language.value}>
-                        {getLanguageName(language.value)} ({language.count})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Department Filter */}
-                <div>
-                  <label className="text-sm font-medium text-gray-600 mb-2 block">
-                    Department
-                  </label>
-                  <Input
-                    placeholder="Filter by department..."
-                    value={searchFilters.department || ""}
-                    onChange={(e) =>
-                      handleFilterChange("department", e.target.value)
-                    }
-                  />
-                </div>
+            <FilterBar
+              filters={[
+                {
+                  id: "classification",
+                  label: "Classification",
+                  placeholder: "All Classifications",
+                  value: searchFilters.classification || undefined,
+                  options: [
+                    ...(facets?.classifications.map((c) => ({
+                      value: c.value,
+                      label: c.value,
+                      count: c.count,
+                    })) || []),
+                  ],
+                  onChange: (value) =>
+                    handleFilterChange("classification", value),
+                },
+                {
+                  id: "language",
+                  label: "Language",
+                  placeholder: "All Languages",
+                  value: searchFilters.language || undefined,
+                  options: [
+                    ...(facets?.languages.map((lang) => ({
+                      value: lang.value,
+                      label: getLanguageName(lang.value),
+                      count: lang.count,
+                    })) || []),
+                  ],
+                  onChange: (value) => handleFilterChange("language", value),
+                },
+              ]}
+              onClearAll={clearFilters}
+            >
+              {/* Department Filter - Custom Input */}
+              <div className="w-full sm:w-64">
+                <Input
+                  placeholder="Filter by department..."
+                  value={searchFilters.department || ""}
+                  onChange={(e) =>
+                    handleFilterChange("department", e.target.value)
+                  }
+                  className="shadow-input"
+                />
               </div>
 
               {/* Section Type Filters */}
@@ -364,7 +330,7 @@ export function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                   </div>
                 </div>
               )}
-            </div>
+            </FilterBar>
           </div>
         </CardContent>
       </Card>
@@ -420,9 +386,10 @@ export function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                             <Badge variant="secondary">
                               {result.job_number}
                             </Badge>
-                            <Badge variant="outline">
-                              {result.classification}
-                            </Badge>
+                            <ClassificationBadge
+                              code={result.classification}
+                              showHelpIcon
+                            />
                             <Badge variant="outline">
                               {getLanguageName(result.language)}
                             </Badge>
@@ -524,13 +491,10 @@ export function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
               </div>
             ) : (
               !loading && (
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto text-gray-300 mb-4" />
-                  <p>No job descriptions found matching your search.</p>
-                  <p className="text-sm mt-2">
-                    Try adjusting your search terms or filters.
-                  </p>
-                </div>
+                <EmptyState
+                  type="no-search-results"
+                  searchQuery={searchQuery}
+                />
               )
             )}
           </CardContent>
@@ -541,8 +505,8 @@ export function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
       {!hasSearched && !loading && (
         <Card>
           <CardContent className="pt-6">
-            <div className="text-center py-12 text-gray-500">
-              <Search className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+            <div className="text-center py-12 text-gray-600 dark:text-gray-400">
+              <Search className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
               <h3 className="text-lg font-medium mb-2">Advanced Job Search</h3>
               <p className="mb-4">
                 Search through job descriptions using keywords, classifications,
@@ -562,4 +526,12 @@ export function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
   );
 }
 
-export default React.memo(SearchInterface);
+// Wrap with error boundary for reliability
+const SearchInterfaceWithErrorBoundary = (props: SearchInterfaceProps) => (
+  <ErrorBoundaryWrapper>
+    <SearchInterface {...props} />
+  </ErrorBoundaryWrapper>
+);
+
+export { SearchInterfaceWithErrorBoundary as SearchInterface };
+export default React.memo(SearchInterfaceWithErrorBoundary);

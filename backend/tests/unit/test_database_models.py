@@ -432,112 +432,113 @@ class TestSearchAnalytics:
         assert hasattr(model, "error_occurred")
 
 
-class TestTranslationProject:
-    """Test TranslationProject model."""
-
-    def test_table_name(self):
-        """Test table name is correct."""
-        assert TranslationProject.__tablename__ == "translation_projects"
-
-    def test_columns(self):
-        """Test that required columns exist."""
-        model = TranslationProject
-        assert hasattr(model, "id")
-        assert hasattr(model, "name")
-        assert hasattr(model, "description")
-        assert hasattr(model, "source_language")
-        assert hasattr(model, "target_language")
-        assert hasattr(model, "project_type")
-        assert hasattr(model, "status")
-        assert hasattr(model, "created_by")
-        assert hasattr(model, "created_at")
-        assert hasattr(model, "updated_at")
-
-    def test_relationships(self):
-        """Test that relationships are defined."""
-        model = TranslationProject
-        assert hasattr(model, "translation_memories")
-
-
-class TestTranslationMemory:
-    """Test TranslationMemory model."""
-
-    def test_table_name(self):
-        """Test table name is correct."""
-        assert TranslationMemory.__tablename__ == "translation_memory"
-
-    def test_columns(self):
-        """Test that required columns exist."""
-        model = TranslationMemory
-        assert hasattr(model, "id")
-        assert hasattr(model, "project_id")
-        assert hasattr(model, "source_text")
-        assert hasattr(model, "target_text")
-        assert hasattr(model, "source_language")
-        assert hasattr(model, "target_language")
-        assert hasattr(model, "domain")
-        assert hasattr(model, "subdomain")
-        assert hasattr(model, "quality_score")
-        assert hasattr(model, "confidence_score")
-        assert hasattr(model, "usage_count")
-        assert hasattr(model, "context_hash")
-        assert hasattr(model, "tm_metadata")
-        assert hasattr(model, "created_by")
-        assert hasattr(model, "validated_by")
-
-    def test_relationships(self):
-        """Test that relationships are defined."""
-        model = TranslationMemory
-        assert hasattr(model, "project")
-        assert hasattr(model, "embeddings")
-
-    def test_foreign_key_cascade(self):
-        """Test foreign key cascade behavior."""
-        project_id_column = None
-        for column in TranslationMemory.__table__.columns:
-            if column.name == "project_id":
-                project_id_column = column
-                break
-
-        assert project_id_column is not None
-        assert len(project_id_column.foreign_keys) == 1
-        fk = list(project_id_column.foreign_keys)[0]
-        assert fk.ondelete == "CASCADE"
-
-
-class TestTranslationEmbedding:
-    """Test TranslationEmbedding model."""
-
-    def test_table_name(self):
-        """Test table name is correct."""
-        assert TranslationEmbedding.__tablename__ == "translation_embeddings"
-
-    def test_columns(self):
-        """Test that required columns exist."""
-        model = TranslationEmbedding
-        assert hasattr(model, "id")
-        assert hasattr(model, "memory_id")
-        assert hasattr(model, "embedding")
-        assert hasattr(model, "text_hash")
-        assert hasattr(model, "created_at")
-
-    def test_relationships(self):
-        """Test that relationships are defined."""
-        model = TranslationEmbedding
-        assert hasattr(model, "memory")
-
-    def test_foreign_key_cascade(self):
-        """Test foreign key cascade behavior."""
-        memory_id_column = None
-        for column in TranslationEmbedding.__table__.columns:
-            if column.name == "memory_id":
-                memory_id_column = column
-                break
-
-        assert memory_id_column is not None
-        assert len(memory_id_column.foreign_keys) == 1
-        fk = list(memory_id_column.foreign_keys)[0]
-        assert fk.ondelete == "CASCADE"
+# Removed: TranslationProject, TranslationMemory, TranslationEmbedding models
+# class TestTranslationProject:
+#     """Test TranslationProject model."""
+#
+#     def test_table_name(self):
+#         """Test table name is correct."""
+#         assert TranslationProject.__tablename__ == "translation_projects"
+#
+#     def test_columns(self):
+#         """Test that required columns exist."""
+#         model = TranslationProject
+#         assert hasattr(model, "id")
+#         assert hasattr(model, "name")
+#         assert hasattr(model, "description")
+#         assert hasattr(model, "source_language")
+#         assert hasattr(model, "target_language")
+#         assert hasattr(model, "project_type")
+#         assert hasattr(model, "status")
+#         assert hasattr(model, "created_by")
+#         assert hasattr(model, "created_at")
+#         assert hasattr(model, "updated_at")
+#
+#     def test_relationships(self):
+#         """Test that relationships are defined."""
+#         model = TranslationProject
+#         assert hasattr(model, "translation_memories")
+#
+#
+# class TestTranslationMemory:
+#     """Test TranslationMemory model."""
+#
+#     def test_table_name(self):
+#         """Test table name is correct."""
+#         assert TranslationMemory.__tablename__ == "translation_memory"
+#
+#     def test_columns(self):
+#         """Test that required columns exist."""
+#         model = TranslationMemory
+#         assert hasattr(model, "id")
+#         assert hasattr(model, "project_id")
+#         assert hasattr(model, "source_text")
+#         assert hasattr(model, "target_text")
+#         assert hasattr(model, "source_language")
+#         assert hasattr(model, "target_language")
+#         assert hasattr(model, "domain")
+#         assert hasattr(model, "subdomain")
+#         assert hasattr(model, "quality_score")
+#         assert hasattr(model, "confidence_score")
+#         assert hasattr(model, "usage_count")
+#         assert hasattr(model, "context_hash")
+#         assert hasattr(model, "tm_metadata")
+#         assert hasattr(model, "created_by")
+#         assert hasattr(model, "validated_by")
+#
+#     def test_relationships(self):
+#         """Test that relationships are defined."""
+#         model = TranslationMemory
+#         assert hasattr(model, "project")
+#         assert hasattr(model, "embeddings")
+#
+#     def test_foreign_key_cascade(self):
+#         """Test foreign key cascade behavior."""
+#         project_id_column = None
+#         for column in TranslationMemory.__table__.columns:
+#             if column.name == "project_id":
+#                 project_id_column = column
+#                 break
+#
+#         assert project_id_column is not None
+#         assert len(project_id_column.foreign_keys) == 1
+#         fk = list(project_id_column.foreign_keys)[0]
+#         assert fk.ondelete == "CASCADE"
+#
+#
+# class TestTranslationEmbedding:
+#     """Test TranslationEmbedding model."""
+#
+#     def test_table_name(self):
+#         """Test table name is correct."""
+#         assert TranslationEmbedding.__tablename__ == "translation_embeddings"
+#
+#     def test_columns(self):
+#         """Test that required columns exist."""
+#         model = TranslationEmbedding
+#         assert hasattr(model, "id")
+#         assert hasattr(model, "memory_id")
+#         assert hasattr(model, "embedding")
+#         assert hasattr(model, "text_hash")
+#         assert hasattr(model, "created_at")
+#
+#     def test_relationships(self):
+#         """Test that relationships are defined."""
+#         model = TranslationEmbedding
+#         assert hasattr(model, "memory")
+#
+#     def test_foreign_key_cascade(self):
+#         """Test foreign key cascade behavior."""
+#         memory_id_column = None
+#         for column in TranslationEmbedding.__table__.columns:
+#             if column.name == "memory_id":
+#                 memory_id_column = column
+#                 break
+#
+#         assert memory_id_column is not None
+#         assert len(memory_id_column.foreign_keys) == 1
+#         fk = list(memory_id_column.foreign_keys)[0]
+#         assert fk.ondelete == "CASCADE"
 
 
 class TestModelDefaults:
@@ -563,15 +564,16 @@ class TestModelDefaults:
         assert SavedSearch.is_favorite.default.arg == "false"
         assert SavedSearch.use_count.default.arg == 0
 
-    def test_translation_project_defaults(self):
-        """Test TranslationProject default values."""
-        assert TranslationProject.project_type.default.arg == "job_descriptions"
-        assert TranslationProject.status.default.arg == "active"
-
-    def test_translation_memory_defaults(self):
-        """Test TranslationMemory default values."""
-        assert TranslationMemory.usage_count.default.arg == 0
-        assert callable(TranslationMemory.tm_metadata.default.arg)  # dict() function
+    # Removed: TranslationProject and TranslationMemory models
+    # def test_translation_project_defaults(self):
+    #     """Test TranslationProject default values."""
+    #     assert TranslationProject.project_type.default.arg == "job_descriptions"
+    #     assert TranslationProject.status.default.arg == "active"
+    #
+    # def test_translation_memory_defaults(self):
+    #     """Test TranslationMemory default values."""
+    #     assert TranslationMemory.usage_count.default.arg == 0
+    #     assert callable(TranslationMemory.tm_metadata.default.arg)  # dict() function
 
 
 class TestColumnTypes:
@@ -610,20 +612,22 @@ class TestColumnTypes:
         assert str(JobComparison.section_scores.type) == "JSONB"
         assert str(DataQualityMetrics.validation_results.type) == "JSONB"
         assert str(SavedSearch.search_filters.type) == "JSONB"
-        assert str(TranslationMemory.tm_metadata.type) == "JSONB"
+        # Removed: TranslationMemory model
+        # assert str(TranslationMemory.tm_metadata.type) == "JSONB"
 
     def test_vector_columns(self):
         """Test vector column definitions."""
         embedding_col = ContentChunk.embedding
         assert "VECTOR" in str(embedding_col.type)
 
-    def test_array_columns(self):
-        """Test array column definitions for translation embeddings."""
-        embedding_col = TranslationEmbedding.embedding
-        # This should be a PostgreSQL ARRAY type
-        assert "ARRAY" in str(embedding_col.type) or hasattr(
-            embedding_col.type, "item_type"
-        )
+    # Removed: TranslationEmbedding model
+    # def test_array_columns(self):
+    #     """Test array column definitions for translation embeddings."""
+    #     embedding_col = TranslationEmbedding.embedding
+    #     # This should be a PostgreSQL ARRAY type
+    #     assert "ARRAY" in str(embedding_col.type) or hasattr(
+    #         embedding_col.type, "item_type"
+    #     )
 
 
 class TestRelationships:
@@ -648,16 +652,17 @@ class TestRelationships:
         assert job_rel.back_populates == "sections"
         assert chunks_rel.back_populates == "section"
 
-    def test_translation_relationships(self):
-        """Test translation model relationships."""
-        # TranslationProject -> TranslationMemory
-        tm_rel = TranslationProject.translation_memories.property
-        assert tm_rel.back_populates == "project"
-
-        # TranslationMemory -> TranslationProject
-        proj_rel = TranslationMemory.project.property
-        assert proj_rel.back_populates == "translation_memories"
-
-        # TranslationMemory -> TranslationEmbedding
-        emb_rel = TranslationMemory.embeddings.property
-        assert emb_rel.back_populates == "memory"
+    # Removed: Translation models
+    # def test_translation_relationships(self):
+    #     """Test translation model relationships."""
+    #     # TranslationProject -> TranslationMemory
+    #     tm_rel = TranslationProject.translation_memories.property
+    #     assert tm_rel.back_populates == "project"
+    #
+    #     # TranslationMemory -> TranslationProject
+    #     proj_rel = TranslationMemory.project.property
+    #     assert proj_rel.back_populates == "translation_memories"
+    #
+    #     # TranslationMemory -> TranslationEmbedding
+    #     emb_rel = TranslationMemory.embeddings.property
+    #     assert emb_rel.back_populates == "memory"

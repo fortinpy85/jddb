@@ -83,7 +83,7 @@ export const EditingWorkspace: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Editing Workspace</h1>
+          <h2 className="text-2xl font-bold">Editing Workspace</h2>
           <p className="text-gray-600">
             Collaborative document editing and translation
           </p>

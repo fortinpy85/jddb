@@ -19,24 +19,6 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-// Simple EmptyState interface (for backward compatibility)
-interface SimpleEmptyStateProps {
-  icon?: "alert" | "file" | "search" | "upload" | "refresh";
-  title: string;
-  description: string;
-  action?: {
-    label: string;
-    onClick: () => void;
-    variant?: "default" | "outline" | "secondary";
-  };
-  secondaryAction?: {
-    label: string;
-    onClick: () => void;
-    variant?: "default" | "outline" | "secondary";
-  };
-  className?: string;
-}
-
 // Advanced EmptyState interface (type-based)
 export interface EmptyStateProps {
   type:
@@ -61,17 +43,6 @@ export interface EmptyStateProps {
   showIllustration?: boolean;
   className?: string;
 }
-
-// Union type for backward compatibility
-type CombinedEmptyStateProps = SimpleEmptyStateProps | EmptyStateProps;
-
-const simpleIconMap = {
-  alert: AlertCircle,
-  file: FileText,
-  search: Search,
-  upload: Upload,
-  refresh: RefreshCw,
-};
 
 const emptyStateConfig = {
   "no-jobs": {
@@ -196,201 +167,142 @@ const emptyStateConfig = {
   },
 };
 
-// Type guard to check if props have 'type' property (advanced mode)
-function isAdvancedEmptyState(
-  props: CombinedEmptyStateProps,
-): props is EmptyStateProps {
-  return "type" in props;
-}
-
-export function EmptyState(props: CombinedEmptyStateProps) {
-  // Handle advanced type-based EmptyState
-  if (isAdvancedEmptyState(props)) {
-    const {
-      type,
-      title,
-      description,
-      actions = [],
-      searchQuery,
-      showIllustration = true,
-      className = "",
-    } = props;
-
-    // Get configuration with fallback
-    const config =
-      emptyStateConfig[type as keyof typeof emptyStateConfig] ||
-      emptyStateConfig.general;
-
-    // Additional safety check - ensure we always have a valid config
-    const finalConfig =
-      config && typeof config.icon === "function"
-        ? config
-        : {
-            icon: FolderOpen,
-            title: "Nothing to Show",
-            description: "There's nothing to display at the moment.",
-            illustration: "📁",
-            bgGradient: "from-gray-50 to-neutral-50",
-            iconColor: "text-gray-400",
-            suggestions: [],
-          };
-
-    const IconComponent = finalConfig.icon;
-
-    const displayTitle = title || finalConfig.title;
-    const displayDescription =
-      description ||
-      (type === "no-search-results" && searchQuery
-        ? `No job descriptions found for "${searchQuery}".`
-        : finalConfig.description);
-
-    return (
-      <Card className={`border-dashed border-2 ${className}`}>
-        <CardContent className="pt-8 pb-8">
-          <div
-            className={`bg-gradient-to-br ${finalConfig.bgGradient} rounded-lg p-8`}
-          >
-            <div className="text-center space-y-4">
-              {/* Illustration and Icon */}
-              <div className="flex flex-col items-center space-y-3">
-                {showIllustration && (
-                  <div className="text-4xl opacity-50 mb-2">
-                    {finalConfig.illustration}
-                  </div>
-                )}
-                <div className={`p-3 rounded-full bg-white shadow-sm`}>
-                  <IconComponent
-                    className={`w-8 h-8 ${finalConfig.iconColor}`}
-                  />
-                </div>
-              </div>
-
-              {/* Title and Description */}
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {displayTitle}
-                </h3>
-                <p className="text-gray-600 max-w-md mx-auto">
-                  {displayDescription}
-                </p>
-              </div>
-
-              {/* Suggestions */}
-              {finalConfig.suggestions.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3">
-                    Helpful Tips:
-                  </h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    {finalConfig.suggestions.map((suggestion, index) => (
-                      <li
-                        key={index}
-                        className="flex items-center justify-center"
-                      >
-                        <CheckCircle className="w-3 h-3 text-green-500 mr-2 flex-shrink-0" />
-                        {suggestion}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              {actions.length > 0 && (
-                <div className="flex flex-wrap gap-2 justify-center pt-4">
-                  {actions.map((action, index) => {
-                    const IconComp = action.icon;
-                    return (
-                      <Button
-                        key={index}
-                        variant={action.variant || "default"}
-                        onClick={action.onClick}
-                        className="flex items-center gap-2"
-                      >
-                        {IconComp && <IconComp className="w-4 h-4" />}
-                        {action.label}
-                      </Button>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Quick Actions for specific types */}
-              {type === "no-jobs" && actions.length === 0 && (
-                <div className="flex flex-col sm:flex-row gap-2 justify-center pt-4">
-                  <Button className="flex items-center gap-2">
-                    <Upload className="w-4 h-4" />
-                    Upload Files
-                  </Button>
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    Learn More
-                  </Button>
-                </div>
-              )}
-
-              {type === "no-search-results" && actions.length === 0 && (
-                <div className="flex flex-col sm:flex-row gap-2 justify-center pt-4">
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <Filter className="w-4 h-4" />
-                    Clear Filters
-                  </Button>
-                  <Button variant="outline" className="flex items-center gap-2">
-                    <Search className="w-4 h-4" />
-                    Browse All Jobs
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Handle simple icon-based EmptyState (backward compatibility)
+export function EmptyState(props: EmptyStateProps) {
   const {
-    icon = "alert",
+    type,
     title,
     description,
-    action,
-    secondaryAction,
+    actions = [],
+    searchQuery,
+    showIllustration = true,
     className = "",
   } = props;
 
-  const IconComponent = simpleIconMap[icon];
+  // Get configuration with fallback
+  const config =
+    emptyStateConfig[type as keyof typeof emptyStateConfig] ||
+    emptyStateConfig.general;
+
+  // Additional safety check - ensure we always have a valid config
+  const finalConfig =
+    config && typeof config.icon === "function"
+      ? config
+      : {
+          icon: FolderOpen,
+          title: "Nothing to Show",
+          description: "There's nothing to display at the moment.",
+          illustration: "📁",
+          bgGradient: "from-gray-50 to-neutral-50",
+          iconColor: "text-gray-400",
+          suggestions: [],
+        };
+
+  const IconComponent = finalConfig.icon;
+
+  const displayTitle = title || finalConfig.title;
+  const displayDescription =
+    description ||
+    (type === "no-search-results" && searchQuery
+      ? `No job descriptions found for "${searchQuery}".`
+      : finalConfig.description);
 
   return (
-    <Card className={className}>
-      <CardContent className="pt-6">
-        <div className="text-center py-8">
-          <div className="mx-auto w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-            <IconComponent className="h-8 w-8 text-gray-400" />
-          </div>
+    <Card className={`border-dashed border-2 ${className}`}>
+      <CardContent className="pt-8 pb-8">
+        <div
+          className={`bg-gradient-to-br ${finalConfig.bgGradient} rounded-lg p-8`}
+        >
+          <div className="text-center space-y-4">
+            {/* Illustration and Icon */}
+            <div className="flex flex-col items-center space-y-3">
+              {showIllustration && (
+                <div className="text-4xl opacity-50 mb-2">
+                  {finalConfig.illustration}
+                </div>
+              )}
+              <div className={`p-3 rounded-full bg-white shadow-sm`}>
+                <IconComponent
+                  data-testid="empty-state-icon-advanced"
+                  className={`w-8 h-8 ${finalConfig.iconColor}`}
+                />
+              </div>
+            </div>
 
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+            {/* Title and Description */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {displayTitle}
+              </h3>
+              <p className="text-gray-600 max-w-md mx-auto">
+                {displayDescription}
+              </p>
+            </div>
 
-          <p className="text-gray-500 mb-6 max-w-sm mx-auto">{description}</p>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            {action && (
-              <Button
-                onClick={action.onClick}
-                variant={action.variant || "default"}
-                className="min-w-[120px]"
-              >
-                {action.label}
-              </Button>
+            {/* Suggestions */}
+            {finalConfig.suggestions.length > 0 && (
+              <div className="mt-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">
+                  Helpful Tips:
+                </h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  {finalConfig.suggestions.map((suggestion, index) => (
+                    <li
+                      key={index}
+                      className="flex items-center justify-center"
+                    >
+                      <CheckCircle className="w-3 h-3 text-green-500 mr-2 flex-shrink-0" />
+                      {suggestion}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
 
-            {secondaryAction && (
-              <Button
-                onClick={secondaryAction.onClick}
-                variant={secondaryAction.variant || "outline"}
-                className="min-w-[120px]"
-              >
-                {secondaryAction.label}
-              </Button>
+            {/* Action Buttons */}
+            {actions.length > 0 && (
+              <div className="flex flex-wrap gap-2 justify-center pt-4">
+                {actions.map((action, index) => {
+                  const IconComp = action.icon;
+                  return (
+                    <Button
+                      key={index}
+                      variant={action.variant || "default"}
+                      onClick={action.onClick}
+                      className="flex items-center gap-2"
+                    >
+                      {IconComp && <IconComp className="w-4 h-4" />}
+                      {action.label}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Quick Actions for specific types */}
+            {type === "no-jobs" && actions.length === 0 && (
+              <div className="flex flex-col sm:flex-row gap-2 justify-center pt-4">
+                <Button className="flex items-center gap-2">
+                  <Upload className="w-4 h-4" />
+                  Upload Files
+                </Button>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Learn More
+                </Button>
+              </div>
+            )}
+
+            {type === "no-search-results" && actions.length === 0 && (
+              <div className="flex flex-col sm:flex-row gap-2 justify-center pt-4">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  Clear Filters
+                </Button>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Search className="w-4 h-4" />
+                  Browse All Jobs
+                </Button>
+              </div>
             )}
           </div>
         </div>

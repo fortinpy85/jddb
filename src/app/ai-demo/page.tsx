@@ -5,22 +5,22 @@
  * Demonstration of all AI features working together
  */
 
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useAISuggestions } from '@/hooks/useAISuggestions';
+import React, { useState } from "react";
+import { useAISuggestions } from "@/hooks/useAISuggestions";
 import {
   QualityDashboard,
   BiasDetector,
   AISuggestionsPanel,
   ContentGeneratorModal,
-} from '@/components/ai';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Sparkles, FileText, AlertTriangle, Target } from 'lucide-react';
+} from "@/components/ai";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Sparkles, FileText, AlertTriangle, Target } from "lucide-react";
 
 const SAMPLE_TEXT = `We are seeking a young, energetic salesman with perfect vision to join our team. He must be able to stand for long periods and be a native English speaker. Recent graduates preferred.
 
@@ -33,16 +33,22 @@ Requirements include:
 - Well-connected in the industry`;
 
 const SAMPLE_SECTIONS = {
-  general_accountability: 'The Director will oversee strategic planning and implementation. This role provides leadership and guidance to the team, ensuring alignment with organizational goals and objectives.',
-  organization_structure: 'Reports to the Assistant Deputy Minister. Manages a team of 12 employees including 3 managers.',
-  key_responsibilities: 'Lead strategic planning initiatives. Manage departmental budget and resource allocation. Provide oversight and guidance to management team.',
-  qualifications: 'Master\'s degree in public administration or related field. 10+ years of progressive leadership experience in government.',
+  general_accountability:
+    "The Director will oversee strategic planning and implementation. This role provides leadership and guidance to the team, ensuring alignment with organizational goals and objectives.",
+  organization_structure:
+    "Reports to the Assistant Deputy Minister. Manages a team of 12 employees including 3 managers.",
+  key_responsibilities:
+    "Lead strategic planning initiatives. Manage departmental budget and resource allocation. Provide oversight and guidance to management team.",
+  qualifications:
+    "Master's degree in public administration or related field. 10+ years of progressive leadership experience in government.",
 };
 
 export default function AIDemo() {
   const [testText, setTestText] = useState(SAMPLE_TEXT);
   const [generatorOpen, setGeneratorOpen] = useState(false);
-  const [generatorMode, setGeneratorMode] = useState<'complete' | 'enhance'>('complete');
+  const [generatorMode, setGeneratorMode] = useState<"complete" | "enhance">(
+    "complete",
+  );
 
   const {
     biasAnalysis,
@@ -58,10 +64,7 @@ export default function AIDemo() {
   } = useAISuggestions();
 
   const handleAnalyze = async () => {
-    await Promise.all([
-      analyzeBias(testText),
-      fetchSuggestions(testText),
-    ]);
+    await Promise.all([analyzeBias(testText), fetchSuggestions(testText)]);
   };
 
   const handleCalculateQuality = async () => {
@@ -69,7 +72,7 @@ export default function AIDemo() {
   };
 
   const handleReplace = (original: string, replacement: string) => {
-    setTestText(text => text.replace(original, replacement));
+    setTestText((text) => text.replace(original, replacement));
   };
 
   return (
@@ -81,7 +84,7 @@ export default function AIDemo() {
             <Sparkles className="h-6 w-6 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">AI Features Demo</h1>
+            <h2 className="text-3xl font-bold">AI Features Demo</h2>
             <p className="text-gray-600">
               Phase 3: Advanced AI Content Intelligence
             </p>
@@ -90,12 +93,10 @@ export default function AIDemo() {
 
         <div className="flex items-center gap-2">
           <Badge className="bg-green-100 text-green-700">
-            <FileText className="h-3 w-3 mr-1" />
-            9 Endpoints Active
+            <FileText className="h-3 w-3 mr-1" />9 Endpoints Active
           </Badge>
           <Badge className="bg-blue-100 text-blue-700">
-            <Target className="h-3 w-3 mr-1" />
-            4 Components
+            <Target className="h-3 w-3 mr-1" />4 Components
           </Badge>
         </div>
       </div>
@@ -119,11 +120,7 @@ export default function AIDemo() {
                 >
                   Reset
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={clearAll}
-                >
+                <Button size="sm" variant="outline" onClick={clearAll}>
                   Clear Results
                 </Button>
               </div>
@@ -140,7 +137,7 @@ export default function AIDemo() {
                 disabled={isLoading || testText.length < 10}
                 className="flex-1"
               >
-                {isLoading ? 'Analyzing...' : 'Analyze Bias & Suggestions'}
+                {isLoading ? "Analyzing..." : "Analyze Bias & Suggestions"}
               </Button>
               <Button
                 onClick={handleCalculateQuality}
@@ -182,8 +179,8 @@ export default function AIDemo() {
               <AISuggestionsPanel
                 suggestions={suggestions}
                 loading={isLoading}
-                onAccept={acceptSuggestion}
-                onReject={rejectSuggestion}
+                onAccept={(suggestion) => acceptSuggestion(suggestion.id)}
+                onReject={(suggestion) => rejectSuggestion(suggestion.id)}
                 className="h-[500px]"
               />
             </TabsContent>
@@ -206,7 +203,7 @@ export default function AIDemo() {
                 className="w-full justify-start"
                 variant="outline"
                 onClick={() => {
-                  setGeneratorMode('complete');
+                  setGeneratorMode("complete");
                   setGeneratorOpen(true);
                 }}
               >
@@ -217,7 +214,7 @@ export default function AIDemo() {
                 className="w-full justify-start"
                 variant="outline"
                 onClick={() => {
-                  setGeneratorMode('enhance');
+                  setGeneratorMode("enhance");
                   setGeneratorOpen(true);
                 }}
               >
@@ -234,7 +231,9 @@ export default function AIDemo() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Bias Issues:</span>
-                  <Badge variant={biasAnalysis.bias_free ? 'outline' : 'destructive'}>
+                  <Badge
+                    variant={biasAnalysis.bias_free ? "outline" : "destructive"}
+                  >
                     {biasAnalysis.issues.length}
                   </Badge>
                 </div>
@@ -258,7 +257,9 @@ export default function AIDemo() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Overall:</span>
-                  <Badge className={`bg-${qualityScore.quality_color}-100 text-${qualityScore.quality_color}-700`}>
+                  <Badge
+                    className={`bg-${qualityScore.quality_color}-100 text-${qualityScore.quality_color}-700`}
+                  >
                     {Math.round(qualityScore.overall_score)}/100
                   </Badge>
                 </div>
@@ -268,7 +269,9 @@ export default function AIDemo() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Priority:</span>
-                  <Badge>{qualityScore.improvement_priority[0] || 'None'}</Badge>
+                  <Badge>
+                    {qualityScore.improvement_priority[0] || "None"}
+                  </Badge>
                 </div>
               </div>
             </Card>
@@ -280,7 +283,7 @@ export default function AIDemo() {
       <ContentGeneratorModal
         open={generatorOpen}
         onClose={() => setGeneratorOpen(false)}
-        onInsert={(content) => setTestText(testText + '\n\n' + content)}
+        onInsert={(content) => setTestText(testText + "\n\n" + content)}
         mode={generatorMode}
         initialContent={testText}
         classification="EX-01"

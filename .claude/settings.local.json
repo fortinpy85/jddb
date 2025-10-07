@@ -51,7 +51,19 @@
       "Bash(git mv:*)",
       "Bash(tee:*)",
       "Bash(make:*)",
-      "Bash(poetry install:*)"
+      "Bash(poetry install:*)",
+      "WebFetch(domain:www.moshjd.com)",
+      "WebFetch(domain:www.hrsg.ca)",
+      "WebFetch(domain:hrizons.com)",
+      "WebFetch(domain:jdxpert.com)",
+      "Bash(cmd /c taskkill:*)",
+      "Bash(cmd /c:*)",
+      "Bash(move:*)",
+      "Bash(test:*)",
+      "WebFetch(domain:docs.lightcast.dev)",
+      "Bash(del .secrets.new)",
+      "mcp__playwright__browser_press_key",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FilterBar, type FilterConfig } from "@/components/ui/filter-bar";
 import {
   Dialog,
   DialogContent,
@@ -25,8 +26,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { cn, getLanguageName } from "@/lib/utils";
 import { useStore } from "@/lib/store";
 import { apiClient } from "@/lib/api";
@@ -47,6 +48,7 @@ import {
 import { LoadingState, ErrorState } from "@/components/ui/states";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
+import { ErrorBoundaryWrapper } from "@/components/ui/error-boundary";
 
 interface CompareViewProps {
   jobId1?: number;
@@ -69,7 +71,7 @@ type MergeStrategy =
   | "include-into-second"
   | "create-hybrid";
 
-export function CompareView({
+function CompareView({
   jobId1: initialJobId1,
   jobId2: initialJobId2,
   onBack,
@@ -178,10 +180,34 @@ export function CompareView({
 
   // Loading state
   if (loading) {
+    return <LoadingState message="Loading jobs..." />;
+  }
+
+  // Empty state - no jobs in database
+  if (jobs.length === 0) {
     return (
-      <LoadingState
-        message="Loading jobs..."
-      />
+      <div className={cn("space-y-6", className)}>
+        <div className="flex items-start justify-between">
+          <div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="mb-2 -ml-2"
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Back
+            </Button>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+              Compare Job Descriptions
+            </h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              No jobs available to compare
+            </p>
+          </div>
+        </div>
+        <EmptyState type="no-comparisons" />
+      </div>
     );
   }
 
@@ -200,62 +226,54 @@ export function CompareView({
               <ChevronLeft className="w-4 h-4 mr-1" />
               Back
             </Button>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
               Compare Job Descriptions
-            </h1>
+            </h2>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
               Select two job descriptions to compare side-by-side
             </p>
           </div>
         </div>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <Label>First Job</Label>
-                <Select
-                  value={selectedJobId1?.toString()}
-                  onValueChange={(v) => setSelectedJobId1(parseInt(v))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select first job..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {jobs.map((job) => (
-                      <SelectItem key={job.id} value={job.id.toString()}>
-                        {job.job_number || `Job #${job.id}`} -{" "}
-                        {job.classification}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-3">
-                <Label>Second Job</Label>
-                <Select
-                  value={selectedJobId2?.toString()}
-                  onValueChange={(v) => setSelectedJobId2(parseInt(v))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select second job..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {jobs
-                      .filter((j) => j.id !== selectedJobId1)
-                      .map((job) => (
-                        <SelectItem key={job.id} value={job.id.toString()}>
-                          {job.job_number || `Job #${job.id}`} -{" "}
-                          {job.classification}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <FilterBar
+          filters={[
+            {
+              id: "job1",
+              label: "First Job",
+              placeholder: "Select first job...",
+              value: selectedJobId1?.toString() || "",
+              options: [
+                { value: "", label: "Select first job..." },
+                ...jobs.map((job) => ({
+                  value: job.id.toString(),
+                  label: `${job.job_number || `Job #${job.id}`} - ${job.classification}`,
+                })),
+              ],
+              onChange: (value) =>
+                setSelectedJobId1(value ? parseInt(value) : undefined),
+              className: "w-full",
+            },
+            {
+              id: "job2",
+              label: "Second Job",
+              placeholder: "Select second job...",
+              value: selectedJobId2?.toString() || "",
+              options: [
+                { value: "", label: "Select second job..." },
+                ...jobs
+                  .filter((j) => j.id !== selectedJobId1)
+                  .map((job) => ({
+                    value: job.id.toString(),
+                    label: `${job.job_number || `Job #${job.id}`} - ${job.classification}`,
+                  })),
+              ],
+              onChange: (value) =>
+                setSelectedJobId2(value ? parseInt(value) : undefined),
+              className: "w-full",
+            },
+          ]}
+          showClearAll={false}
+        />
       </div>
     );
   }
@@ -275,9 +293,9 @@ export function CompareView({
             <ChevronLeft className="w-4 h-4 mr-1" />
             Back
           </Button>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
             Compare Job Descriptions
-          </h1>
+          </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
             Side-by-side comparison with difference highlighting
           </p>
@@ -290,45 +308,37 @@ export function CompareView({
       </div>
 
       {/* Job Selectors */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Select
-              value={selectedJobId1?.toString()}
-              onValueChange={(v) => setSelectedJobId1(parseInt(v))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {jobs.map((job) => (
-                  <SelectItem key={job.id} value={job.id.toString()}>
-                    {job.job_number || `Job #${job.id}`} - {job.classification}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={selectedJobId2?.toString()}
-              onValueChange={(v) => setSelectedJobId2(parseInt(v))}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {jobs
-                  .filter((j) => j.id !== selectedJobId1)
-                  .map((job) => (
-                    <SelectItem key={job.id} value={job.id.toString()}>
-                      {job.job_number || `Job #${job.id}`} - {job.classification}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      <FilterBar
+        filters={[
+          {
+            id: "job1",
+            label: "First Job",
+            placeholder: "Select first job...",
+            value: selectedJobId1?.toString() || "",
+            options: jobs.map((job) => ({
+              value: job.id.toString(),
+              label: `${job.job_number || `Job #${job.id}`} - ${job.classification}`,
+            })),
+            onChange: (value) => setSelectedJobId1(parseInt(value)),
+            className: "w-full",
+          },
+          {
+            id: "job2",
+            label: "Second Job",
+            placeholder: "Select second job...",
+            value: selectedJobId2?.toString() || "",
+            options: jobs
+              .filter((j) => j.id !== selectedJobId1)
+              .map((job) => ({
+                value: job.id.toString(),
+                label: `${job.job_number || `Job #${job.id}`} - ${job.classification}`,
+              })),
+            onChange: (value) => setSelectedJobId2(parseInt(value)),
+            className: "w-full",
+          },
+        ]}
+        showClearAll={false}
+      />
 
       {/* Comparison Metrics */}
       {job1 && job2 && (
@@ -587,3 +597,15 @@ function JobSectionComparison({
     </div>
   );
 }
+
+// Wrap with error boundary for reliability
+export function CompareViewWithErrorBoundary(props: CompareViewProps) {
+  return (
+    <ErrorBoundaryWrapper>
+      <CompareView {...props} />
+    </ErrorBoundaryWrapper>
+  );
+}
+
+// Export wrapped version as default
+export { CompareViewWithErrorBoundary as CompareView };

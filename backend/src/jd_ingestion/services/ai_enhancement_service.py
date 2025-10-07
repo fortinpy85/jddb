@@ -1812,7 +1812,7 @@ Return ONLY valid JSON, no other text."""
 
 {context_str}
 
-Section Type: {section_type.replace('_', ' ').title()}
+Section Type: {section_type.replace("_", " ").title()}
 Purpose: This section describes {section_desc}
 
 Partial Content:

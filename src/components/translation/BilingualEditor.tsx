@@ -38,6 +38,8 @@ import {
   Split,
   ArrowLeftRight,
   Sparkles,
+  Loader2,
+  ArrowLeft,
 } from "lucide-react";
 import { BiasDetector } from "@/components/ai/BiasDetector";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
@@ -68,7 +70,11 @@ export interface BilingualDocument {
 }
 
 interface BilingualEditorProps {
-  document: BilingualDocument;
+  document?: BilingualDocument;
+  jobId?: number;
+  sourceLanguage?: string;
+  targetLanguage?: string;
+  onBack?: () => void;
   onSave?: (document: BilingualDocument) => void;
   onSegmentChange?: (
     segmentId: string,
@@ -82,27 +88,95 @@ interface BilingualEditorProps {
 
 export const BilingualEditor: React.FC<BilingualEditorProps> = ({
   document: initialDocument,
+  jobId,
+  sourceLanguage,
+  targetLanguage,
+  onBack,
   onSave,
   onSegmentChange,
   onStatusChange,
   readOnly = false,
   className,
 }) => {
-  const [document, setDocument] = useState<BilingualDocument>(initialDocument);
+  const [document, setDocument] = useState<BilingualDocument | null>(initialDocument || null);
+  const [loading, setLoading] = useState(!initialDocument && !!jobId);
+  const [error, setError] = useState<string | null>(null);
   const [activeSegment, setActiveSegment] = useState<string | null>(null);
   const [linkedScrolling, setLinkedScrolling] = useState(true);
   const [viewMode, setViewMode] = useState<"split" | "tabs">("split");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showBiasAnalysis, setShowBiasAnalysis] = useState(false);
   const [analyzingSegment, setAnalyzingSegment] = useState<string | null>(null);
-  const { biasAnalysis, analyzeBias, loading: biasLoading } = useAISuggestions();
+  const {
+    biasAnalysis,
+    analyzeBias,
+    isLoading: biasLoading,
+  } = useAISuggestions();
 
   const englishScrollRef = useRef<HTMLDivElement>(null);
   const frenchScrollRef = useRef<HTMLDivElement>(null);
 
+  // Fetch document if jobId is provided
+  useEffect(() => {
+    if (!initialDocument && jobId) {
+      fetchBilingualDocument(jobId);
+    }
+  }, [jobId, initialDocument]);
+
+  const fetchBilingualDocument = async (id: number) => {
+    try {
+      setLoading(true);
+      setError(null);
+      // Use window.location to construct API URL for browser environment
+      const apiBaseUrl = typeof window !== 'undefined'
+        ? `${window.location.protocol}//${window.location.hostname}:8000/api`
+        : "http://localhost:8000/api";
+      const response = await fetch(`${apiBaseUrl}/bilingual-documents/${id}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch bilingual document: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.document) {
+        const doc: BilingualDocument = {
+          id: data.document.id || `doc-${id}`,
+          job_id: id,
+          title: data.document.title || `Job ${id}`,
+          segments: data.document.segments.map((seg: any, index: number) => ({
+            id: seg.id || `segment-${index}`,
+            english: seg.english || "",
+            french: seg.french || "",
+            status: seg.status || "draft",
+            lastModified: seg.lastModified ? new Date(seg.lastModified) : new Date(),
+            modifiedBy: seg.modifiedBy,
+          })) as BilingualSegment[],
+          metadata: {
+            created: data.document.metadata?.created ? new Date(data.document.metadata.created) : new Date(),
+            modified: data.document.metadata?.modified ? new Date(data.document.metadata.modified) : new Date(),
+            englishCompleteness: data.document.metadata?.englishCompleteness || 0,
+            frenchCompleteness: data.document.metadata?.frenchCompleteness || 0,
+            overallStatus: data.document.metadata?.overallStatus || "draft",
+          },
+        };
+        setDocument(doc);
+      } else {
+        throw new Error("Invalid response format from server");
+      }
+    } catch (err) {
+      console.error("Error fetching bilingual document:", err);
+      setError(err instanceof Error ? err.message : "Failed to load bilingual document");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Update document when prop changes
   useEffect(() => {
-    setDocument(initialDocument);
+    if (initialDocument) {
+      setDocument(initialDocument);
+    }
   }, [initialDocument]);
 
   // Calculate completeness for each language
@@ -181,7 +255,10 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
   };
 
   // Handle bias analysis for a segment
-  const handleAnalyzeBias = async (segmentId: string, language: "en" | "fr") => {
+  const handleAnalyzeBias = async (
+    segmentId: string,
+    language: "en" | "fr",
+  ) => {
     const segment = document.segments.find((seg) => seg.id === segmentId);
     if (!segment) return;
 
@@ -436,6 +513,75 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
       </TabsContent>
     </Tabs>
   );
+
+  // Handle loading state
+  if (loading) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {onBack && (
+              <Button variant="ghost" size="sm" onClick={onBack}>
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+            )}
+            Loading Bilingual Editor...
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            <p className="text-sm text-muted-foreground">
+              Loading translation editor for Job {jobId}...
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Handle error state
+  if (error || !document) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {onBack && (
+              <Button variant="ghost" size="sm" onClick={onBack}>
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+            )}
+            Error Loading Editor
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-4">
+            <AlertCircle className="w-12 h-12 text-red-600" />
+            <div className="text-center">
+              <p className="text-sm font-medium text-red-600">
+                {error || "Failed to load bilingual document"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Please try again or select a different job.
+              </p>
+            </div>
+            <div className="flex gap-2 mt-4">
+              {onBack && (
+                <Button variant="outline" onClick={onBack}>
+                  Go Back
+                </Button>
+              )}
+              {jobId && (
+                <Button onClick={() => fetchBilingualDocument(jobId)}>
+                  Retry
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className={className}>

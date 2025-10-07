@@ -11,6 +11,8 @@ from sqlalchemy import (
     Text,
     Date,
     DECIMAL,
+    Table,
+    Float,
 )
 from sqlalchemy.orm import relationship, DeclarativeBase
 from sqlalchemy.dialects.postgresql import JSONB
@@ -20,6 +22,32 @@ from datetime import datetime
 
 class Base(DeclarativeBase):
     pass
+
+
+# Association table for many-to-many relationship between JobDescription and Skill
+job_description_skills = Table(
+    "job_description_skills",
+    Base.metadata,
+    Column("id", Integer, primary_key=True, index=True),
+    Column(
+        "job_id",
+        Integer,
+        ForeignKey("job_descriptions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    Column(
+        "skill_id",
+        Integer,
+        ForeignKey("skills.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    Column(
+        "confidence", Float, nullable=True
+    ),  # Confidence score from Lightcast extraction
+    Column("created_at", DateTime, default=datetime.utcnow, nullable=False),
+)
 
 
 class User(Base):
@@ -137,6 +165,12 @@ class JobDescription(Base):
     job_metadata = relationship("JobMetadata", back_populates="job", uselist=False)
     quality_metrics = relationship(
         "DataQualityMetrics", back_populates="job", uselist=False
+    )
+    skills = relationship(
+        "Skill",
+        secondary=job_description_skills,
+        back_populates="job_descriptions",
+        lazy="selectin",
     )
 
 
@@ -261,7 +295,49 @@ class JobComparison(Base):
     job2 = relationship("JobDescription", foreign_keys=[job2_id])
 
 
+class Skill(Base):
+    """
+    Lightcast Skills - Standardized skills from Lightcast Open Skills taxonomy.
+
+    This table stores skills extracted from job descriptions using the Lightcast API.
+    Each skill is uniquely identified by its Lightcast ID and can be associated with
+    multiple job descriptions through the job_description_skills association table.
+    """
+
+    __tablename__ = "skills"
+
+    id = Column(Integer, primary_key=True, index=True)
+    lightcast_id = Column(
+        String(50), unique=True, index=True, nullable=False
+    )  # Lightcast skill ID (e.g., "KS123ABC")
+    name = Column(String(500), nullable=False, index=True)  # Skill name
+    skill_type = Column(
+        String(100), nullable=True, index=True
+    )  # Skill type/category from Lightcast
+    description = Column(Text, nullable=True)  # Skill description
+    category = Column(String(200), nullable=True)  # Additional categorization
+    subcategory = Column(String(200), nullable=True)
+    skill_metadata = Column(JSONB, nullable=True)  # Additional Lightcast metadata
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow, nullable=True)
+
+    # Relationships
+    job_descriptions = relationship(
+        "JobDescription",
+        secondary=job_description_skills,
+        back_populates="skills",
+        lazy="selectin",
+    )
+
+
 class JobSkill(Base):
+    """
+    DEPRECATED: Legacy job skills model.
+
+    Use the Skill model and job_description_skills association table instead.
+    This model is kept for backwards compatibility and may be removed in a future version.
+    """
+
     __tablename__ = "job_skills"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -342,3 +418,48 @@ class AIUsageTracking(Base):
     success = Column(String(10), nullable=True)
     error_message = Column(Text, nullable=True)
     request_metadata = Column(JSONB, nullable=True)
+
+
+class RLHFFeedback(Base):
+    """
+    RLHF (Reinforcement Learning from Human Feedback) Feedback
+
+    Captures user feedback on AI suggestions to improve model performance.
+    Tracks accept/reject decisions, modifications, and user preferences.
+    """
+
+    __tablename__ = "rlhf_feedback"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    job_id = Column(
+        Integer,
+        ForeignKey("job_descriptions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    event_type = Column(
+        String(50), nullable=False, index=True
+    )  # accept, reject, modify, generate
+    original_text = Column(Text, nullable=False)
+    suggested_text = Column(Text, nullable=True)
+    final_text = Column(Text, nullable=True)
+    suggestion_type = Column(
+        String(50), nullable=True, index=True
+    )  # grammar, style, clarity, bias, compliance
+    user_action = Column(
+        String(50), nullable=False, index=True
+    )  # accepted, rejected, modified
+    confidence = Column(
+        DECIMAL(4, 3), nullable=True
+    )  # AI confidence score (0.000-1.000)
+    feedback_metadata = Column(
+        JSONB, nullable=True
+    )  # Additional context (renamed from 'metadata' to avoid SQLAlchemy reserved name)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
+
+    # Relationships
+    user = relationship("User", foreign_keys=[user_id])
+    job = relationship("JobDescription", foreign_keys=[job_id])

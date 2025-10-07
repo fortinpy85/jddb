@@ -59,6 +59,7 @@ export function DashboardSidebar({
           className="w-full p-2 shadow-button"
           onClick={onNavigateToStatistics}
           title="Statistics"
+          aria-label="Statistics"
         >
           <BarChart3 className="w-5 h-5" />
         </Button>
@@ -68,6 +69,7 @@ export function DashboardSidebar({
           className="w-full p-2 shadow-button"
           onClick={onNavigateToSystemHealth}
           title="System Health"
+          aria-label="System Health"
         >
           <Activity className="w-5 h-5" />
         </Button>

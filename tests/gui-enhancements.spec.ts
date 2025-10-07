@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("GUI Enhancements", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the application
-    await page.goto("http://localhost:3000");
+    await page.goto("http://localhost:3002");
 
     // Wait for the page to be fully loaded
     await page.waitForLoadState("networkidle");
@@ -414,7 +414,7 @@ test.describe("GUI Enhancements", () => {
 
     test("should have proper loading and error states", async ({ page }) => {
       // Test error state by navigating to a non-existent route or triggering an error
-      await page.goto("http://localhost:3000/#invalid-route");
+      await page.goto("http://localhost:3002/#invalid-route");
       await page.waitForTimeout(1000);
 
       // Check if app gracefully handles invalid routes
@@ -427,7 +427,7 @@ test.describe("GUI Enhancements", () => {
       await expect(validContent.first()).toBeVisible();
 
       // Return to main page
-      await page.goto("http://localhost:3000");
+      await page.goto("http://localhost:3002");
       await page.waitForLoadState("networkidle");
     });
   });

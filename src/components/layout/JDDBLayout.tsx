@@ -148,6 +148,7 @@ export function JDDBLayout({
         <div className="flex">
           {/* Left Sidebar (minimal) */}
           <aside
+            data-testid="sidebar"
             className={cn(
               "transition-all duration-300 flex-shrink-0 bg-slate-50/50 dark:bg-slate-900/50 border-r border-slate-200/50 dark:border-slate-700/50",
               sidebarCollapsed ? "w-12" : "w-16 sm:w-20 lg:w-24",
@@ -159,6 +160,7 @@ export function JDDBLayout({
                 size="sm"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                 className="w-full p-2"
+                data-testid="sidebar-toggle"
               >
                 {sidebarCollapsed ? (
                   <Menu className="w-4 h-4" />
@@ -228,7 +230,7 @@ function JDDBHeader({
                 <Database className="relative w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mr-2 sm:mr-3 group-hover:scale-110 transition-transform duration-300" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-sm sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-slate-100 dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300 truncate">
+                <h2 className="text-sm sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-slate-100 dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300 truncate">
                   {title || (
                     <>
                       <span className="hidden sm:inline">
@@ -237,7 +239,7 @@ function JDDBHeader({
                       <span className="sm:hidden">JDDB</span>
                     </>
                   )}
-                </h1>
+                </h2>
                 {subtitle && (
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium truncate">
                     {subtitle}
@@ -391,9 +393,9 @@ export function PageContainer({
         <div className="flex items-center justify-between">
           <div>
             {title && (
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100">
                 {title}
-              </h1>
+              </h2>
             )}
             {subtitle && (
               <p className="text-slate-600 dark:text-slate-400 mt-1">

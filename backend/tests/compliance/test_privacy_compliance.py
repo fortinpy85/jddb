@@ -312,9 +312,9 @@ class TestITSG33Compliance:
         }
 
         for requirement, enabled in auth_requirements.items():
-            assert (
-                enabled
-            ), f"Authentication requirement '{requirement}' must be enabled"
+            assert enabled, (
+                f"Authentication requirement '{requirement}' must be enabled"
+            )
 
     def test_audit_logging_requirements(self):
         """Test that audit logging meets ITSG-33 requirements."""

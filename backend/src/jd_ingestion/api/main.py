@@ -26,8 +26,10 @@ from .endpoints import (
     jobs,
     performance,
     phase2_monitoring,
+    preferences,
     quality,
     rate_limits,
+    rlhf,
     saved_searches,
     search,
     # search_analytics consolidated into analytics.py
@@ -140,6 +142,7 @@ app.include_router(performance.router, prefix="/api/performance", tags=["perform
 app.include_router(
     saved_searches.router, prefix="/api/saved-searches", tags=["saved-searches"]
 )
+app.include_router(preferences.router, prefix="/api", tags=["preferences"])
 # search_analytics consolidated into analytics.py - routes now under /api/analytics/search/
 app.include_router(rate_limits.router, prefix="/api/rate-limits", tags=["rate-limits"])
 app.include_router(health.router, prefix="/api/health", tags=["health"])
@@ -160,6 +163,7 @@ app.include_router(
 app.include_router(
     translation_quality.router, prefix="/api", tags=["translation-quality"]
 )
+app.include_router(rlhf.router, prefix="/api", tags=["rlhf"])
 
 # Mount static files for serving the frontend
 import os  # noqa: E402

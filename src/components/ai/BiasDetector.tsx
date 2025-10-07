@@ -5,18 +5,17 @@
  * Inline bias highlighting and correction suggestions
  */
 
-import React, { useState, useMemo } from 'react';
-import type { BiasIssue, BiasAnalysisResponse } from '@/types/ai';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import React, { useState, useMemo } from "react";
+import type { BiasIssue, BiasAnalysisResponse } from "@/types/ai";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from "@/components/ui/tooltip";
 import {
   AlertCircle,
   AlertTriangle,
@@ -25,7 +24,7 @@ import {
   Filter,
   ChevronDown,
   ChevronUp,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface BiasDetectorProps {
   text: string;
@@ -37,33 +36,33 @@ interface BiasDetectorProps {
 }
 
 const SEVERITY_COLORS = {
-  critical: 'bg-red-600 text-white',
-  high: 'bg-red-500 text-white',
-  medium: 'bg-yellow-500 text-white',
-  low: 'bg-yellow-400 text-gray-900',
+  critical: "bg-red-600 text-white",
+  high: "bg-red-500 text-white",
+  medium: "bg-yellow-500 text-white",
+  low: "bg-yellow-400 text-gray-900",
 };
 
 const SEVERITY_TEXT_COLORS = {
-  critical: 'text-red-700',
-  high: 'text-red-600',
-  medium: 'text-yellow-600',
-  low: 'text-yellow-500',
+  critical: "text-red-700",
+  high: "text-red-600",
+  medium: "text-yellow-600",
+  low: "text-yellow-500",
 };
 
 const SEVERITY_BG_COLORS = {
-  critical: 'bg-red-100',
-  high: 'bg-red-50',
-  medium: 'bg-yellow-100',
-  low: 'bg-yellow-50',
+  critical: "bg-red-100",
+  high: "bg-red-50",
+  medium: "bg-yellow-100",
+  low: "bg-yellow-50",
 };
 
 const BIAS_TYPE_LABELS = {
-  gender: 'Gender',
-  age: 'Age',
-  disability: 'Disability',
-  cultural: 'Cultural',
-  gender_coded_masculine: 'Masculine-coded',
-  gender_coded_feminine: 'Feminine-coded',
+  gender: "Gender",
+  age: "Age",
+  disability: "Disability",
+  cultural: "Cultural",
+  gender_coded_masculine: "Masculine-coded",
+  gender_coded_feminine: "Feminine-coded",
 };
 
 /**
@@ -75,13 +74,13 @@ export function BiasDetector({
   onReplace,
   onIgnore,
   enabled = true,
-  className = '',
+  className = "",
 }: BiasDetectorProps) {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([
-    'gender',
-    'age',
-    'disability',
-    'cultural',
+    "gender",
+    "age",
+    "disability",
+    "cultural",
   ]);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -89,7 +88,7 @@ export function BiasDetector({
   const filteredIssues = useMemo(() => {
     if (!biasAnalysis?.issues) return [];
     return biasAnalysis.issues.filter((issue) =>
-      selectedTypes.includes(issue.type)
+      selectedTypes.includes(issue.type),
     );
   }, [biasAnalysis, selectedTypes]);
 
@@ -99,7 +98,13 @@ export function BiasDetector({
       return <span>{text}</span>;
     }
 
-    return <HighlightedText text={text} issues={filteredIssues} onReplace={onReplace} />;
+    return (
+      <HighlightedText
+        text={text}
+        issues={filteredIssues}
+        onReplace={onReplace}
+      />
+    );
   }, [text, filteredIssues, enabled, onReplace]);
 
   if (!enabled) {
@@ -108,7 +113,7 @@ export function BiasDetector({
 
   const toggleType = (type: string) => {
     setSelectedTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type],
     );
   };
 
@@ -143,7 +148,7 @@ export function BiasDetector({
             {Object.entries(BIAS_TYPE_LABELS).map(([type, label]) => (
               <Badge
                 key={type}
-                variant={selectedTypes.includes(type) ? 'default' : 'outline'}
+                variant={selectedTypes.includes(type) ? "default" : "outline"}
                 className="cursor-pointer"
                 onClick={() => toggleType(type)}
               >
@@ -202,16 +207,16 @@ function BiasStatusBadge({
   const score = Math.round(biasAnalysis.inclusivity_score * 100);
   const scoreColor =
     score >= 80
-      ? 'bg-green-100 text-green-700'
+      ? "bg-green-100 text-green-700"
       : score >= 60
-      ? 'bg-yellow-100 text-yellow-700'
-      : 'bg-red-100 text-red-700';
+        ? "bg-yellow-100 text-yellow-700"
+        : "bg-red-100 text-red-700";
 
   return (
     <div className="flex items-center gap-2">
       <Badge className={`gap-2 ${scoreColor}`}>
         <AlertTriangle className="h-3 w-3" />
-        {filteredCount} {filteredCount === 1 ? 'Issue' : 'Issues'}
+        {filteredCount} {filteredCount === 1 ? "Issue" : "Issues"}
       </Badge>
       <span className="text-sm text-gray-600">Inclusivity: {score}%</span>
     </div>
@@ -231,7 +236,9 @@ function HighlightedText({
   onReplace?: (original: string, replacement: string) => void;
 }) {
   // Sort issues by start index
-  const sortedIssues = [...issues].sort((a, b) => a.start_index - b.start_index);
+  const sortedIssues = [...issues].sort(
+    (a, b) => a.start_index - b.start_index,
+  );
 
   const segments: React.ReactNode[] = [];
   let currentIndex = 0;
@@ -242,7 +249,7 @@ function HighlightedText({
       segments.push(
         <span key={`text-${idx}`}>
           {text.substring(currentIndex, issue.start_index)}
-        </span>
+        </span>,
       );
     }
 
@@ -253,7 +260,7 @@ function HighlightedText({
         issue={issue}
         text={text.substring(issue.start_index, issue.end_index)}
         onReplace={onReplace}
-      />
+      />,
     );
 
     currentIndex = issue.end_index;
@@ -279,8 +286,10 @@ function BiasHighlight({
   text: string;
   onReplace?: (original: string, replacement: string) => void;
 }) {
-  const bgColor = SEVERITY_BG_COLORS[issue.severity as keyof typeof SEVERITY_BG_COLORS];
-  const textColor = SEVERITY_TEXT_COLORS[issue.severity as keyof typeof SEVERITY_TEXT_COLORS];
+  const bgColor =
+    SEVERITY_BG_COLORS[issue.severity as keyof typeof SEVERITY_BG_COLORS];
+  const textColor =
+    SEVERITY_TEXT_COLORS[issue.severity as keyof typeof SEVERITY_TEXT_COLORS];
 
   return (
     <TooltipProvider>
@@ -313,7 +322,11 @@ function BiasTooltip({
   return (
     <div className="space-y-2 p-1">
       <div className="flex items-center gap-2">
-        <Badge className={SEVERITY_COLORS[issue.severity as keyof typeof SEVERITY_COLORS]}>
+        <Badge
+          className={
+            SEVERITY_COLORS[issue.severity as keyof typeof SEVERITY_COLORS]
+          }
+        >
           {issue.severity}
         </Badge>
         <Badge variant="outline">
@@ -379,7 +392,8 @@ function BiasIssuesList({
         {Object.entries(groupedIssues).map(([type, typeIssues]) => (
           <div key={type} className="space-y-2">
             <h5 className="text-sm font-medium text-gray-700">
-              {BIAS_TYPE_LABELS[type as keyof typeof BIAS_TYPE_LABELS]} ({typeIssues.length})
+              {BIAS_TYPE_LABELS[type as keyof typeof BIAS_TYPE_LABELS]} (
+              {typeIssues.length})
             </h5>
             <div className="space-y-2">
               {typeIssues.map((issue, idx) => (
@@ -410,7 +424,8 @@ function BiasIssueCard({
   onReplace?: (original: string, replacement: string) => void;
   onIgnore?: (issue: BiasIssue) => void;
 }) {
-  const bgColor = SEVERITY_BG_COLORS[issue.severity as keyof typeof SEVERITY_BG_COLORS];
+  const bgColor =
+    SEVERITY_BG_COLORS[issue.severity as keyof typeof SEVERITY_BG_COLORS];
 
   return (
     <div className={`p-3 rounded border ${bgColor}`}>
@@ -477,13 +492,14 @@ export function CompactBiasBadge({
   }
 
   const criticalCount = biasAnalysis.issues.filter(
-    (i) => i.severity === 'critical' || i.severity === 'high'
+    (i) => i.severity === "critical" || i.severity === "high",
   ).length;
 
   return (
     <Badge className="gap-1 bg-yellow-100 text-yellow-700">
       <AlertTriangle className="h-3 w-3" />
-      {biasAnalysis.issues.length} {criticalCount > 0 && `(${criticalCount} critical)`}
+      {biasAnalysis.issues.length}{" "}
+      {criticalCount > 0 && `(${criticalCount} critical)`}
     </Badge>
   );
 }

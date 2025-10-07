@@ -181,7 +181,12 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
           <div className="space-y-2">
             <Label className="text-xs">Invite Collaborators</Label>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => setInviteDialogOpen(true)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={() => setInviteDialogOpen(true)}
+              >
                 <UserPlus className="w-3 h-3 mr-1" />
                 Invite User
               </Button>

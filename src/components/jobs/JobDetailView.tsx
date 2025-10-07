@@ -10,6 +10,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ClassificationBadge } from "@/components/ui/classification-badge";
 import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
@@ -47,6 +48,8 @@ import { useToast } from "@/components/ui/toast";
 import { QualityDashboard } from "@/components/ai/QualityDashboard";
 import { ContentGeneratorModal } from "@/components/ai/ContentGeneratorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
+import { WorkflowStepper } from "@/components/ui/workflow-stepper";
+import { SkillTagsSection } from "@/components/skills/SkillTags";
 
 interface JobDetailViewProps {
   jobId: number;
@@ -57,7 +60,7 @@ interface JobDetailViewProps {
   className?: string;
 }
 
-export function JobDetailView({
+function JobDetailView({
   jobId,
   onBack,
   onEdit,
@@ -69,7 +72,11 @@ export function JobDetailView({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { addToast } = useToast();
-  const { qualityScore, calculateQuality, loading: qualityLoading } = useAISuggestions();
+  const {
+    qualityScore,
+    calculateQuality,
+    isLoading: qualityLoading,
+  } = useAISuggestions();
 
   // Load job details
   useEffect(() => {
@@ -89,7 +96,7 @@ export function JobDetailView({
         jobData.sections.forEach((section) => {
           sectionsMap[section.section_type] = section.section_content;
         });
-        await calculateQuality(sectionsMap, jobData.raw_content);
+        await calculateQuality(sectionsMap);
       }
     } catch (err) {
       setError(
@@ -135,11 +142,7 @@ export function JobDetailView({
 
   // Loading state
   if (loading) {
-    return (
-      <LoadingState
-        message="Loading job details..."
-      />
-    );
+    return <LoadingState message="Loading job details..." />;
   }
 
   // Error state
@@ -179,18 +182,24 @@ export function JobDetailView({
         size="sm"
         onClick={onBack}
         className="-ml-2 shadow-button"
+        aria-label="Navigate back to jobs list"
       >
         <ChevronLeft className="w-4 h-4 mr-1" />
         Back to Jobs
       </Button>
 
+      {/* Workflow Progress Indicator */}
+      <div className="bg-card border rounded-lg p-4">
+        <WorkflowStepper currentStep="review" completedSteps={["upload"]} />
+      </div>
+
       {/* Header with Sticky Action Toolbar */}
       <div className="space-y-4">
         {/* Title Section */}
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
             {job.job_number || "Untitled Job"}
-          </h1>
+          </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400">
             {job.file_path}
           </p>
@@ -207,6 +216,7 @@ export function JobDetailView({
                   size="sm"
                   onClick={() => onEdit?.(job)}
                   className="shadow-button"
+                  aria-label={`Edit job ${job.job_number || "description"}`}
                 >
                   <Edit className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Edit</span>
@@ -216,6 +226,7 @@ export function JobDetailView({
                   size="sm"
                   onClick={handleApprove}
                   className="shadow-button"
+                  aria-label={`Approve job ${job.job_number || "description"}`}
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Approve</span>
@@ -318,12 +329,33 @@ export function JobDetailView({
 
       {/* Metadata Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetadataCard
-          icon={Building}
-          label="Classification"
-          value={job.classification || "N/A"}
-          badge
-        />
+        {/* Classification Card with ClassificationBadge */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <Building className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                  Classification
+                </p>
+                <div className="mt-1">
+                  {job.classification ? (
+                    <ClassificationBadge
+                      code={job.classification}
+                      showHelpIcon
+                    />
+                  ) : (
+                    <Badge variant="outline" className="font-mono">
+                      N/A
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         <MetadataCard
           icon={Languages}
           label="Language"
@@ -332,7 +364,11 @@ export function JobDetailView({
         <MetadataCard
           icon={Calendar}
           label="Created"
-          value={job.created_at ? new Date(job.created_at).toLocaleDateString() : 'N/A'}
+          value={
+            job.created_at
+              ? new Date(job.created_at).toLocaleDateString()
+              : "N/A"
+          }
         />
         <MetadataCard
           icon={FileText}
@@ -351,6 +387,15 @@ export function JobDetailView({
         />
       )}
 
+      {/* Extracted Skills */}
+      {job.skills && job.skills.length > 0 && (
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <SkillTagsSection skills={job.skills} />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Job Sections */}
       <div className="grid grid-cols-1 gap-6">
         {job.sections && job.sections.length > 0 ? (
@@ -363,12 +408,15 @@ export function JobDetailView({
               classification={job.classification}
               onContentUpdate={(newContent) => {
                 // Update section content
-                setJob((prev) => ({
-                  ...prev!,
-                  sections: prev!.sections.map((s, i) =>
-                    i === index ? { ...s, section_content: newContent } : s
-                  ),
-                }));
+                setJob((prev) => {
+                  if (!prev || !prev.sections) return prev;
+                  return {
+                    ...prev,
+                    sections: prev.sections.map((s, i) =>
+                      i === index ? { ...s, section_content: newContent } : s,
+                    ),
+                  };
+                });
                 addToast({
                   title: "Content Updated",
                   description: `Section "${section.section_type}" has been updated`,
@@ -378,13 +426,7 @@ export function JobDetailView({
             />
           ))
         ) : (
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-slate-600 dark:text-slate-400">
-                No sections available for this job description.
-              </p>
-            </CardContent>
-          </Card>
+          <EmptyState type="no-sections" />
         )}
       </div>
 
@@ -425,7 +467,7 @@ export function JobDetailView({
                     Budget Authority
                   </label>
                   <p className="text-sm text-slate-900 dark:text-slate-100 mt-1">
-                    ${job.metadata.salary_budget?.toLocaleString() ?? 'N/A'}
+                    ${job.metadata.salary_budget?.toLocaleString() ?? "N/A"}
                   </p>
                 </div>
               )}
@@ -525,6 +567,7 @@ function JobSectionCard({
               variant="ghost"
               size="sm"
               onClick={() => setShowGenerator(true)}
+              aria-label={`Edit ${title.replace(/_/g, " ")} section`}
             >
               <Edit className="w-4 h-4" />
             </Button>
@@ -542,12 +585,16 @@ function JobSectionCard({
       <ContentGeneratorModal
         open={showGenerator}
         onClose={() => setShowGenerator(false)}
-        onGenerate={handleGenerate}
-        sectionType={title}
-        currentContent={content}
-        jobNumber={jobNumber}
-        classification={classification}
+        onInsert={handleGenerate}
+        mode="enhance"
+        initialContent={content}
+        classification={classification || "EX-01"}
+        language="en"
       />
     </>
   );
 }
+
+// Export memoized component for performance
+export default React.memo(JobDetailView);
+export { JobDetailView };

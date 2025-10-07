@@ -37,7 +37,11 @@ import {
   BarChart3,
   BookOpen,
 } from "lucide-react";
-import { BilingualEditor, BilingualDocument, BilingualSegment } from "./BilingualEditor";
+import {
+  BilingualEditor,
+  BilingualDocument,
+  BilingualSegment,
+} from "./BilingualEditor";
 import { QualityIndicator, QualityAssessment } from "./QualityIndicator";
 
 export interface TranslationReviewWorkflowProps {

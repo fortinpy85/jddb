@@ -845,3 +845,320 @@ def _generate_search_performance_alerts(
         )
 
     return alerts
+
+
+# === Skills Analytics Endpoints ===
+
+
+@router.get("/skills/inventory")
+async def get_skills_inventory(
+    search: Optional[str] = Query(None, description="Search skills by name"),
+    skill_type: Optional[str] = Query(None, description="Filter by skill type"),
+    min_job_count: Optional[int] = Query(
+        None, ge=1, description="Minimum number of jobs"
+    ),
+    limit: int = Query(100, ge=1, le=1000, description="Number of skills to return"),
+    offset: int = Query(0, ge=0, description="Number of skills to skip"),
+    db: AsyncSession = Depends(get_async_session),
+) -> Dict[str, Any]:
+    """
+    Get comprehensive skills inventory with job counts and statistics.
+
+    Returns all skills in the database with:
+    - Number of jobs requiring each skill
+    - Average confidence score
+    - Skill type and category information
+    """
+    try:
+        from sqlalchemy import func, select, desc
+        from ...database.models import Skill, job_description_skills
+
+        # Build base query for skills with job counts
+        skills_query = (
+            select(
+                Skill.id,
+                Skill.lightcast_id,
+                Skill.name,
+                Skill.skill_type,
+                Skill.category,
+                Skill.subcategory,
+                func.count(job_description_skills.c.job_id).label("job_count"),
+                func.avg(job_description_skills.c.confidence).label("avg_confidence"),
+            )
+            .outerjoin(
+                job_description_skills,
+                Skill.id == job_description_skills.c.skill_id,
+            )
+            .group_by(
+                Skill.id,
+                Skill.lightcast_id,
+                Skill.name,
+                Skill.skill_type,
+                Skill.category,
+                Skill.subcategory,
+            )
+        )
+
+        # Apply filters
+        if search:
+            skills_query = skills_query.where(Skill.name.ilike(f"%{search}%"))
+        if skill_type:
+            skills_query = skills_query.where(Skill.skill_type == skill_type)
+        if min_job_count:
+            skills_query = skills_query.having(
+                func.count(job_description_skills.c.job_id) >= min_job_count
+            )
+
+        # Get total count before pagination
+        count_query = select(func.count()).select_from(skills_query.subquery())
+        count_result = await db.execute(count_query)
+        total_count = count_result.scalar_one()
+
+        # Apply ordering and pagination
+        skills_query = (
+            skills_query.order_by(desc("job_count"), Skill.name)
+            .limit(limit)
+            .offset(offset)
+        )
+
+        result = await db.execute(skills_query)
+        skills = result.all()
+
+        return {
+            "total": total_count,
+            "limit": limit,
+            "offset": offset,
+            "skills": [
+                {
+                    "id": skill.id,
+                    "lightcast_id": skill.lightcast_id,
+                    "name": skill.name,
+                    "skill_type": skill.skill_type,
+                    "category": skill.category,
+                    "subcategory": skill.subcategory,
+                    "job_count": skill.job_count,
+                    "avg_confidence": round(float(skill.avg_confidence), 3)
+                    if skill.avg_confidence
+                    else 0.0,
+                }
+                for skill in skills
+            ],
+        }
+
+    except Exception as e:
+        logger.error("Failed to get skills inventory", error=str(e))
+        raise HTTPException(
+            status_code=500, detail="Failed to retrieve skills inventory"
+        )
+
+
+@router.get("/skills/top")
+async def get_top_skills(
+    limit: int = Query(10, ge=1, le=100, description="Number of top skills to return"),
+    skill_type: Optional[str] = Query(None, description="Filter by skill type"),
+    db: AsyncSession = Depends(get_async_session),
+) -> Dict[str, Any]:
+    """
+    Get top N most frequently requested skills across all job descriptions.
+
+    Returns skills ordered by the number of jobs that require them.
+    """
+    try:
+        from sqlalchemy import func, select, desc
+        from ...database.models import Skill, JobDescription, job_description_skills
+
+        # Query for top skills
+        query = (
+            select(
+                Skill.id,
+                Skill.lightcast_id,
+                Skill.name,
+                Skill.skill_type,
+                Skill.category,
+                func.count(job_description_skills.c.job_id).label("job_count"),
+                func.avg(job_description_skills.c.confidence).label("avg_confidence"),
+                func.max(job_description_skills.c.confidence).label("max_confidence"),
+                func.min(job_description_skills.c.confidence).label("min_confidence"),
+            )
+            .join(
+                job_description_skills,
+                Skill.id == job_description_skills.c.skill_id,
+            )
+            .group_by(
+                Skill.id,
+                Skill.lightcast_id,
+                Skill.name,
+                Skill.skill_type,
+                Skill.category,
+            )
+        )
+
+        # Apply filter
+        if skill_type:
+            query = query.where(Skill.skill_type == skill_type)
+
+        # Order by job count and limit
+        query = query.order_by(desc("job_count"), Skill.name).limit(limit)
+
+        result = await db.execute(query)
+        skills = result.all()
+
+        # Get total job count for percentage calculation
+        total_jobs_result = await db.execute(select(func.count(JobDescription.id)))
+        total_jobs = total_jobs_result.scalar_one()
+
+        return {
+            "total_jobs": total_jobs,
+            "top_skills": [
+                {
+                    "id": skill.id,
+                    "lightcast_id": skill.lightcast_id,
+                    "name": skill.name,
+                    "skill_type": skill.skill_type,
+                    "category": skill.category,
+                    "job_count": skill.job_count,
+                    "percentage": round((skill.job_count / total_jobs * 100), 2)
+                    if total_jobs > 0
+                    else 0.0,
+                    "avg_confidence": round(float(skill.avg_confidence), 3)
+                    if skill.avg_confidence
+                    else 0.0,
+                    "confidence_range": {
+                        "min": round(float(skill.min_confidence), 3)
+                        if skill.min_confidence
+                        else 0.0,
+                        "max": round(float(skill.max_confidence), 3)
+                        if skill.max_confidence
+                        else 0.0,
+                    },
+                }
+                for skill in skills
+            ],
+        }
+
+    except Exception as e:
+        logger.error("Failed to get top skills", error=str(e))
+        raise HTTPException(status_code=500, detail="Failed to retrieve top skills")
+
+
+@router.get("/skills/types")
+async def get_skill_types(
+    db: AsyncSession = Depends(get_async_session),
+) -> Dict[str, Any]:
+    """
+    Get distribution of skills by type.
+
+    Returns count of skills for each skill type category.
+    """
+    try:
+        from sqlalchemy import func, select, desc
+        from ...database.models import Skill, job_description_skills
+
+        # Query for skill types distribution
+        query = (
+            select(
+                Skill.skill_type,
+                func.count(Skill.id).label("skill_count"),
+                func.count(func.distinct(job_description_skills.c.job_id)).label(
+                    "job_count"
+                ),
+            )
+            .outerjoin(
+                job_description_skills,
+                Skill.id == job_description_skills.c.skill_id,
+            )
+            .group_by(Skill.skill_type)
+            .order_by(desc("skill_count"))
+        )
+
+        result = await db.execute(query)
+        types = result.all()
+
+        return {
+            "skill_types": [
+                {
+                    "type": skill_type.skill_type
+                    if skill_type.skill_type
+                    else "Unknown",
+                    "skill_count": skill_type.skill_count,
+                    "job_count": skill_type.job_count,
+                }
+                for skill_type in types
+            ],
+            "total_types": len(types),
+        }
+
+    except Exception as e:
+        logger.error("Failed to get skill types", error=str(e))
+        raise HTTPException(status_code=500, detail="Failed to retrieve skill types")
+
+
+@router.get("/skills/stats")
+async def get_skills_statistics(
+    db: AsyncSession = Depends(get_async_session),
+) -> Dict[str, Any]:
+    """
+    Get overall skills statistics.
+
+    Returns summary statistics about skills in the system.
+    """
+    try:
+        from sqlalchemy import func, select
+        from ...database.models import Skill, JobDescription, job_description_skills
+
+        # Total unique skills
+        total_skills_result = await db.execute(select(func.count(Skill.id)))
+        total_skills = total_skills_result.scalar_one()
+
+        # Total skill-job associations
+        total_associations_result = await db.execute(
+            select(func.count()).select_from(job_description_skills)
+        )
+        total_associations = total_associations_result.scalar_one()
+
+        # Jobs with skills
+        jobs_with_skills_result = await db.execute(
+            select(
+                func.count(func.distinct(job_description_skills.c.job_id))
+            ).select_from(job_description_skills)
+        )
+        jobs_with_skills = jobs_with_skills_result.scalar_one()
+
+        # Total jobs
+        total_jobs_result = await db.execute(select(func.count(JobDescription.id)))
+        total_jobs = total_jobs_result.scalar_one()
+
+        # Average skills per job
+        avg_skills_per_job = (
+            total_associations / jobs_with_skills if jobs_with_skills > 0 else 0
+        )
+
+        # Average confidence score
+        avg_confidence_result = await db.execute(
+            select(func.avg(job_description_skills.c.confidence)).select_from(
+                job_description_skills
+            )
+        )
+        avg_confidence = avg_confidence_result.scalar_one()
+
+        return {
+            "total_unique_skills": total_skills,
+            "total_skill_associations": total_associations,
+            "jobs_with_skills": jobs_with_skills,
+            "total_jobs": total_jobs,
+            "skills_coverage_percentage": round(
+                (jobs_with_skills / total_jobs * 100), 2
+            )
+            if total_jobs > 0
+            else 0.0,
+            "avg_skills_per_job": round(avg_skills_per_job, 2),
+            "avg_confidence_score": round(float(avg_confidence), 3)
+            if avg_confidence
+            else 0.0,
+        }
+
+    except Exception as e:
+        logger.error("Failed to get skills statistics", error=str(e))
+        raise HTTPException(
+            status_code=500, detail="Failed to retrieve skills statistics"
+        )

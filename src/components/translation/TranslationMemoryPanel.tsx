@@ -42,7 +42,7 @@ export const TranslationMemoryPanel: React.FC<TranslationMemoryPanelProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState(initialSearchText);
   const [selectedMatch, setSelectedMatch] = useState<number | null>(null);
-  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(
+  const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(
     null,
   );
 
@@ -123,7 +123,6 @@ export const TranslationMemoryPanel: React.FC<TranslationMemoryPanelProps> = ({
     try {
       // Rate translation: 5 stars for approved, 1 star for rejected
       await rateTranslation(matchId, approved ? 5 : 1);
-      console.log(`Match ${matchId} ${approved ? "approved" : "rejected"}`);
     } catch (err) {
       console.error("Error rating translation:", err);
     }
@@ -238,12 +237,12 @@ export const TranslationMemoryPanel: React.FC<TranslationMemoryPanelProps> = ({
       <CardContent className="pt-0 flex-1 flex flex-col">
         <ScrollArea className="flex-1">
           {isLoading ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-600 dark:text-gray-400">
               <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-50 animate-pulse" />
               <p className="text-sm">Searching translation memory...</p>
             </div>
           ) : matches.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-600 dark:text-gray-400">
               <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">
                 {searchQuery.trim().length < 3
@@ -275,7 +274,7 @@ export const TranslationMemoryPanel: React.FC<TranslationMemoryPanelProps> = ({
 
         {/* Quick actions */}
         <Separator className="my-3" />
-        <div className="flex items-center justify-between text-xs text-gray-500">
+        <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
           <div className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
             {matches.length > 0 && matches[0]?.last_used
@@ -350,7 +349,7 @@ const TranslationMatchCard: React.FC<{
 
     {/* Source Text */}
     <div className="space-y-1">
-      <div className="text-xs text-gray-500">Source:</div>
+      <div className="text-xs text-gray-600 dark:text-gray-400">Source:</div>
       <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded">
         {match.source_text}
       </div>
@@ -358,14 +357,14 @@ const TranslationMatchCard: React.FC<{
 
     {/* Target Text */}
     <div className="space-y-1">
-      <div className="text-xs text-gray-500">Translation:</div>
+      <div className="text-xs text-gray-600 dark:text-gray-400">Translation:</div>
       <div className="text-sm text-gray-900 bg-blue-50 p-2 rounded">
         {match.target_text}
       </div>
     </div>
 
     {/* Metadata */}
-    <div className="flex items-center justify-between text-xs text-gray-500">
+    <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
       <div className="flex items-center gap-3">
         <span>Used {match.usage_count} times</span>
         <span>Last: {formatLastUsed(match.last_used)}</span>
@@ -380,6 +379,7 @@ const TranslationMatchCard: React.FC<{
             e.stopPropagation();
             onCopy();
           }}
+          aria-label="Copy translation"
         >
           <Copy className="w-3 h-3" />
         </Button>
@@ -391,6 +391,7 @@ const TranslationMatchCard: React.FC<{
             e.stopPropagation();
             onApproval(true);
           }}
+          aria-label="Approve translation"
         >
           <ThumbsUp className="w-3 h-3" />
         </Button>
@@ -402,6 +403,7 @@ const TranslationMatchCard: React.FC<{
             e.stopPropagation();
             onApproval(false);
           }}
+          aria-label="Reject translation"
         >
           <ThumbsDown className="w-3 h-3" />
         </Button>

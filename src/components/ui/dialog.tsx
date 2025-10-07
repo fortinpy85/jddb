@@ -5,7 +5,7 @@
 
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 import { Button } from "./button";
@@ -35,6 +35,11 @@ interface DialogDescriptionProps {
   children: React.ReactNode;
 }
 
+interface DialogFooterProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
 export function Dialog({ open, onOpenChange, children }: DialogProps) {
   if (!open) return null;
 
@@ -56,13 +61,51 @@ export function DialogContent({
   children,
   "data-testid": testId,
 }: DialogContentProps) {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+
+      const dialog = contentRef.current;
+      if (!dialog) return;
+
+      const focusableElements = dialog.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      const focusableArray = Array.from(focusableElements) as HTMLElement[];
+      const firstElement = focusableArray[0];
+      const lastElement = focusableArray[focusableArray.length - 1];
+
+      if (e.shiftKey) {
+        // Shift + Tab: going backwards
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        // Tab: going forwards
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <div
+      ref={contentRef}
       className={cn(
         "relative bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-lg w-full mx-4 p-6",
         className,
       )}
       data-testid={testId}
+      role="dialog"
+      aria-modal="true"
     >
       {children}
     </div>
@@ -89,5 +132,18 @@ export function DialogTitle({ children, className }: DialogTitleProps) {
 export function DialogDescription({ children }: DialogDescriptionProps) {
   return (
     <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{children}</p>
+  );
+}
+
+export function DialogFooter({ children, className }: DialogFooterProps) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 mt-6",
+        className,
+      )}
+    >
+      {children}
+    </div>
   );
 }

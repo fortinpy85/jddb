@@ -189,19 +189,21 @@ class TestSystemMonitor:
         assert "Redis ping failed" in result["error"]
 
     @pytest.mark.asyncio
-    @patch("jd_ingestion.utils.monitoring.openai")
+    @patch("jd_ingestion.utils.monitoring.AsyncOpenAI")
     @patch("jd_ingestion.utils.monitoring.settings")
-    async def test_check_openai_health_success(self, mock_settings, mock_openai):
+    async def test_check_openai_health_success(self, mock_settings, mock_async_openai):
         """Test successful OpenAI health check."""
         mock_settings.openai_api_key = "test-key"
         mock_settings.embedding_model = "text-embedding-3-small"
 
         # Mock OpenAI response
+        mock_client = AsyncMock()
         mock_models_response = MagicMock()
         mock_model = MagicMock()
         mock_model.id = "text-embedding-3-small"
         mock_models_response.data = [mock_model]
-        mock_openai.Model.alist.return_value = mock_models_response
+        mock_client.models.list.return_value = mock_models_response
+        mock_async_openai.return_value = mock_client
 
         with patch("jd_ingestion.utils.monitoring.redis.from_url"):
             monitor = SystemMonitor()
@@ -227,12 +229,14 @@ class TestSystemMonitor:
         assert "OpenAI API key not configured" in result["error"]
 
     @pytest.mark.asyncio
-    @patch("jd_ingestion.utils.monitoring.openai")
+    @patch("jd_ingestion.utils.monitoring.AsyncOpenAI")
     @patch("jd_ingestion.utils.monitoring.settings")
-    async def test_check_openai_health_failure(self, mock_settings, mock_openai):
+    async def test_check_openai_health_failure(self, mock_settings, mock_async_openai):
         """Test OpenAI health check failure."""
         mock_settings.openai_api_key = "test-key"
-        mock_openai.Model.alist.side_effect = Exception("API error")
+        mock_client = AsyncMock()
+        mock_client.models.list.side_effect = Exception("API error")
+        mock_async_openai.return_value = mock_client
 
         with patch("jd_ingestion.utils.monitoring.redis.from_url"):
             monitor = SystemMonitor()

@@ -94,9 +94,7 @@ export const SmartTemplateSelector: React.FC<SmartTemplateSelectorProps> = ({
 
   const loadClassifications = async () => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/templates/classifications`,
-      );
+      const response = await fetch(`${API_BASE_URL}/templates/classifications`);
       const data = await response.json();
       setClassifications(data);
     } catch (error) {

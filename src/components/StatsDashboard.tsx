@@ -13,7 +13,6 @@ import {
   TrendingUp,
   Clock,
   CheckCircle,
-  AlertCircle,
   BarChart3,
   Users,
   FileText,
@@ -25,7 +24,28 @@ import {
 } from "lucide-react";
 import SkeletonLoader from "@/components/ui/skeleton";
 import { AnimatedCounter } from "./ui/animated-counter";
-import type { IngestionStats, TaskStats, ResilienceStats } from "@/lib/types";
+import type {
+  IngestionStats,
+  TaskStats,
+  ResilienceStats,
+  SkillsStatsResponse,
+  TopSkillsResponse,
+  SkillTypesResponse,
+  SkillsInventoryResponse,
+} from "@/lib/types";
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 function StatsDashboard() {
   const [ingestionStats, setIngestionStats] = useState<IngestionStats | null>(
@@ -34,21 +54,46 @@ function StatsDashboard() {
   const [taskStats, setTaskStats] = useState<TaskStats | null>(null);
   const [resilienceStats, setResilienceStats] =
     useState<ResilienceStats | null>(null);
+  const [skillsStats, setSkillsStats] = useState<SkillsStatsResponse | null>(
+    null,
+  );
+  const [topSkills, setTopSkills] = useState<TopSkillsResponse | null>(null);
+  const [skillTypes, setSkillTypes] = useState<SkillTypesResponse | null>(null);
+  const [skillsInventory, setSkillsInventory] =
+    useState<SkillsInventoryResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const fetchAllStats = async () => {
     try {
       setLoading(true);
-      const [ingestion, tasks, resilience] = await Promise.all([
+      const [
+        ingestion,
+        tasks,
+        resilience,
+        skills,
+        topSkillsData,
+        skillTypesData,
+        inventory,
+      ] = await Promise.all([
         apiClient.getIngestionStats(),
         apiClient.getTaskStats(),
         apiClient.getResilienceStatus(),
+        apiClient.getSkillsStats().catch(() => null),
+        apiClient.getTopSkills({ limit: 15 }).catch(() => null),
+        apiClient.getSkillTypes().catch(() => null),
+        apiClient
+          .getSkillsInventory({ limit: 20, offset: 0 })
+          .catch(() => null),
       ]);
 
       setIngestionStats(ingestion);
       setTaskStats(tasks);
       setResilienceStats(resilience);
+      setSkillsStats(skills);
+      setTopSkills(topSkillsData);
+      setSkillTypes(skillTypesData);
+      setSkillsInventory(inventory);
       setLastUpdated(new Date());
     } catch (error) {
       console.error("Failed to fetch statistics:", error);
@@ -132,9 +177,10 @@ function StatsDashboard() {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="processing">Processing</TabsTrigger>
+          <TabsTrigger value="skills">Skills Analytics</TabsTrigger>
           <TabsTrigger value="tasks">Task Queue</TabsTrigger>
           <TabsTrigger value="health">System Health</TabsTrigger>
         </TabsList>
@@ -451,6 +497,293 @@ function StatsDashboard() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Skills Analytics Tab */}
+        <TabsContent value="skills" className="space-y-6">
+          {/* Key Metrics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="flex items-center p-6">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Target className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">
+                    Total Skills
+                  </p>
+                  <AnimatedCounter
+                    end={skillsStats?.total_unique_skills || 0}
+                    className="text-2xl font-bold"
+                    duration={1500}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="flex items-center p-6">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Coverage</p>
+                  <p className="text-2xl font-bold">
+                    {skillsStats?.skills_coverage_percentage.toFixed(1) || 0}%
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="flex items-center p-6">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <TrendingUp className="w-6 h-6 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">
+                    Avg Confidence
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {skillsStats?.avg_confidence_score.toFixed(1) || 0}%
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="flex items-center p-6">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <Database className="w-6 h-6 text-orange-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">
+                    Unique Skills
+                  </p>
+                  <AnimatedCounter
+                    end={skillsStats?.total_unique_skills || 0}
+                    className="text-2xl font-bold"
+                    duration={1500}
+                    delay={100}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Top Skills Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <BarChart3 className="w-5 h-5 mr-2" />
+                  Top 15 Skills
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {topSkills && topSkills.top_skills.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart
+                      data={topSkills.top_skills}
+                      layout="vertical"
+                      margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis type="number" />
+                      <YAxis dataKey="skill_name" type="category" width={90} />
+                      <RechartsTooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-white p-3 border border-gray-200 rounded shadow-lg">
+                                <p className="font-semibold">
+                                  {payload[0].payload.skill_name}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Jobs: {payload[0].payload.job_count}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  {payload[0].payload.percentage.toFixed(1)}% of
+                                  all jobs
+                                </p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Bar dataKey="job_count" fill="#3b82f6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-center text-gray-500 py-12">
+                    No skills data available
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Skill Types Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Activity className="w-5 h-5 mr-2" />
+                  Skills by Type
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {skillTypes && skillTypes.skill_types.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={400}>
+                    <PieChart>
+                      <Pie
+                        data={skillTypes.skill_types.map((st) => ({
+                          ...st,
+                          name: st.type || "Unknown",
+                          value: st.skill_count,
+                        }))}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={(entry: any) => {
+                          const total = skillTypes.skill_types.reduce(
+                            (sum, t) => sum + t.skill_count,
+                            0,
+                          );
+                          const percentage =
+                            ((entry.value as number) / total) * 100;
+                          return `${entry.name} (${percentage.toFixed(1)}%)`;
+                        }}
+                        outerRadius={120}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {skillTypes.skill_types.map((entry, index) => {
+                          const colors = [
+                            "#3b82f6",
+                            "#10b981",
+                            "#f59e0b",
+                            "#ef4444",
+                            "#8b5cf6",
+                            "#ec4899",
+                            "#06b6d4",
+                            "#84cc16",
+                          ];
+                          return (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={colors[index % colors.length]}
+                            />
+                          );
+                        })}
+                      </Pie>
+                      <RechartsTooltip
+                        content={({ active, payload }) => {
+                          if (active && payload && payload.length) {
+                            const total = skillTypes.skill_types.reduce(
+                              (sum, t) => sum + t.skill_count,
+                              0,
+                            );
+                            const percentage = (payload[0].value / total) * 100;
+                            return (
+                              <div className="bg-white p-3 border border-gray-200 rounded shadow-lg">
+                                <p className="font-semibold">
+                                  {payload[0].payload.type || "Unknown"}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Count: {payload[0].payload.skill_count}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  {percentage.toFixed(1)}% of all skills
+                                </p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-center text-gray-500 py-12">
+                    No skill types data available
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Skills Inventory Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <FileText className="w-5 h-5 mr-2" />
+                Skills Inventory
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {skillsInventory && skillsInventory.skills.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 border-b">
+                      <tr>
+                        <th className="text-left p-3 font-medium">
+                          Skill Name
+                        </th>
+                        <th className="text-left p-3 font-medium">Type</th>
+                        <th className="text-right p-3 font-medium">Jobs</th>
+                        <th className="text-right p-3 font-medium">
+                          Avg Confidence
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {skillsInventory.skills.map((skill) => (
+                        <tr
+                          key={skill.lightcast_id}
+                          className="hover:bg-gray-50"
+                        >
+                          <td className="p-3 font-medium">{skill.name}</td>
+                          <td className="p-3">
+                            {skill.skill_type ? (
+                              <Badge variant="secondary">
+                                {skill.skill_type}
+                              </Badge>
+                            ) : (
+                              <span className="text-gray-400 text-xs">
+                                Unknown
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3 text-right">{skill.job_count}</td>
+                          <td className="p-3 text-right">
+                            {skill.avg_confidence ? (
+                              <span className="font-medium">
+                                {(skill.avg_confidence * 100).toFixed(1)}%
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {skillsInventory.total > skillsInventory.skills.length && (
+                    <div className="text-center text-sm text-gray-500 mt-4">
+                      Showing {skillsInventory.skills.length} of{" "}
+                      {skillsInventory.total} skills
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-12">
+                  No skills inventory data available
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

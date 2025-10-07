@@ -15,7 +15,13 @@ const mockSearchJobs = mock(() => Promise.resolve());
 // Create a mock store state that we can modify in tests
 let mockStoreState: any;
 
-const mockUseStore = mock(() => mockStoreState);
+// Create a proper mock for useStore that handles selectors
+const mockUseStore = mock((selector?: any) => {
+  if (typeof selector === "function") {
+    return selector(mockStoreState);
+  }
+  return mockStoreState;
+});
 
 mock.module("../lib/store", () => ({
   useStore: mockUseStore,
@@ -61,13 +67,6 @@ const mockJobs = [
   },
 ];
 
-const mockJobsResponse = {
-  jobs: mockJobs,
-  total: 2,
-  page: 1,
-  pages: 1,
-};
-
 describe("JobList Component", () => {
   beforeEach(() => {
     // Reset mocks
@@ -106,7 +105,6 @@ describe("JobList Component", () => {
       setFilters: mockSetFilters as any,
       searchJobs: mockSearchJobs as any,
     };
-    mockUseStore.mockReturnValue(mockStoreState);
 
     // Clear any previous renders
     document.body.innerHTML = "";
@@ -184,14 +182,15 @@ describe("JobList Component", () => {
         by_language: {},
       },
     };
-    mockUseStore.mockReturnValue(mockStoreState);
 
     render(<JobList />);
 
     // When component first renders with no jobs, it shows initialization UI
     // Check for the initialization UI elements instead
     expect(screen.getByText("Job Descriptions")).toBeInTheDocument();
-    expect(screen.getByText(/click the button below to load job data/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/click the button below to load job data/i),
+    ).toBeInTheDocument();
     expect(screen.getByText("Load Job Data")).toBeInTheDocument();
   });
 
@@ -215,7 +214,6 @@ describe("JobList Component", () => {
         by_language: {},
       },
     };
-    mockUseStore.mockReturnValue(mockStoreState);
 
     render(<JobList />);
 
@@ -270,7 +268,6 @@ describe("JobList Component", () => {
         total_jobs: 50,
       },
     };
-    mockUseStore.mockReturnValue(mockStoreState);
 
     render(<JobList />);
 
@@ -287,7 +284,6 @@ describe("JobList Component", () => {
         total_jobs: 50,
       },
     };
-    mockUseStore.mockReturnValue(mockStoreState);
 
     render(<JobList />);
 
@@ -348,7 +344,6 @@ describe("JobList Component", () => {
         by_language: {},
       },
     };
-    mockUseStore.mockReturnValue(mockStoreState);
 
     render(<JobList />);
 
@@ -364,7 +359,6 @@ describe("JobList Component", () => {
       loading: false,
       error: null,
     };
-    mockUseStore.mockReturnValue(mockStoreState);
 
     render(<JobList />);
 

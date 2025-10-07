@@ -123,7 +123,7 @@ export function AlertBanner({
       role="alert"
       aria-live="polite"
     >
-        <div className="mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex items-start gap-3">
           {/* Icon */}
           {showIcon && (

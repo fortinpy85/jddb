@@ -1,23 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { JobDescription } from "@/lib/types";
 import { apiClient } from "@/lib/api";
-import {
-  getClassificationLevel,
-  getLanguageName,
-  getStatusColor,
-} from "@/lib/utils";
+import { getClassificationLevel, getLanguageName } from "@/lib/utils";
 import { useStore } from "@/lib/store";
 import {
   RefreshCw,
   Search,
-  CheckCircle,
-  Clock,
   AlertCircle,
   Filter,
   Eye,
@@ -30,6 +24,7 @@ import {
 import EmptyState from "@/components/ui/empty-state";
 import SkeletonLoader from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
+import { ErrorBoundaryWrapper } from "@/components/ui/error-boundary";
 interface JobListProps {
   onJobSelect?: (job: JobDescription) => void;
   showFilters?: boolean;
@@ -70,33 +65,19 @@ export function JobList({
   const [isInitializing, setIsInitializing] = useState(false);
 
   const initializeData = async () => {
-    console.log(
-      "🚀 initializeData called, current initialized state:",
-      initialized,
-      "isInitializing:",
-      isInitializing,
-    );
     if (initialized || isInitializing) {
-      console.log("⚠️ Already initialized or initializing, returning early");
       return;
     }
 
     try {
-      console.log("Initializing job data...");
-      console.log("🔄 Setting isInitializing to true");
       setIsInitializing(true);
       setFilters(initialFilters);
-      console.log("Fetching jobs...");
       await fetchJobs(true);
-      console.log("Fetching stats...");
       await fetchStats();
-      console.log("✅ API calls completed, setting initialized to true");
       setInitialized(true);
       setIsInitializing(false);
-      console.log("✅ initializeData completed successfully");
     } catch (error) {
       console.error("Failed to initialize data:", error);
-      console.log("❌ Setting isInitializing back to false due to error");
       setIsInitializing(false);
     }
   };
@@ -232,17 +213,6 @@ ${Object.entries(fullJob.metadata)
     }
   };
 
-  // Status indicator component
-  const StatusIndicator = ({ status }: { status: string }) => (
-    <Badge className={getStatusColor(status)}>
-      {status === "completed" && <CheckCircle className="w-3 h-3 mr-1" />}
-      {status === "processing" && <Clock className="w-3 h-3 mr-1" />}
-      {status === "failed" && <AlertCircle className="w-3 h-3 mr-1" />}
-      {status === "needs_review" && <AlertCircle className="w-3 h-3 mr-1" />}
-      {status}
-    </Badge>
-  );
-
   console.log(
     "🎯 JobList render - initialized:",
     initialized,
@@ -259,9 +229,6 @@ ${Object.entries(fullJob.metadata)
   const shouldShowInitUI = !initialized && !hasJobData;
 
   if (shouldShowInitUI) {
-    console.log(
-      "🔄 Rendering initialization UI (not initialized and no job data)",
-    );
     return (
       <div className="space-y-6">
         <Card>
@@ -286,8 +253,6 @@ ${Object.entries(fullJob.metadata)
       </div>
     );
   }
-
-  console.log("✅ Rendering main job list UI (has job data or initialized)");
 
   return (
     <div className="space-y-6">
@@ -580,4 +545,11 @@ ${Object.entries(fullJob.metadata)
   );
 }
 
-export default React.memo(JobList);
+// Wrap with error boundary for reliability
+const JobListWithErrorBoundary = (props: JobListProps) => (
+  <ErrorBoundaryWrapper>
+    <JobList {...props} />
+  </ErrorBoundaryWrapper>
+);
+
+export default React.memo(JobListWithErrorBoundary);

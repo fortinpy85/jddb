@@ -101,6 +101,7 @@ export function ThemeToggleCompact({ className }: { className?: string }) {
         onClick={() => setTheme("light")}
         className="h-7 w-7 p-0"
         title="Light mode"
+        aria-label="Light mode"
       >
         <Sun className="h-3.5 w-3.5" />
       </Button>
@@ -110,6 +111,7 @@ export function ThemeToggleCompact({ className }: { className?: string }) {
         onClick={() => setTheme("dark")}
         className="h-7 w-7 p-0"
         title="Dark mode"
+        aria-label="Dark mode"
       >
         <Moon className="h-3.5 w-3.5" />
       </Button>
@@ -119,6 +121,7 @@ export function ThemeToggleCompact({ className }: { className?: string }) {
         onClick={() => setTheme("system")}
         className="h-7 w-7 p-0"
         title="System theme"
+        aria-label="System theme"
       >
         <Monitor className="h-3.5 w-3.5" />
       </Button>

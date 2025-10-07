@@ -103,7 +103,7 @@ export function useCollaborativeEditor(
           onDocumentChange?.(message.document_state);
           break;
 
-        case "operation":
+        case "operation": {
           // Remote operation received from another user
           const operation = message.operation as Operation;
           if (operation && sessionState) {
@@ -125,13 +125,13 @@ export function useCollaborativeEditor(
             onOperationApplied?.(operation);
           }
           break;
+        }
 
         case "operation_ack":
           // Operation acknowledged by server
-          console.log("Operation acknowledged:", message.operation_id);
           break;
 
-        case "user_joined":
+        case "user_joined": {
           // New user joined the session
           const newParticipants = message.participants as number[];
           setSessionState((prev) =>
@@ -139,6 +139,7 @@ export function useCollaborativeEditor(
           );
           onParticipantsChange?.(newParticipants);
           break;
+        }
 
         case "cursor_update":
           // Update cursor position for a participant
@@ -152,7 +153,7 @@ export function useCollaborativeEditor(
           break;
 
         default:
-          console.log("Unknown message type:", message.type);
+        // Unknown message type
       }
     },
     [sessionState, onDocumentChange, onParticipantsChange, onOperationApplied],
@@ -162,7 +163,6 @@ export function useCollaborativeEditor(
     enabled: true,
     onMessage: handleMessage,
     onOpen: () => {
-      console.log(`Connected to collaborative session: ${sessionId}`);
       // Process any queued operations
       while (operationQueueRef.current.length > 0) {
         const op = operationQueueRef.current.shift();
@@ -172,7 +172,7 @@ export function useCollaborativeEditor(
       }
     },
     onClose: () => {
-      console.log(`Disconnected from session: ${sessionId}`);
+      // Disconnected from session
     },
     onError: (error) => {
       console.error("WebSocket error:", error);

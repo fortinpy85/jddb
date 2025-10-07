@@ -253,11 +253,7 @@ export function BasicEditingView({
   };
 
   if (loading) {
-    return (
-      <LoadingState
-        message="Loading job description..."
-      />
-    );
+    return <LoadingState message="Loading job description..." />;
   }
 
   return (
@@ -279,9 +275,9 @@ export function BasicEditingView({
                   Back
                 </Button>
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                     Edit Job Description
-                  </h1>
+                  </h2>
                   <p className="text-sm text-slate-600 dark:text-slate-400">
                     Collaborative editing workspace
                   </p>

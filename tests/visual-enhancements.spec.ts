@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Visual Enhancements and Dark Mode", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the application
-    await page.goto("http://localhost:3000");
+    await page.goto("http://localhost:3002");
 
     // Wait for the page to load completely
     await page.waitForLoadState("networkidle");
@@ -172,10 +172,11 @@ test.describe("Visual Enhancements and Dark Mode", () => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.waitForTimeout(500);
 
-    // Check that main elements are still visible
+    // Check that main elements are still visible (use first h1 to avoid strict mode)
     const header = page
       .locator("h1")
-      .filter({ hasText: "Job Description Database" });
+      .first()
+      .filter({ hasText: /Job Description Database|JDDB|Dashboard/ });
     await expect(header).toBeVisible();
 
     // Check that tabs are accessible

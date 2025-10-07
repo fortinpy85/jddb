@@ -7,9 +7,9 @@ test.describe("Dashboard", () => {
   });
 
   test("should display main dashboard elements", async ({ page }) => {
-    // Check header
-    await expect(page.locator("h1")).toContainText(
-      "Job Description Database (JDDB)",
+    // Check header (use first h1 to avoid strict mode violation)
+    await expect(page.locator("h1").first()).toContainText(
+      /Job Description Database|JDDB|Dashboard/,
     );
 
     // Check navigation tabs

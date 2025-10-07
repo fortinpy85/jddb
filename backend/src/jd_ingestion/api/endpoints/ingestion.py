@@ -250,6 +250,24 @@ async def process_single_file(
                         filename=file_path_obj.name,
                     )
 
+                # Validate metadata and collect warnings
+                metadata_warnings = []
+                if not file_metadata.title:
+                    metadata_warnings.append("No title extracted from filename - using 'Untitled'")
+                    logger.warning("Missing title in file", filename=file_path_obj.name)
+
+                if not file_metadata.classification:
+                    metadata_warnings.append("No classification extracted from filename - using 'UNKNOWN'")
+                    logger.warning("Missing classification in file", filename=file_path_obj.name)
+
+                # Log all validation warnings
+                if metadata_warnings:
+                    logger.warning(
+                        "File has metadata quality issues",
+                        filename=file_path_obj.name,
+                        warnings=metadata_warnings
+                    )
+
                 # Create job description record with minimal safe data
                 job_description = JobDescription(
                     job_number=job_number,
@@ -402,6 +420,41 @@ async def process_single_file(
                         )
                         # Don't fail the entire process if embeddings fail
                         # The main data has already been committed, no need to rollback
+
+                # Extract skills from job description (done after commit to have job ID)
+                try:
+                    from ...services.skill_extraction_service import (
+                        skill_extraction_service,
+                    )
+
+                    logger.info(
+                        "Starting skill extraction from job description",
+                        job_id=job_id,
+                    )
+
+                    # Extract skills from the raw content
+                    extracted_skills = await skill_extraction_service.extract_and_save_skills(
+                        job_id=job_id,
+                        job_text=raw_content,
+                        db=db,
+                        confidence_threshold=0.5,  # Only include skills with 50%+ confidence
+                    )
+
+                    logger.info(
+                        f"Extracted and saved {len(extracted_skills)} skills",
+                        job_id=job_id,
+                        skill_count=len(extracted_skills),
+                    )
+
+                except Exception as skill_error:
+                    logger.error(
+                        "Skill extraction failed",
+                        job_id=job_id,
+                        error=str(skill_error),
+                    )
+                    # Don't fail the entire process if skill extraction fails
+                    # The main data has already been committed
+
             except Exception as e:
                 logger.error("Database save failed", error=str(e))
                 await db.rollback()
@@ -446,6 +499,7 @@ async def process_single_file(
                 "file_path": file_path,
                 "job_id": job_id,
                 "saved_to_database": save_to_db and job_id is not None,
+                "warnings": metadata_warnings if metadata_warnings else None,
                 "metadata": {
                     "job_number": file_metadata.job_number,
                     "classification": file_metadata.classification,

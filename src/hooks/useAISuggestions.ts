@@ -12,10 +12,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
-import type {
-  BiasAnalysisResponse,
-  QualityScoreResponse,
-} from "@/types/ai";
+import type { BiasAnalysisResponse, QualityScoreResponse } from "@/types/ai";
 
 export interface AISuggestion {
   id: string;
@@ -71,8 +68,12 @@ export function useAISuggestions(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [overallScore, setOverallScore] = useState<number | null>(null);
-  const [biasAnalysis, setBiasAnalysis] = useState<BiasAnalysisResponse | null>(null);
-  const [qualityScore, setQualityScore] = useState<QualityScoreResponse | null>(null);
+  const [biasAnalysis, setBiasAnalysis] = useState<BiasAnalysisResponse | null>(
+    null,
+  );
+  const [qualityScore, setQualityScore] = useState<QualityScoreResponse | null>(
+    null,
+  );
 
   const fetchSuggestions = useCallback(
     async (text: string, context?: string, suggestionTypes?: string[]) => {
@@ -146,7 +147,9 @@ export function useAISuggestions(
         setQualityScore(data);
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to calculate quality score";
+          err instanceof Error
+            ? err.message
+            : "Failed to calculate quality score";
         setError(errorMessage);
         console.error("Error calculating quality:", err);
         setQualityScore(null);
@@ -214,7 +217,7 @@ export function useDebouncedAIAnalysis(options: {
   } = options;
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const analyzeText = useCallback(
     (text: string) => {
@@ -243,13 +246,13 @@ export function useDebouncedAIAnalysis(options: {
             onBiasAnalysis(biasResult);
           }
         } catch (err) {
-          console.error('Debounced analysis failed:', err);
+          console.error("Debounced analysis failed:", err);
         } finally {
           setIsAnalyzing(false);
         }
       }, debounceMs);
     },
-    [onBiasAnalysis, debounceMs, minLength, gpt4Enabled]
+    [onBiasAnalysis, debounceMs, minLength, gpt4Enabled],
   );
 
   // Cleanup on unmount

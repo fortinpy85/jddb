@@ -70,7 +70,11 @@ export function AnimatedCounter({
     return prefix + num.toFixed(decimals) + suffix;
   };
 
-  return <span className={className}>{formatNumber(count)}</span>;
+  return (
+    <span className={className} data-testid="animated-counter">
+      {formatNumber(count)}
+    </span>
+  );
 }
 
 export default AnimatedCounter;

@@ -8,7 +8,7 @@ from typing import Dict, Any, List
 from datetime import datetime, timedelta
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
-import openai
+from openai import AsyncOpenAI
 
 from ..config import settings
 from ..database.connection import get_async_session
@@ -186,8 +186,9 @@ class SystemMonitor:
 
         try:
             # Simple API test (list models is lightweight)
+            client = AsyncOpenAI(api_key=settings.openai_api_key)
             start_time = datetime.utcnow()
-            models = await openai.Model.alist()
+            models = await client.models.list()
             response_time = (datetime.utcnow() - start_time).total_seconds() * 1000
 
             # Check if our embedding model is available

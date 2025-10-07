@@ -4,6 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
+- Always use context7 when I need code generation, setup or configuration steps, or library/API documentation.
+- This means you should automatically use the Context7 MCP tools to resolve library id and get library docs without me having to explicitly ask.
+
 ### Backend (Python/FastAPI with Poetry)
 
 **Package Management**: Uses Poetry for dependency management and virtual environment isolation.

@@ -82,9 +82,9 @@ export function UIShowcase() {
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-20"></div>
             <Database className="relative w-12 h-12 text-blue-600" />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
             JDDB UI Improvements
-          </h1>
+          </h2>
         </div>
         <p className="text-lg text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
           Enhanced user interface with consistent layout, modern design

@@ -205,7 +205,7 @@ export function EnhancedNavigation({
           isExpanded &&
           (!isCollapsed || variant !== "sidebar") && (
             <div className="space-y-1 mt-1">
-              {item.children!.map((child) => renderNavItem(child, level + 1))}
+              {item.children?.map((child) => renderNavItem(child, level + 1))}
             </div>
           )}
       </div>

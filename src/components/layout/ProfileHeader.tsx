@@ -1,7 +1,6 @@
-
 /**
  * Profile Header Component
- * Sits below the main AppHeader and contains contextual navigation 
+ * Sits below the main AppHeader and contains contextual navigation
  * like breadcrumbs and open tabs.
  */
 
