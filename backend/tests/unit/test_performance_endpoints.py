@@ -554,9 +554,9 @@ class TestPerformanceEndpointsIntegration:
         for endpoint in endpoints_to_test:
             response = client.get(endpoint)
             # Should not be 404 (route not found) - could be auth/db related errors
-            assert response.status_code != 404, (
-                f"Endpoint {endpoint} not properly routed"
-            )
+            assert (
+                response.status_code != 404
+            ), f"Endpoint {endpoint} not properly routed"
 
     def test_performance_benchmark_post_routing(self):
         """Test that benchmark POST endpoint is properly routed."""

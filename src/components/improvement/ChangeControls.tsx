@@ -53,9 +53,9 @@ export interface ChangeControlsProps {
   onReject: (changeId: string) => void;
   onAcceptAll: (category?: ChangeCategory) => void;
   onRejectAll: (category?: ChangeCategory) => void;
-  onNavigate: (direction: 'next' | 'prev') => void;
-  onFilterCategory: (category: ChangeCategory | 'all') => void;
-  selectedCategory?: ChangeCategory | 'all';
+  onNavigate: (direction: "next" | "prev") => void;
+  onFilterCategory: (category: ChangeCategory | "all") => void;
+  selectedCategory?: ChangeCategory | "all";
   finalText?: string;
   className?: string;
 }
@@ -74,8 +74,8 @@ export function ChangeControls({
   onRejectAll,
   onNavigate,
   onFilterCategory,
-  selectedCategory = 'all',
-  finalText = '',
+  selectedCategory = "all",
+  finalText = "",
   className = "",
 }: ChangeControlsProps) {
   const currentChange = changes[currentChangeIndex];
@@ -86,59 +86,65 @@ export function ChangeControls({
   const [showAcceptAllDialog, setShowAcceptAllDialog] = useState(false);
   const [showRejectAllDialog, setShowRejectAllDialog] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [exportFormat, setExportFormat] = useState<'txt' | 'json' | null>(null);
+  const [exportFormat, setExportFormat] = useState<"txt" | "json" | null>(null);
 
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Cmd/Ctrl + Enter: Accept current change
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && currentChange) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && currentChange) {
         e.preventDefault();
         onAccept(currentChange.id);
-        if (hasNext) onNavigate('next');
+        if (hasNext) onNavigate("next");
       }
 
       // Cmd/Ctrl + Delete/Backspace: Reject current change
-      if ((e.metaKey || e.ctrlKey) && (e.key === 'Delete' || e.key === 'Backspace') && currentChange) {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        (e.key === "Delete" || e.key === "Backspace") &&
+        currentChange
+      ) {
         e.preventDefault();
         onReject(currentChange.id);
-        if (hasNext) onNavigate('next');
+        if (hasNext) onNavigate("next");
       }
 
       // Arrow keys: Navigate changes
-      if (e.key === 'ArrowRight' && hasNext) {
+      if (e.key === "ArrowRight" && hasNext) {
         e.preventDefault();
-        onNavigate('next');
+        onNavigate("next");
       }
-      if (e.key === 'ArrowLeft' && hasPrev) {
+      if (e.key === "ArrowLeft" && hasPrev) {
         e.preventDefault();
-        onNavigate('prev');
+        onNavigate("prev");
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [currentChange, hasNext, hasPrev, onAccept, onReject, onNavigate]);
 
   // Filter changes by category
-  const filteredChanges = selectedCategory === 'all'
-    ? changes
-    : changes.filter(c => c.category === selectedCategory);
+  const filteredChanges =
+    selectedCategory === "all"
+      ? changes
+      : changes.filter((c) => c.category === selectedCategory);
 
   const pendingChanges = filteredChanges.filter(
-    c => !acceptedChangeIds.includes(c.id) && !rejectedChangeIds.includes(c.id)
+    (c) =>
+      !acceptedChangeIds.includes(c.id) && !rejectedChangeIds.includes(c.id),
   );
 
   // Bulk accept with confirmation
   const handleAcceptAll = async () => {
     setIsProcessing(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate processing
-      onAcceptAll(selectedCategory === 'all' ? undefined : selectedCategory);
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate processing
+      onAcceptAll(selectedCategory === "all" ? undefined : selectedCategory);
       setShowAcceptAllDialog(false);
     } catch (error) {
-      console.error('Failed to accept all changes:', error);
-      alert('Failed to accept all changes. Please try again.');
+      console.error("Failed to accept all changes:", error);
+      alert("Failed to accept all changes. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -148,32 +154,32 @@ export function ChangeControls({
   const handleRejectAll = async () => {
     setIsProcessing(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate processing
-      onRejectAll(selectedCategory === 'all' ? undefined : selectedCategory);
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate processing
+      onRejectAll(selectedCategory === "all" ? undefined : selectedCategory);
       setShowRejectAllDialog(false);
     } catch (error) {
-      console.error('Failed to reject all changes:', error);
-      alert('Failed to reject all changes. Please try again.');
+      console.error("Failed to reject all changes:", error);
+      alert("Failed to reject all changes. Please try again.");
     } finally {
       setIsProcessing(false);
     }
   };
 
   // Export final text
-  const handleExport = (format: 'txt' | 'json') => {
+  const handleExport = (format: "txt" | "json") => {
     try {
       let content: string;
       let mimeType: string;
       let filename: string;
 
-      if (format === 'txt') {
+      if (format === "txt") {
         content = finalText;
-        mimeType = 'text/plain';
-        filename = `improved_job_description_${new Date().toISOString().split('T')[0]}.txt`;
+        mimeType = "text/plain";
+        filename = `improved_job_description_${new Date().toISOString().split("T")[0]}.txt`;
       } else {
         const exportData = {
           finalText,
-          changes: changes.map(c => ({
+          changes: changes.map((c) => ({
             id: c.id,
             type: c.type,
             category: c.category,
@@ -192,14 +198,14 @@ export function ChangeControls({
           exportDate: new Date().toISOString(),
         };
         content = JSON.stringify(exportData, null, 2);
-        mimeType = 'application/json';
-        filename = `improved_job_description_${new Date().toISOString().split('T')[0]}.json`;
+        mimeType = "application/json";
+        filename = `improved_job_description_${new Date().toISOString().split("T")[0]}.json`;
       }
 
       const blob = new Blob([content], { type: mimeType });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
+      const a = document.createElement("a");
+      a.style.display = "none";
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
@@ -209,8 +215,8 @@ export function ChangeControls({
 
       setExportFormat(null);
     } catch (error) {
-      console.error('Export failed:', error);
-      alert('Export failed. Please try again.');
+      console.error("Export failed:", error);
+      alert("Export failed. Please try again.");
     }
   };
 
@@ -234,7 +240,9 @@ export function ChangeControls({
           {/* Category Filter */}
           <Select
             value={selectedCategory}
-            onValueChange={(value) => onFilterCategory(value as ChangeCategory | 'all')}
+            onValueChange={(value) =>
+              onFilterCategory(value as ChangeCategory | "all")
+            }
           >
             <SelectTrigger className="w-[140px] h-8">
               <Filter className="h-3 w-3 mr-2" />
@@ -264,7 +272,7 @@ export function ChangeControls({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => onNavigate('prev')}
+                  onClick={() => onNavigate("prev")}
                   disabled={!hasPrev}
                   className="h-7"
                 >
@@ -273,7 +281,7 @@ export function ChangeControls({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => onNavigate('next')}
+                  onClick={() => onNavigate("next")}
                   disabled={!hasNext}
                   className="h-7"
                 >
@@ -296,7 +304,7 @@ export function ChangeControls({
                 size="sm"
                 onClick={() => {
                   onAccept(currentChange.id);
-                  if (hasNext) onNavigate('next');
+                  if (hasNext) onNavigate("next");
                 }}
                 disabled={acceptedChangeIds.includes(currentChange.id)}
                 className="flex-1 bg-green-600 hover:bg-green-700"
@@ -310,7 +318,7 @@ export function ChangeControls({
                 size="sm"
                 onClick={() => {
                   onReject(currentChange.id);
-                  if (hasNext) onNavigate('next');
+                  if (hasNext) onNavigate("next");
                 }}
                 disabled={rejectedChangeIds.includes(currentChange.id)}
                 className="flex-1"
@@ -343,7 +351,7 @@ export function ChangeControls({
               ) : (
                 <CheckCheck className="h-3 w-3 mr-1" />
               )}
-              Accept All {selectedCategory !== 'all' && selectedCategory}
+              Accept All {selectedCategory !== "all" && selectedCategory}
             </Button>
             <Button
               variant="outline"
@@ -357,7 +365,7 @@ export function ChangeControls({
               ) : (
                 <XCircle className="h-3 w-3 mr-1" />
               )}
-              Reject All {selectedCategory !== 'all' && selectedCategory}
+              Reject All {selectedCategory !== "all" && selectedCategory}
             </Button>
           </div>
         </div>
@@ -373,7 +381,7 @@ export function ChangeControls({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleExport('txt')}
+              onClick={() => handleExport("txt")}
               disabled={!finalText || isProcessing}
               className="text-xs"
             >
@@ -383,7 +391,7 @@ export function ChangeControls({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => handleExport('json')}
+              onClick={() => handleExport("json")}
               disabled={!finalText || isProcessing}
               className="text-xs"
             >
@@ -401,10 +409,18 @@ export function ChangeControls({
               Keyboard Shortcuts
             </summary>
             <div className="mt-2 space-y-1 pl-4">
-              <div><kbd>⌘ + ↵</kbd> Accept change</div>
-              <div><kbd>⌘ + ⌫</kbd> Reject change</div>
-              <div><kbd>→</kbd> Next change</div>
-              <div><kbd>←</kbd> Previous change</div>
+              <div>
+                <kbd>⌘ + ↵</kbd> Accept change
+              </div>
+              <div>
+                <kbd>⌘ + ⌫</kbd> Reject change
+              </div>
+              <div>
+                <kbd>→</kbd> Next change
+              </div>
+              <div>
+                <kbd>←</kbd> Previous change
+              </div>
             </div>
           </details>
         </div>
@@ -416,8 +432,10 @@ export function ChangeControls({
           <DialogHeader>
             <DialogTitle>Accept All Changes?</DialogTitle>
             <DialogDescription>
-              You are about to accept {pendingChanges.length} pending {selectedCategory !== 'all' ? selectedCategory : ''} change{pendingChanges.length !== 1 ? 's' : ''}.
-              This action will apply all these changes to your text.
+              You are about to accept {pendingChanges.length} pending{" "}
+              {selectedCategory !== "all" ? selectedCategory : ""} change
+              {pendingChanges.length !== 1 ? "s" : ""}. This action will apply
+              all these changes to your text.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -456,8 +474,10 @@ export function ChangeControls({
           <DialogHeader>
             <DialogTitle>Reject All Changes?</DialogTitle>
             <DialogDescription>
-              You are about to reject {pendingChanges.length} pending {selectedCategory !== 'all' ? selectedCategory : ''} change{pendingChanges.length !== 1 ? 's' : ''}.
-              This action will discard all these changes.
+              You are about to reject {pendingChanges.length} pending{" "}
+              {selectedCategory !== "all" ? selectedCategory : ""} change
+              {pendingChanges.length !== 1 ? "s" : ""}. This action will discard
+              all these changes.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -501,14 +521,22 @@ interface CurrentChangeCardProps {
   isRejected: boolean;
 }
 
-function CurrentChangeCard({ change, isAccepted, isRejected }: CurrentChangeCardProps) {
+function CurrentChangeCard({
+  change,
+  isAccepted,
+  isRejected,
+}: CurrentChangeCardProps) {
   return (
-    <div className={cn(
-      "p-3 rounded-lg border-2 transition-colors",
-      isAccepted && "bg-green-50 border-green-300 dark:bg-green-900/20",
-      isRejected && "bg-red-50 border-red-300 dark:bg-red-900/20",
-      !isAccepted && !isRejected && "bg-blue-50 border-blue-300 dark:bg-blue-900/20"
-    )}>
+    <div
+      className={cn(
+        "p-3 rounded-lg border-2 transition-colors",
+        isAccepted && "bg-green-50 border-green-300 dark:bg-green-900/20",
+        isRejected && "bg-red-50 border-red-300 dark:bg-red-900/20",
+        !isAccepted &&
+          !isRejected &&
+          "bg-blue-50 border-blue-300 dark:bg-blue-900/20",
+      )}
+    >
       <div className="space-y-2">
         {/* Category & Severity */}
         <div className="flex items-center gap-2">
@@ -527,23 +555,26 @@ function CurrentChangeCard({ change, isAccepted, isRejected }: CurrentChangeCard
 
         {/* Change Text */}
         <div className="space-y-1 text-sm">
-          {change.type === 'deletion' && (
+          {change.type === "deletion" && (
             <div className="text-red-700 dark:text-red-400">
-              <span className="font-medium">Remove:</span> "{change.originalText}"
+              <span className="font-medium">Remove:</span> "
+              {change.originalText}"
             </div>
           )}
-          {change.type === 'addition' && (
+          {change.type === "addition" && (
             <div className="text-green-700 dark:text-green-400">
               <span className="font-medium">Add:</span> "{change.suggestedText}"
             </div>
           )}
-          {change.type === 'modification' && (
+          {change.type === "modification" && (
             <>
               <div className="text-red-700 dark:text-red-400">
-                <span className="font-medium">From:</span> "{change.originalText}"
+                <span className="font-medium">From:</span> "
+                {change.originalText}"
               </div>
               <div className="text-green-700 dark:text-green-400">
-                <span className="font-medium">To:</span> "{change.suggestedText}"
+                <span className="font-medium">To:</span> "{change.suggestedText}
+                "
               </div>
             </>
           )}
@@ -579,15 +610,15 @@ function CurrentChangeCard({ change, isAccepted, isRejected }: CurrentChangeCard
  */
 function getCategoryBadgeClass(category: ChangeCategory): string {
   switch (category) {
-    case 'grammar':
-      return 'bg-red-100 text-red-700';
-    case 'style':
-      return 'bg-blue-100 text-blue-700';
-    case 'clarity':
-      return 'bg-purple-100 text-purple-700';
-    case 'bias':
-      return 'bg-yellow-100 text-yellow-700';
-    case 'compliance':
-      return 'bg-green-100 text-green-700';
+    case "grammar":
+      return "bg-red-100 text-red-700";
+    case "style":
+      return "bg-blue-100 text-blue-700";
+    case "clarity":
+      return "bg-purple-100 text-purple-700";
+    case "bias":
+      return "bg-yellow-100 text-yellow-700";
+    case "compliance":
+      return "bg-green-100 text-green-700";
   }
 }

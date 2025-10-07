@@ -4,7 +4,13 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -74,7 +80,8 @@ const DEFAULT_PREFERENCES: UserPreferences = {
 };
 
 export function UserPreferencesPage() {
-  const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
+  const [preferences, setPreferences] =
+    useState<UserPreferences>(DEFAULT_PREFERENCES);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -124,7 +131,8 @@ export function UserPreferencesPage() {
       // Clear success message after 3 seconds
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to save preferences";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to save preferences";
       setError(errorMessage);
       console.error("Save preferences error:", err);
     } finally {
@@ -144,7 +152,8 @@ export function UserPreferencesPage() {
       setPreferences(DEFAULT_PREFERENCES);
       setSaved(false);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to reset preferences";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to reset preferences";
       setError(errorMessage);
       console.error("Reset preferences error:", err);
     } finally {
@@ -173,9 +182,7 @@ export function UserPreferencesPage() {
             <Settings className="w-8 h-8" />
             User Preferences
           </h2>
-          <p className="text-gray-600 mt-1">
-            Customize your JDDB experience
-          </p>
+          <p className="text-gray-600 mt-1">Customize your JDDB experience</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -245,9 +252,7 @@ export function UserPreferencesPage() {
             <User className="w-5 h-5" />
             Profile
           </CardTitle>
-          <CardDescription>
-            Manage your profile information
-          </CardDescription>
+          <CardDescription>Manage your profile information</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -308,9 +313,7 @@ export function UserPreferencesPage() {
             <Globe className="w-5 h-5" />
             Language & Region
           </CardTitle>
-          <CardDescription>
-            Set your preferred language
-          </CardDescription>
+          <CardDescription>Set your preferred language</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -433,7 +436,8 @@ export function UserPreferencesPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="confidence_threshold">
-              Confidence Threshold: {Math.round(preferences.suggestion_confidence_threshold * 100)}%
+              Confidence Threshold:{" "}
+              {Math.round(preferences.suggestion_confidence_threshold * 100)}%
             </Label>
             <input
               id="confidence_threshold"
@@ -445,14 +449,16 @@ export function UserPreferencesPage() {
               onChange={(e) =>
                 handleChange(
                   "suggestion_confidence_threshold",
-                  parseFloat(e.target.value) / 100
+                  parseFloat(e.target.value) / 100,
                 )
               }
               className="w-full"
               disabled={!preferences.enable_ai_suggestions}
             />
             <div className="text-sm text-gray-500">
-              Only show suggestions with {Math.round(preferences.suggestion_confidence_threshold * 100)}% or higher confidence
+              Only show suggestions with{" "}
+              {Math.round(preferences.suggestion_confidence_threshold * 100)}%
+              or higher confidence
             </div>
           </div>
         </CardContent>
@@ -474,7 +480,9 @@ export function UserPreferencesPage() {
             <Label htmlFor="editor_mode">Default Editor Mode</Label>
             <Select
               value={preferences.default_editor_mode}
-              onValueChange={(value) => handleChange("default_editor_mode", value)}
+              onValueChange={(value) =>
+                handleChange("default_editor_mode", value)
+              }
             >
               <SelectTrigger id="editor_mode">
                 <SelectValue />

@@ -180,7 +180,7 @@ export function FilterBarHeader({
  * Hook to manage filter state
  */
 export function useFilters<T extends Record<string, string>>(
-  initialFilters: T
+  initialFilters: T,
 ) {
   const [filters, setFilters] = React.useState<T>(initialFilters);
 
@@ -195,7 +195,7 @@ export function useFilters<T extends Record<string, string>>(
   const hasActiveFilters = React.useMemo(() => {
     return Object.entries(filters).some(
       ([key, value]) =>
-        value && value !== "all" && value !== initialFilters[key as keyof T]
+        value && value !== "all" && value !== initialFilters[key as keyof T],
     );
   }, [filters, initialFilters]);
 

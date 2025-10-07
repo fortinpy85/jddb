@@ -110,9 +110,9 @@ class TestAuthenticationSecurity:
         # Test session token generation
         token = self._generate_session_token()
         assert len(token) >= 32, "Session token should be at least 32 characters"
-        assert token.isalnum() or any(c in token for c in ["-", "_"]), (
-            "Token should be alphanumeric"
-        )
+        assert token.isalnum() or any(
+            c in token for c in ["-", "_"]
+        ), "Token should be alphanumeric"
 
         # Test session timeout
         session_created = datetime.now()
@@ -132,9 +132,9 @@ class TestAuthenticationSecurity:
             is_locked = failed_attempts >= max_attempts
 
             if is_locked:
-                assert is_locked, (
-                    f"Account should be locked after {max_attempts} failed attempts"
-                )
+                assert (
+                    is_locked
+                ), f"Account should be locked after {max_attempts} failed attempts"
                 break
 
     def _validate_password_complexity(self, password: str) -> bool:
@@ -185,9 +185,9 @@ class TestDataProtectionSecurity:
         # Mock encryption (in real implementation, this would use actual encryption)
         encrypted_data = self._encrypt_data(sensitive_data, "test-key")
         assert encrypted_data != sensitive_data, "Data should be encrypted"
-        assert len(encrypted_data) > len(sensitive_data), (
-            "Encrypted data should be longer"
-        )
+        assert len(encrypted_data) > len(
+            sensitive_data
+        ), "Encrypted data should be longer"
 
         # Test decryption
         decrypted_data = self._decrypt_data(encrypted_data, "test-key")
@@ -218,9 +218,9 @@ class TestDataProtectionSecurity:
         }
 
         for requirement, implemented in key_management.items():
-            assert implemented, (
-                f"Key management requirement '{requirement}' must be implemented"
-            )
+            assert (
+                implemented
+            ), f"Key management requirement '{requirement}' must be implemented"
 
     def test_pii_data_handling(self):
         """Test that PII is properly identified and protected."""
@@ -382,9 +382,9 @@ class TestAuditLoggingSecurity:
         for event in critical_events:
             # These events should trigger immediate alerts
             alert_triggered = self._check_security_alert(event)
-            assert alert_triggered, (
-                f"Critical event '{event}' should trigger security alert"
-            )
+            assert (
+                alert_triggered
+            ), f"Critical event '{event}' should trigger security alert"
 
     def _log_security_event(self, audit_logger: Mock, event_type: str) -> bool:
         """Mock logging a security event."""
@@ -449,9 +449,9 @@ class TestWebSocketSecurity:
 
         # Invalid token should reject connection
         can_connect_invalid = self._validate_websocket_auth(invalid_token)
-        assert not can_connect_invalid, (
-            "Invalid token should reject WebSocket connection"
-        )
+        assert (
+            not can_connect_invalid
+        ), "Invalid token should reject WebSocket connection"
 
     def test_websocket_rate_limiting(self):
         """Test that WebSocket connections are rate limited."""
@@ -494,9 +494,9 @@ class TestWebSocketSecurity:
         # Invalid messages should fail validation
         for invalid_msg in invalid_messages:
             is_invalid = self._validate_websocket_message(invalid_msg)
-            assert not is_invalid, (
-                f"Invalid message should fail validation: {invalid_msg}"
-            )
+            assert (
+                not is_invalid
+            ), f"Invalid message should fail validation: {invalid_msg}"
 
     def _validate_websocket_auth(self, token: str) -> bool:
         """Mock WebSocket authentication validation."""

@@ -6,7 +6,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { BilingualEditor, BilingualDocument, BilingualSegment } from "./BilingualEditor";
+import {
+  BilingualEditor,
+  BilingualDocument,
+  BilingualSegment,
+} from "./BilingualEditor";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
@@ -38,10 +42,14 @@ const BilingualEditorWrapper: React.FC<BilingualEditorWrapperProps> = ({
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_BASE_URL}/bilingual-documents/${jobId}`);
+      const response = await fetch(
+        `${API_BASE_URL}/bilingual-documents/${jobId}`,
+      );
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch bilingual document: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch bilingual document: ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
@@ -57,13 +65,20 @@ const BilingualEditorWrapper: React.FC<BilingualEditorWrapperProps> = ({
             english: seg.english || "",
             french: seg.french || "",
             status: seg.status || "draft",
-            lastModified: seg.lastModified ? new Date(seg.lastModified) : new Date(),
+            lastModified: seg.lastModified
+              ? new Date(seg.lastModified)
+              : new Date(),
             modifiedBy: seg.modifiedBy,
           })) as BilingualSegment[],
           metadata: {
-            created: data.document.metadata?.created ? new Date(data.document.metadata.created) : new Date(),
-            modified: data.document.metadata?.modified ? new Date(data.document.metadata.modified) : new Date(),
-            englishCompleteness: data.document.metadata?.englishCompleteness || 0,
+            created: data.document.metadata?.created
+              ? new Date(data.document.metadata.created)
+              : new Date(),
+            modified: data.document.metadata?.modified
+              ? new Date(data.document.metadata.modified)
+              : new Date(),
+            englishCompleteness:
+              data.document.metadata?.englishCompleteness || 0,
             frenchCompleteness: data.document.metadata?.frenchCompleteness || 0,
             overallStatus: data.document.metadata?.overallStatus || "draft",
           },
@@ -75,7 +90,11 @@ const BilingualEditorWrapper: React.FC<BilingualEditorWrapperProps> = ({
       }
     } catch (err) {
       console.error("Error fetching bilingual document:", err);
-      setError(err instanceof Error ? err.message : "Failed to load bilingual document");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load bilingual document",
+      );
     } finally {
       setLoading(false);
     }
@@ -83,20 +102,23 @@ const BilingualEditorWrapper: React.FC<BilingualEditorWrapperProps> = ({
 
   const handleSave = async (updatedDocument: BilingualDocument) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/bilingual-documents/${jobId}/save`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${API_BASE_URL}/bilingual-documents/${jobId}/save`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            segments: updatedDocument.segments.map((seg) => ({
+              id: seg.id,
+              english: seg.english,
+              french: seg.french,
+              status: seg.status,
+            })),
+          }),
         },
-        body: JSON.stringify({
-          segments: updatedDocument.segments.map((seg) => ({
-            id: seg.id,
-            english: seg.english,
-            french: seg.french,
-            status: seg.status,
-          })),
-        }),
-      });
+      );
 
       if (!response.ok) {
         throw new Error("Failed to save bilingual document");
@@ -118,14 +140,14 @@ const BilingualEditorWrapper: React.FC<BilingualEditorWrapperProps> = ({
   const handleSegmentChange = async (
     segmentId: string,
     language: "en" | "fr",
-    content: string
+    content: string,
   ) => {
     try {
       await fetch(
         `${API_BASE_URL}/bilingual-documents/${jobId}/segments/${segmentId}?language=${language}&content=${encodeURIComponent(content)}`,
         {
           method: "PUT",
-        }
+        },
       );
     } catch (err) {
       console.error("Error updating segment:", err);
@@ -145,7 +167,7 @@ const BilingualEditorWrapper: React.FC<BilingualEditorWrapperProps> = ({
             segment_id: segmentId,
             status,
           }),
-        }
+        },
       );
     } catch (err) {
       console.error("Error updating segment status:", err);
@@ -201,9 +223,7 @@ const BilingualEditorWrapper: React.FC<BilingualEditorWrapperProps> = ({
               <Button variant="outline" onClick={onBack}>
                 Go Back
               </Button>
-              <Button onClick={fetchBilingualDocument}>
-                Retry
-              </Button>
+              <Button onClick={fetchBilingualDocument}>Retry</Button>
             </div>
           </div>
         </CardContent>

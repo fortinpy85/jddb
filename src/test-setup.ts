@@ -132,11 +132,13 @@ if (typeof window !== "undefined" && !window.matchMedia) {
 // Mock MouseEvent for JSDOM
 if (typeof global !== "undefined" && typeof window !== "undefined") {
   if (!global.MouseEvent) {
-    (global as any).MouseEvent = window.MouseEvent || class MouseEvent extends Event {
-      constructor(type: string, eventInitDict?: MouseEventInit) {
-        super(type, eventInitDict);
-      }
-    };
+    (global as any).MouseEvent =
+      window.MouseEvent ||
+      class MouseEvent extends Event {
+        constructor(type: string, eventInitDict?: MouseEventInit) {
+          super(type, eventInitDict);
+        }
+      };
   }
 }
 
@@ -181,7 +183,7 @@ if (typeof global !== "undefined" && typeof window !== "undefined") {
 
   // Force override to ensure polyfill is always available
   (global as any).requestAnimationFrame = window.requestAnimationFrame = (
-    callback: FrameRequestCallback
+    callback: FrameRequestCallback,
   ): number => {
     const id = ++rafId;
     rafCallbacks.set(id, callback);
@@ -197,7 +199,7 @@ if (typeof global !== "undefined" && typeof window !== "undefined") {
   };
 
   (global as any).cancelAnimationFrame = window.cancelAnimationFrame = (
-    id: number
+    id: number,
   ): void => {
     rafCallbacks.delete(id);
   };

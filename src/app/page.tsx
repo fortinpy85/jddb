@@ -59,9 +59,24 @@ const UserPreferencesPage = lazy(() =>
 const BilingualEditor = lazy(() =>
   import("@/components/translation/BilingualEditor").then((m) => ({
     default: m.BilingualEditor,
-  }))
+  })),
 );
 const AIDemo = lazy(() => import("@/app/ai-demo/page"));
+const AIJobWriter = lazy(() =>
+  import("@/components/generation/AIJobWriter").then((m) => ({
+    default: m.AIJobWriter,
+  })),
+);
+const JobPostingGenerator = lazy(() =>
+  import("@/components/generation/JobPostingGenerator").then((m) => ({
+    default: m.JobPostingGenerator,
+  })),
+);
+const PredictiveAnalytics = lazy(() =>
+  import("@/components/analytics/PredictiveAnalytics").then((m) => ({
+    default: m.PredictiveAnalytics,
+  })),
+);
 
 // View types for routing
 type ViewType =
@@ -72,6 +87,9 @@ type ViewType =
   | "search"
   | "editing"
   | "improvement"
+  | "writer"
+  | "posting"
+  | "analytics"
   | "translate"
   | "compare"
   | "statistics"
@@ -154,6 +172,12 @@ export default function HomePage() {
         return "improve";
       case "editing":
         return "translate";
+      case "writer":
+        return "writer";
+      case "posting":
+        return "posting";
+      case "analytics":
+        return "analytics";
       default:
         return activeView as AppView;
     }
@@ -188,6 +212,18 @@ export default function HomePage() {
           // If no job selected, go to jobs list and show message
           handleViewChange("home");
         }
+        break;
+      case "writer":
+        selectJob(null); // Clear selection when navigating to AI writer
+        handleViewChange("writer");
+        break;
+      case "posting":
+        selectJob(null); // Clear selection when navigating to posting generator
+        handleViewChange("posting");
+        break;
+      case "analytics":
+        selectJob(null); // Clear selection when navigating to analytics
+        handleViewChange("analytics");
         break;
       case "translate":
         if (selectedJob) {
@@ -376,6 +412,65 @@ export default function HomePage() {
           >
             <UserPreferencesPage />
           </Suspense>
+        );
+      case "writer":
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold">
+                  AI Job Description Writer
+                </h2>
+                <p className="text-muted-foreground mt-2">
+                  Create comprehensive job descriptions with AI assistance
+                </p>
+              </div>
+            </div>
+            <Suspense
+              fallback={<LoadingState message="Loading AI writer..." />}
+            >
+              <AIJobWriter />
+            </Suspense>
+          </div>
+        );
+      case "posting":
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold">Job Posting Generator</h2>
+                <p className="text-muted-foreground mt-2">
+                  Transform job descriptions into optimized public postings
+                </p>
+              </div>
+            </div>
+            <Suspense
+              fallback={<LoadingState message="Loading posting generator..." />}
+            >
+              <JobPostingGenerator />
+            </Suspense>
+          </div>
+        );
+      case "analytics":
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold">
+                  Predictive Content Analytics
+                </h2>
+                <p className="text-muted-foreground mt-2">
+                  AI-powered predictions for application volume, time-to-fill,
+                  and content effectiveness
+                </p>
+              </div>
+            </div>
+            <Suspense
+              fallback={<LoadingState message="Loading analytics..." />}
+            >
+              <PredictiveAnalytics />
+            </Suspense>
+          </div>
         );
       case "ai-demo":
         return (

@@ -43,6 +43,8 @@ import {
   Wand2,
   Menu,
   X,
+  FileText,
+  Megaphone,
 } from "lucide-react";
 import ThemeToggle from "@/components/ui/theme-toggle";
 
@@ -52,6 +54,9 @@ export type AppView =
   | "jobs"
   | "upload"
   | "improve"
+  | "writer"
+  | "posting"
+  | "analytics"
   | "search"
   | "compare"
   | "translate"
@@ -102,6 +107,24 @@ const primaryNavItems: NavItem[] = [
     label: "Improve",
     icon: Wand2,
     description: "AI-powered improvements",
+  },
+  {
+    id: "writer",
+    label: "AI Writer",
+    icon: FileText,
+    description: "Generate job descriptions with AI",
+  },
+  {
+    id: "posting",
+    label: "Job Posting",
+    icon: Megaphone,
+    description: "Create public postings",
+  },
+  {
+    id: "analytics",
+    label: "Predictive Analytics",
+    icon: BarChart3,
+    description: "Content predictions & insights",
   },
   {
     id: "search",
@@ -245,7 +268,8 @@ export function AppHeader({
                 {primaryNavItems.map((item) => {
                   const isActive = currentView === item.id;
                   const Icon = item.icon;
-                  const requiresJob = item.id === "translate" || item.id === "improve";
+                  const requiresJob =
+                    item.id === "translate" || item.id === "improve";
                   const isDisabled = requiresJob && !hasSelectedJob;
                   const tooltipText = isDisabled
                     ? `Select a job to ${item.id === "translate" ? "translate" : "improve"}`
@@ -259,8 +283,9 @@ export function AppHeader({
                       disabled={isDisabled}
                       className={cn(
                         "w-full justify-start gap-3 h-11",
-                        isActive && "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
-                        isDisabled && "opacity-50 cursor-not-allowed"
+                        isActive &&
+                          "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
+                        isDisabled && "opacity-50 cursor-not-allowed",
                       )}
                       title={tooltipText}
                       aria-label={item.label}
@@ -293,7 +318,8 @@ export function AppHeader({
               const Icon = item.icon;
 
               // Disable translate and improve when no job is selected
-              const requiresJob = item.id === "translate" || item.id === "improve";
+              const requiresJob =
+                item.id === "translate" || item.id === "improve";
               const isDisabled = requiresJob && !hasSelectedJob;
               const tooltipText = isDisabled
                 ? `Select a job to ${item.id === "translate" ? "translate" : "improve"}`
@@ -313,7 +339,8 @@ export function AppHeader({
                     "transition-all duration-200",
 
                     // Hover state
-                    !isDisabled && "hover:bg-slate-100/80 dark:hover:bg-slate-800/80",
+                    !isDisabled &&
+                      "hover:bg-slate-100/80 dark:hover:bg-slate-800/80",
                     !isDisabled && "hover:shadow-button",
 
                     // Active state
@@ -324,7 +351,9 @@ export function AppHeader({
                     ],
 
                     // Inactive state
-                    !isActive && !isDisabled && "text-slate-600 dark:text-slate-400",
+                    !isActive &&
+                      !isDisabled &&
+                      "text-slate-600 dark:text-slate-400",
 
                     // Disabled state
                     isDisabled && "opacity-50 cursor-not-allowed",

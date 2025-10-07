@@ -5,11 +5,11 @@
  * Automatically analyzes text as user types and provides live suggestions.
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { useAISuggestions } from './useAISuggestions';
-import { analyzeDiff } from '@/utils/diffAnalysis';
-import type { TextChange, DiffResult } from '@/utils/diffAnalysis';
-import type { AISuggestion } from './useAISuggestions';
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useAISuggestions } from "./useAISuggestions";
+import { analyzeDiff } from "@/utils/diffAnalysis";
+import type { TextChange, DiffResult } from "@/utils/diffAnalysis";
+import type { AISuggestion } from "./useAISuggestions";
 
 export interface UseLiveImprovementOptions {
   debounceMs?: number;
@@ -57,7 +57,7 @@ export interface UseLiveImprovementReturn {
 
 export interface RLHFEvent {
   timestamp: string;
-  eventType: 'accept' | 'reject' | 'modify' | 'generate';
+  eventType: "accept" | "reject" | "modify" | "generate";
   suggestionId?: string;
   suggestionType?: string;
   originalText: string;
@@ -80,12 +80,13 @@ export function useLiveImprovement({
   onAnalysisComplete,
 }: UseLiveImprovementOptions = {}): UseLiveImprovementReturn {
   // State
-  const [originalText, setOriginalTextState] = useState('');
-  const [improvedText, setImprovedText] = useState('');
+  const [originalText, setOriginalTextState] = useState("");
+  const [improvedText, setImprovedText] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [lastAnalyzedAt, setLastAnalyzedAt] = useState<Date | null>(null);
   const [diffResult, setDiffResult] = useState<DiffResult | null>(null);
-  const [currentSuggestion, setCurrentSuggestion] = useState<AISuggestion | null>(null);
+  const [currentSuggestion, setCurrentSuggestion] =
+    useState<AISuggestion | null>(null);
   const [rlhfEvents, setRlhfEvents] = useState<RLHFEvent[]>([]);
 
   // Refs
@@ -103,87 +104,99 @@ export function useLiveImprovement({
   } = useAISuggestions();
 
   // Set original text with debounced analysis
-  const setOriginalText = useCallback((text: string) => {
-    setOriginalTextState(text);
+  const setOriginalText = useCallback(
+    (text: string) => {
+      setOriginalTextState(text);
 
-    // Clear previous timer
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
+      // Clear previous timer
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
 
-    // Don't analyze if text is too short
-    if (text.length < minLength) {
-      setIsAnalyzing(false);
-      return;
-    }
+      // Don't analyze if text is too short
+      if (text.length < minLength) {
+        setIsAnalyzing(false);
+        return;
+      }
 
-    // Auto-analyze if enabled
-    if (autoAnalyze) {
-      setIsAnalyzing(true);
+      // Auto-analyze if enabled
+      if (autoAnalyze) {
+        setIsAnalyzing(true);
 
-      // Set new debounced timer
-      debounceTimerRef.current = setTimeout(() => {
-        triggerAnalysisInternal(text);
-      }, debounceMs);
-    }
-  }, [minLength, autoAnalyze, debounceMs]);
+        // Set new debounced timer
+        debounceTimerRef.current = setTimeout(() => {
+          triggerAnalysisInternal(text);
+        }, debounceMs);
+      }
+    },
+    [minLength, autoAnalyze, debounceMs],
+  );
 
   // Trigger analysis manually or via debounce
-  const triggerAnalysisInternal = useCallback(async (text: string) => {
-    const analysisId = ++analysisCounterRef.current;
+  const triggerAnalysisInternal = useCallback(
+    async (text: string) => {
+      const analysisId = ++analysisCounterRef.current;
 
-    try {
-      setIsAnalyzing(true);
+      try {
+        setIsAnalyzing(true);
 
-      // Fetch AI suggestions
-      await fetchSuggestions(text, 'job_description', [
-        'grammar',
-        'style',
-        'clarity',
-        'bias',
-        'compliance',
-      ]);
+        // Fetch AI suggestions
+        await fetchSuggestions(text, "job_description", [
+          "grammar",
+          "style",
+          "clarity",
+          "bias",
+          "compliance",
+        ]);
 
-      // Generate improved text by applying suggestions
-      // In real implementation, this would call a backend API
-      const improved = await generateImprovedText(text, suggestions);
+        // Generate improved text by applying suggestions
+        // In real implementation, this would call a backend API
+        const improved = await generateImprovedText(text, suggestions);
 
-      // Only update if this is still the latest analysis
-      if (analysisId === analysisCounterRef.current) {
-        setImprovedText(improved);
-        setLastAnalyzedAt(new Date());
+        // Only update if this is still the latest analysis
+        if (analysisId === analysisCounterRef.current) {
+          setImprovedText(improved);
+          setLastAnalyzedAt(new Date());
 
-        // Run diff analysis
-        const result = analyzeDiff(text, improved, suggestions);
-        setDiffResult(result);
+          // Run diff analysis
+          const result = analyzeDiff(text, improved, suggestions);
+          setDiffResult(result);
 
-        // Callbacks
-        onImprovedTextGenerated?.(improved);
-        onAnalysisComplete?.(result);
+          // Callbacks
+          onImprovedTextGenerated?.(improved);
+          onAnalysisComplete?.(result);
 
-        // Capture RLHF event
-        if (captureRLHF) {
-          captureRLHFEvent({
-            eventType: 'generate',
-            originalText: text,
-            suggestedText: improved,
-            userAction: 'ai_generated',
-            metadata: {
-              suggestionCount: suggestions.length,
-              overallScore,
-              analysisId,
-            },
-          });
+          // Capture RLHF event
+          if (captureRLHF) {
+            captureRLHFEvent({
+              eventType: "generate",
+              originalText: text,
+              suggestedText: improved,
+              userAction: "ai_generated",
+              metadata: {
+                suggestionCount: suggestions.length,
+                overallScore,
+                analysisId,
+              },
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Live analysis failed:", error);
+      } finally {
+        if (analysisId === analysisCounterRef.current) {
+          setIsAnalyzing(false);
         }
       }
-    } catch (error) {
-      console.error('Live analysis failed:', error);
-    } finally {
-      if (analysisId === analysisCounterRef.current) {
-        setIsAnalyzing(false);
-      }
-    }
-  }, [suggestions, onImprovedTextGenerated, onAnalysisComplete, captureRLHF, overallScore]);
+    },
+    [
+      suggestions,
+      onImprovedTextGenerated,
+      onAnalysisComplete,
+      captureRLHF,
+      overallScore,
+    ],
+  );
 
   // Public trigger analysis method
   const triggerAnalysis = useCallback(() => {
@@ -193,57 +206,63 @@ export function useLiveImprovement({
   }, [originalText, minLength, triggerAnalysisInternal]);
 
   // Accept suggestion
-  const acceptSuggestion = useCallback((suggestion: AISuggestion) => {
-    // Apply the suggestion to improved text
-    const newImprovedText = improvedText.replace(
-      suggestion.original_text,
-      suggestion.suggested_text
-    );
-    setImprovedText(newImprovedText);
+  const acceptSuggestion = useCallback(
+    (suggestion: AISuggestion) => {
+      // Apply the suggestion to improved text
+      const newImprovedText = improvedText.replace(
+        suggestion.original_text,
+        suggestion.suggested_text,
+      );
+      setImprovedText(newImprovedText);
 
-    // Update AI suggestions state
-    acceptAISuggestion(suggestion.id);
+      // Update AI suggestions state
+      acceptAISuggestion(suggestion.id);
 
-    // Capture RLHF event
-    if (captureRLHF) {
-      captureRLHFEvent({
-        eventType: 'accept',
-        suggestionId: suggestion.id,
-        suggestionType: suggestion.type,
-        originalText: suggestion.original_text,
-        suggestedText: suggestion.suggested_text,
-        finalText: suggestion.suggested_text,
-        userAction: 'accepted',
-        confidence: suggestion.confidence,
-      });
-    }
+      // Capture RLHF event
+      if (captureRLHF) {
+        captureRLHFEvent({
+          eventType: "accept",
+          suggestionId: suggestion.id,
+          suggestionType: suggestion.type,
+          originalText: suggestion.original_text,
+          suggestedText: suggestion.suggested_text,
+          finalText: suggestion.suggested_text,
+          userAction: "accepted",
+          confidence: suggestion.confidence,
+        });
+      }
 
-    // Clear current suggestion
-    setCurrentSuggestion(null);
-  }, [improvedText, acceptAISuggestion, captureRLHF]);
+      // Clear current suggestion
+      setCurrentSuggestion(null);
+    },
+    [improvedText, acceptAISuggestion, captureRLHF],
+  );
 
   // Reject suggestion
-  const rejectSuggestion = useCallback((suggestion: AISuggestion) => {
-    // Update AI suggestions state
-    rejectAISuggestion(suggestion.id);
+  const rejectSuggestion = useCallback(
+    (suggestion: AISuggestion) => {
+      // Update AI suggestions state
+      rejectAISuggestion(suggestion.id);
 
-    // Capture RLHF event
-    if (captureRLHF) {
-      captureRLHFEvent({
-        eventType: 'reject',
-        suggestionId: suggestion.id,
-        suggestionType: suggestion.type,
-        originalText: suggestion.original_text,
-        suggestedText: suggestion.suggested_text,
-        finalText: suggestion.original_text, // User kept original
-        userAction: 'rejected',
-        confidence: suggestion.confidence,
-      });
-    }
+      // Capture RLHF event
+      if (captureRLHF) {
+        captureRLHFEvent({
+          eventType: "reject",
+          suggestionId: suggestion.id,
+          suggestionType: suggestion.type,
+          originalText: suggestion.original_text,
+          suggestedText: suggestion.suggested_text,
+          finalText: suggestion.original_text, // User kept original
+          userAction: "rejected",
+          confidence: suggestion.confidence,
+        });
+      }
 
-    // Clear current suggestion
-    setCurrentSuggestion(null);
-  }, [rejectAISuggestion, captureRLHF]);
+      // Clear current suggestion
+      setCurrentSuggestion(null);
+    },
+    [rejectAISuggestion, captureRLHF],
+  );
 
   // Apply all improvements and return final text
   const applyImprovement = useCallback(() => {
@@ -251,30 +270,35 @@ export function useLiveImprovement({
   }, [improvedText]);
 
   // Capture RLHF event
-  const captureRLHFEvent = useCallback((event: Omit<RLHFEvent, 'timestamp'>) => {
-    const fullEvent: RLHFEvent = {
-      ...event,
-      timestamp: new Date().toISOString(),
-    };
+  const captureRLHFEvent = useCallback(
+    (event: Omit<RLHFEvent, "timestamp">) => {
+      const fullEvent: RLHFEvent = {
+        ...event,
+        timestamp: new Date().toISOString(),
+      };
 
-    setRlhfEvents((prev) => [...prev, fullEvent]);
+      setRlhfEvents((prev) => [...prev, fullEvent]);
 
-    // Also save to localStorage for persistence
-    try {
-      const existingData = JSON.parse(localStorage.getItem('rlhf_live_events') || '[]');
-      existingData.push(fullEvent);
-      localStorage.setItem('rlhf_live_events', JSON.stringify(existingData));
+      // Also save to localStorage for persistence
+      try {
+        const existingData = JSON.parse(
+          localStorage.getItem("rlhf_live_events") || "[]",
+        );
+        existingData.push(fullEvent);
+        localStorage.setItem("rlhf_live_events", JSON.stringify(existingData));
 
-      // Auto-sync when threshold reached (10 events)
-      if (existingData.length >= 10) {
-        syncRLHFData().catch(error => {
-          console.error(`Auto-sync failed:`, error);
-        });
+        // Auto-sync when threshold reached (10 events)
+        if (existingData.length >= 10) {
+          syncRLHFData().catch((error) => {
+            console.error(`Auto-sync failed:`, error);
+          });
+        }
+      } catch (error) {
+        console.error("Failed to save RLHF event to localStorage:", error);
       }
-    } catch (error) {
-      console.error('Failed to save RLHF event to localStorage:', error);
-    }
-  }, []);
+    },
+    [],
+  );
 
   // Export RLHF data
   const exportRLHFData = useCallback(() => {
@@ -332,7 +356,7 @@ export function useLiveImprovement({
  */
 async function generateImprovedText(
   originalText: string,
-  suggestions: AISuggestion[]
+  suggestions: AISuggestion[],
 ): Promise<string> {
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 500));
@@ -343,14 +367,17 @@ async function generateImprovedText(
   suggestions
     .filter((s) => s.confidence >= 0.8)
     .forEach((suggestion) => {
-      improved = improved.replace(suggestion.original_text, suggestion.suggested_text);
+      improved = improved.replace(
+        suggestion.original_text,
+        suggestion.suggested_text,
+      );
     });
 
   // Basic improvements
   improved = improved
-    .replace(/he\/she/gi, 'they')
-    .replace(/his\/her/gi, 'their')
-    .replace(/\s+/g, ' ')
+    .replace(/he\/she/gi, "they")
+    .replace(/his\/her/gi, "their")
+    .replace(/\s+/g, " ")
     .trim();
 
   return improved;
@@ -361,9 +388,9 @@ async function generateImprovedText(
  */
 export function exportAllRLHFData(): RLHFEvent[] {
   try {
-    return JSON.parse(localStorage.getItem('rlhf_live_events') || '[]');
+    return JSON.parse(localStorage.getItem("rlhf_live_events") || "[]");
   } catch (error) {
-    console.error('Failed to export RLHF data:', error);
+    console.error("Failed to export RLHF data:", error);
     return [];
   }
 }
@@ -373,16 +400,20 @@ export function exportAllRLHFData(): RLHFEvent[] {
  */
 export function clearAllRLHFData(): void {
   try {
-    localStorage.removeItem('rlhf_live_events');
+    localStorage.removeItem("rlhf_live_events");
   } catch (error) {
-    console.error('Failed to clear RLHF data:', error);
+    console.error("Failed to clear RLHF data:", error);
   }
 }
 
 /**
  * Sync RLHF events to backend and clear localStorage
  */
-export async function syncRLHFData(): Promise<{success: boolean; synced: number; error?: string}> {
+export async function syncRLHFData(): Promise<{
+  success: boolean;
+  synced: number;
+  error?: string;
+}> {
   try {
     const events = exportAllRLHFData();
 
@@ -391,7 +422,7 @@ export async function syncRLHFData(): Promise<{success: boolean; synced: number;
     }
 
     // Import API client dynamically to avoid circular dependencies
-    const { apiClient } = await import('@/lib/api');
+    const { apiClient } = await import("@/lib/api");
 
     const result = await apiClient.syncRLHFEvents(events);
 
@@ -400,11 +431,11 @@ export async function syncRLHFData(): Promise<{success: boolean; synced: number;
 
     return { success: true, synced: events.length };
   } catch (error) {
-    console.error('Failed to sync RLHF data:', error);
+    console.error("Failed to sync RLHF data:", error);
     return {
       success: false,
       synced: 0,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }
@@ -417,7 +448,7 @@ export function getPendingRLHFCount(): number {
     const events = exportAllRLHFData();
     return events.length;
   } catch (error) {
-    console.error('Failed to get pending RLHF count:', error);
+    console.error("Failed to get pending RLHF count:", error);
     return 0;
   }
 }

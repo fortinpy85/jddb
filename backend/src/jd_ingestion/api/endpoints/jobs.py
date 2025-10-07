@@ -195,7 +195,8 @@ async def list_jobs(
                 "file_path": job.file_path,
                 "quality_score": (
                     float(job.quality_metrics.content_completeness_score)
-                    if job.quality_metrics and job.quality_metrics.content_completeness_score
+                    if job.quality_metrics
+                    and job.quality_metrics.content_completeness_score
                     else 0.0
                 ),
             }

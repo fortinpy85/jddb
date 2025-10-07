@@ -5,14 +5,15 @@
  * Handles batching, retry logic, and localStorage synchronization.
  */
 
-import type { RLHFEvent } from '@/hooks/useLiveImprovement';
+import type { RLHFEvent } from "@/hooks/useLiveImprovement";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
 export interface RLHFFeedbackCreate {
   user_id?: number;
   job_id?: number;
-  event_type: 'accept' | 'reject' | 'modify' | 'generate';
+  event_type: "accept" | "reject" | "modify" | "generate";
   original_text: string;
   suggested_text?: string;
   final_text?: string;
@@ -81,7 +82,7 @@ export class RLHFService {
         this.scheduleBatchSend();
       }
     } catch (error) {
-      console.error('Failed to capture RLHF feedback:', error);
+      console.error("Failed to capture RLHF feedback:", error);
     }
   }
 
@@ -120,7 +121,7 @@ export class RLHFService {
       // Clear localStorage after successful sync
       this.clearLocalStorage();
     } catch (error) {
-      console.error('Failed to sync RLHF data to backend:', error);
+      console.error("Failed to sync RLHF data to backend:", error);
       throw error;
     }
   }
@@ -137,7 +138,7 @@ export class RLHFService {
     try {
       await this.sendBulkFeedback(batch);
     } catch (error) {
-      console.error('Failed to send RLHF batch:', error);
+      console.error("Failed to send RLHF batch:", error);
       // Re-queue failed items
       this.batchQueue.unshift(...batch);
     }
@@ -163,11 +164,13 @@ export class RLHFService {
   /**
    * Send bulk feedback to API
    */
-  private async sendBulkFeedback(feedbackItems: RLHFFeedbackCreate[]): Promise<void> {
+  private async sendBulkFeedback(
+    feedbackItems: RLHFFeedbackCreate[],
+  ): Promise<void> {
     const response = await fetch(`${API_BASE_URL}/rlhf/feedback/bulk`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         feedback_items: feedbackItems,
@@ -184,14 +187,14 @@ export class RLHFService {
    */
   async getAcceptanceRate(
     suggestionType?: string,
-    days: number = 30
+    days: number = 30,
   ): Promise<RLHFStatistics> {
     const params = new URLSearchParams();
-    if (suggestionType) params.append('suggestion_type', suggestionType);
-    params.append('days', days.toString());
+    if (suggestionType) params.append("suggestion_type", suggestionType);
+    params.append("days", days.toString());
 
     const response = await fetch(
-      `${API_BASE_URL}/rlhf/statistics/acceptance-rate?${params}`
+      `${API_BASE_URL}/rlhf/statistics/acceptance-rate?${params}`,
     );
 
     if (!response.ok) {
@@ -206,7 +209,7 @@ export class RLHFService {
    */
   async getTypeStatistics(days: number = 30): Promise<TypeStatistics[]> {
     const response = await fetch(
-      `${API_BASE_URL}/rlhf/statistics/by-type?days=${days}`
+      `${API_BASE_URL}/rlhf/statistics/by-type?days=${days}`,
     );
 
     if (!response.ok) {
@@ -221,10 +224,10 @@ export class RLHFService {
    */
   async exportTrainingData(
     minConfidence: number = 0.7,
-    limit: number = 1000
+    limit: number = 1000,
   ): Promise<any> {
     const response = await fetch(
-      `${API_BASE_URL}/rlhf/export/training-data?min_confidence=${minConfidence}&limit=${limit}`
+      `${API_BASE_URL}/rlhf/export/training-data?min_confidence=${minConfidence}&limit=${limit}`,
     );
 
     if (!response.ok) {
@@ -239,14 +242,14 @@ export class RLHFService {
    */
   private saveToLocalStorage(feedback: RLHFFeedbackCreate): void {
     try {
-      const existing = JSON.parse(localStorage.getItem('rlhf_pending') || '[]');
+      const existing = JSON.parse(localStorage.getItem("rlhf_pending") || "[]");
       existing.push({
         ...feedback,
         timestamp: new Date().toISOString(),
       });
-      localStorage.setItem('rlhf_pending', JSON.stringify(existing));
+      localStorage.setItem("rlhf_pending", JSON.stringify(existing));
     } catch (error) {
-      console.error('Failed to save RLHF data to localStorage:', error);
+      console.error("Failed to save RLHF data to localStorage:", error);
     }
   }
 
@@ -255,10 +258,10 @@ export class RLHFService {
    */
   private getLocalStorageData(): RLHFEvent[] {
     try {
-      const data = localStorage.getItem('rlhf_live_events') || '[]';
+      const data = localStorage.getItem("rlhf_live_events") || "[]";
       return JSON.parse(data);
     } catch (error) {
-      console.error('Failed to read RLHF data from localStorage:', error);
+      console.error("Failed to read RLHF data from localStorage:", error);
       return [];
     }
   }
@@ -268,10 +271,10 @@ export class RLHFService {
    */
   private clearLocalStorage(): void {
     try {
-      localStorage.removeItem('rlhf_live_events');
-      localStorage.removeItem('rlhf_pending');
+      localStorage.removeItem("rlhf_live_events");
+      localStorage.removeItem("rlhf_pending");
     } catch (error) {
-      console.error('Failed to clear RLHF data from localStorage:', error);
+      console.error("Failed to clear RLHF data from localStorage:", error);
     }
   }
 
@@ -288,15 +291,15 @@ export class RLHFService {
 export const rlhfService = RLHFService.getInstance();
 
 // Auto-sync on page load (after delay)
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   setTimeout(() => {
     rlhfService.syncLocalStorageToBackend().catch(console.error);
   }, 5000); // Wait 5 seconds after page load
 }
 
 // Flush on page unload
-if (typeof window !== 'undefined') {
-  window.addEventListener('beforeunload', () => {
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeunload", () => {
     rlhfService.flush().catch(console.error);
   });
 }

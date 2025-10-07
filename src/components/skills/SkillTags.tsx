@@ -42,7 +42,9 @@ export function SkillTags({
   const remainingCount = sortedSkills.length - displaySkills.length;
 
   // Get badge variant based on confidence score
-  const getConfidenceVariant = (confidence: number): "default" | "secondary" | "outline" => {
+  const getConfidenceVariant = (
+    confidence: number,
+  ): "default" | "secondary" | "outline" => {
     if (confidence >= 0.8) return "default"; // High confidence - primary color
     if (confidence >= 0.6) return "secondary"; // Medium confidence
     return "outline"; // Low confidence
@@ -91,7 +93,7 @@ export function SkillTags({
               variant={getConfidenceVariant(skill.confidence)}
               className={cn(
                 sizeClasses[size],
-                "cursor-help transition-colors hover:bg-primary/20"
+                "cursor-help transition-colors hover:bg-primary/20",
               )}
             >
               {skill.name}
@@ -181,7 +183,7 @@ export function SkillTagsSection({
                 ? Math.round(
                     (skills.reduce((sum, s) => sum + s.confidence, 0) /
                       skills.length) *
-                      100
+                      100,
                   )
                 : 0}
               %

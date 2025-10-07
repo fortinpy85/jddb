@@ -261,7 +261,7 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                   id: "classification",
                   label: "Classification",
                   placeholder: "All Classifications",
-                  value: searchFilters.classification || undefined,
+                  value: searchFilters.classification || "",
                   options: [
                     ...(facets?.classifications.map((c) => ({
                       value: c.value,
@@ -276,7 +276,7 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                   id: "language",
                   label: "Language",
                   placeholder: "All Languages",
-                  value: searchFilters.language || undefined,
+                  value: searchFilters.language || "",
                   options: [
                     ...(facets?.languages.map((lang) => ({
                       value: lang.value,

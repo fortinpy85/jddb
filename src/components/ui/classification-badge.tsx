@@ -72,30 +72,28 @@ export function ClassificationBadge({
   showHelpIcon = false,
   variant = "secondary",
 }: ClassificationBadgeProps) {
-  const description = CLASSIFICATION_DESCRIPTIONS[code] || `${code} - Classification description not available`;
+  const description =
+    CLASSIFICATION_DESCRIPTIONS[code] ||
+    `${code} - Classification description not available`;
 
   return (
     <TooltipProvider delayDuration={300}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Badge
-            variant={variant}
-            className={cn(
-              "cursor-help transition-all hover:ring-2 hover:ring-primary/20",
-              className
-            )}
-          >
-            {code}
-            {showHelpIcon && (
-              <HelpCircle className="ml-1 h-3 w-3 opacity-70" />
-            )}
-          </Badge>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-xs">
-          <p className="font-semibold">{code}</p>
-          <p className="text-xs text-muted-foreground mt-1">{description}</p>
-        </TooltipContent>
-      </Tooltip>
+      <TooltipTrigger asChild>
+        <Badge
+          variant={variant}
+          className={cn(
+            "cursor-help transition-all hover:ring-2 hover:ring-primary/20",
+            className,
+          )}
+        >
+          {code}
+          {showHelpIcon && <HelpCircle className="ml-1 h-3 w-3 opacity-70" />}
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-xs">
+        <p className="font-semibold">{code}</p>
+        <p className="text-xs text-muted-foreground mt-1">{description}</p>
+      </TooltipContent>
     </TooltipProvider>
   );
 }
@@ -125,7 +123,7 @@ export function ClassificationSelect({
         "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         "disabled:cursor-not-allowed disabled:opacity-50",
-        className
+        className,
       )}
     >
       <option value="">All Classifications</option>

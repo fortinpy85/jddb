@@ -9,7 +9,12 @@
 
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type {
   TextChange,
@@ -63,7 +68,10 @@ export function DiffHighlighter({
             );
           } else {
             return (
-              <span key={`text-${index}`} className="text-gray-900 dark:text-gray-100">
+              <span
+                key={`text-${index}`}
+                className="text-gray-900 dark:text-gray-100"
+              >
                 {segment.text}
               </span>
             );
@@ -85,12 +93,17 @@ interface TextSegment {
 /**
  * Build text segments from original text and changes
  */
-function buildTextSegments(originalText: string, changes: TextChange[]): TextSegment[] {
+function buildTextSegments(
+  originalText: string,
+  changes: TextChange[],
+): TextSegment[] {
   const segments: TextSegment[] = [];
   let currentIndex = 0;
 
   // Sort changes by start index
-  const sortedChanges = [...changes].sort((a, b) => a.startIndex - b.startIndex);
+  const sortedChanges = [...changes].sort(
+    (a, b) => a.startIndex - b.startIndex,
+  );
 
   sortedChanges.forEach((change) => {
     // Add unchanged text before this change
@@ -102,7 +115,8 @@ function buildTextSegments(originalText: string, changes: TextChange[]): TextSeg
 
     // Add the change
     segments.push({
-      text: change.type === 'deletion' ? change.originalText : change.suggestedText,
+      text:
+        change.type === "deletion" ? change.originalText : change.suggestedText,
       change,
     });
 
@@ -137,7 +151,9 @@ function ChangeHighlight({
   showCategory,
 }: ChangeHighlightProps) {
   const colorClass = getChangeColorClass(change.type);
-  const categoryClass = showCategory ? getCategoryColorClass(change.category) : '';
+  const categoryClass = showCategory
+    ? getCategoryColorClass(change.category)
+    : "";
 
   const content = (
     <span
@@ -147,19 +163,23 @@ function ChangeHighlight({
         colorClass,
         categoryClass,
         isSelected && "ring-2 ring-blue-500 ring-offset-1",
-        "hover:shadow-sm"
+        "hover:shadow-sm",
       )}
     >
-      {change.type === 'deletion' && (
+      {change.type === "deletion" && (
         <span className="line-through">{change.originalText}</span>
       )}
-      {change.type === 'addition' && (
+      {change.type === "addition" && (
         <span className="underline decoration-2">{change.suggestedText}</span>
       )}
-      {change.type === 'modification' && (
+      {change.type === "modification" && (
         <>
-          <span className="line-through text-red-600 mr-1">{change.originalText}</span>
-          <span className="underline decoration-2 text-green-600">{change.suggestedText}</span>
+          <span className="line-through text-red-600 mr-1">
+            {change.originalText}
+          </span>
+          <span className="underline decoration-2 text-green-600">
+            {change.suggestedText}
+          </span>
         </>
       )}
     </span>
@@ -167,12 +187,12 @@ function ChangeHighlight({
 
   if (change.explanation || change.confidence !== undefined) {
     return (
-      <Tooltip>
+      <TooltipProvider>
         <TooltipTrigger asChild>{content}</TooltipTrigger>
         <TooltipContent>
           <ChangeTooltip change={change} />
         </TooltipContent>
-      </Tooltip>
+      </TooltipProvider>
     );
   }
 
@@ -212,17 +232,17 @@ function ChangeTooltip({ change }: { change: TextChange }) {
 
       {/* Change details */}
       <div className="text-xs space-y-1 pt-2 border-t border-gray-200 dark:border-gray-700">
-        {change.type === 'deletion' && (
+        {change.type === "deletion" && (
           <div className="text-red-600">
             <strong>Remove:</strong> "{change.originalText}"
           </div>
         )}
-        {change.type === 'addition' && (
+        {change.type === "addition" && (
           <div className="text-green-600">
             <strong>Add:</strong> "{change.suggestedText}"
           </div>
         )}
-        {change.type === 'modification' && (
+        {change.type === "modification" && (
           <>
             <div className="text-red-600">
               <strong>From:</strong> "{change.originalText}"
@@ -242,16 +262,16 @@ function ChangeTooltip({ change }: { change: TextChange }) {
  */
 function getCategoryBadgeClass(category: ChangeCategory): string {
   switch (category) {
-    case 'grammar':
-      return 'bg-red-100 text-red-700';
-    case 'style':
-      return 'bg-blue-100 text-blue-700';
-    case 'clarity':
-      return 'bg-purple-100 text-purple-700';
-    case 'bias':
-      return 'bg-yellow-100 text-yellow-700';
-    case 'compliance':
-      return 'bg-green-100 text-green-700';
+    case "grammar":
+      return "bg-red-100 text-red-700";
+    case "style":
+      return "bg-blue-100 text-blue-700";
+    case "clarity":
+      return "bg-purple-100 text-purple-700";
+    case "bias":
+      return "bg-yellow-100 text-yellow-700";
+    case "compliance":
+      return "bg-green-100 text-green-700";
   }
 }
 
@@ -275,7 +295,12 @@ export function DiffSummary({
 }: DiffSummaryProps) {
   if (totalChanges === 0) {
     return (
-      <div className={cn("flex items-center gap-2 text-sm text-gray-600", className)}>
+      <div
+        className={cn(
+          "flex items-center gap-2 text-sm text-gray-600",
+          className,
+        )}
+      >
         <CheckCircle className="h-4 w-4 text-green-600" />
         <span>No changes detected</span>
       </div>
@@ -286,7 +311,7 @@ export function DiffSummary({
     <div className={cn("flex items-center gap-3 text-sm", className)}>
       <AlertCircle className="h-4 w-4 text-blue-600" />
       <span className="text-gray-700 dark:text-gray-300">
-        {totalChanges} {totalChanges === 1 ? 'change' : 'changes'}:
+        {totalChanges} {totalChanges === 1 ? "change" : "changes"}:
       </span>
       {additionCount > 0 && (
         <Badge className="bg-green-100 text-green-700 text-xs">

@@ -63,8 +63,10 @@ function ImprovementView({
   const [improvedText, setImprovedText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [showOriginal, setShowOriginal] = useState(true);
-  const [viewMode, setViewMode] = useState<'split' | 'diff'>('diff');
-  const [rightPanelTab, setRightPanelTab] = useState<'changes' | 'live'>('live');
+  const [viewMode, setViewMode] = useState<"split" | "diff">("diff");
+  const [rightPanelTab, setRightPanelTab] = useState<"changes" | "live">(
+    "live",
+  );
 
   // AI Suggestions hook
   const {
@@ -107,7 +109,8 @@ function ImprovementView({
   // Unsaved changes protection
   const { confirmNavigation } = useUnsavedChanges({
     hasUnsavedChanges: improvement.hasPendingChanges || improvement.hasChanges,
-    message: "You have unsaved improvements. Are you sure you want to leave? All pending changes will be lost.",
+    message:
+      "You have unsaved improvements. Are you sure you want to leave? All pending changes will be lost.",
     enabled: true,
   });
 
@@ -133,7 +136,7 @@ function ImprovementView({
         setIsGenerating(false);
       }, 1500);
     } catch (error) {
-      console.error('Failed to generate improvement:', error);
+      console.error("Failed to generate improvement:", error);
       setIsGenerating(false);
     }
   };
@@ -188,7 +191,10 @@ function ImprovementView({
                 Job Description Improvement
               </h2>
               {(improvement.hasPendingChanges || improvement.hasChanges) && (
-                <Badge variant="outline" className="text-amber-600 border-amber-600">
+                <Badge
+                  variant="outline"
+                  className="text-amber-600 border-amber-600"
+                >
                   Unsaved Changes
                 </Badge>
               )}
@@ -204,9 +210,9 @@ function ImprovementView({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setViewMode(viewMode === 'split' ? 'diff' : 'split')}
+            onClick={() => setViewMode(viewMode === "split" ? "diff" : "split")}
           >
-            {viewMode === 'split' ? (
+            {viewMode === "split" ? (
               <>
                 <FileText className="w-4 h-4 mr-2" />
                 Show Diff
@@ -280,7 +286,9 @@ function ImprovementView({
                 <CardTitle className="text-lg flex items-center space-x-2">
                   <Sparkles className="w-5 h-5 text-blue-600" />
                   <span>
-                    {viewMode === 'diff' ? 'Inline Diff View' : 'Side-by-Side Comparison'}
+                    {viewMode === "diff"
+                      ? "Inline Diff View"
+                      : "Side-by-Side Comparison"}
                   </span>
                 </CardTitle>
                 <div className="flex items-center space-x-2">
@@ -295,11 +303,13 @@ function ImprovementView({
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden p-0">
               <ScrollArea className="h-full p-6">
-                {viewMode === 'diff' ? (
+                {viewMode === "diff" ? (
                   <DiffHighlighter
                     originalText={originalText}
                     changes={improvement.filteredChanges}
-                    onChangeClick={(change) => improvement.selectChange(change.id)}
+                    onChangeClick={(change) =>
+                      improvement.selectChange(change.id)
+                    }
                     selectedChangeId={improvement.selectedChangeId}
                     showCategories={true}
                   />
@@ -323,7 +333,9 @@ function ImprovementView({
         <div className="flex flex-col min-h-0">
           <Tabs
             value={rightPanelTab}
-            onValueChange={(value) => setRightPanelTab(value as 'changes' | 'live')}
+            onValueChange={(value) =>
+              setRightPanelTab(value as "changes" | "live")
+            }
             className="flex-1 flex flex-col min-h-0"
           >
             <TabsList className="grid w-full grid-cols-2">
@@ -405,12 +417,16 @@ interface SplitViewProps {
 // Helper to map character index to line number
 function getLineNumberFromIndex(text: string, charIndex: number): number {
   const textUpToIndex = text.substring(0, charIndex);
-  return textUpToIndex.split('\n').length - 1;
+  return textUpToIndex.split("\n").length - 1;
 }
 
 // Helper to get changes for a specific line
-function getChangesForLine(changes: any[], text: string, lineNumber: number): any[] {
-  return changes.filter(change => {
+function getChangesForLine(
+  changes: any[],
+  text: string,
+  lineNumber: number,
+): any[] {
+  return changes.filter((change) => {
     const startLine = getLineNumberFromIndex(text, change.startIndex);
     const endLine = getLineNumberFromIndex(text, change.endIndex);
     return lineNumber >= startLine && lineNumber <= endLine;
@@ -424,21 +440,23 @@ function SplitView({
   onAcceptChange,
   onRejectChange,
   acceptedChangeIds = [],
-  rejectedChangeIds = []
+  rejectedChangeIds = [],
 }: SplitViewProps) {
-  const [focusedLineIndex, setFocusedLineIndex] = React.useState<number | null>(null);
+  const [focusedLineIndex, setFocusedLineIndex] = React.useState<number | null>(
+    null,
+  );
 
   // Split into lines for side-by-side comparison
-  const originalLines = originalText.split('\n');
-  const improvedLines = improvedText.split('\n');
+  const originalLines = originalText.split("\n");
+  const improvedLines = improvedText.split("\n");
   const maxLines = Math.max(originalLines.length, improvedLines.length);
 
   // Get line-level change information
   const getLineChanges = (lineNumber: number) => {
     const lineChanges = getChangesForLine(changes, originalText, lineNumber);
-    const hasAddition = lineChanges.some(c => c.type === 'addition');
-    const hasDeletion = lineChanges.some(c => c.type === 'deletion');
-    const hasModification = lineChanges.some(c => c.type === 'modification');
+    const hasAddition = lineChanges.some((c) => c.type === "addition");
+    const hasDeletion = lineChanges.some((c) => c.type === "deletion");
+    const hasModification = lineChanges.some((c) => c.type === "modification");
 
     return { lineChanges, hasAddition, hasDeletion, hasModification };
   };
@@ -453,25 +471,27 @@ function SplitView({
       if (lineChanges.lineChanges.length === 0) return;
 
       const pendingChanges = lineChanges.lineChanges.filter(
-        c => !acceptedChangeIds.includes(c.id) && !rejectedChangeIds.includes(c.id)
+        (c) =>
+          !acceptedChangeIds.includes(c.id) &&
+          !rejectedChangeIds.includes(c.id),
       );
       if (pendingChanges.length === 0) return;
 
       switch (e.key) {
-        case 'Enter':
-        case 'a':
-        case 'A':
+        case "Enter":
+        case "a":
+        case "A":
           e.preventDefault();
-          pendingChanges.forEach(c => onAcceptChange?.(c.id));
+          pendingChanges.forEach((c) => onAcceptChange?.(c.id));
           break;
-        case 'Delete':
-        case 'r':
-        case 'R':
+        case "Delete":
+        case "r":
+        case "R":
           e.preventDefault();
-          pendingChanges.forEach(c => onRejectChange?.(c.id));
+          pendingChanges.forEach((c) => onRejectChange?.(c.id));
           break;
-        case 'ArrowDown':
-        case 'j':
+        case "ArrowDown":
+        case "j":
           e.preventDefault();
           // Move to next change
           for (let i = focusedLineIndex + 1; i < maxLines; i++) {
@@ -482,8 +502,8 @@ function SplitView({
             }
           }
           break;
-        case 'ArrowUp':
-        case 'k':
+        case "ArrowUp":
+        case "k":
           e.preventDefault();
           // Move to previous change
           for (let i = focusedLineIndex - 1; i >= 0; i--) {
@@ -497,9 +517,15 @@ function SplitView({
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedLineIndex, changes, acceptedChangeIds, rejectedChangeIds, maxLines]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    focusedLineIndex,
+    changes,
+    acceptedChangeIds,
+    rejectedChangeIds,
+    maxLines,
+  ]);
 
   return (
     <div className="grid grid-cols-2 gap-2 divide-x divide-gray-200">
@@ -512,24 +538,32 @@ function SplitView({
           </div>
         </div>
         {originalLines.map((line, index) => {
-          const { lineChanges, hasAddition, hasDeletion, hasModification } = getLineChanges(index);
+          const { lineChanges, hasAddition, hasDeletion, hasModification } =
+            getLineChanges(index);
           const hasChange = lineChanges.length > 0;
-          const isAccepted = lineChanges.some(c => acceptedChangeIds.includes(c.id));
-          const isRejected = lineChanges.some(c => rejectedChangeIds.includes(c.id));
+          const isAccepted = lineChanges.some((c) =>
+            acceptedChangeIds.includes(c.id),
+          );
+          const isRejected = lineChanges.some((c) =>
+            rejectedChangeIds.includes(c.id),
+          );
           const isFocused = focusedLineIndex === index;
 
           // Determine background color based on change type
-          let bgClass = 'hover:bg-gray-50 dark:hover:bg-gray-800/50';
+          let bgClass = "hover:bg-gray-50 dark:hover:bg-gray-800/50";
           if (isFocused) {
-            bgClass = 'bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-500';
+            bgClass = "bg-blue-50 dark:bg-blue-900/20 ring-2 ring-blue-500";
           } else if (isAccepted) {
-            bgClass = 'bg-green-50 dark:bg-green-900/20 border-l-2 border-green-500';
+            bgClass =
+              "bg-green-50 dark:bg-green-900/20 border-l-2 border-green-500";
           } else if (isRejected) {
-            bgClass = 'bg-red-50 dark:bg-red-900/20 border-l-2 border-red-500';
+            bgClass = "bg-red-50 dark:bg-red-900/20 border-l-2 border-red-500";
           } else if (hasDeletion) {
-            bgClass = 'bg-red-50/50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20';
+            bgClass =
+              "bg-red-50/50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/20";
           } else if (hasModification) {
-            bgClass = 'bg-yellow-50/50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20';
+            bgClass =
+              "bg-yellow-50/50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20";
           }
 
           return (
@@ -538,7 +572,7 @@ function SplitView({
               className={cn(
                 "flex items-start gap-2 px-3 py-1.5 rounded transition-colors group",
                 bgClass,
-                hasChange && "cursor-pointer"
+                hasChange && "cursor-pointer",
               )}
               onClick={() => hasChange && setFocusedLineIndex(index)}
               tabIndex={hasChange ? 0 : -1}
@@ -547,14 +581,18 @@ function SplitView({
                 {index + 1}
               </span>
               <span className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed flex-1">
-                {line || '\u00A0'}
+                {line || "\u00A0"}
               </span>
               {/* Inline controls for changes */}
               {hasChange && !isAccepted && !isRejected && (
-                <div className={cn(
-                  "flex items-center gap-1 transition-opacity",
-                  isFocused ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                )}>
+                <div
+                  className={cn(
+                    "flex items-center gap-1 transition-opacity",
+                    isFocused
+                      ? "opacity-100"
+                      : "opacity-0 group-hover:opacity-100",
+                  )}
+                >
                   {lineChanges.map((change) => (
                     <React.Fragment key={change.id}>
                       <Button
@@ -597,33 +635,44 @@ function SplitView({
           </div>
         </div>
         {improvedLines.map((line, index) => {
-          const { lineChanges, hasAddition, hasDeletion, hasModification } = getLineChanges(index);
+          const { lineChanges, hasAddition, hasDeletion, hasModification } =
+            getLineChanges(index);
           const hasChange = lineChanges.length > 0;
-          const isAccepted = lineChanges.some(c => acceptedChangeIds.includes(c.id));
-          const isRejected = lineChanges.some(c => rejectedChangeIds.includes(c.id));
+          const isAccepted = lineChanges.some((c) =>
+            acceptedChangeIds.includes(c.id),
+          );
+          const isRejected = lineChanges.some((c) =>
+            rejectedChangeIds.includes(c.id),
+          );
 
           // Determine background color based on change type
-          let bgClass = 'hover:bg-gray-50 dark:hover:bg-gray-800/50';
+          let bgClass = "hover:bg-gray-50 dark:hover:bg-gray-800/50";
           if (isAccepted) {
-            bgClass = 'bg-green-50 dark:bg-green-900/20 border-l-2 border-green-500';
+            bgClass =
+              "bg-green-50 dark:bg-green-900/20 border-l-2 border-green-500";
           } else if (isRejected) {
-            bgClass = 'bg-red-50 dark:bg-red-900/20 border-l-2 border-red-500';
+            bgClass = "bg-red-50 dark:bg-red-900/20 border-l-2 border-red-500";
           } else if (hasAddition) {
-            bgClass = 'bg-green-50/50 dark:bg-green-900/10 hover:bg-green-100 dark:hover:bg-green-900/20';
+            bgClass =
+              "bg-green-50/50 dark:bg-green-900/10 hover:bg-green-100 dark:hover:bg-green-900/20";
           } else if (hasModification) {
-            bgClass = 'bg-yellow-50/50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20';
+            bgClass =
+              "bg-yellow-50/50 dark:bg-yellow-900/10 hover:bg-yellow-100 dark:hover:bg-yellow-900/20";
           }
 
           return (
             <div
               key={`imp-${index}`}
-              className={cn("flex items-start gap-2 px-3 py-1.5 rounded transition-colors", bgClass)}
+              className={cn(
+                "flex items-start gap-2 px-3 py-1.5 rounded transition-colors",
+                bgClass,
+              )}
             >
               <span className="text-xs text-gray-400 select-none w-8 flex-shrink-0 text-right">
                 {index + 1}
               </span>
               <span className="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed flex-1">
-                {line || '\u00A0'}
+                {line || "\u00A0"}
               </span>
             </div>
           );
@@ -642,9 +691,9 @@ function simulateImprovement(originalText: string, suggestions: any[]): string {
 
   // Apply some basic improvements for demo
   improved = improved
-    .replace(/he\/she/gi, 'they')
-    .replace(/his\/her/gi, 'their')
-    .replace(/\s+/g, ' ')
+    .replace(/he\/she/gi, "they")
+    .replace(/his\/her/gi, "their")
+    .replace(/\s+/g, " ")
     .trim();
 
   return improved;

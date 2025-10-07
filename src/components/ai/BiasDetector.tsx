@@ -292,19 +292,15 @@ function BiasHighlight({
     SEVERITY_TEXT_COLORS[issue.severity as keyof typeof SEVERITY_TEXT_COLORS];
 
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={200}>
-        <TooltipTrigger asChild>
-          <mark
-            className={`${bgColor} ${textColor} cursor-help px-0.5 rounded`}
-          >
-            {text}
-          </mark>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="max-w-sm">
-          <BiasTooltip issue={issue} onReplace={onReplace} />
-        </TooltipContent>
-      </Tooltip>
+    <TooltipProvider delayDuration={200}>
+      <TooltipTrigger asChild>
+        <mark className={`${bgColor} ${textColor} cursor-help px-0.5 rounded`}>
+          {text}
+        </mark>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-sm">
+        <BiasTooltip issue={issue} onReplace={onReplace} />
+      </TooltipContent>
     </TooltipProvider>
   );
 }

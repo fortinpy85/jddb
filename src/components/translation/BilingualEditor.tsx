@@ -98,7 +98,9 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
   readOnly = false,
   className,
 }) => {
-  const [document, setDocument] = useState<BilingualDocument | null>(initialDocument || null);
+  const [document, setDocument] = useState<BilingualDocument | null>(
+    initialDocument || null,
+  );
   const [loading, setLoading] = useState(!initialDocument && !!jobId);
   const [error, setError] = useState<string | null>(null);
   const [activeSegment, setActiveSegment] = useState<string | null>(null);
@@ -128,13 +130,16 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
       setLoading(true);
       setError(null);
       // Use window.location to construct API URL for browser environment
-      const apiBaseUrl = typeof window !== 'undefined'
-        ? `${window.location.protocol}//${window.location.hostname}:8000/api`
-        : "http://localhost:8000/api";
+      const apiBaseUrl =
+        typeof window !== "undefined"
+          ? `${window.location.protocol}//${window.location.hostname}:8000/api`
+          : "http://localhost:8000/api";
       const response = await fetch(`${apiBaseUrl}/bilingual-documents/${id}`);
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch bilingual document: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch bilingual document: ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
@@ -149,13 +154,20 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
             english: seg.english || "",
             french: seg.french || "",
             status: seg.status || "draft",
-            lastModified: seg.lastModified ? new Date(seg.lastModified) : new Date(),
+            lastModified: seg.lastModified
+              ? new Date(seg.lastModified)
+              : new Date(),
             modifiedBy: seg.modifiedBy,
           })) as BilingualSegment[],
           metadata: {
-            created: data.document.metadata?.created ? new Date(data.document.metadata.created) : new Date(),
-            modified: data.document.metadata?.modified ? new Date(data.document.metadata.modified) : new Date(),
-            englishCompleteness: data.document.metadata?.englishCompleteness || 0,
+            created: data.document.metadata?.created
+              ? new Date(data.document.metadata.created)
+              : new Date(),
+            modified: data.document.metadata?.modified
+              ? new Date(data.document.metadata.modified)
+              : new Date(),
+            englishCompleteness:
+              data.document.metadata?.englishCompleteness || 0,
             frenchCompleteness: data.document.metadata?.frenchCompleteness || 0,
             overallStatus: data.document.metadata?.overallStatus || "draft",
           },
@@ -166,7 +178,11 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
       }
     } catch (err) {
       console.error("Error fetching bilingual document:", err);
-      setError(err instanceof Error ? err.message : "Failed to load bilingual document");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load bilingual document",
+      );
     } finally {
       setLoading(false);
     }
@@ -181,6 +197,7 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
 
   // Calculate completeness for each language
   const calculateCompleteness = (language: "en" | "fr"): number => {
+    if (!document) return 0;
     const segments = document.segments;
     if (segments.length === 0) return 0;
 
@@ -198,24 +215,27 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
     language: "en" | "fr",
     content: string,
   ) => {
-    setDocument((prev) => ({
-      ...prev,
-      segments: prev.segments.map((seg) =>
-        seg.id === segmentId
-          ? {
-              ...seg,
-              [language === "en" ? "english" : "french"]: content,
-              lastModified: new Date(),
-            }
-          : seg,
-      ),
-      metadata: {
-        ...prev.metadata,
-        modified: new Date(),
-        englishCompleteness: calculateCompleteness("en"),
-        frenchCompleteness: calculateCompleteness("fr"),
-      },
-    }));
+    setDocument((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        segments: prev.segments.map((seg) =>
+          seg.id === segmentId
+            ? {
+                ...seg,
+                [language === "en" ? "english" : "french"]: content,
+                lastModified: new Date(),
+              }
+            : seg,
+        ),
+        metadata: {
+          ...prev.metadata,
+          modified: new Date(),
+          englishCompleteness: calculateCompleteness("en"),
+          frenchCompleteness: calculateCompleteness("fr"),
+        },
+      };
+    });
 
     setHasUnsavedChanges(true);
 
@@ -226,18 +246,21 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
 
   // Handle status change
   const handleStatusChange = (segmentId: string, status: TranslationStatus) => {
-    setDocument((prev) => ({
-      ...prev,
-      segments: prev.segments.map((seg) =>
-        seg.id === segmentId
-          ? {
-              ...seg,
-              status,
-              lastModified: new Date(),
-            }
-          : seg,
-      ),
-    }));
+    setDocument((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        segments: prev.segments.map((seg) =>
+          seg.id === segmentId
+            ? {
+                ...seg,
+                status,
+                lastModified: new Date(),
+              }
+            : seg,
+        ),
+      };
+    });
 
     setHasUnsavedChanges(true);
 
@@ -248,7 +271,7 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
 
   // Handle save
   const handleSave = () => {
-    if (onSave) {
+    if (onSave && document) {
       onSave(document);
       setHasUnsavedChanges(false);
     }
@@ -259,6 +282,7 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
     segmentId: string,
     language: "en" | "fr",
   ) => {
+    if (!document) return;
     const segment = document.segments.find((seg) => seg.id === segmentId);
     if (!segment) return;
 
@@ -416,103 +440,109 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
   };
 
   // Split view layout
-  const renderSplitView = () => (
-    <div className="grid grid-cols-2 gap-4">
-      {/* English Column */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium flex items-center gap-2">
-            <Languages className="w-4 h-4" />
-            English
-          </Label>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600">
-              {calculateCompleteness("en")}% complete
-            </span>
-            <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-green-500 transition-all"
-                style={{ width: `${calculateCompleteness("en")}%` }}
-              />
+  const renderSplitView = () => {
+    if (!document) return null;
+    return (
+      <div className="grid grid-cols-2 gap-4">
+        {/* English Column */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Languages className="w-4 h-4" />
+              English
+            </Label>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600">
+                {calculateCompleteness("en")}% complete
+              </span>
+              <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-green-500 transition-all"
+                  style={{ width: `${calculateCompleteness("en")}%` }}
+                />
+              </div>
             </div>
           </div>
+
+          <ScrollArea
+            className="h-[600px] pr-4"
+            ref={englishScrollRef}
+            onScroll={(e) => handleScroll("en", e)}
+          >
+            {document.segments.map((segment) =>
+              renderSegmentEditor(segment, "en"),
+            )}
+          </ScrollArea>
         </div>
 
-        <ScrollArea
-          className="h-[600px] pr-4"
-          ref={englishScrollRef}
-          onScroll={(e) => handleScroll("en", e)}
-        >
-          {document.segments.map((segment) =>
-            renderSegmentEditor(segment, "en"),
-          )}
-        </ScrollArea>
-      </div>
-
-      {/* French Column */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium flex items-center gap-2">
-            <Languages className="w-4 h-4" />
-            Français
-          </Label>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600">
-              {calculateCompleteness("fr")}% complete
-            </span>
-            <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-green-500 transition-all"
-                style={{ width: `${calculateCompleteness("fr")}%` }}
-              />
+        {/* French Column */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Languages className="w-4 h-4" />
+              Français
+            </Label>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600">
+                {calculateCompleteness("fr")}% complete
+              </span>
+              <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-green-500 transition-all"
+                  style={{ width: `${calculateCompleteness("fr")}%` }}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <ScrollArea
-          className="h-[600px] pr-4"
-          ref={frenchScrollRef}
-          onScroll={(e) => handleScroll("fr", e)}
-        >
-          {document.segments.map((segment) =>
-            renderSegmentEditor(segment, "fr"),
-          )}
-        </ScrollArea>
+          <ScrollArea
+            className="h-[600px] pr-4"
+            ref={frenchScrollRef}
+            onScroll={(e) => handleScroll("fr", e)}
+          >
+            {document.segments.map((segment) =>
+              renderSegmentEditor(segment, "fr"),
+            )}
+          </ScrollArea>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Tabbed view layout
-  const renderTabbedView = () => (
-    <Tabs defaultValue="en" className="w-full">
-      <TabsList>
-        <TabsTrigger value="en" className="flex items-center gap-2">
-          <Languages className="w-4 h-4" />
-          English ({calculateCompleteness("en")}%)
-        </TabsTrigger>
-        <TabsTrigger value="fr" className="flex items-center gap-2">
-          <Languages className="w-4 h-4" />
-          Français ({calculateCompleteness("fr")}%)
-        </TabsTrigger>
-      </TabsList>
+  const renderTabbedView = () => {
+    if (!document) return null;
+    return (
+      <Tabs defaultValue="en" className="w-full">
+        <TabsList>
+          <TabsTrigger value="en" className="flex items-center gap-2">
+            <Languages className="w-4 h-4" />
+            English ({calculateCompleteness("en")}%)
+          </TabsTrigger>
+          <TabsTrigger value="fr" className="flex items-center gap-2">
+            <Languages className="w-4 h-4" />
+            Français ({calculateCompleteness("fr")}%)
+          </TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="en">
-        <ScrollArea className="h-[600px] pr-4">
-          {document.segments.map((segment) =>
-            renderSegmentEditor(segment, "en"),
-          )}
-        </ScrollArea>
-      </TabsContent>
+        <TabsContent value="en">
+          <ScrollArea className="h-[600px] pr-4">
+            {document.segments.map((segment) =>
+              renderSegmentEditor(segment, "en"),
+            )}
+          </ScrollArea>
+        </TabsContent>
 
-      <TabsContent value="fr">
-        <ScrollArea className="h-[600px] pr-4">
-          {document.segments.map((segment) =>
-            renderSegmentEditor(segment, "fr"),
-          )}
-        </ScrollArea>
-      </TabsContent>
-    </Tabs>
-  );
+        <TabsContent value="fr">
+          <ScrollArea className="h-[600px] pr-4">
+            {document.segments.map((segment) =>
+              renderSegmentEditor(segment, "fr"),
+            )}
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
+    );
+  };
 
   // Handle loading state
   if (loading) {

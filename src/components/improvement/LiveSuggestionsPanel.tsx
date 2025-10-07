@@ -58,17 +58,20 @@ export function LiveSuggestionsPanel({
   className = "",
 }: LiveSuggestionsPanelProps) {
   const [expandedSuggestions, setExpandedSuggestions] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
 
   // Group suggestions by type
-  const groupedSuggestions = suggestions.reduce((acc, suggestion) => {
-    if (!acc[suggestion.type]) {
-      acc[suggestion.type] = [];
-    }
-    acc[suggestion.type].push(suggestion);
-    return acc;
-  }, {} as Record<string, AISuggestion[]>);
+  const groupedSuggestions = suggestions.reduce(
+    (acc, suggestion) => {
+      if (!acc[suggestion.type]) {
+        acc[suggestion.type] = [];
+      }
+      acc[suggestion.type].push(suggestion);
+      return acc;
+    },
+    {} as Record<string, AISuggestion[]>,
+  );
 
   const toggleSuggestion = (id: string) => {
     setExpandedSuggestions((prev) => {
@@ -108,7 +111,9 @@ export function LiveSuggestionsPanel({
                 <span className="text-gray-600 dark:text-gray-400">
                   Quality Score
                 </span>
-                <span className={cn("font-semibold", getScoreColor(overallScore))}>
+                <span
+                  className={cn("font-semibold", getScoreColor(overallScore))}
+                >
                   {Math.round(overallScore * 100)}%
                 </span>
               </div>
@@ -142,18 +147,20 @@ export function LiveSuggestionsPanel({
                 <Separator />
 
                 {/* All Suggestions by Type */}
-                {Object.entries(groupedSuggestions).map(([type, typeSuggestions]) => (
-                  <SuggestionTypeGroup
-                    key={type}
-                    type={type as AISuggestion["type"]}
-                    suggestions={typeSuggestions}
-                    expandedSuggestions={expandedSuggestions}
-                    onToggle={toggleSuggestion}
-                    onSuggestionClick={onSuggestionClick}
-                    onAccept={onAccept}
-                    onReject={onReject}
-                  />
-                ))}
+                {Object.entries(groupedSuggestions).map(
+                  ([type, typeSuggestions]) => (
+                    <SuggestionTypeGroup
+                      key={type}
+                      type={type as AISuggestion["type"]}
+                      suggestions={typeSuggestions}
+                      expandedSuggestions={expandedSuggestions}
+                      onToggle={toggleSuggestion}
+                      onSuggestionClick={onSuggestionClick}
+                      onAccept={onAccept}
+                      onReject={onReject}
+                    />
+                  ),
+                )}
               </>
             )}
           </div>
@@ -317,7 +324,8 @@ function CompactSuggestionCard({
     <div
       className={cn(
         "border rounded-lg p-2 transition-all cursor-pointer hover:border-blue-300 dark:hover:border-blue-700",
-        isExpanded && "bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800"
+        isExpanded &&
+          "bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800",
       )}
       onClick={onClick}
     >
@@ -335,7 +343,7 @@ function CompactSuggestionCard({
         <ChevronRight
           className={cn(
             "h-4 w-4 text-gray-400 transition-transform flex-shrink-0",
-            isExpanded && "rotate-90"
+            isExpanded && "rotate-90",
           )}
         />
       </div>

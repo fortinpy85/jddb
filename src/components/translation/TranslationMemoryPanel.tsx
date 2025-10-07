@@ -42,9 +42,9 @@ export const TranslationMemoryPanel: React.FC<TranslationMemoryPanelProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState(initialSearchText);
   const [selectedMatch, setSelectedMatch] = useState<number | null>(null);
-  const [debounceTimer, setDebounceTimer] = useState<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
+  const [debounceTimer, setDebounceTimer] = useState<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   // Use the real translation memory hook
   const {
@@ -357,7 +357,9 @@ const TranslationMatchCard: React.FC<{
 
     {/* Target Text */}
     <div className="space-y-1">
-      <div className="text-xs text-gray-600 dark:text-gray-400">Translation:</div>
+      <div className="text-xs text-gray-600 dark:text-gray-400">
+        Translation:
+      </div>
       <div className="text-sm text-gray-900 bg-blue-50 p-2 rounded">
         {match.target_text}
       </div>

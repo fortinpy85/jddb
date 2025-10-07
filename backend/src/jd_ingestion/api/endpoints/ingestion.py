@@ -253,19 +253,25 @@ async def process_single_file(
                 # Validate metadata and collect warnings
                 metadata_warnings = []
                 if not file_metadata.title:
-                    metadata_warnings.append("No title extracted from filename - using 'Untitled'")
+                    metadata_warnings.append(
+                        "No title extracted from filename - using 'Untitled'"
+                    )
                     logger.warning("Missing title in file", filename=file_path_obj.name)
 
                 if not file_metadata.classification:
-                    metadata_warnings.append("No classification extracted from filename - using 'UNKNOWN'")
-                    logger.warning("Missing classification in file", filename=file_path_obj.name)
+                    metadata_warnings.append(
+                        "No classification extracted from filename - using 'UNKNOWN'"
+                    )
+                    logger.warning(
+                        "Missing classification in file", filename=file_path_obj.name
+                    )
 
                 # Log all validation warnings
                 if metadata_warnings:
                     logger.warning(
                         "File has metadata quality issues",
                         filename=file_path_obj.name,
-                        warnings=metadata_warnings
+                        warnings=metadata_warnings,
                     )
 
                 # Create job description record with minimal safe data

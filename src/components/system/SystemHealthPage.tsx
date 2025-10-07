@@ -91,13 +91,18 @@ export function SystemHealthPage() {
       const appMetrics = healthData.metrics?.application || {};
 
       // Update database status
-      const dbStatus = dbComponent.status === "healthy" ? "healthy" :
-                       dbComponent.status === "degraded" ? "degraded" : "down";
+      const dbStatus =
+        dbComponent.status === "healthy"
+          ? "healthy"
+          : dbComponent.status === "degraded"
+            ? "degraded"
+            : "down";
 
       setMetrics({
         database: {
           status: dbStatus,
-          message: dbComponent.message || "PostgreSQL connection status unknown",
+          message:
+            dbComponent.message || "PostgreSQL connection status unknown",
           timestamp: new Date().toISOString(),
         },
         api: {
@@ -106,8 +111,11 @@ export function SystemHealthPage() {
           timestamp: healthData.timestamp || new Date().toISOString(),
         },
         storage: {
-          used: Math.round((systemMetrics.disk_usage_mb || 0) / 1024 * 100) / 100,
-          total: Math.round((systemMetrics.disk_total_mb || 5000) / 1024 * 100) / 100,
+          used:
+            Math.round(((systemMetrics.disk_usage_mb || 0) / 1024) * 100) / 100,
+          total:
+            Math.round(((systemMetrics.disk_total_mb || 5000) / 1024) * 100) /
+            100,
           percentage: systemMetrics.disk_usage_percent || 0,
         },
         response_time: {
@@ -119,7 +127,8 @@ export function SystemHealthPage() {
 
       setLastCheck(new Date());
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Health check failed";
+      const errorMessage =
+        err instanceof Error ? err.message : "Health check failed";
       setError(errorMessage);
 
       setMetrics((prev) => ({
@@ -198,7 +207,9 @@ export function SystemHealthPage() {
             size="sm"
             variant="outline"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
         </div>
@@ -235,7 +246,9 @@ export function SystemHealthPage() {
                   <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5" />
                   <div>
                     <div className="font-medium">{alert.title || "Alert"}</div>
-                    <div className="text-yellow-700">{alert.message || alert.description}</div>
+                    <div className="text-yellow-700">
+                      {alert.message || alert.description}
+                    </div>
                     {alert.severity && (
                       <Badge className="mt-1">{alert.severity}</Badge>
                     )}
@@ -258,26 +271,32 @@ export function SystemHealthPage() {
         <CardContent>
           <div className="flex items-center gap-4">
             {getStatusIcon(
-              metrics.database.status === "down" || metrics.api.status === "down"
+              metrics.database.status === "down" ||
+                metrics.api.status === "down"
                 ? "down"
-                : metrics.database.status === "degraded" || metrics.api.status === "degraded"
-                ? "degraded"
-                : "healthy"
+                : metrics.database.status === "degraded" ||
+                    metrics.api.status === "degraded"
+                  ? "degraded"
+                  : "healthy",
             )}
             <div>
               <div className="font-semibold text-lg">
-                {metrics.database.status === "down" || metrics.api.status === "down"
+                {metrics.database.status === "down" ||
+                metrics.api.status === "down"
                   ? "System Issues Detected"
-                  : metrics.database.status === "degraded" || metrics.api.status === "degraded"
-                  ? "System Degraded"
-                  : "All Systems Operational"}
+                  : metrics.database.status === "degraded" ||
+                      metrics.api.status === "degraded"
+                    ? "System Degraded"
+                    : "All Systems Operational"}
               </div>
               <div className="text-sm text-gray-600">
-                {metrics.database.status === "down" || metrics.api.status === "down"
+                {metrics.database.status === "down" ||
+                metrics.api.status === "down"
                   ? "Critical services are experiencing issues"
-                  : metrics.database.status === "degraded" || metrics.api.status === "degraded"
-                  ? "Some services are running with reduced performance"
-                  : "No issues detected across all services"}
+                  : metrics.database.status === "degraded" ||
+                      metrics.api.status === "degraded"
+                    ? "Some services are running with reduced performance"
+                    : "No issues detected across all services"}
               </div>
             </div>
           </div>
@@ -318,7 +337,9 @@ export function SystemHealthPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Query Time (avg)</span>
-                <span className="font-medium">{metrics.response_time.avg}ms</span>
+                <span className="font-medium">
+                  {metrics.response_time.avg}ms
+                </span>
               </div>
             </div>
           </CardContent>
@@ -341,22 +362,22 @@ export function SystemHealthPage() {
             <div className="flex items-center gap-3">
               {getStatusIcon(metrics.api.status)}
               <div className="flex-1">
-                <div className="text-sm font-medium">
-                  {metrics.api.message}
-                </div>
-                <div className="text-xs text-gray-500">
-                  FastAPI + Uvicorn
-                </div>
+                <div className="text-sm font-medium">{metrics.api.message}</div>
+                <div className="text-xs text-gray-500">FastAPI + Uvicorn</div>
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Response Time (p95)</span>
-                <span className="font-medium">{metrics.response_time.p95}ms</span>
+                <span className="font-medium">
+                  {metrics.response_time.p95}ms
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Response Time (p99)</span>
-                <span className="font-medium">{metrics.response_time.p99}ms</span>
+                <span className="font-medium">
+                  {metrics.response_time.p99}ms
+                </span>
               </div>
             </div>
           </CardContent>
@@ -376,7 +397,8 @@ export function SystemHealthPage() {
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Database Size</span>
               <span className="font-medium">
-                {metrics.storage.used.toFixed(2)} GB / {metrics.storage.total.toFixed(2)} GB
+                {metrics.storage.used.toFixed(2)} GB /{" "}
+                {metrics.storage.total.toFixed(2)} GB
               </span>
             </div>
             <Progress value={metrics.storage.percentage} className="h-2" />

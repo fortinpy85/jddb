@@ -5,7 +5,7 @@
  * Tracks state changes and provides navigation through history.
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from "react";
 
 export interface VersionState {
   acceptedChangeIds: string[];
@@ -26,7 +26,7 @@ export interface UseVersionHistoryReturn {
   redo: () => void;
 
   // State management
-  pushVersion: (state: Omit<VersionState, 'timestamp'>) => void;
+  pushVersion: (state: Omit<VersionState, "timestamp">) => void;
   clearHistory: () => void;
 
   // History data
@@ -45,13 +45,13 @@ interface UseVersionHistoryOptions {
  * Hook for managing version history with undo/redo
  */
 export function useVersionHistory(
-  initialState: Omit<VersionState, 'timestamp'>,
-  options: UseVersionHistoryOptions = {}
+  initialState: Omit<VersionState, "timestamp">,
+  options: UseVersionHistoryOptions = {},
 ): UseVersionHistoryReturn {
   const { maxHistorySize = 50, onStateChange } = options;
 
   const [history, setHistory] = useState<VersionState[]>([
-    { ...initialState, timestamp: Date.now() }
+    { ...initialState, timestamp: Date.now() },
   ]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -63,35 +63,38 @@ export function useVersionHistory(
   const canRedo = currentIndex < history.length - 1;
 
   // Push new version to history
-  const pushVersion = useCallback((state: Omit<VersionState, 'timestamp'>) => {
-    // Don't push if we're navigating through history
-    if (isNavigatingRef.current) return;
+  const pushVersion = useCallback(
+    (state: Omit<VersionState, "timestamp">) => {
+      // Don't push if we're navigating through history
+      if (isNavigatingRef.current) return;
 
-    setHistory(prev => {
-      // Remove any "future" versions if we're not at the end
-      const newHistory = prev.slice(0, currentIndex + 1);
+      setHistory((prev) => {
+        // Remove any "future" versions if we're not at the end
+        const newHistory = prev.slice(0, currentIndex + 1);
 
-      // Add new version
-      const newVersion: VersionState = {
-        ...state,
-        timestamp: Date.now()
-      };
+        // Add new version
+        const newVersion: VersionState = {
+          ...state,
+          timestamp: Date.now(),
+        };
 
-      newHistory.push(newVersion);
+        newHistory.push(newVersion);
 
-      // Limit history size
-      if (newHistory.length > maxHistorySize) {
-        return newHistory.slice(-maxHistorySize);
-      }
+        // Limit history size
+        if (newHistory.length > maxHistorySize) {
+          return newHistory.slice(-maxHistorySize);
+        }
 
-      return newHistory;
-    });
+        return newHistory;
+      });
 
-    setCurrentIndex(prev => {
-      const newIndex = Math.min(prev + 1, maxHistorySize - 1);
-      return newIndex;
-    });
-  }, [currentIndex, maxHistorySize]);
+      setCurrentIndex((prev) => {
+        const newIndex = Math.min(prev + 1, maxHistorySize - 1);
+        return newIndex;
+      });
+    },
+    [currentIndex, maxHistorySize],
+  );
 
   // Undo to previous version
   const undo = useCallback(() => {
@@ -128,8 +131,8 @@ export function useVersionHistory(
     const resetState: VersionState = {
       acceptedChangeIds: [],
       rejectedChangeIds: [],
-      description: 'Initial state',
-      timestamp: Date.now()
+      description: "Initial state",
+      timestamp: Date.now(),
     };
     setHistory([resetState]);
     setCurrentIndex(0);
@@ -137,21 +140,24 @@ export function useVersionHistory(
   }, [onStateChange]);
 
   // Keyboard shortcut handler
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    // Check for Ctrl+Z (Windows/Linux) or Cmd+Z (Mac)
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-      e.preventDefault();
-      undo();
-    }
-    // Check for Ctrl+Shift+Z or Ctrl+Y (Windows/Linux) or Cmd+Shift+Z (Mac)
-    else if (
-      ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') ||
-      (e.ctrlKey && e.key === 'y')
-    ) {
-      e.preventDefault();
-      redo();
-    }
-  }, [undo, redo]);
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      // Check for Ctrl+Z (Windows/Linux) or Cmd+Z (Mac)
+      if ((e.ctrlKey || e.metaKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+      // Check for Ctrl+Shift+Z or Ctrl+Y (Windows/Linux) or Cmd+Shift+Z (Mac)
+      else if (
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "z") ||
+        (e.ctrlKey && e.key === "y")
+      ) {
+        e.preventDefault();
+        redo();
+      }
+    },
+    [undo, redo],
+  );
 
   return {
     currentVersion,
@@ -163,6 +169,6 @@ export function useVersionHistory(
     pushVersion,
     clearHistory,
     history,
-    handleKeyDown
+    handleKeyDown,
   };
 }

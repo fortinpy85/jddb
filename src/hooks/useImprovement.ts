@@ -5,11 +5,18 @@
  * Handles change acceptance/rejection, navigation, and RLHF data capture.
  */
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import { analyzeDiff, applyChanges } from '@/utils/diffAnalysis';
-import type { TextChange, ChangeCategory, DiffResult } from '@/utils/diffAnalysis';
-import type { AISuggestion } from './useAISuggestions';
-import { useVersionHistory, type UseVersionHistoryReturn } from './useVersionHistory';
+import { useState, useCallback, useEffect, useMemo } from "react";
+import { analyzeDiff, applyChanges } from "@/utils/diffAnalysis";
+import type {
+  TextChange,
+  ChangeCategory,
+  DiffResult,
+} from "@/utils/diffAnalysis";
+import type { AISuggestion } from "./useAISuggestions";
+import {
+  useVersionHistory,
+  type UseVersionHistoryReturn,
+} from "./useVersionHistory";
 
 export interface UseImprovementOptions {
   originalText: string;
@@ -42,12 +49,12 @@ export interface UseImprovementReturn {
   rejectChange: (changeId: string) => void;
   acceptAll: (category?: ChangeCategory) => void;
   rejectAll: (category?: ChangeCategory) => void;
-  navigateChange: (direction: 'next' | 'prev') => void;
+  navigateChange: (direction: "next" | "prev") => void;
   selectChange: (changeId: string | null) => void;
 
   // Filtering
-  selectedCategory: ChangeCategory | 'all';
-  setSelectedCategory: (category: ChangeCategory | 'all') => void;
+  selectedCategory: ChangeCategory | "all";
+  setSelectedCategory: (category: ChangeCategory | "all") => void;
 
   // Final text
   finalText: string;
@@ -83,35 +90,38 @@ export function useImprovement({
   const [rejectedChangeIds, setRejectedChangeIds] = useState<string[]>([]);
   const [currentChangeIndex, setCurrentChangeIndex] = useState(0);
   const [selectedChangeId, setSelectedChangeId] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<ChangeCategory | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<
+    ChangeCategory | "all"
+  >("all");
 
   // Version history for undo/redo
   const versionHistory = useVersionHistory(
     {
       acceptedChangeIds: [],
       rejectedChangeIds: [],
-      description: 'Initial state'
+      description: "Initial state",
     },
     {
       maxHistorySize: 50,
       onStateChange: (state) => {
         setAcceptedChangeIds(state.acceptedChangeIds);
         setRejectedChangeIds(state.rejectedChangeIds);
-      }
-    }
+      },
+    },
   );
 
   // Keyboard shortcuts for undo/redo
   useEffect(() => {
-    window.addEventListener('keydown', versionHistory.handleKeyDown);
-    return () => window.removeEventListener('keydown', versionHistory.handleKeyDown);
+    window.addEventListener("keydown", versionHistory.handleKeyDown);
+    return () =>
+      window.removeEventListener("keydown", versionHistory.handleKeyDown);
   }, [versionHistory.handleKeyDown]);
 
   // Filter changes by category
   const filteredChanges = useMemo(() => {
-    return selectedCategory === 'all'
+    return selectedCategory === "all"
       ? changes
-      : changes.filter(c => c.category === selectedCategory);
+      : changes.filter((c) => c.category === selectedCategory);
   }, [changes, selectedCategory]);
 
   // Get current change
@@ -120,128 +130,164 @@ export function useImprovement({
   // Get pending changes
   const pendingChanges = useMemo(() => {
     return filteredChanges.filter(
-      c => !acceptedChangeIds.includes(c.id) && !rejectedChangeIds.includes(c.id)
+      (c) =>
+        !acceptedChangeIds.includes(c.id) && !rejectedChangeIds.includes(c.id),
     );
   }, [filteredChanges, acceptedChangeIds, rejectedChangeIds]);
 
   // Accept change
-  const acceptChange = useCallback((changeId: string) => {
-    const change = changes.find(c => c.id === changeId);
-    if (!change) return;
+  const acceptChange = useCallback(
+    (changeId: string) => {
+      const change = changes.find((c) => c.id === changeId);
+      if (!change) return;
 
-    const newAccepted = [...acceptedChangeIds, changeId];
-    const newRejected = rejectedChangeIds.filter(id => id !== changeId);
+      const newAccepted = [...acceptedChangeIds, changeId];
+      const newRejected = rejectedChangeIds.filter((id) => id !== changeId);
 
-    setAcceptedChangeIds(newAccepted);
-    setRejectedChangeIds(newRejected);
+      setAcceptedChangeIds(newAccepted);
+      setRejectedChangeIds(newRejected);
 
-    // Push to version history
-    versionHistory.pushVersion({
-      acceptedChangeIds: newAccepted,
-      rejectedChangeIds: newRejected,
-      description: `Accepted change: ${change.category}`
-    });
+      // Push to version history
+      versionHistory.pushVersion({
+        acceptedChangeIds: newAccepted,
+        rejectedChangeIds: newRejected,
+        description: `Accepted change: ${change.category}`,
+      });
 
-    // Call callback
-    onAcceptChange?.(change);
+      // Call callback
+      onAcceptChange?.(change);
 
-    // Capture RLHF data
-    if (captureRLHF) {
-      captureRLHFData(change, 'accept');
-    }
-  }, [changes, acceptedChangeIds, rejectedChangeIds, onAcceptChange, captureRLHF, versionHistory]);
+      // Capture RLHF data
+      if (captureRLHF) {
+        captureRLHFData(change, "accept");
+      }
+    },
+    [
+      changes,
+      acceptedChangeIds,
+      rejectedChangeIds,
+      onAcceptChange,
+      captureRLHF,
+      versionHistory,
+    ],
+  );
 
   // Reject change
-  const rejectChange = useCallback((changeId: string) => {
-    const change = changes.find(c => c.id === changeId);
-    if (!change) return;
+  const rejectChange = useCallback(
+    (changeId: string) => {
+      const change = changes.find((c) => c.id === changeId);
+      if (!change) return;
 
-    const newRejected = [...rejectedChangeIds, changeId];
-    const newAccepted = acceptedChangeIds.filter(id => id !== changeId);
+      const newRejected = [...rejectedChangeIds, changeId];
+      const newAccepted = acceptedChangeIds.filter((id) => id !== changeId);
 
-    setRejectedChangeIds(newRejected);
-    setAcceptedChangeIds(newAccepted);
+      setRejectedChangeIds(newRejected);
+      setAcceptedChangeIds(newAccepted);
 
-    // Push to version history
-    versionHistory.pushVersion({
-      acceptedChangeIds: newAccepted,
-      rejectedChangeIds: newRejected,
-      description: `Rejected change: ${change.category}`
-    });
+      // Push to version history
+      versionHistory.pushVersion({
+        acceptedChangeIds: newAccepted,
+        rejectedChangeIds: newRejected,
+        description: `Rejected change: ${change.category}`,
+      });
 
-    // Call callback
-    onRejectChange?.(change);
+      // Call callback
+      onRejectChange?.(change);
 
-    // Capture RLHF data
-    if (captureRLHF) {
-      captureRLHFData(change, 'reject');
-    }
-  }, [changes, acceptedChangeIds, rejectedChangeIds, onRejectChange, captureRLHF, versionHistory]);
+      // Capture RLHF data
+      if (captureRLHF) {
+        captureRLHFData(change, "reject");
+      }
+    },
+    [
+      changes,
+      acceptedChangeIds,
+      rejectedChangeIds,
+      onRejectChange,
+      captureRLHF,
+      versionHistory,
+    ],
+  );
 
   // Accept all changes (optionally filtered by category)
-  const acceptAll = useCallback((category?: ChangeCategory) => {
-    const changesToAccept = category
-      ? changes.filter(c => c.category === category)
-      : changes;
+  const acceptAll = useCallback(
+    (category?: ChangeCategory) => {
+      const changesToAccept = category
+        ? changes.filter((c) => c.category === category)
+        : changes;
 
-    const ids = changesToAccept.map(c => c.id);
-    setAcceptedChangeIds(prev => [...new Set([...prev, ...ids])]);
-    setRejectedChangeIds(prev => prev.filter(id => !ids.includes(id)));
+      const ids = changesToAccept.map((c) => c.id);
+      setAcceptedChangeIds((prev) => [...new Set([...prev, ...ids])]);
+      setRejectedChangeIds((prev) => prev.filter((id) => !ids.includes(id)));
 
-    // Call callbacks and RLHF
-    changesToAccept.forEach(change => {
-      onAcceptChange?.(change);
-      if (captureRLHF) {
-        captureRLHFData(change, 'accept');
-      }
-    });
-  }, [changes, onAcceptChange, captureRLHF]);
+      // Call callbacks and RLHF
+      changesToAccept.forEach((change) => {
+        onAcceptChange?.(change);
+        if (captureRLHF) {
+          captureRLHFData(change, "accept");
+        }
+      });
+    },
+    [changes, onAcceptChange, captureRLHF],
+  );
 
   // Reject all changes (optionally filtered by category)
-  const rejectAll = useCallback((category?: ChangeCategory) => {
-    const changesToReject = category
-      ? changes.filter(c => c.category === category)
-      : changes;
+  const rejectAll = useCallback(
+    (category?: ChangeCategory) => {
+      const changesToReject = category
+        ? changes.filter((c) => c.category === category)
+        : changes;
 
-    const ids = changesToReject.map(c => c.id);
-    setRejectedChangeIds(prev => [...new Set([...prev, ...ids])]);
-    setAcceptedChangeIds(prev => prev.filter(id => !ids.includes(id)));
+      const ids = changesToReject.map((c) => c.id);
+      setRejectedChangeIds((prev) => [...new Set([...prev, ...ids])]);
+      setAcceptedChangeIds((prev) => prev.filter((id) => !ids.includes(id)));
 
-    // Call callbacks and RLHF
-    changesToReject.forEach(change => {
-      onRejectChange?.(change);
-      if (captureRLHF) {
-        captureRLHFData(change, 'reject');
-      }
-    });
-  }, [changes, onRejectChange, captureRLHF]);
+      // Call callbacks and RLHF
+      changesToReject.forEach((change) => {
+        onRejectChange?.(change);
+        if (captureRLHF) {
+          captureRLHFData(change, "reject");
+        }
+      });
+    },
+    [changes, onRejectChange, captureRLHF],
+  );
 
   // Navigate changes
-  const navigateChange = useCallback((direction: 'next' | 'prev') => {
-    setCurrentChangeIndex(prev => {
-      if (direction === 'next') {
-        return Math.min(prev + 1, filteredChanges.length - 1);
-      } else {
-        return Math.max(prev - 1, 0);
-      }
-    });
-  }, [filteredChanges.length]);
+  const navigateChange = useCallback(
+    (direction: "next" | "prev") => {
+      setCurrentChangeIndex((prev) => {
+        if (direction === "next") {
+          return Math.min(prev + 1, filteredChanges.length - 1);
+        } else {
+          return Math.max(prev - 1, 0);
+        }
+      });
+    },
+    [filteredChanges.length],
+  );
 
   // Select specific change
-  const selectChange = useCallback((changeId: string | null) => {
-    setSelectedChangeId(changeId);
-    if (changeId) {
-      const index = filteredChanges.findIndex(c => c.id === changeId);
-      if (index !== -1) {
-        setCurrentChangeIndex(index);
+  const selectChange = useCallback(
+    (changeId: string | null) => {
+      setSelectedChangeId(changeId);
+      if (changeId) {
+        const index = filteredChanges.findIndex((c) => c.id === changeId);
+        if (index !== -1) {
+          setCurrentChangeIndex(index);
+        }
       }
-    }
-  }, [filteredChanges]);
+    },
+    [filteredChanges],
+  );
 
   // Apply accepted changes to get final text
   const applyAcceptedChanges = useCallback(() => {
     const finalText = applyChanges(originalText, changes, acceptedChangeIds);
-    onApplyChanges?.(finalText, changes.filter(c => acceptedChangeIds.includes(c.id)));
+    onApplyChanges?.(
+      finalText,
+      changes.filter((c) => acceptedChangeIds.includes(c.id)),
+    );
     return finalText;
   }, [originalText, changes, acceptedChangeIds, onApplyChanges]);
 
@@ -300,7 +346,10 @@ export function useImprovement({
 /**
  * Capture RLHF data for a change action
  */
-function captureRLHFData(change: TextChange, action: 'accept' | 'reject' | 'modify') {
+function captureRLHFData(
+  change: TextChange,
+  action: "accept" | "reject" | "modify",
+) {
   // Store RLHF data for later analysis
   const rlhfData = {
     changeId: change.id,
@@ -315,11 +364,11 @@ function captureRLHFData(change: TextChange, action: 'accept' | 'reject' | 'modi
 
   // Save to localStorage for now (will be moved to backend API)
   try {
-    const existingData = JSON.parse(localStorage.getItem('rlhf_data') || '[]');
+    const existingData = JSON.parse(localStorage.getItem("rlhf_data") || "[]");
     existingData.push(rlhfData);
-    localStorage.setItem('rlhf_data', JSON.stringify(existingData));
+    localStorage.setItem("rlhf_data", JSON.stringify(existingData));
   } catch (error) {
-    console.error('Failed to capture RLHF data:', error);
+    console.error("Failed to capture RLHF data:", error);
   }
 }
 
@@ -328,9 +377,9 @@ function captureRLHFData(change: TextChange, action: 'accept' | 'reject' | 'modi
  */
 export function exportRLHFData(): Array<any> {
   try {
-    return JSON.parse(localStorage.getItem('rlhf_data') || '[]');
+    return JSON.parse(localStorage.getItem("rlhf_data") || "[]");
   } catch (error) {
-    console.error('Failed to export RLHF data:', error);
+    console.error("Failed to export RLHF data:", error);
     return [];
   }
 }
@@ -340,8 +389,8 @@ export function exportRLHFData(): Array<any> {
  */
 export function clearRLHFData(): void {
   try {
-    localStorage.removeItem('rlhf_data');
+    localStorage.removeItem("rlhf_data");
   } catch (error) {
-    console.error('Failed to clear RLHF data:', error);
+    console.error("Failed to clear RLHF data:", error);
   }
 }

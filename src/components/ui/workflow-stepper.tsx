@@ -90,9 +90,7 @@ export function WorkflowStepper({
                   <div
                     className={cn(
                       "absolute top-5 left-1/2 w-full h-0.5 -z-10",
-                      isCompleted
-                        ? "bg-primary"
-                        : "bg-muted",
+                      isCompleted ? "bg-primary" : "bg-muted",
                     )}
                   />
                 )}
@@ -156,7 +154,9 @@ export function WorkflowStepper({
  */
 export function useWorkflowProgress() {
   const [currentStep, setCurrentStep] = React.useState<WorkflowStep>("upload");
-  const [completedSteps, setCompletedSteps] = React.useState<WorkflowStep[]>([]);
+  const [completedSteps, setCompletedSteps] = React.useState<WorkflowStep[]>(
+    [],
+  );
 
   const completeStep = (step: WorkflowStep) => {
     setCompletedSteps((prev) => {

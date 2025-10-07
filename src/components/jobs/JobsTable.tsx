@@ -671,8 +671,8 @@ function JobsTable({
                               (job.quality_score || 0) >= 0.7
                                 ? "bg-green-500"
                                 : (job.quality_score || 0) >= 0.4
-                                ? "bg-yellow-500"
-                                : "bg-red-500"
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
                             }`}
                             style={{
                               width: `${Math.round((job.quality_score || 0) * 100)}%`,

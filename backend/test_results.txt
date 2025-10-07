@@ -1,0 +1,189 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Scripts\python.exe
+cachedir: .pytest_cache
+benchmark: 5.1.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\JDDB\backend
+configfile: pyproject.toml
+plugins: anyio-4.10.0, Faker-37.8.0, asyncio-1.2.0, benchmark-5.1.0, cov-7.0.0, mock-3.15.1, xdist-3.8.0, respx-0.22.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1160 items / 7 errors
+
+=================================== ERRORS ====================================
+_____________ ERROR collecting tests/unit/test_database_models.py _____________
+ImportError while importing test module 'C:\JDDB\backend\tests\unit\test_database_models.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\python.py:498: in importtestmodule
+    mod = import_path(
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+C:\Python\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\assertion\rewrite.py:186: in exec_module
+    exec(co, module.__dict__)
+tests\unit\test_database_models.py:5: in <module>
+    from jd_ingestion.database.models import (
+E   ImportError: cannot import name 'CareerPath' from 'jd_ingestion.database.models' (C:\JDDB\backend\src\jd_ingestion\database\models.py)
+_____________ ERROR collecting tests/unit/test_embedding_tasks.py _____________
+ImportError while importing test module 'C:\JDDB\backend\tests\unit\test_embedding_tasks.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\python.py:498: in importtestmodule
+    mod = import_path(
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+C:\Python\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\assertion\rewrite.py:186: in exec_module
+    exec(co, module.__dict__)
+tests\unit\test_embedding_tasks.py:6: in <module>
+    from jd_ingestion.tasks.embedding_tasks import (
+E   ImportError: cannot import name '_is_retryable_error' from 'jd_ingestion.tasks.embedding_tasks' (C:\JDDB\backend\src\jd_ingestion\tasks\embedding_tasks.py)
+_____________ ERROR collecting tests/unit/test_jobs_endpoints.py ______________
+ImportError while importing test module 'C:\JDDB\backend\tests\unit\test_jobs_endpoints.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\python.py:498: in importtestmodule
+    mod = import_path(
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+C:\Python\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\assertion\rewrite.py:186: in exec_module
+    exec(co, module.__dict__)
+tests\unit\test_jobs_endpoints.py:13: in <module>
+    from jd_ingestion.api.endpoints.jobs import (
+E   ImportError: cannot import name 'get_job_status' from 'jd_ingestion.api.endpoints.jobs' (C:\JDDB\backend\src\jd_ingestion\api\endpoints\jobs.py)
+____________ ERROR collecting tests/unit/test_processing_tasks.py _____________
+ImportError while importing test module 'C:\JDDB\backend\tests\unit\test_processing_tasks.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\python.py:498: in importtestmodule
+    mod = import_path(
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+C:\Python\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\assertion\rewrite.py:186: in exec_module
+    exec(co, module.__dict__)
+tests\unit\test_processing_tasks.py:7: in <module>
+    from jd_ingestion.tasks.processing_tasks import (
+E   ImportError: cannot import name '_is_retryable_error' from 'jd_ingestion.tasks.processing_tasks' (C:\JDDB\backend\src\jd_ingestion\tasks\processing_tasks.py)
+______________ ERROR collecting tests/unit/test_quality_tasks.py ______________
+ImportError while importing test module 'C:\JDDB\backend\tests\unit\test_quality_tasks.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\python.py:498: in importtestmodule
+    mod = import_path(
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+C:\Python\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\assertion\rewrite.py:186: in exec_module
+    exec(co, module.__dict__)
+tests\unit\test_quality_tasks.py:6: in <module>
+    from jd_ingestion.tasks.quality_tasks import (
+E   ImportError: cannot import name '_is_retryable_error' from 'jd_ingestion.tasks.quality_tasks' (C:\JDDB\backend\src\jd_ingestion\tasks\quality_tasks.py)
+__________ ERROR collecting tests/unit/test_rate_limiting_service.py __________
+ImportError while importing test module 'C:\JDDB\backend\tests\unit\test_rate_limiting_service.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\python.py:498: in importtestmodule
+    mod = import_path(
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+C:\Python\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\assertion\rewrite.py:186: in exec_module
+    exec(co, module.__dict__)
+tests\unit\test_rate_limiting_service.py:11: in <module>
+    from jd_ingestion.services.rate_limiting_service import (
+E   ImportError: cannot import name 'RateLimitExceeded' from 'jd_ingestion.services.rate_limiting_service' (C:\JDDB\backend\src\jd_ingestion\services\rate_limiting_service.py)
+_______ ERROR collecting tests/unit/test_translation_memory_service.py ________
+ImportError while importing test module 'C:\JDDB\backend\tests\unit\test_translation_memory_service.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\python.py:498: in importtestmodule
+    mod = import_path(
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\pathlib.py:587: in import_path
+    importlib.import_module(module_name)
+C:\Python\Python312\Lib\importlib\__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked
+    ???
+<frozen importlib._bootstrap>:935: in _load_unlocked
+    ???
+C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Lib\site-packages\_pytest\assertion\rewrite.py:186: in exec_module
+    exec(co, module.__dict__)
+tests\unit\test_translation_memory_service.py:11: in <module>
+    from jd_ingestion.database.models import (
+E   ImportError: cannot import name 'TranslationProject' from 'jd_ingestion.database.models' (C:\JDDB\backend\src\jd_ingestion\database\models.py)
+=========================== short test summary info ===========================
+ERROR tests/unit/test_database_models.py
+ERROR tests/unit/test_embedding_tasks.py
+ERROR tests/unit/test_jobs_endpoints.py
+ERROR tests/unit/test_processing_tasks.py
+ERROR tests/unit/test_quality_tasks.py
+ERROR tests/unit/test_rate_limiting_service.py
+ERROR tests/unit/test_translation_memory_service.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 7 errors during collection !!!!!!!!!!!!!!!!!!!
+============================== 7 errors in 7.90s ==============================

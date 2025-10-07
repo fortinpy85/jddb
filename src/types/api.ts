@@ -69,9 +69,48 @@ export interface ProcessingStats {
 }
 
 export interface UploadResponse {
-  message: string;
-  job_id: number;
-  task_id: string;
+  status: string;
+  filename: string;
+  processing_result: ProcessingResult;
+}
+
+export interface ProcessingResult {
+  status: string;
+  file_path: string;
+  job_id?: number;
+  file_metadata?: FileMetadata;
+  processed_content?: ProcessedContent;
+  errors?: string[];
+}
+
+export interface ProcessedContent {
+  sections?: Record<string, string>;
+  structured_fields?: StructuredFields;
+  chunks_generated?: number;
+  processing_errors?: string[];
+}
+
+export interface FileMetadata {
+  file_name?: string;
+  file_size?: number;
+  encoding?: string;
+  language?: string;
+  job_number?: string;
+  classification?: string;
+  title?: string;
+  is_valid?: boolean;
+  validation_errors?: string[];
+}
+
+export interface StructuredFields {
+  position_title?: string;
+  job_number?: string;
+  classification?: string;
+  department?: string;
+  reports_to?: string;
+  location?: string;
+  fte_count?: number;
+  salary_budget?: number;
 }
 
 export interface ComparisonResult {
@@ -81,9 +120,6 @@ export interface ComparisonResult {
 
 // Placeholder types for missing imports
 export interface BulkUploadStatus {}
-export interface FileMetadata {}
-export interface StructuredFields {}
-export interface ProcessingResult {}
 export interface CircuitBreakerState {}
 export interface HealthIndicator {}
 export interface FileProcessingResponse {}

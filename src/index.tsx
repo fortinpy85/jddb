@@ -13,7 +13,9 @@ function main() {
 
   // Check if dist directory exists
   if (!existsSync(distDir)) {
-    console.error("❌ Error: dist directory not found. Please run 'bun run build' first.");
+    console.error(
+      "❌ Error: dist directory not found. Please run 'bun run build' first.",
+    );
     process.exit(1);
   }
 
@@ -24,21 +26,30 @@ function main() {
 
       // Proxy all /api/* requests to the backend server
       if (url.pathname.startsWith("/api/")) {
-        const backendReq = new Request(`${backendUrl}${url.pathname}${url.search}`, {
-          method: req.method,
-          headers: req.headers,
-          body: req.method !== "GET" && req.method !== "HEAD" ? req.body : undefined,
-        });
+        const backendReq = new Request(
+          `${backendUrl}${url.pathname}${url.search}`,
+          {
+            method: req.method,
+            headers: req.headers,
+            body:
+              req.method !== "GET" && req.method !== "HEAD"
+                ? req.body
+                : undefined,
+          },
+        );
 
         try {
           const response = await fetch(backendReq);
           return response;
         } catch (error) {
           console.error("❌ Proxy error:", error);
-          return new Response(JSON.stringify({ error: "Backend unavailable" }), {
-            status: 503,
-            headers: { "Content-Type": "application/json" },
-          });
+          return new Response(
+            JSON.stringify({ error: "Backend unavailable" }),
+            {
+              status: 503,
+              headers: { "Content-Type": "application/json" },
+            },
+          );
         }
       }
 
