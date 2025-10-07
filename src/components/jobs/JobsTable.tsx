@@ -50,6 +50,8 @@ import {
   ChevronRight,
   Languages,
   Briefcase,
+  Grid3x3,
+  List,
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import {
@@ -58,6 +60,7 @@ import {
   TableSkeleton,
 } from "@/components/ui/states";
 import { EmptyState } from "@/components/ui/empty-state";
+import { JobGridView } from "./JobGridView";
 
 interface JobsTableProps {
   onJobSelect?: (job: JobDescription) => void;
@@ -86,6 +89,7 @@ function JobsTable({
   const { addToast } = useToast();
 
   // Local state
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [selectedJobs, setSelectedJobs] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState<SortField>("created_at");
@@ -338,6 +342,28 @@ function JobsTable({
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* View Mode Toggle */}
+          <div className="flex gap-1 border rounded-md">
+            <Button
+              variant={viewMode === "table" ? "secondary" : "ghost"}
+              size="sm"
+              className="rounded-r-none"
+              onClick={() => setViewMode("table")}
+              title="Table View"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === "grid" ? "secondary" : "ghost"}
+              size="sm"
+              className="rounded-l-none"
+              onClick={() => setViewMode("grid")}
+              title="Grid View"
+            >
+              <Grid3x3 className="h-4 w-4" />
+            </Button>
+          </div>
+
           <Button
             variant="outline"
             size="sm"
@@ -525,271 +551,283 @@ function JobsTable({
         </div>
       )}
 
-      {/* Table */}
-      <Card className="elevation-1 shadow-card">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                <tr>
-                  <th className="px-4 py-3 text-left w-12">
-                    <Checkbox
-                      checked={
-                        selectedJobs.length === paginatedJobs.length &&
-                        paginatedJobs.length > 0
-                      }
-                      onCheckedChange={handleSelectAll}
-                    />
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <button
-                      onClick={() => handleSort("job_number")}
-                      className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider hover:text-slate-900 dark:hover:text-slate-100"
-                    >
-                      Job Number
-                      {renderSortIcon("job_number")}
-                    </button>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                      Job Title
-                    </span>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <button
-                      onClick={() => handleSort("classification")}
-                      className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider hover:text-slate-900 dark:hover:text-slate-100"
-                    >
-                      Classification
-                      {renderSortIcon("classification")}
-                    </button>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <button
-                      onClick={() => handleSort("language")}
-                      className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider hover:text-slate-900 dark:hover:text-slate-100"
-                    >
-                      Language
-                      {renderSortIcon("language")}
-                    </button>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                      Status
-                    </span>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                      Quality
-                    </span>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <button
-                      onClick={() => handleSort("created_at")}
-                      className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider hover:text-slate-900 dark:hover:text-slate-100"
-                    >
-                      Created
-                      {renderSortIcon("created_at")}
-                    </button>
-                  </th>
-                  <th className="px-4 py-3 text-right w-20">
-                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                      Actions
-                    </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                {paginatedJobs.map((job) => (
-                  <tr
-                    key={job.id}
-                    className="shadow-table-row cursor-pointer"
-                    onClick={() => onJobSelect?.(job)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        onJobSelect?.(job);
-                      }
-                    }}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`View job ${job.job_number || "N/A"}: ${job.title || "Untitled"}`}
-                  >
-                    <td
-                      className="px-4 py-3"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+      {/* Conditional View: Table or Grid */}
+      {viewMode === "grid" ? (
+        <JobGridView
+          jobs={filteredJobs}
+          onJobSelect={onJobSelect || (() => {})}
+          onJobEdit={(job) => handleJobAction(job, "Edit")}
+          onJobDelete={(job) => handleJobAction(job, "Delete")}
+          isLoading={loading}
+        />
+      ) : (
+        <Card className="elevation-1 shadow-card">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                  <tr>
+                    <th className="px-4 py-3 text-left w-12">
                       <Checkbox
-                        checked={selectedJobs.includes(job.id)}
-                        onCheckedChange={(checked) =>
-                          handleSelectJob(job.id, checked as boolean)
+                        checked={
+                          selectedJobs.length === paginatedJobs.length &&
+                          paginatedJobs.length > 0
                         }
-                        aria-label={`Select job ${job.job_number || job.id}`}
+                        onCheckedChange={handleSelectAll}
                       />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center space-x-2">
-                        <FileText className="w-4 h-4 text-slate-400" />
-                        <span className="font-medium text-slate-900 dark:text-slate-100">
-                          {job.job_number || "N/A"}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-sm text-slate-700 dark:text-slate-300">
-                        {job.title || "N/A"}
+                    </th>
+                    <th className="px-4 py-3 text-left">
+                      <button
+                        onClick={() => handleSort("job_number")}
+                        className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider hover:text-slate-900 dark:hover:text-slate-100"
+                      >
+                        Job Number
+                        {renderSortIcon("job_number")}
+                      </button>
+                    </th>
+                    <th className="px-4 py-3 text-left">
+                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                        Job Title
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {job.classification ? (
-                        <ClassificationBadge
-                          code={job.classification}
-                          showHelpIcon
-                        />
-                      ) : (
-                        <Badge variant="outline" className="font-mono">
-                          N/A
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center space-x-1">
-                        <Languages className="w-4 h-4 text-slate-400" />
-                        <span className="text-sm text-slate-700 dark:text-slate-300">
-                          {getLanguageName(job.language || "en")}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge className={getStatusColor("N/A")}>N/A</Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center space-x-1">
-                        <div className="w-16 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${
-                              (job.quality_score || 0) >= 0.7
-                                ? "bg-green-500"
-                                : (job.quality_score || 0) >= 0.4
-                                  ? "bg-yellow-500"
-                                  : "bg-red-500"
-                            }`}
-                            style={{
-                              width: `${Math.round((job.quality_score || 0) * 100)}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="text-xs text-slate-600 dark:text-slate-400">
-                          {Math.round((job.quality_score || 0) * 100)}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-sm text-slate-600 dark:text-slate-400">
-                        {new Date(
-                          job.created_at || Date.now(),
-                        ).toLocaleDateString()}
+                    </th>
+                    <th className="px-4 py-3 text-left">
+                      <button
+                        onClick={() => handleSort("classification")}
+                        className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider hover:text-slate-900 dark:hover:text-slate-100"
+                      >
+                        Classification
+                        {renderSortIcon("classification")}
+                      </button>
+                    </th>
+                    <th className="px-4 py-3 text-left">
+                      <button
+                        onClick={() => handleSort("language")}
+                        className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider hover:text-slate-900 dark:hover:text-slate-100"
+                      >
+                        Language
+                        {renderSortIcon("language")}
+                      </button>
+                    </th>
+                    <th className="px-4 py-3 text-left">
+                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                        Status
                       </span>
-                    </td>
-                    <td
-                      className="px-4 py-3 text-right"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            aria-label={`Actions for job ${job.job_number || job.id}`}
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onJobSelect?.(job)}>
-                            <Eye className="w-4 h-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleJobAction(job, "Edit")}
-                          >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleJobAction(job, "Duplicate")}
-                          >
-                            <Copy className="w-4 h-4 mr-2" />
-                            Duplicate
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleJobAction(job, "Delete")}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </td>
+                    </th>
+                    <th className="px-4 py-3 text-left">
+                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                        Quality
+                      </span>
+                    </th>
+                    <th className="px-4 py-3 text-left">
+                      <button
+                        onClick={() => handleSort("created_at")}
+                        className="flex items-center text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider hover:text-slate-900 dark:hover:text-slate-100"
+                      >
+                        Created
+                        {renderSortIcon("created_at")}
+                      </button>
+                    </th>
+                    <th className="px-4 py-3 text-right w-20">
+                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                        Actions
+                      </span>
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-slate-700">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-slate-600 dark:text-slate-400">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <Select
-                  value={pageSize.toString()}
-                  onValueChange={(value) => setPageSize(parseInt(value))}
-                >
-                  <SelectTrigger className="w-20">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="20">20</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span className="text-sm text-slate-600 dark:text-slate-400">
-                  per page
-                </span>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setCurrentPage(Math.min(totalPages, currentPage + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                  {paginatedJobs.map((job) => (
+                    <tr
+                      key={job.id}
+                      className="shadow-table-row cursor-pointer"
+                      onClick={() => onJobSelect?.(job)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          onJobSelect?.(job);
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`View job ${job.job_number || "N/A"}: ${job.title || "Untitled"}`}
+                    >
+                      <td
+                        className="px-4 py-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Checkbox
+                          checked={selectedJobs.includes(job.id)}
+                          onCheckedChange={(checked) =>
+                            handleSelectJob(job.id, checked as boolean)
+                          }
+                          aria-label={`Select job ${job.job_number || job.id}`}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center space-x-2">
+                          <FileText className="w-4 h-4 text-slate-400" />
+                          <span className="font-medium text-slate-900 dark:text-slate-100">
+                            {job.job_number || "N/A"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-slate-700 dark:text-slate-300">
+                          {job.title || "N/A"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {job.classification ? (
+                          <ClassificationBadge
+                            code={job.classification}
+                            showHelpIcon
+                          />
+                        ) : (
+                          <Badge variant="outline" className="font-mono">
+                            N/A
+                          </Badge>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center space-x-1">
+                          <Languages className="w-4 h-4 text-slate-400" />
+                          <span className="text-sm text-slate-700 dark:text-slate-300">
+                            {getLanguageName(job.language || "en")}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge className={getStatusColor("N/A")}>N/A</Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center space-x-1">
+                          <div className="w-16 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${
+                                (job.quality_score || 0) >= 0.7
+                                  ? "bg-green-500"
+                                  : (job.quality_score || 0) >= 0.4
+                                    ? "bg-yellow-500"
+                                    : "bg-red-500"
+                              }`}
+                              style={{
+                                width: `${Math.round((job.quality_score || 0) * 100)}%`,
+                              }}
+                            />
+                          </div>
+                          <span className="text-xs text-slate-600 dark:text-slate-400">
+                            {Math.round((job.quality_score || 0) * 100)}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-slate-600 dark:text-slate-400">
+                          {new Date(
+                            job.created_at || Date.now(),
+                          ).toLocaleDateString()}
+                        </span>
+                      </td>
+                      <td
+                        className="px-4 py-3 text-right"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              aria-label={`Actions for job ${job.job_number || job.id}`}
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => onJobSelect?.(job)}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleJobAction(job, "Edit")}
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleJobAction(job, "Duplicate")}
+                            >
+                              <Copy className="w-4 h-4 mr-2" />
+                              Duplicate
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleJobAction(job, "Delete")}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Select
+                    value={pageSize.toString()}
+                    onValueChange={(value) => setPageSize(parseInt(value))}
+                  >
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    per page
+                  </span>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setCurrentPage(Math.min(totalPages, currentPage + 1))
+                    }
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
