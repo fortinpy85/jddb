@@ -1,0 +1,63 @@
+{
+  "title": "Téléverser des descriptions de poste",
+  "subtitle": "Téléverser et traiter des fichiers de description de poste",
+  "dropzone": {
+    "title": "Glisser-déposer les fichiers ici",
+    "subtitle": "ou cliquer pour parcourir",
+    "uploading": "Téléversement en cours...",
+    "processing": "Traitement des fichiers...",
+    "supportedFormats": "Formats pris en charge: .txt, .doc, .docx, .pdf",
+    "maxSize": "Taille maximale du fichier: {{size}} Mo",
+    "dropHere": "Déposer les fichiers ici",
+    "selectFiles": "Sélectionner des fichiers"
+  },
+  "fileList": {
+    "title": "Fichiers à téléverser",
+    "empty": "Aucun fichier sélectionné",
+    "fileName": "Nom du fichier",
+    "size": "Taille",
+    "status": "État",
+    "actions": "Actions",
+    "remove": "Retirer",
+    "removeAll": "Retirer tout"
+  },
+  "status": {
+    "pending": "En attente",
+    "uploading": "Téléversement",
+    "processing": "Traitement",
+    "completed": "Terminé",
+    "failed": "Échec",
+    "queued": "En file d'attente"
+  },
+  "actions": {
+    "upload": "Téléverser les fichiers",
+    "uploadAll": "Tout téléverser",
+    "cancel": "Annuler le téléversement",
+    "retry": "Réessayer",
+    "clear": "Effacer les terminés"
+  },
+  "progress": {
+    "uploading": "Téléversement de {{current}} sur {{total}} fichiers",
+    "uploaded": "{{count}} fichier téléversé",
+    "uploaded_plural": "{{count}} fichiers téléversés",
+    "failed": "{{count}} fichier en échec",
+    "failed_plural": "{{count}} fichiers en échec"
+  },
+  "validation": {
+    "fileTooBig": "La taille du fichier dépasse {{max}} Mo",
+    "invalidFormat": "Format de fichier invalide",
+    "duplicateFile": "Fichier déjà ajouté",
+    "noFilesSelected": "Veuillez sélectionner des fichiers à téléverser"
+  },
+  "success": {
+    "uploaded": "Fichier téléversé avec succès",
+    "uploaded_plural": "{{count}} fichiers téléversés avec succès",
+    "processing": "Les fichiers sont en cours de traitement en arrière-plan"
+  },
+  "errors": {
+    "uploadFailed": "Échec du téléversement",
+    "networkError": "Erreur réseau. Veuillez réessayer.",
+    "serverError": "Erreur serveur. Veuillez contacter le support.",
+    "invalidFile": "Fichier invalide. Veuillez vérifier le fichier et réessayer."
+  }
+}

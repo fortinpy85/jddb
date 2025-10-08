@@ -13,12 +13,16 @@ import jobsEn from "@/locales/en/jobs.json";
 import errorsEn from "@/locales/en/errors.json";
 import navigationEn from "@/locales/en/navigation.json";
 import dashboardEn from "@/locales/en/dashboard.json";
+import uploadEn from "@/locales/en/upload.json";
+import formsEn from "@/locales/en/forms.json";
 
 import commonFr from "@/locales/fr/common.json";
 import jobsFr from "@/locales/fr/jobs.json";
 import errorsFr from "@/locales/fr/errors.json";
 import navigationFr from "@/locales/fr/navigation.json";
 import dashboardFr from "@/locales/fr/dashboard.json";
+import uploadFr from "@/locales/fr/upload.json";
+import formsFr from "@/locales/fr/forms.json";
 
 // Configure i18next
 i18n
@@ -32,6 +36,8 @@ i18n
         errors: errorsEn,
         navigation: navigationEn,
         dashboard: dashboardEn,
+        upload: uploadEn,
+        forms: formsEn,
       },
       fr: {
         common: commonFr,
@@ -39,6 +45,8 @@ i18n
         errors: errorsFr,
         navigation: navigationFr,
         dashboard: dashboardFr,
+        upload: uploadFr,
+        forms: formsFr,
       },
     },
     fallbackLng: "en",

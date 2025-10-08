@@ -10,6 +10,8 @@ export interface I18nNamespace {
   errors: typeof import("@/locales/en/errors.json");
   navigation: typeof import("@/locales/en/navigation.json");
   dashboard: typeof import("@/locales/en/dashboard.json");
+  upload: typeof import("@/locales/en/upload.json");
+  forms: typeof import("@/locales/en/forms.json");
 }
 
 declare module "i18next" {

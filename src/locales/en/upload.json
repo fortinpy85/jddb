@@ -1,0 +1,63 @@
+{
+  "title": "Upload Job Descriptions",
+  "subtitle": "Upload and process job description files",
+  "dropzone": {
+    "title": "Drag & Drop Files Here",
+    "subtitle": "or click to browse",
+    "uploading": "Uploading...",
+    "processing": "Processing files...",
+    "supportedFormats": "Supported formats: .txt, .doc, .docx, .pdf",
+    "maxSize": "Maximum file size: {{size}} MB",
+    "dropHere": "Drop files here",
+    "selectFiles": "Select Files"
+  },
+  "fileList": {
+    "title": "Files to Upload",
+    "empty": "No files selected",
+    "fileName": "File Name",
+    "size": "Size",
+    "status": "Status",
+    "actions": "Actions",
+    "remove": "Remove",
+    "removeAll": "Remove All"
+  },
+  "status": {
+    "pending": "Pending",
+    "uploading": "Uploading",
+    "processing": "Processing",
+    "completed": "Completed",
+    "failed": "Failed",
+    "queued": "Queued"
+  },
+  "actions": {
+    "upload": "Upload Files",
+    "uploadAll": "Upload All",
+    "cancel": "Cancel Upload",
+    "retry": "Retry",
+    "clear": "Clear Completed"
+  },
+  "progress": {
+    "uploading": "Uploading {{current}} of {{total}} files",
+    "uploaded": "{{count}} file uploaded",
+    "uploaded_plural": "{{count}} files uploaded",
+    "failed": "{{count}} file failed",
+    "failed_plural": "{{count}} files failed"
+  },
+  "validation": {
+    "fileTooBig": "File size exceeds {{max}} MB",
+    "invalidFormat": "Invalid file format",
+    "duplicateFile": "File already added",
+    "noFilesSelected": "Please select files to upload"
+  },
+  "success": {
+    "uploaded": "File uploaded successfully",
+    "uploaded_plural": "{{count}} files uploaded successfully",
+    "processing": "Files are being processed in the background"
+  },
+  "errors": {
+    "uploadFailed": "Upload failed",
+    "networkError": "Network error. Please try again.",
+    "serverError": "Server error. Please contact support.",
+    "invalidFile": "Invalid file. Please check the file and try again."
+  }
+}
