@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,8 @@ export function JobList({
   showFilters = true,
   initialFilters = {},
 }: JobListProps) {
+  const { t } = useTranslation(["jobs", "common"]);
+
   // Separate selectors for data and actions to prevent re-renders
   const { jobs, loading, error, pagination, stats, filters } = useStore(
     (state) => ({
@@ -100,7 +103,7 @@ export function JobList({
   };
 
   const handleJobDelete = async (jobId: number, jobNumber: string) => {
-    if (!confirm(`Are you sure you want to delete job ${jobNumber}?`)) {
+    if (!confirm(t("jobs:actions.confirmDelete", { jobNumber }))) {
       return;
     }
 
@@ -111,14 +114,17 @@ export function JobList({
 
       addToast({
         type: "success",
-        title: "Job Deleted",
-        description: `Job ${jobNumber} has been successfully deleted.`,
+        title: t("jobs:messages.deleteSuccess"),
+        description: t("jobs:messages.deleteSuccessDescription", { jobNumber }),
       });
     } catch (err) {
       addToast({
         type: "error",
-        title: "Delete Failed",
-        description: `Failed to delete job: ${err instanceof Error ? err.message : "Unknown error"}`,
+        title: t("jobs:messages.deleteFailed"),
+        description: t("jobs:messages.deleteFailedDescription", {
+          error:
+            err instanceof Error ? err.message : t("common:errors.unknown"),
+        }),
       });
     }
   };
@@ -201,14 +207,19 @@ ${Object.entries(fullJob.metadata)
 
       addToast({
         type: "success",
-        title: "Export Complete",
-        description: `Job ${job.job_number} has been exported successfully.`,
+        title: t("jobs:messages.exportSuccess"),
+        description: t("jobs:messages.exportSuccessDescription", {
+          jobNumber: job.job_number,
+        }),
       });
     } catch (err) {
       addToast({
         type: "error",
-        title: "Export Failed",
-        description: `Failed to export job: ${err instanceof Error ? err.message : "Unknown error"}`,
+        title: t("jobs:messages.exportFailed"),
+        description: t("jobs:messages.exportFailedDescription", {
+          error:
+            err instanceof Error ? err.message : t("common:errors.unknown"),
+        }),
       });
     }
   };
@@ -233,20 +244,20 @@ ${Object.entries(fullJob.metadata)
       <div className="space-y-6">
         <Card>
           <CardContent className="pt-6 text-center">
-            <h3 className="text-lg font-semibold mb-4">Job Descriptions</h3>
-            <p className="text-gray-600 mb-4">
-              Click the button below to load job data
-            </p>
+            <h3 className="text-lg font-semibold mb-4">
+              {t("jobs:list.title")}
+            </h3>
+            <p className="text-gray-600 mb-4">{t("jobs:list.loadPrompt")}</p>
             <Button
               onClick={initializeData}
               disabled={loading || isInitializing}
             >
               <Database className="w-4 h-4 mr-2" />
               {isInitializing
-                ? "Initializing..."
+                ? t("common:loading.initializing")
                 : loading
-                  ? "Loading..."
-                  : "Load Job Data"}
+                  ? t("common:loading.loading")
+                  : t("jobs:actions.loadData")}
             </Button>
           </CardContent>
         </Card>
@@ -260,7 +271,9 @@ ${Object.entries(fullJob.metadata)
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Job Descriptions ({stats.total_jobs})</span>
+            <span>
+              {t("jobs:list.title")} ({stats.total_jobs})
+            </span>
             <Button
               variant="outline"
               size="sm"
@@ -270,7 +283,7 @@ ${Object.entries(fullJob.metadata)
               }}
             >
               <RefreshCw className="w-4 h-4 mr-2" />
-              Refresh
+              {t("jobs:actions.refresh")}
             </Button>
           </CardTitle>
         </CardHeader>
@@ -281,31 +294,41 @@ ${Object.entries(fullJob.metadata)
               <div className="text-2xl font-bold text-green-600">
                 {stats.processing_status.completed}
               </div>
-              <div className="text-sm text-gray-600">Completed</div>
+              <div className="text-sm text-gray-600">
+                {t("jobs:status.completed")}
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
                 {stats.processing_status.processing}
               </div>
-              <div className="text-sm text-gray-600">Processing</div>
+              <div className="text-sm text-gray-600">
+                {t("jobs:status.processing")}
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-yellow-600">
                 {stats.processing_status.pending}
               </div>
-              <div className="text-sm text-gray-600">Pending</div>
+              <div className="text-sm text-gray-600">
+                {t("jobs:status.pending")}
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
                 {stats.processing_status.needs_review}
               </div>
-              <div className="text-sm text-gray-600">Needs Review</div>
+              <div className="text-sm text-gray-600">
+                {t("jobs:status.needsReview")}
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-red-600">
                 {stats.processing_status.failed}
               </div>
-              <div className="text-sm text-gray-600">Failed</div>
+              <div className="text-sm text-gray-600">
+                {t("jobs:status.failed")}
+              </div>
             </div>
           </div>
 
@@ -316,14 +339,14 @@ ${Object.entries(fullJob.metadata)
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="Search job descriptions..."
+                  placeholder={t("jobs:search.placeholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   className="pl-10"
                 />
               </div>
-              <Button onClick={handleSearch}>Search</Button>
+              <Button onClick={handleSearch}>{t("jobs:actions.search")}</Button>
             </div>
 
             {/* Filters */}
@@ -332,14 +355,16 @@ ${Object.entries(fullJob.metadata)
                 <div className="flex items-center gap-2">
                   <Filter className="w-4 h-4 text-gray-400" />
                   <select
-                    aria-label="Classification filter"
+                    aria-label={t("jobs:filters.classificationLabel")}
                     value={filters.classification || ""}
                     onChange={(e) =>
                       handleFilterChange("classification", e.target.value)
                     }
                     className="border rounded px-3 py-1 text-sm"
                   >
-                    <option value="">All Classifications</option>
+                    <option value="">
+                      {t("jobs:filters.allClassifications")}
+                    </option>
                     {Object.entries(stats.by_classification).map(
                       ([classification, count]) => (
                         <option key={classification} value={classification}>
@@ -351,14 +376,14 @@ ${Object.entries(fullJob.metadata)
                 </div>
 
                 <select
-                  aria-label="Language filter"
+                  aria-label={t("jobs:filters.languageLabel")}
                   value={filters.language || ""}
                   onChange={(e) =>
                     handleFilterChange("language", e.target.value)
                   }
                   className="border rounded px-3 py-1 text-sm"
                 >
-                  <option value="">All Languages</option>
+                  <option value="">{t("jobs:filters.allLanguages")}</option>
                   {Object.entries(stats.by_language).map(
                     ([language, count]) => (
                       <option key={language} value={language}>
@@ -369,7 +394,7 @@ ${Object.entries(fullJob.metadata)
                 </select>
 
                 <Input
-                  placeholder="Department filter..."
+                  placeholder={t("jobs:filters.departmentPlaceholder")}
                   value={filters.department || ""}
                   onChange={(e) =>
                     handleFilterChange("department", e.target.value)
@@ -442,7 +467,7 @@ ${Object.entries(fullJob.metadata)
                 {job.processed_date && (
                   <p className="text-xs text-gray-500 flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    Processed:{" "}
+                    {t("jobs:details.processed")}:{" "}
                     {new Date(job.processed_date).toLocaleDateString()}
                   </p>
                 )}
@@ -457,7 +482,7 @@ ${Object.entries(fullJob.metadata)
                   className="flex-1 transition-all duration-200 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 group/btn"
                 >
                   <Eye className="w-4 h-4 mr-1 group-hover/btn:scale-110 transition-transform duration-200" />
-                  View
+                  {t("jobs:actions.view")}
                 </Button>
 
                 <Button
@@ -467,7 +492,7 @@ ${Object.entries(fullJob.metadata)
                   className="flex-1 transition-all duration-200 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 group/btn"
                 >
                   <Download className="w-4 h-4 mr-1 group-hover/btn:scale-110 transition-transform duration-200" />
-                  Export
+                  {t("jobs:actions.export")}
                 </Button>
 
                 <Button
@@ -475,6 +500,7 @@ ${Object.entries(fullJob.metadata)
                   size="sm"
                   onClick={() => handleJobDelete(job.id, job.job_number)}
                   className="transition-all duration-200 hover:bg-red-50 hover:border-red-300 hover:text-red-700 group/btn px-3"
+                  title={t("jobs:actions.delete")}
                 >
                   <Trash2 className="w-4 h-4 group-hover/btn:scale-110 transition-transform duration-200" />
                 </Button>
@@ -491,10 +517,10 @@ ${Object.entries(fullJob.metadata)
             {loading ? (
               <>
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Loading...
+                {t("common:loading.loading")}...
               </>
             ) : (
-              "Load More"
+              t("jobs:actions.loadMore")
             )}
           </Button>
         </div>
@@ -514,7 +540,7 @@ ${Object.entries(fullJob.metadata)
             searchQuery
               ? [
                   {
-                    label: "Clear Search",
+                    label: t("jobs:actions.clearSearch"),
                     onClick: () => {
                       setSearchQuery("");
                       fetchJobs(true);
@@ -522,7 +548,7 @@ ${Object.entries(fullJob.metadata)
                     variant: "outline",
                   },
                   {
-                    label: "Browse All Jobs",
+                    label: t("jobs:actions.browseAll"),
                     onClick: () => {
                       setSearchQuery("");
                       setFilters({});
@@ -533,7 +559,7 @@ ${Object.entries(fullJob.metadata)
                 ]
               : [
                   {
-                    label: "Upload Files",
+                    label: t("jobs:actions.uploadFiles"),
                     onClick: () => (window.location.hash = "#upload"),
                     icon: Upload,
                   },
