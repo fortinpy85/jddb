@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { API_KEY, makeAuthenticatedRequest } from './utils/test-helpers';
 
 test.describe('Phase 2 Backend API Testing', () => {
 
@@ -35,8 +36,8 @@ test.describe('Phase 2 Backend API Testing', () => {
   });
 
   test('should have working jobs API', async ({ page }) => {
-    // Test jobs listing
-    const response = await page.request.get('http://localhost:8000/api/jobs/?limit=5');
+    // Test jobs listing with authentication
+    const response = await makeAuthenticatedRequest(page, 'http://localhost:8000/api/jobs/?limit=5');
     expect(response.status()).toBe(200);
 
     const data = await response.json();
@@ -46,8 +47,8 @@ test.describe('Phase 2 Backend API Testing', () => {
   });
 
   test('should have translation memory service health', async ({ page }) => {
-    // Test translation memory health endpoint
-    const response = await page.request.get('http://localhost:8000/api/translation-memory/health');
+    // Test translation memory health endpoint with authentication
+    const response = await makeAuthenticatedRequest(page, 'http://localhost:8000/api/translation-memory/health');
     expect(response.status()).toBe(200);
 
     const health = await response.json();
@@ -58,7 +59,7 @@ test.describe('Phase 2 Backend API Testing', () => {
   });
 
   test('should have analytics endpoints', async ({ page }) => {
-    // Test analytics endpoints
+    // Test analytics endpoints with authentication
     const endpoints = [
       '/api/analytics/performance-summary',
       '/api/analytics/usage-patterns',
@@ -67,21 +68,21 @@ test.describe('Phase 2 Backend API Testing', () => {
     ];
 
     for (const endpoint of endpoints) {
-      const response = await page.request.get(`http://localhost:8000${endpoint}`);
+      const response = await makeAuthenticatedRequest(page, `http://localhost:8000${endpoint}`);
       // Should either work (200) or return structured error (not 404)
       expect([200, 422, 500].includes(response.status())).toBe(true);
     }
   });
 
   test('should have Phase 2 monitoring endpoints', async ({ page }) => {
-    // Test Phase 2 monitoring endpoints
-    const response = await page.request.get('http://localhost:8000/api/monitoring/health');
+    // Test Phase 2 monitoring endpoints with authentication
+    const response = await makeAuthenticatedRequest(page, 'http://localhost:8000/api/monitoring/health');
     expect([200, 422, 500].includes(response.status())).toBe(true);
   });
 
   test('should have search functionality', async ({ page }) => {
-    // Test search endpoint
-    const response = await page.request.get('http://localhost:8000/api/search/?q=manager&limit=5');
+    // Test search endpoint with authentication
+    const response = await makeAuthenticatedRequest(page, 'http://localhost:8000/api/search/?q=manager&limit=5');
     expect([200, 422].includes(response.status())).toBe(true);
 
     if (response.status() === 200) {
@@ -91,14 +92,14 @@ test.describe('Phase 2 Backend API Testing', () => {
   });
 
   test('should have ingestion endpoints', async ({ page }) => {
-    // Test ingestion status
-    const response = await page.request.get('http://localhost:8000/api/ingestion/stats');
+    // Test ingestion status with authentication
+    const response = await makeAuthenticatedRequest(page, 'http://localhost:8000/api/ingestion/stats');
     expect([200, 422, 500].includes(response.status())).toBe(true);
   });
 
   test('should have quality endpoints', async ({ page }) => {
-    // Test quality endpoints
-    const response = await page.request.get('http://localhost:8000/api/quality/metrics');
+    // Test quality endpoints with authentication
+    const response = await makeAuthenticatedRequest(page, 'http://localhost:8000/api/quality/metrics');
     expect([200, 422, 404, 500].includes(response.status())).toBe(true);
   });
 
@@ -107,8 +108,9 @@ test.describe('Phase 2 Backend API Testing', () => {
 test.describe('Phase 2 API Integration Tests', () => {
 
   test('should handle translation memory suggestions endpoint', async ({ page }) => {
-    // Test translation memory suggestions (POST endpoint)
-    const response = await page.request.post('http://localhost:8000/api/translation-memory/suggestions', {
+    // Test translation memory suggestions (POST endpoint) with authentication
+    const response = await makeAuthenticatedRequest(page, 'http://localhost:8000/api/translation-memory/suggestions', {
+      method: 'POST',
       data: {
         source_text: "Responsible for strategic planning",
         source_language: "en",
@@ -196,8 +198,8 @@ test.describe('Phase 2 Service Health Validation', () => {
   });
 
   test('should have analytics middleware working', async ({ page }) => {
-    // Make a request that should be tracked
-    const response = await page.request.get('http://localhost:8000/api/jobs/?limit=1');
+    // Make an authenticated request that should be tracked
+    const response = await makeAuthenticatedRequest(page, 'http://localhost:8000/api/jobs/?limit=1');
     expect([200, 422].includes(response.status())).toBe(true);
 
     // Analytics should track the request (verified by server logs)

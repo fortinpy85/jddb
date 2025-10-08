@@ -63,7 +63,8 @@
       "WebFetch(domain:docs.lightcast.dev)",
       "Bash(del .secrets.new)",
       "mcp__playwright__browser_press_key",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(PORT=3004 bun dev)"
     ],
     "deny": [],
     "ask": []

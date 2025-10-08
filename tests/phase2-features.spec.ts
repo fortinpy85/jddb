@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { API_KEY, makeAuthenticatedRequest } from './utils/test-helpers';
 
 test.describe('Phase 2 Features - Collaborative Editing', () => {
 
@@ -99,20 +100,20 @@ test.describe('Phase 2 Features - Collaborative Editing', () => {
 test.describe('Phase 2 Features - API Integration', () => {
 
   test('should have working backend API endpoints', async ({ page }) => {
-    // Test if backend is accessible
-    const response = await page.request.get('http://localhost:8000/api/health');
+    // Test if backend is accessible with authentication
+    const response = await makeAuthenticatedRequest(page, 'http://localhost:8000/api/health');
     expect(response.status()).toBe(200);
   });
 
   test('should access translation memory API', async ({ page }) => {
-    // Test translation memory API endpoint
-    const response = await page.request.get('http://localhost:8000/api/translation-memory/');
+    // Test translation memory API endpoint with authentication
+    const response = await makeAuthenticatedRequest(page, 'http://localhost:8000/api/translation-memory/');
     expect(response.status()).toBe(200);
   });
 
   test('should access jobs API with new features', async ({ page }) => {
-    // Test jobs API endpoint
-    const response = await page.request.get('http://localhost:8000/api/jobs?limit=5');
+    // Test jobs API endpoint with authentication
+    const response = await makeAuthenticatedRequest(page, 'http://localhost:8000/api/jobs?limit=5');
     expect(response.status()).toBe(200);
 
     const jobs = await response.json();

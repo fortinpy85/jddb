@@ -254,11 +254,24 @@ export default function HomePage() {
   // Determine if we should show left panel collapsed
   const leftPanelCollapsed = !showDashboardSidebar;
 
+  // Helper to wrap content with proper panel ID for ARIA controls
+  const wrapWithPanelId = (content: React.ReactNode, viewId: string) => {
+    return (
+      <div
+        id={`${viewId}-panel`}
+        role="tabpanel"
+        aria-labelledby={`${viewId}-tab`}
+      >
+        {content}
+      </div>
+    );
+  };
+
   // Main content renderer based on active view
   const renderContent = () => {
     switch (activeView) {
       case "dashboard":
-        return (
+        return wrapWithPanelId(
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -273,10 +286,11 @@ export default function HomePage() {
             >
               <StatsDashboard />
             </Suspense>
-          </div>
+          </div>,
+          "dashboard",
         );
       case "home":
-        return (
+        return wrapWithPanelId(
           <JobsTable
             onJobSelect={handleJobSelect}
             onNavigateToUpload={() => handleViewChange("upload")}
@@ -284,29 +298,33 @@ export default function HomePage() {
             onCreateNew={() => {
               setShowCreateJobModal(true);
             }}
-          />
+          />,
+          "jobs",
         );
       case "job-details":
-        return selectedJob ? (
-          <JobDetailView
-            jobId={selectedJob.id}
-            onBack={handleBackFromDetails}
-            onEdit={() => handleViewChange("improvement")}
-            onTranslate={() => {
-              handleViewChange("translate");
-            }}
-            onCompare={() => handleViewChange("compare")}
-          />
-        ) : (
-          <ErrorState
-            title="No job selected"
-            message="Please select a job from the list"
-            onAction={handleBackFromDetails}
-            actionLabel="Back to Jobs"
-          />
+        return wrapWithPanelId(
+          selectedJob ? (
+            <JobDetailView
+              jobId={selectedJob.id}
+              onBack={handleBackFromDetails}
+              onEdit={() => handleViewChange("improvement")}
+              onTranslate={() => {
+                handleViewChange("translate");
+              }}
+              onCompare={() => handleViewChange("compare")}
+            />
+          ) : (
+            <ErrorState
+              title="No job selected"
+              message="Please select a job from the list"
+              onAction={handleBackFromDetails}
+              actionLabel="Back to Jobs"
+            />
+          ),
+          "jobs",
         );
       case "upload":
-        return (
+        return wrapWithPanelId(
           <Suspense
             fallback={<LoadingState message="Loading upload interface..." />}
           >
@@ -315,16 +333,18 @@ export default function HomePage() {
               maxFileSize={50}
               acceptedFileTypes={[".txt", ".doc", ".docx", ".pdf"]}
             />
-          </Suspense>
+          </Suspense>,
+          "upload",
         );
       case "search":
-        return (
+        return wrapWithPanelId(
           <Suspense fallback={<LoadingState message="Loading search..." />}>
             <SearchInterface onJobSelect={handleJobSelect} />
-          </Suspense>
+          </Suspense>,
+          "search",
         );
       case "editing":
-        return (
+        return wrapWithPanelId(
           <Suspense fallback={<LoadingState message="Loading editor..." />}>
             <BasicEditingView
               jobId={selectedJob?.id}
@@ -335,10 +355,11 @@ export default function HomePage() {
                 // TODO: Add lock warning modal
               }}
             />
-          </Suspense>
+          </Suspense>,
+          "improve",
         );
       case "improvement":
-        return (
+        return wrapWithPanelId(
           <Suspense
             fallback={<LoadingState message="Loading improvement tools..." />}
           >
@@ -356,33 +377,40 @@ export default function HomePage() {
                 handleViewChange(selectedJob ? "job-details" : "home");
               }}
             />
-          </Suspense>
+          </Suspense>,
+          "improve",
         );
       case "translate":
-        return selectedJob ? (
-          <Suspense fallback={<LoadingState message="Loading translator..." />}>
-            <BilingualEditor
-              jobId={selectedJob.id}
-              sourceLanguage={selectedJob.language === "fr" ? "fr" : "en"}
-              targetLanguage={selectedJob.language === "fr" ? "en" : "fr"}
-              onBack={() => handleViewChange("job-details")}
+        return wrapWithPanelId(
+          selectedJob ? (
+            <Suspense
+              fallback={<LoadingState message="Loading translator..." />}
+            >
+              <BilingualEditor
+                jobId={selectedJob.id}
+                sourceLanguage={selectedJob.language === "fr" ? "fr" : "en"}
+                targetLanguage={selectedJob.language === "fr" ? "en" : "fr"}
+                onBack={() => handleViewChange("job-details")}
+              />
+            </Suspense>
+          ) : (
+            <ErrorState
+              title="No Job Selected"
+              message="Please select a job description to translate"
+              onAction={() => handleViewChange("home")}
             />
-          </Suspense>
-        ) : (
-          <ErrorState
-            title="No Job Selected"
-            message="Please select a job description to translate"
-            onAction={() => handleViewChange("home")}
-          />
+          ),
+          "translate",
         );
       case "compare":
-        return (
+        return wrapWithPanelId(
           <Suspense fallback={<LoadingState message="Loading comparison..." />}>
             <JobComparison />
-          </Suspense>
+          </Suspense>,
+          "compare",
         );
       case "statistics":
-        return (
+        return wrapWithPanelId(
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -397,26 +425,29 @@ export default function HomePage() {
             >
               <StatsDashboard />
             </Suspense>
-          </div>
+          </div>,
+          "statistics",
         );
       case "system-health":
-        return (
+        return wrapWithPanelId(
           <Suspense
             fallback={<LoadingState message="Loading system health..." />}
           >
             <SystemHealthPage />
-          </Suspense>
+          </Suspense>,
+          "system-health",
         );
       case "preferences":
-        return (
+        return wrapWithPanelId(
           <Suspense
             fallback={<LoadingState message="Loading preferences..." />}
           >
             <UserPreferencesPage />
-          </Suspense>
+          </Suspense>,
+          "preferences",
         );
       case "writer":
-        return (
+        return wrapWithPanelId(
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -433,10 +464,11 @@ export default function HomePage() {
             >
               <AIJobWriter />
             </Suspense>
-          </div>
+          </div>,
+          "writer",
         );
       case "posting":
-        return (
+        return wrapWithPanelId(
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -451,10 +483,11 @@ export default function HomePage() {
             >
               <JobPostingGenerator />
             </Suspense>
-          </div>
+          </div>,
+          "posting",
         );
       case "analytics":
-        return (
+        return wrapWithPanelId(
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -472,21 +505,24 @@ export default function HomePage() {
             >
               <PredictiveAnalytics />
             </Suspense>
-          </div>
+          </div>,
+          "analytics",
         );
       case "ai-demo":
-        return (
+        return wrapWithPanelId(
           <Suspense fallback={<LoadingState message="Loading AI demo..." />}>
             <AIDemo />
-          </Suspense>
+          </Suspense>,
+          "ai-demo",
         );
       default:
-        return (
+        return wrapWithPanelId(
           <JobsTable
             onJobSelect={handleJobSelect}
             onNavigateToUpload={() => handleViewChange("upload")}
             onNavigateToSearch={() => handleViewChange("search")}
-          />
+          />,
+          "jobs",
         );
     }
   };

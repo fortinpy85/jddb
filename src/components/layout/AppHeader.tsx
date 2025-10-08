@@ -296,6 +296,7 @@ export function AppHeader({
                   return (
                     <Button
                       key={item.id}
+                      id={`${item.id}-tab`}
                       variant={isActive ? "secondary" : "ghost"}
                       onClick={() => !isDisabled && handleNavigation(item.id)}
                       disabled={isDisabled}
@@ -364,6 +365,7 @@ export function AppHeader({
               return (
                 <Button
                   key={item.id}
+                  id={`${item.id}-tab`}
                   variant="ghost"
                   size="sm"
                   onClick={() => !isDisabled && handleNavigation(item.id)}

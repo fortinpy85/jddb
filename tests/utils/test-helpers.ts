@@ -1,7 +1,12 @@
 /**
  * Test utilities and helpers for E2E tests
  */
-import { Page, expect } from "@playwright/test";
+import { Page, expect, APIRequestContext } from "@playwright/test";
+
+/**
+ * API Key for backend authentication
+ */
+export const API_KEY = "your_api_key"; // pragma: allowlist secret
 
 /**
  * Mock API response for tests
@@ -285,5 +290,31 @@ export async function mockErrorResponse(
       contentType: "application/json",
       body: JSON.stringify({ error: message, detail: message }),
     });
+  });
+}
+
+/**
+ * Make an authenticated API request with X-API-Key header
+ * Use this for testing backend endpoints that require authentication
+ */
+export async function makeAuthenticatedRequest(
+  page: Page,
+  url: string,
+  options: {
+    method?: string;
+    data?: any;
+    headers?: Record<string, string>;
+  } = {},
+) {
+  const { method = "GET", data, headers = {} } = options;
+
+  return await page.request.fetch(url, {
+    method,
+    headers: {
+      "X-API-Key": API_KEY,
+      "Content-Type": "application/json",
+      ...headers,
+    },
+    data: data ? JSON.stringify(data) : undefined,
   });
 }

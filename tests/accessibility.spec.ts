@@ -62,8 +62,8 @@ test.describe("Accessibility Compliance - WCAG 2.1 Level A & AA", () => {
   test("Dashboard view should be accessible", async ({ page }) => {
     await page.goto("/");
 
-    // Navigate to Dashboard
-    await page.getByRole("button", { name: "Dashboard", exact: false }).click();
+    // Navigate to Dashboard using stable ID (language-independent)
+    await page.locator('#dashboard-tab').click();
     await page.waitForTimeout(1000); // Allow lazy load
     await page.waitForLoadState("networkidle");
 
@@ -80,8 +80,8 @@ test.describe("Accessibility Compliance - WCAG 2.1 Level A & AA", () => {
 
     await page.goto("/");
 
-    // Navigate to Search
-    await page.getByRole("button", { name: "Search", exact: false }).click();
+    // Navigate to Search using stable ID (language-independent)
+    await page.locator('#search-tab').click();
     await page.waitForTimeout(1000); // Allow lazy load
     await page.waitForLoadState("networkidle");
 
@@ -95,8 +95,8 @@ test.describe("Accessibility Compliance - WCAG 2.1 Level A & AA", () => {
   test("Upload interface should be accessible", async ({ page }) => {
     await page.goto("/");
 
-    // Navigate to Upload
-    await page.getByRole("button", { name: "Upload", exact: false }).click();
+    // Navigate to Upload using stable ID (language-independent)
+    await page.locator('#upload-tab').click();
     await page.waitForTimeout(1000); // Allow lazy load
     await page.waitForLoadState("networkidle");
 
@@ -110,8 +110,8 @@ test.describe("Accessibility Compliance - WCAG 2.1 Level A & AA", () => {
   test("Compare view should be accessible", async ({ page }) => {
     await page.goto("/");
 
-    // Navigate to Compare
-    await page.getByRole("button", { name: "Compare", exact: false }).click();
+    // Navigate to Compare using stable ID (language-independent)
+    await page.locator('#compare-tab').click();
     await page.waitForTimeout(1000); // Allow lazy load
     await page.waitForLoadState("networkidle");
 
@@ -125,8 +125,8 @@ test.describe("Accessibility Compliance - WCAG 2.1 Level A & AA", () => {
   test("Translate view should be accessible", async ({ page }) => {
     await page.goto("/");
 
-    // Navigate to Translate
-    await page.getByRole("button", { name: "Translate", exact: false }).click();
+    // Navigate to Translate using stable ID (language-independent)
+    await page.locator('#translate-tab').click();
     await page.waitForTimeout(1000); // Allow lazy load
     await page.waitForLoadState("networkidle");
 
@@ -140,8 +140,8 @@ test.describe("Accessibility Compliance - WCAG 2.1 Level A & AA", () => {
   test("AI Demo page should be accessible", async ({ page }) => {
     await page.goto("/");
 
-    // Navigate to AI Demo
-    await page.getByRole("button", { name: "AI Demo", exact: false }).click();
+    // Navigate to AI Demo using stable ID (language-independent)
+    await page.locator('#ai-demo-tab').click();
     await page.waitForTimeout(1000); // Allow lazy load
     await page.waitForLoadState("networkidle");
 
@@ -232,8 +232,8 @@ test.describe("Accessibility - Screen Reader Support", () => {
 
     await page.goto("/");
 
-    // Navigate to Search (has form inputs)
-    await page.getByRole("button", { name: "Search", exact: false }).click();
+    // Navigate to Search (has form inputs) using stable ID
+    await page.locator('#search-tab').click();
     await page.waitForTimeout(1000);
     await page.waitForLoadState("networkidle");
 
