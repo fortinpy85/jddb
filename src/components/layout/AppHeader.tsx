@@ -281,16 +281,16 @@ export function AppHeader({
 
                   // Get translated label and description
                   const label = item.labelKey.startsWith("navigation.")
-                    ? t(item.labelKey)
+                    ? t(item.labelKey.replace("navigation.", ""))
                     : item.labelKey;
                   const description = item.descriptionKey?.startsWith(
                     "navigation.",
                   )
-                    ? t(item.descriptionKey)
+                    ? t(item.descriptionKey.replace("navigation.", ""))
                     : item.descriptionKey;
 
                   const tooltipText = isDisabled
-                    ? t("navigation.tooltips.selectJobFirst")
+                    ? t("tooltips.selectJobFirst")
                     : description;
 
                   return (
@@ -351,14 +351,14 @@ export function AppHeader({
 
               // Get translated label and description
               const label = item.labelKey.startsWith("navigation.")
-                ? t(item.labelKey)
+                ? t(item.labelKey.replace("navigation.", ""))
                 : item.labelKey;
               const description = item.descriptionKey?.startsWith("navigation.")
-                ? t(item.descriptionKey)
+                ? t(item.descriptionKey.replace("navigation.", ""))
                 : item.descriptionKey;
 
               const tooltipText = isDisabled
-                ? t("navigation.tooltips.selectJobFirst")
+                ? t("tooltips.selectJobFirst")
                 : description;
 
               return (
