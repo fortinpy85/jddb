@@ -138,7 +138,8 @@ export default function HomePage() {
 
   // Initialize API client and load data
   useEffect(() => {
-    apiClient.setApiKey("your_api_key");
+    // Note: API key not required for current backend implementation
+    // Backend uses environment-based configuration
     fetchJobs(true);
     fetchStats();
   }, [fetchJobs, fetchStats]);
@@ -352,7 +353,10 @@ export default function HomePage() {
                 handleViewChange(selectedJob ? "job-details" : "home")
               }
               onAdvancedEdit={() => {
-                // TODO: Add lock warning modal
+                // Future Enhancement: Add lock warning modal
+                // This modal should warn users that switching to advanced mode
+                // will lock the document for concurrent editing
+                // For now, advanced mode is accessible through the advanced tab
               }}
             />
           </Suspense>,

@@ -10,12 +10,8 @@ class Settings(BaseSettings):
     environment: str = "development"  # development, staging, production
 
     # Database Configuration
-    database_url: str = (
-        "postgresql+asyncpg://username:password@localhost:5432/jd_ingestion"
-    )
-    database_sync_url: str = (
-        "postgresql://username:password@localhost:5432/jd_ingestion"
-    )
+    database_url: str = "postgresql+asyncpg://username:password@localhost:5432/jd_ingestion"  # pragma: allowlist secret
+    database_sync_url: str = "postgresql://username:password@localhost:5432/jd_ingestion"  # pragma: allowlist secret
     database_pool_size: int = 10
     database_max_overflow: int = 20
     database_pool_timeout: int = 30
@@ -65,7 +61,9 @@ class Settings(BaseSettings):
     RETRY_BASE_DELAY: float = 0.5
 
     # API Settings
-    API_KEY: str = "your_api_key"
+    # Note: API_KEY is optional - used for service-to-service authentication if needed
+    # For production, set via environment variable: API_KEY=<your-key>
+    API_KEY: str = ""
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     api_workers: int = 1

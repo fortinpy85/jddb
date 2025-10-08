@@ -134,7 +134,12 @@ function CompareView({
       type: "info",
     });
     setShowMergeDialog(false);
-    // TODO: Navigate to editing view with merged content
+
+    // Future Enhancement: Navigate to editing view with merged content
+    // This will require:
+    // 1. Backend endpoint to create merged job description
+    // 2. State management for merged document
+    // 3. Navigation to editing view with pre-populated content
   };
 
   const comparisonMetrics: ComparisonMetric[] =

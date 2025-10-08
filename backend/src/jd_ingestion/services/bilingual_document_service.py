@@ -297,6 +297,7 @@ class BilingualDocumentService:
         logger.info(f"Fetching translation history for job {job_id}")
 
         # Mock history data
+        # Note: In production, user field would contain actual authenticated user IDs
         history = [
             {
                 "id": "1",
@@ -304,7 +305,7 @@ class BilingualDocumentService:
                 "oldStatus": "draft",
                 "newStatus": "review",
                 "timestamp": datetime.utcnow().isoformat(),
-                "user": "translator@example.com",
+                "user": "system-translator",
             },
             {
                 "id": "2",
@@ -312,7 +313,7 @@ class BilingualDocumentService:
                 "oldStatus": "review",
                 "newStatus": "approved",
                 "timestamp": datetime.utcnow().isoformat(),
-                "user": "reviewer@example.com",
+                "user": "system-reviewer",
             },
             {
                 "id": "3",
@@ -320,7 +321,7 @@ class BilingualDocumentService:
                 "oldStatus": "review",
                 "newStatus": "approved",
                 "timestamp": datetime.utcnow().isoformat(),
-                "user": "reviewer@example.com",
+                "user": "system-reviewer",
             },
         ]
 

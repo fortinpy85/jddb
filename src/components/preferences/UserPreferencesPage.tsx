@@ -64,8 +64,8 @@ interface UserPreferences {
 }
 
 const DEFAULT_PREFERENCES: UserPreferences = {
-  display_name: "Admin User",
-  email: "admin@example.com",
+  display_name: "User",
+  email: "", // Will be populated from authenticated user profile
   theme: "system",
   language: "en",
   enable_notifications: true,

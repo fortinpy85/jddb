@@ -295,7 +295,7 @@ User Agent: ${navigator.userAgent}
               Copy Error Details
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <a href="mailto:support@example.com?subject=Error Report">
+              <a href="mailto:jddb-support@canada.ca?subject=JDDB Error Report">
                 <HelpCircle className="h-3 w-3 mr-1" />
                 Contact Support
               </a>

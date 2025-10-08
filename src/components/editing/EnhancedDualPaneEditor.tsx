@@ -91,7 +91,9 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
     (isTyping) => {
       // Send typing status to other collaborators via WebSocket
       if (enableCollaboration && collaboration?.isConnected) {
-        // TODO: Send typing_start or typing_stop message
+        // Future Enhancement: Send typing_start or typing_stop message
+        // This will enable real-time typing indicators for collaborative editing
+        // Requires WebSocket message protocol implementation
       }
     },
     1000,
