@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ interface SearchSuggestions {
 }
 
 function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
+  const { t } = useTranslation(["jobs", "common"]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFilters, setSearchFilters] = useState<{
     classification?: string;
@@ -138,7 +140,9 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
       setResults(response.results || []);
       setTotalResults(response.total_results || 0);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Search failed");
+      setError(
+        err instanceof Error ? err.message : t("jobs:search.searchFailed"),
+      );
       setResults([]);
       setTotalResults(0);
     } finally {
@@ -186,7 +190,7 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
         <CardHeader>
           <CardTitle className="flex items-center">
             <Search className="w-5 h-5 mr-2" />
-            Advanced Search
+            {t("jobs:search.advancedSearch")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -198,7 +202,7 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     ref={searchInputRef}
-                    placeholder="Search job descriptions, titles, responsibilities..."
+                    placeholder={t("jobs:search.placeholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => {
@@ -249,7 +253,7 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                   ) : (
                     <Search className="w-4 h-4 mr-2" />
                   )}
-                  Search
+                  {t("jobs:actions.search")}
                 </Button>
               </div>
             </div>
@@ -259,8 +263,8 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
               filters={[
                 {
                   id: "classification",
-                  label: "Classification",
-                  placeholder: "All Classifications",
+                  label: t("jobs:filters.classificationLabel"),
+                  placeholder: t("jobs:filters.allClassifications"),
                   value: searchFilters.classification || "",
                   options: [
                     ...(facets?.classifications.map((c) => ({
@@ -274,8 +278,8 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                 },
                 {
                   id: "language",
-                  label: "Language",
-                  placeholder: "All Languages",
+                  label: t("jobs:filters.languageLabel"),
+                  placeholder: t("jobs:filters.allLanguages"),
                   value: searchFilters.language || "",
                   options: [
                     ...(facets?.languages.map((lang) => ({
@@ -292,7 +296,7 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
               {/* Department Filter - Custom Input */}
               <div className="w-full sm:w-64">
                 <Input
-                  placeholder="Filter by department..."
+                  placeholder={t("jobs:filters.departmentPlaceholder")}
                   value={searchFilters.department || ""}
                   onChange={(e) =>
                     handleFilterChange("department", e.target.value)
@@ -305,7 +309,7 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
               {facets?.section_types && facets.section_types.length > 0 && (
                 <div>
                   <label className="text-sm font-medium text-gray-600 mb-2 block">
-                    Search in Sections
+                    {t("jobs:search.searchInSections")}
                   </label>
                   <div className="flex flex-wrap gap-2 overflow-hidden max-w-full">
                     {facets.section_types.map((sectionType) => (
@@ -353,12 +357,14 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>
-                Search Results {totalResults > 0 && `(${totalResults} found)`}
+                {t("jobs:search.results")}{" "}
+                {totalResults > 0 &&
+                  `(${totalResults} ${t("jobs:search.found")})`}
               </span>
               {totalResults > 0 && (
                 <Badge variant="secondary" className="flex items-center">
                   <TrendingUp className="w-4 h-4 mr-1" />
-                  Sorted by relevance
+                  {t("jobs:search.sortedByRelevance")}
                 </Badge>
               )}
             </CardTitle>
@@ -367,7 +373,7 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                Searching...
+                {t("jobs:search.searching")}...
               </div>
             ) : results.length > 0 ? (
               <div className="space-y-4">
@@ -411,7 +417,7 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                           {result.matching_sections.length > 0 && (
                             <div className="space-y-2">
                               <p className="text-sm font-medium text-gray-600">
-                                Matching sections:
+                                {t("jobs:search.matchingSections")}:
                               </p>
                               <div className="flex flex-wrap gap-1">
                                 {result.matching_sections.map(
@@ -458,7 +464,7 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                             }}
                           >
                             <Eye className="w-4 h-4 mr-1" />
-                            View
+                            {t("jobs:actions.view")}
                           </Button>
 
                           <Button
@@ -481,7 +487,7 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                             }}
                           >
                             <Download className="w-4 h-4 mr-1" />
-                            Export
+                            {t("jobs:actions.export")}
                           </Button>
                         </div>
                       </div>
@@ -507,16 +513,15 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
           <CardContent className="pt-6">
             <div className="text-center py-12 text-gray-600 dark:text-gray-400">
               <Search className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" />
-              <h3 className="text-lg font-medium mb-2">Advanced Job Search</h3>
-              <p className="mb-4">
-                Search through job descriptions using keywords, classifications,
-                and filters.
-              </p>
+              <h3 className="text-lg font-medium mb-2">
+                {t("jobs:search.advancedSearch")}
+              </h3>
+              <p className="mb-4">{t("jobs:search.description")}</p>
               <div className="text-sm space-y-1">
-                <p>• Full-text search across all job content</p>
-                <p>• Filter by classification, language, and department</p>
-                <p>• Search within specific sections</p>
-                <p>• Smart suggestions as you type</p>
+                <p>• {t("jobs:search.features.fullText")}</p>
+                <p>• {t("jobs:search.features.filterBy")}</p>
+                <p>• {t("jobs:search.features.searchSections")}</p>
+                <p>• {t("jobs:search.features.smartSuggestions")}</p>
               </div>
             </div>
           </CardContent>
