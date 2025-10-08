@@ -1,0 +1,44 @@
+{
+  "main": {
+    "dashboard": "Tableau de bord",
+    "jobs": "Postes",
+    "upload": "Téléverser",
+    "search": "Rechercher",
+    "compare": "Comparer",
+    "translate": "Traduire",
+    "improve": "Améliorer",
+    "aiDemo": "Démo IA",
+    "statistics": "Statistiques"
+  },
+  "user": {
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "help": "Aide et support",
+    "logout": "Déconnexion",
+    "notifications": "Notifications"
+  },
+  "tooltips": {
+    "dashboardDesc": "Voir l'aperçu et les statistiques",
+    "jobsDesc": "Parcourir et gérer les descriptions de poste",
+    "uploadDesc": "Téléverser de nouveaux fichiers de description de poste",
+    "searchDesc": "Rechercher dans toutes les descriptions de poste",
+    "compareDesc": "Comparer plusieurs descriptions de poste",
+    "translateDesc": "Traduire les descriptions de poste (nécessite la sélection d'un poste)",
+    "improveDesc": "Amélioration de description de poste alimentée par l'IA (nécessite la sélection d'un poste)",
+    "aiDemoDesc": "Démonstration des capacités de l'IA et de la détection des biais",
+    "statisticsDesc": "Voir les analyses et métriques détaillées",
+    "selectJobFirst": "Sélectionnez un poste pour activer cette fonctionnalité",
+    "notificationsDesc": "Voir les notifications et alertes récentes"
+  },
+  "breadcrumbs": {
+    "home": "Accueil",
+    "jobs": "Postes",
+    "jobDetails": "Détails du poste",
+    "upload": "Téléverser",
+    "search": "Rechercher",
+    "compare": "Comparer",
+    "translate": "Traduire",
+    "improve": "Améliorer",
+    "settings": "Paramètres"
+  }
+}

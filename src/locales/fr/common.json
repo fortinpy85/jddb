@@ -1,0 +1,93 @@
+{
+  "appName": "Base de données des descriptions de poste",
+  "appNameShort": "BDDP",
+  "language": {
+    "english": "English",
+    "french": "Français",
+    "switchTo": "Passer à {{language}}",
+    "current": "Langue actuelle : {{language}}"
+  },
+  "actions": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "create": "Créer",
+    "update": "Mettre à jour",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "submit": "Soumettre",
+    "reset": "Réinitialiser",
+    "clear": "Effacer",
+    "apply": "Appliquer",
+    "export": "Exporter",
+    "import": "Importer",
+    "download": "Télécharger",
+    "upload": "Téléverser",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "refresh": "Actualiser",
+    "viewDetails": "Voir les détails",
+    "confirm": "Confirmer"
+  },
+  "status": {
+    "loading": "Chargement...",
+    "saving": "Enregistrement...",
+    "processing": "Traitement...",
+    "success": "Succès",
+    "error": "Erreur",
+    "warning": "Avertissement",
+    "info": "Information",
+    "draft": "Brouillon",
+    "published": "Publié",
+    "archived": "Archivé",
+    "active": "Actif",
+    "inactive": "Inactif"
+  },
+  "validation": {
+    "required": "Ce champ est obligatoire",
+    "invalidEmail": "Adresse courriel invalide",
+    "invalidFormat": "Format invalide",
+    "tooShort": "Trop court",
+    "tooLong": "Trop long",
+    "mustBeNumber": "Doit être un nombre",
+    "mustBePositive": "Doit être un nombre positif"
+  },
+  "accessibility": {
+    "skipToMain": "Passer au contenu principal",
+    "skipToNavigation": "Passer à la navigation",
+    "skipToSearch": "Passer à la recherche",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "mainNavigation": "Navigation principale",
+    "userMenu": "Menu utilisateur",
+    "notifications": "Notifications",
+    "settings": "Paramètres",
+    "help": "Aide",
+    "languageToggle": "Basculer la langue",
+    "themeToggle": "Basculer le thème"
+  },
+  "theme": {
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système",
+    "toggle": "Basculer le thème"
+  },
+  "pagination": {
+    "page": "Page",
+    "of": "de",
+    "rowsPerPage": "Lignes par page",
+    "showing": "Affichage de {{from}} à {{to}} sur {{total}} résultats"
+  },
+  "time": {
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "lastWeek": "La semaine dernière",
+    "lastMonth": "Le mois dernier",
+    "lastYear": "L'année dernière",
+    "custom": "Plage personnalisée"
+  }
+}

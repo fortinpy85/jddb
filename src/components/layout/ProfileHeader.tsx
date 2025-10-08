@@ -50,17 +50,41 @@ export function ProfileHeader({
     >
       <div className="flex items-center justify-between h-full">
         {/* Breadcrumbs */}
-        <nav className="flex items-center text-sm font-medium text-slate-600 dark:text-slate-400">
+        <nav
+          className="flex items-center text-sm font-medium text-slate-600 dark:text-slate-400"
+          aria-label="Breadcrumb"
+        >
           <Home className="w-4 h-4 mr-2 flex-shrink-0" />
           {breadcrumbs.map((item, index) => (
             <React.Fragment key={index}>
-              <a
-                href={item.href}
-                onClick={item.onClick}
-                className="hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
-              >
-                {item.label}
-              </a>
+              {item.onClick ? (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    item.onClick?.();
+                  }}
+                  className="hover:text-slate-900 dark:hover:text-slate-200 transition-colors underline decoration-transparent hover:decoration-current"
+                  aria-label={`Navigate to ${item.label}`}
+                >
+                  {item.label}
+                </button>
+              ) : item.href && item.href !== "#" ? (
+                <a
+                  href={item.href}
+                  className="hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+                  aria-label={`Navigate to ${item.label}`}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <span
+                  aria-current={
+                    index === breadcrumbs.length - 1 ? "page" : undefined
+                  }
+                >
+                  {item.label}
+                </span>
+              )}
               {index < breadcrumbs.length - 1 && (
                 <ChevronRight className="w-4 h-4 mx-1 text-slate-400 dark:text-slate-500" />
               )}

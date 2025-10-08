@@ -1,0 +1,93 @@
+{
+  "appName": "Job Description Database",
+  "appNameShort": "JDDB",
+  "language": {
+    "english": "English",
+    "french": "Français",
+    "switchTo": "Switch to {{language}}",
+    "current": "Current language: {{language}}"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "update": "Update",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "reset": "Reset",
+    "clear": "Clear",
+    "apply": "Apply",
+    "export": "Export",
+    "import": "Import",
+    "download": "Download",
+    "upload": "Upload",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "refresh": "Refresh",
+    "viewDetails": "View Details",
+    "confirm": "Confirm"
+  },
+  "status": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "processing": "Processing...",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Information",
+    "draft": "Draft",
+    "published": "Published",
+    "archived": "Archived",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "invalidFormat": "Invalid format",
+    "tooShort": "Too short",
+    "tooLong": "Too long",
+    "mustBeNumber": "Must be a number",
+    "mustBePositive": "Must be a positive number"
+  },
+  "accessibility": {
+    "skipToMain": "Skip to main content",
+    "skipToNavigation": "Skip to navigation",
+    "skipToSearch": "Skip to search",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "mainNavigation": "Main navigation",
+    "userMenu": "User menu",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "help": "Help",
+    "languageToggle": "Language toggle",
+    "themeToggle": "Toggle theme"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "toggle": "Toggle theme"
+  },
+  "pagination": {
+    "page": "Page",
+    "of": "of",
+    "rowsPerPage": "Rows per page",
+    "showing": "Showing {{from}} to {{to}} of {{total}} results"
+  },
+  "time": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "lastWeek": "Last week",
+    "lastMonth": "Last month",
+    "lastYear": "Last year",
+    "custom": "Custom range"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "title": "Descriptions de poste",
+  "subtitle": "Parcourir et gérer toutes les descriptions de poste",
+  "noJobsFound": "Aucune description de poste trouvée",
+  "loadingJobs": "Chargement des descriptions de poste...",
+  "jobDetails": "Détails du poste",
+  "fields": {
+    "jobNumber": "Numéro de poste",
+    "title": "Titre",
+    "classification": "Classification",
+    "department": "Ministère",
+    "status": "Statut",
+    "language": "Langue",
+    "qualityScore": "Score de qualité",
+    "createdDate": "Date de création",
+    "modifiedDate": "Dernière modification",
+    "reportsTo": "Relève de",
+    "budget": "Autorité budgétaire",
+    "team": "Taille de l'équipe"
+  },
+  "filters": {
+    "title": "Filtres",
+    "clearAll": "Tout effacer",
+    "classification": "Classification",
+    "department": "Ministère",
+    "status": "Statut",
+    "language": "Langue",
+    "qualityRange": "Plage de score de qualité",
+    "dateRange": "Plage de dates",
+    "searchPlaceholder": "Rechercher des descriptions de poste..."
+  },
+  "quality": {
+    "excellent": "Excellent",
+    "good": "Bon",
+    "fair": "Passable",
+    "poor": "Faible",
+    "scoreLabel": "Qualité : {{score}}%"
+  },
+  "sections": {
+    "generalAccountability": "Responsabilité générale",
+    "organizationStructure": "Structure organisationnelle",
+    "natureAndScope": "Nature et portée",
+    "specificAccountabilities": "Responsabilités spécifiques",
+    "dimensions": "Dimensions",
+    "knowledge": "Connaissances, compétences et aptitudes"
+  },
+  "actions": {
+    "viewDetails": "Voir les détails",
+    "edit": "Modifier le poste",
+    "delete": "Supprimer le poste",
+    "export": "Exporter",
+    "translate": "Traduire",
+    "improve": "Améliorer avec l'IA",
+    "compare": "Comparer",
+    "duplicate": "Dupliquer"
+  },
+  "view": {
+    "table": "Vue tableau",
+    "grid": "Vue grille",
+    "list": "Vue liste"
+  },
+  "sort": {
+    "relevance": "Pertinence",
+    "dateNewest": "Date (Plus récent)",
+    "dateOldest": "Date (Plus ancien)",
+    "titleAZ": "Titre (A-Z)",
+    "titleZA": "Titre (Z-A)",
+    "qualityHighest": "Qualité (Plus élevée)",
+    "qualityLowest": "Qualité (Plus faible)"
+  }
+}

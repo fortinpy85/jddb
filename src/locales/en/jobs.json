@@ -1,0 +1,71 @@
+{
+  "title": "Job Descriptions",
+  "subtitle": "Browse and manage all job descriptions",
+  "noJobsFound": "No job descriptions found",
+  "loadingJobs": "Loading job descriptions...",
+  "jobDetails": "Job Details",
+  "fields": {
+    "jobNumber": "Job Number",
+    "title": "Title",
+    "classification": "Classification",
+    "department": "Department",
+    "status": "Status",
+    "language": "Language",
+    "qualityScore": "Quality Score",
+    "createdDate": "Created",
+    "modifiedDate": "Last Modified",
+    "reportsTo": "Reports To",
+    "budget": "Budget Authority",
+    "team": "Team Size"
+  },
+  "filters": {
+    "title": "Filters",
+    "clearAll": "Clear All",
+    "classification": "Classification",
+    "department": "Department",
+    "status": "Status",
+    "language": "Language",
+    "qualityRange": "Quality Score Range",
+    "dateRange": "Date Range",
+    "searchPlaceholder": "Search job descriptions..."
+  },
+  "quality": {
+    "excellent": "Excellent",
+    "good": "Good",
+    "fair": "Fair",
+    "poor": "Poor",
+    "scoreLabel": "Quality: {{score}}%"
+  },
+  "sections": {
+    "generalAccountability": "General Accountability",
+    "organizationStructure": "Organization Structure",
+    "natureAndScope": "Nature and Scope",
+    "specificAccountabilities": "Specific Accountabilities",
+    "dimensions": "Dimensions",
+    "knowledge": "Knowledge, Skills & Abilities"
+  },
+  "actions": {
+    "viewDetails": "View Details",
+    "edit": "Edit Job",
+    "delete": "Delete Job",
+    "export": "Export",
+    "translate": "Translate",
+    "improve": "Improve with AI",
+    "compare": "Compare",
+    "duplicate": "Duplicate"
+  },
+  "view": {
+    "table": "Table View",
+    "grid": "Grid View",
+    "list": "List View"
+  },
+  "sort": {
+    "relevance": "Relevance",
+    "dateNewest": "Date (Newest)",
+    "dateOldest": "Date (Oldest)",
+    "titleAZ": "Title (A-Z)",
+    "titleZA": "Title (Z-A)",
+    "qualityHighest": "Quality (Highest)",
+    "qualityLowest": "Quality (Lowest)"
+  }
+}

@@ -88,6 +88,8 @@ export function ThreeColumnLayout({
         {/* Left Panel (Permanent) */}
         {leftPanel && (
           <aside
+            role="complementary"
+            aria-label="Dashboard sidebar"
             style={{ width: `${leftPanelWidth}px` }}
             className={cn(
               "flex-shrink-0 transition-all duration-300 ease-in-out",
@@ -104,6 +106,8 @@ export function ThreeColumnLayout({
         {/* Middle Panel (Collapsible) */}
         {middlePanel && (
           <aside
+            role="complementary"
+            aria-label="AI assistant panel"
             style={{
               width: middlePanelCollapsed ? `48px` : `${middlePanelWidth}px`,
             }}
@@ -148,6 +152,10 @@ export function ThreeColumnLayout({
 
         {/* Main Content */}
         <main
+          id="main-content"
+          role="main"
+          aria-label="Main content"
+          tabIndex={-1}
           className={cn(
             "flex-1 overflow-y-auto overflow-x-hidden",
             "bg-transparent",

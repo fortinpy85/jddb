@@ -67,6 +67,7 @@ export default function ThemeToggle({
         className,
       )}
       title={getTitle()}
+      aria-label={getTitle()}
     >
       {/* Animated icon container */}
       <div className="relative flex items-center justify-center">

@@ -78,7 +78,10 @@ export function DashboardSidebar({
   }
 
   return (
-    <div className={cn("space-y-6 p-4", className)}>
+    <div
+      className={cn("space-y-6 p-4", className)}
+      data-testid="dashboard-sidebar"
+    >
       {/* Header */}
       <div className="space-y-2">
         <div className="flex items-center space-x-2">

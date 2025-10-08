@@ -1,0 +1,52 @@
+{
+  "general": {
+    "title": "Oups ! Une erreur s'est produite",
+    "message": "Une erreur inattendue s'est produite. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "goHome": "Aller au tableau de bord",
+    "contactSupport": "Contacter le support"
+  },
+  "notFound": {
+    "title": "Page non trouvée",
+    "message": "La page que vous recherchez n'existe pas.",
+    "goHome": "Aller au tableau de bord"
+  },
+  "network": {
+    "title": "Erreur réseau",
+    "message": "Impossible de se connecter au serveur. Veuillez vérifier votre connexion Internet.",
+    "offline": "Vous semblez être hors ligne"
+  },
+  "validation": {
+    "required": "Ce champ est obligatoire",
+    "invalidFormat": "Format invalide",
+    "fileTooLarge": "Le fichier est trop volumineux (max {{maxSize}})",
+    "unsupportedFileType": "Type de fichier non pris en charge",
+    "invalidEmail": "Adresse courriel invalide"
+  },
+  "upload": {
+    "failed": "Échec du téléversement",
+    "fileTypeNotSupported": "Type de fichier non pris en charge. Veuillez téléverser des fichiers .txt, .doc, .docx ou .pdf.",
+    "fileTooLarge": "La taille du fichier dépasse la taille maximale autorisée de {{maxSize}}",
+    "networkError": "Erreur réseau pendant le téléversement. Veuillez réessayer."
+  },
+  "jobs": {
+    "loadFailed": "Échec du chargement des descriptions de poste",
+    "notFound": "Description de poste non trouvée",
+    "updateFailed": "Échec de la mise à jour de la description de poste",
+    "deleteFailed": "Échec de la suppression de la description de poste"
+  },
+  "translation": {
+    "failed": "Échec de la traduction",
+    "noJobSelected": "Veuillez d'abord sélectionner une description de poste"
+  },
+  "search": {
+    "failed": "Échec de la recherche",
+    "noResults": "Aucun résultat trouvé pour votre requête"
+  },
+  "api": {
+    "unauthorized": "Non autorisé. Veuillez vous connecter.",
+    "forbidden": "Vous n'avez pas la permission d'effectuer cette action.",
+    "serverError": "Erreur serveur. Veuillez réessayer plus tard.",
+    "timeout": "Délai d'attente de la requête dépassé. Veuillez réessayer."
+  }
+}

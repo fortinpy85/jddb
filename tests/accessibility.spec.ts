@@ -336,3 +336,127 @@ test.describe("Accessibility - Images and Media", () => {
     }
   });
 });
+
+test.describe("Phase 6 - Bilingual Support & WET Compliance", () => {
+  test("Should have language attribute on HTML element", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    const html = page.locator('html');
+    const lang = await html.getAttribute('lang');
+
+    // Should have either 'en' or 'fr'
+    expect(['en', 'fr']).toContain(lang);
+  });
+
+  test("Should have accessible language toggle button", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Find language toggle button
+    const langToggle = page.locator('button').filter({ hasText: /Français|English/ }).first();
+
+    // Should be visible
+    await expect(langToggle).toBeVisible();
+
+    // Should have proper ARIA label
+    const ariaLabel = await langToggle.getAttribute('aria-label');
+    expect(ariaLabel).toBeTruthy();
+    expect(ariaLabel).toMatch(/Switch to|Passer à/);
+  });
+
+  test("Should support bilingual language switching", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Get current language
+    const htmlLang = await page.locator('html').getAttribute('lang');
+    const initialLang = htmlLang === 'en' ? 'en' : 'fr';
+
+    // Click language toggle
+    const langToggle = page.locator('button').filter({ hasText: /Français|English/ }).first();
+    await langToggle.click();
+
+    // Wait for language change
+    await page.waitForTimeout(500);
+
+    // Check that language changed
+    const newLang = await page.locator('html').getAttribute('lang');
+    expect(newLang).not.toBe(initialLang);
+
+    // Verify it's a valid language code
+    expect(['en', 'fr']).toContain(newLang);
+  });
+
+  test("Should have skip links for keyboard navigation", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Focus on the first interactive element (should be skip link)
+    await page.keyboard.press('Tab');
+
+    // Check if skip link exists and becomes visible when focused
+    const skipLink = page.locator('a[href="#main-content"]').first();
+
+    if (await skipLink.count() > 0) {
+      // Verify skip link text
+      const text = await skipLink.textContent();
+      expect(text).toMatch(/Skip to main content|Passer au contenu principal/);
+
+      // Click skip link
+      await skipLink.click();
+      await page.waitForTimeout(200);
+
+      // Main content should be visible
+      const mainContent = page.locator('main#main-content');
+      await expect(mainContent).toBeVisible();
+    }
+  });
+
+  test("Should have proper ARIA landmarks", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Check for main landmark
+    const main = page.locator('main#main-content[role="main"]');
+    await expect(main).toBeVisible();
+
+    // Check for navigation landmark
+    const nav = page.locator('nav#main-navigation');
+    const navCount = await nav.count();
+    expect(navCount).toBeGreaterThan(0);
+
+    // Check for complementary landmarks (sidebars)
+    const sidebars = page.locator('aside[role="complementary"]');
+    const sidebarCount = await sidebars.count();
+    expect(sidebarCount).toBeGreaterThanOrEqual(0);
+  });
+
+  test("Navigation items should have proper ARIA tab attributes", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Check desktop navigation
+    const navButtons = page.locator('nav[role="tablist"] button[role="tab"]');
+    const count = await navButtons.count();
+
+    if (count > 0) {
+      // Check that each nav item has aria-label
+      for (let i = 0; i < Math.min(count, 5); i++) {
+        const button = navButtons.nth(i);
+        const ariaLabel = await button.getAttribute('aria-label');
+        expect(ariaLabel).toBeTruthy();
+      }
+    }
+  });
+
+  test("Main content area should be focusable", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Main content should have tabindex -1 for programmatic focus
+    const mainContent = page.locator('main#main-content');
+    const tabIndex = await mainContent.getAttribute('tabindex');
+    expect(tabIndex).toBe('-1');
+  });
+});

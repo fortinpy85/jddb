@@ -1,0 +1,52 @@
+{
+  "general": {
+    "title": "Oops! Something went wrong",
+    "message": "An unexpected error occurred. Please try again.",
+    "retry": "Try Again",
+    "goHome": "Go to Dashboard",
+    "contactSupport": "Contact Support"
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "message": "The page you're looking for doesn't exist.",
+    "goHome": "Go to Dashboard"
+  },
+  "network": {
+    "title": "Network Error",
+    "message": "Unable to connect to the server. Please check your internet connection.",
+    "offline": "You appear to be offline"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidFormat": "Invalid format",
+    "fileTooLarge": "File is too large (max {{maxSize}})",
+    "unsupportedFileType": "Unsupported file type",
+    "invalidEmail": "Invalid email address"
+  },
+  "upload": {
+    "failed": "Upload failed",
+    "fileTypeNotSupported": "File type not supported. Please upload .txt, .doc, .docx, or .pdf files.",
+    "fileTooLarge": "File size exceeds maximum allowed size of {{maxSize}}",
+    "networkError": "Network error during upload. Please try again."
+  },
+  "jobs": {
+    "loadFailed": "Failed to load job descriptions",
+    "notFound": "Job description not found",
+    "updateFailed": "Failed to update job description",
+    "deleteFailed": "Failed to delete job description"
+  },
+  "translation": {
+    "failed": "Translation failed",
+    "noJobSelected": "Please select a job description first"
+  },
+  "search": {
+    "failed": "Search failed",
+    "noResults": "No results found for your query"
+  },
+  "api": {
+    "unauthorized": "Unauthorized. Please sign in.",
+    "forbidden": "You don't have permission to perform this action.",
+    "serverError": "Server error. Please try again later.",
+    "timeout": "Request timed out. Please try again."
+  }
+}

@@ -6,6 +6,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import HomePage from "./app/page";
+import "./i18n/config"; // Initialize i18next for bilingual support
 
 function main() {
   try {

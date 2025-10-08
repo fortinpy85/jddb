@@ -1,0 +1,44 @@
+{
+  "main": {
+    "dashboard": "Dashboard",
+    "jobs": "Jobs",
+    "upload": "Upload",
+    "search": "Search",
+    "compare": "Compare",
+    "translate": "Translate",
+    "improve": "Improve",
+    "aiDemo": "AI Demo",
+    "statistics": "Statistics"
+  },
+  "user": {
+    "profile": "Profile",
+    "settings": "Settings",
+    "help": "Help & Support",
+    "logout": "Sign Out",
+    "notifications": "Notifications"
+  },
+  "tooltips": {
+    "dashboardDesc": "View overview and statistics",
+    "jobsDesc": "Browse and manage job descriptions",
+    "uploadDesc": "Upload new job description files",
+    "searchDesc": "Search across all job descriptions",
+    "compareDesc": "Compare multiple job descriptions",
+    "translateDesc": "Translate job descriptions (requires job selection)",
+    "improveDesc": "AI-powered job description improvement (requires job selection)",
+    "aiDemoDesc": "Demo AI capabilities and bias detection",
+    "statisticsDesc": "View detailed analytics and metrics",
+    "selectJobFirst": "Select a job to enable this feature",
+    "notificationsDesc": "View recent notifications and alerts"
+  },
+  "breadcrumbs": {
+    "home": "Home",
+    "jobs": "Jobs",
+    "jobDetails": "Job Details",
+    "upload": "Upload",
+    "search": "Search",
+    "compare": "Compare",
+    "translate": "Translate",
+    "improve": "Improve",
+    "settings": "Settings"
+  }
+}

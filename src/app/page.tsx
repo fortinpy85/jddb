@@ -30,6 +30,8 @@ import {
 import { LoadingState, ErrorState } from "@/components/ui/states";
 import { PageTransition } from "@/components/ui/transitions";
 import { AlertBanner } from "@/components/ui/alert-banner";
+import { LanguageSync } from "@/components/wet/LanguageSync";
+import { SkipLinks } from "@/components/wet/SkipLinks";
 
 // Lazy load route-level components for better performance
 const BulkUpload = lazy(() => import("@/components/BulkUpload"));
@@ -98,7 +100,7 @@ type ViewType =
   | "ai-demo";
 
 export default function HomePage() {
-  const [activeView, setActiveView] = useState<ViewType>("home");
+  const [activeView, setActiveView] = useState<ViewType>("dashboard");
   const [previousView, setPreviousView] = useState<ViewType | undefined>(
     undefined,
   );
@@ -502,6 +504,8 @@ export default function HomePage() {
 
   return (
     <ThemeProvider defaultTheme="system" enableSystem>
+      <SkipLinks />
+      <LanguageSync />
       <ErrorBoundaryWrapper
         showDetails={process.env.NODE_ENV === "development"}
       >
@@ -513,8 +517,23 @@ export default function HomePage() {
               profileHeader={
                 <ProfileHeader
                   breadcrumbs={[
-                    { label: "Home", href: "#" },
-                    { label: "Dashboard" },
+                    {
+                      label: "Home",
+                      onClick: () => handleViewChange("home"),
+                    },
+                    {
+                      label:
+                        activeView === "dashboard"
+                          ? "Dashboard"
+                          : activeView === "statistics"
+                            ? "Statistics"
+                            : activeView === "system-health"
+                              ? "System Health"
+                              : activeView === "preferences"
+                                ? "Preferences"
+                                : activeView.charAt(0).toUpperCase() +
+                                  activeView.slice(1),
+                    },
                   ]}
                   openTabs={[
                     { id: "tab1", title: "Job 1", active: true },

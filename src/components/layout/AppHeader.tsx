@@ -47,6 +47,8 @@ import {
   Megaphone,
 } from "lucide-react";
 import ThemeToggle from "@/components/ui/theme-toggle";
+import { LanguageToggle } from "@/components/wet/LanguageToggle";
+import { useTranslation } from "react-i18next";
 
 export type AppView =
   | "home"
@@ -77,84 +79,84 @@ interface AppHeaderProps {
 
 interface NavItem {
   id: AppView;
-  label: string;
+  labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: number;
-  description?: string;
+  descriptionKey?: string;
 }
 
 const primaryNavItems: NavItem[] = [
   {
     id: "dashboard",
-    label: "Dashboard",
+    labelKey: "navigation.main.dashboard",
     icon: BarChart3,
-    description: "Overview and quick actions",
+    descriptionKey: "navigation.tooltips.dashboardDesc",
   },
   {
     id: "jobs",
-    label: "Jobs",
+    labelKey: "navigation.main.jobs",
     icon: Database,
-    description: "Browse job descriptions",
+    descriptionKey: "navigation.tooltips.jobsDesc",
   },
   {
     id: "upload",
-    label: "Upload",
+    labelKey: "navigation.main.upload",
     icon: Upload,
-    description: "Upload new files",
+    descriptionKey: "navigation.tooltips.uploadDesc",
   },
   {
     id: "improve",
-    label: "Improve",
+    labelKey: "navigation.main.improve",
     icon: Wand2,
-    description: "AI-powered improvements",
+    descriptionKey: "navigation.tooltips.improveDesc",
   },
   {
     id: "writer",
-    label: "AI Writer",
+    labelKey: "AI Writer",
     icon: FileText,
-    description: "Generate job descriptions with AI",
+    descriptionKey: "Generate job descriptions with AI",
   },
   {
     id: "posting",
-    label: "Job Posting",
+    labelKey: "Job Posting",
     icon: Megaphone,
-    description: "Create public postings",
+    descriptionKey: "Create public postings",
   },
   {
     id: "analytics",
-    label: "Predictive Analytics",
+    labelKey: "Predictive Analytics",
     icon: BarChart3,
-    description: "Content predictions & insights",
+    descriptionKey: "Content predictions & insights",
   },
   {
     id: "search",
-    label: "Search",
+    labelKey: "navigation.main.search",
     icon: Search,
-    description: "Advanced search",
+    descriptionKey: "navigation.tooltips.searchDesc",
   },
   {
     id: "compare",
-    label: "Compare",
+    labelKey: "navigation.main.compare",
     icon: GitCompare,
-    description: "Compare jobs",
+    descriptionKey: "navigation.tooltips.compareDesc",
   },
   {
     id: "translate",
-    label: "Translate",
+    labelKey: "navigation.main.translate",
     icon: Languages,
-    description: "Bilingual editor",
+    descriptionKey: "navigation.tooltips.translateDesc",
   },
   {
     id: "ai-demo",
-    label: "AI Demo",
+    labelKey: "navigation.main.aiDemo",
     icon: Sparkles,
-    description: "AI features showcase",
+    descriptionKey: "navigation.tooltips.aiDemoDesc",
   },
   {
     id: "statistics",
-    label: "Statistics",
+    labelKey: "navigation.main.statistics",
     icon: BarChart3,
-    description: "Analytics and reports",
+    descriptionKey: "navigation.tooltips.statisticsDesc",
   },
 ];
 
@@ -168,6 +170,7 @@ export function AppHeader({
   className,
 }: AppHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useTranslation(["navigation", "common"]);
 
   const handleNavigation = (view: AppView) => {
     if (onNavigate) {
@@ -224,9 +227,9 @@ export function AppHeader({
 
               {/* Title with gradient */}
               <div className="ml-3 hidden sm:block">
-                <h1 className="text-lg font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-slate-100 dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 dark:group-hover:from-blue-400 dark:group-hover:to-indigo-400 transition-all duration-300">
+                <div className="text-lg font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-slate-100 dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 dark:group-hover:from-blue-400 dark:group-hover:to-indigo-400 transition-all duration-300">
                   Job Description Database
-                </h1>
+                </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   AI-Powered Management System
                 </p>
@@ -264,16 +267,31 @@ export function AppHeader({
                   Navigate through the application
                 </SheetDescription>
               </SheetHeader>
-              <nav className="mt-6 flex flex-col space-y-1">
+              <nav
+                className="mt-6 flex flex-col space-y-1"
+                role="tablist"
+                aria-label="Main navigation"
+              >
                 {primaryNavItems.map((item) => {
                   const isActive = currentView === item.id;
                   const Icon = item.icon;
                   const requiresJob =
                     item.id === "translate" || item.id === "improve";
                   const isDisabled = requiresJob && !hasSelectedJob;
+
+                  // Get translated label and description
+                  const label = item.labelKey.startsWith("navigation.")
+                    ? t(item.labelKey)
+                    : item.labelKey;
+                  const description = item.descriptionKey?.startsWith(
+                    "navigation.",
+                  )
+                    ? t(item.descriptionKey)
+                    : item.descriptionKey;
+
                   const tooltipText = isDisabled
-                    ? `Select a job to ${item.id === "translate" ? "translate" : "improve"}`
-                    : item.description;
+                    ? t("navigation.tooltips.selectJobFirst")
+                    : description;
 
                   return (
                     <Button
@@ -281,6 +299,10 @@ export function AppHeader({
                       variant={isActive ? "secondary" : "ghost"}
                       onClick={() => !isDisabled && handleNavigation(item.id)}
                       disabled={isDisabled}
+                      role="tab"
+                      aria-selected={isActive}
+                      aria-controls={`${item.id}-panel`}
+                      tabIndex={isActive ? 0 : -1}
                       className={cn(
                         "w-full justify-start gap-3 h-11",
                         isActive &&
@@ -288,14 +310,14 @@ export function AppHeader({
                         isDisabled && "opacity-50 cursor-not-allowed",
                       )}
                       title={tooltipText}
-                      aria-label={item.label}
+                      aria-label={label}
                     >
                       <Icon className="w-4 h-4" />
                       <div className="flex-1 text-left">
-                        <div className="font-medium">{item.label}</div>
-                        {item.description && (
+                        <div className="font-medium">{label}</div>
+                        {description && (
                           <div className="text-xs text-muted-foreground">
-                            {item.description}
+                            {description}
                           </div>
                         )}
                       </div>
@@ -312,7 +334,12 @@ export function AppHeader({
           </Sheet>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-1">
+          <nav
+            id="main-navigation"
+            className="hidden lg:flex items-center space-x-1"
+            role="tablist"
+            aria-label="Main navigation"
+          >
             {primaryNavItems.map((item) => {
               const isActive = currentView === item.id;
               const Icon = item.icon;
@@ -321,9 +348,18 @@ export function AppHeader({
               const requiresJob =
                 item.id === "translate" || item.id === "improve";
               const isDisabled = requiresJob && !hasSelectedJob;
+
+              // Get translated label and description
+              const label = item.labelKey.startsWith("navigation.")
+                ? t(item.labelKey)
+                : item.labelKey;
+              const description = item.descriptionKey?.startsWith("navigation.")
+                ? t(item.descriptionKey)
+                : item.descriptionKey;
+
               const tooltipText = isDisabled
-                ? `Select a job to ${item.id === "translate" ? "translate" : "improve"}`
-                : item.description;
+                ? t("navigation.tooltips.selectJobFirst")
+                : description;
 
               return (
                 <Button
@@ -332,6 +368,11 @@ export function AppHeader({
                   size="sm"
                   onClick={() => !isDisabled && handleNavigation(item.id)}
                   disabled={isDisabled}
+                  role="tab"
+                  aria-selected={isActive}
+                  aria-controls={`${item.id}-panel`}
+                  aria-label={label}
+                  tabIndex={isActive ? 0 : -1}
                   className={cn(
                     // Base styles
                     "relative px-3 py-2 h-auto",
@@ -361,7 +402,7 @@ export function AppHeader({
                   title={tooltipText}
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="text-xs font-medium">{item.label}</span>
+                  <span className="text-xs font-medium">{label}</span>
 
                   {/* Active indicator */}
                   {isActive && (
@@ -399,6 +440,9 @@ export function AppHeader({
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
               )}
             </Button>
+
+            {/* Language Toggle */}
+            <LanguageToggle variant="ghost" className="shadow-focus" />
 
             {/* Theme Toggle */}
             <ThemeToggle size="sm" className="shadow-focus" />
