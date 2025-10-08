@@ -6,6 +6,7 @@
 "use client";
 
 import React, { useState, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -57,6 +58,7 @@ export function BulkUpload({
   maxFileSize = 50,
   acceptedFileTypes = [".txt", ".doc", ".docx", ".pdf"],
 }: BulkUploadProps) {
+  const { t } = useTranslation("upload");
   const [files, setFiles] = useState<FileUploadStatus[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -76,13 +78,15 @@ export function BulkUpload({
         // Validate file type
         const fileExtension = "." + file.name.split(".").pop()?.toLowerCase();
         if (!acceptedFileTypes.includes(fileExtension)) {
-          errors.push(`${file.name}: Unsupported file type`);
+          errors.push(`${file.name}: ${t("validation.invalidFormat")}`);
           return;
         }
 
         // Validate file size
         if (file.size > maxFileSize * 1024 * 1024) {
-          errors.push(`${file.name}: File too large (max ${maxFileSize}MB)`);
+          errors.push(
+            `${file.name}: ${t("validation.fileTooBig", { max: maxFileSize })}`,
+          );
           return;
         }
 
@@ -91,7 +95,7 @@ export function BulkUpload({
           (f) => f.file.name === file.name && f.file.size === file.size,
         );
         if (isDuplicate) {
-          errors.push(`${file.name}: File already selected`);
+          errors.push(`${file.name}: ${t("validation.duplicateFile")}`);
           return;
         }
 
@@ -104,8 +108,10 @@ export function BulkUpload({
 
       if (errors.length > 0) {
         addToast({
-          title: "File Selection Issues",
-          description: `${errors.length} file(s) couldn't be added. Please check file types and sizes.`,
+          title: t("messages.fileSelectionIssues"),
+          description: t("messages.fileSelectionDescription", {
+            count: errors.length,
+          }),
           type: "error",
         });
       }
@@ -175,9 +181,12 @@ export function BulkUpload({
           // Update individual file progress toast
           if (fileProgress) {
             if (newProgress < 50) {
-              fileProgress.updateProgress(newProgress, "Uploading file...");
+              fileProgress.updateProgress(newProgress, t("progress.uploading"));
             } else if (newProgress < 90) {
-              fileProgress.updateProgress(newProgress, "Processing content...");
+              fileProgress.updateProgress(
+                newProgress,
+                t("progress.processing"),
+              );
             }
           }
 
@@ -195,14 +204,17 @@ export function BulkUpload({
 
       // Determine final status based on result
       let finalStatus: FileUploadStatus["status"] = "completed";
-      let statusMessage = "File uploaded successfully";
+      let statusMessage = t("messages.uploadSuccess");
 
       if (
         result.processing_result.processed_content?.processing_errors?.length >
         0
       ) {
         finalStatus = "needs_review";
-        statusMessage = `Uploaded but needs review (${result.processing_result.processed_content.processing_errors.length} issues)`;
+        statusMessage = t("messages.uploadedNeedsReview", {
+          count:
+            result.processing_result.processed_content.processing_errors.length,
+        });
       }
 
       const completedFile = {
@@ -227,7 +239,9 @@ export function BulkUpload({
       return completedFile;
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Upload failed";
+        error instanceof Error
+          ? error.message
+          : t("messages.uploadError", { error: "Unknown error" });
 
       const failedFile = {
         ...fileStatus,
@@ -320,14 +334,16 @@ export function BulkUpload({
       ).length;
 
       // Complete batch progress with summary
-      let summaryMessage = `${completed} file(s) uploaded successfully`;
-      if (failed > 0) summaryMessage += `, ${failed} failed`;
-      if (needsReview > 0) summaryMessage += `, ${needsReview} need review`;
+      let summaryMessage = t("fileList.filesSelected", { count: completed });
+      if (failed > 0)
+        summaryMessage += `, ${failed} ${t("summary.failed").toLowerCase()}`;
+      if (needsReview > 0)
+        summaryMessage += `, ${needsReview} ${t("summary.needReview").toLowerCase()}`;
 
       if (completed > 0) {
         batchProgress.complete(summaryMessage);
       } else {
-        batchProgress.error("All uploads failed");
+        batchProgress.error(t("messages.bulkUploadFailed"));
       }
 
       onUploadComplete?.(files);
@@ -336,17 +352,17 @@ export function BulkUpload({
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "An unexpected error occurred during upload";
+          : t("messages.uploadError", { error: "Unknown error" });
 
       batchProgress.error(errorMessage);
 
       // Show additional error toast with retry action
       addToast({
-        title: "Bulk Upload Failed",
+        title: t("messages.bulkUploadFailed"),
         description: errorMessage,
         type: "error",
         action: {
-          label: "Retry Upload",
+          label: t("messages.retryUpload"),
           onClick: () => startBulkUpload(),
         },
       });
@@ -410,7 +426,7 @@ export function BulkUpload({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Bulk File Upload</span>
+            <span>{t("title")}</span>
             {files.length > 0 && (
               <Button
                 variant="outline"
@@ -419,7 +435,7 @@ export function BulkUpload({
                 disabled={isUploading}
               >
                 <Trash2 className="w-4 h-4 mr-2" />
-                Clear All
+                {t("actions.clearAll")}
               </Button>
             )}
           </CardTitle>
@@ -450,27 +466,31 @@ export function BulkUpload({
               onChange={handleFileInputChange}
               className="hidden"
               disabled={isUploading}
-              title="Select files to upload"
-              aria-label="Select files to upload"
+              title={t("accessibility.selectFiles")}
+              aria-label={t("accessibility.selectFiles")}
             />
 
             {dragActive ? (
               <div className="text-blue-600">
                 <Upload className="w-16 h-16 mx-auto mb-4 animate-bounce" />
-                <p className="text-xl font-semibold">Drop files here</p>
-                <p className="text-sm mt-2 opacity-75">Release to upload</p>
+                <p className="text-xl font-semibold">
+                  {t("dropzone.dropHere")}
+                </p>
+                <p className="text-sm mt-2 opacity-75">
+                  {t("dropzone.releaseToUpload")}
+                </p>
               </div>
             ) : (
               <div className="text-gray-700">
                 <FolderOpen className="w-16 h-16 mx-auto mb-4 text-gray-600 dark:text-gray-400" />
                 <p className="text-xl font-semibold mb-2">
-                  Drag and drop files here, or click to select
+                  {t("dropzone.dragAndDrop")}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                  Supported formats: {acceptedFileTypes.join(", ")}
+                  {t("dropzone.supportedFormats")}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Max size: {maxFileSize}MB per file
+                  {t("dropzone.maxSize", { size: maxFileSize })}
                 </p>
               </div>
             )}
@@ -480,20 +500,21 @@ export function BulkUpload({
           {files.length > 0 && (
             <div className="mt-6 flex items-center justify-between">
               <div className="text-sm text-gray-600">
-                {stats.total} files selected
+                {t("fileList.filesSelected", { count: stats.total })}
                 {stats.completed > 0 && (
                   <span className="ml-2">
-                    • {stats.completed} completed
+                    • {stats.completed} {t("summary.completed").toLowerCase()}
                     {stats.failed > 0 && (
                       <span className="text-red-600">
                         {" "}
-                        • {stats.failed} failed
+                        • {stats.failed} {t("summary.failed").toLowerCase()}
                       </span>
                     )}
                     {stats.needsReview > 0 && (
                       <span className="text-orange-600">
                         {" "}
-                        • {stats.needsReview} need review
+                        • {stats.needsReview}{" "}
+                        {t("summary.needReview").toLowerCase()}
                       </span>
                     )}
                   </span>
@@ -508,12 +529,15 @@ export function BulkUpload({
                 {isUploading ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    Uploading...
+                    {t("status.uploading")}...
                   </>
                 ) : (
                   <>
                     <Upload className="w-4 h-4 mr-2" />
-                    Upload {stats.pending > 0 ? `(${stats.pending})` : "All"}
+                    {t("actions.upload")}{" "}
+                    {stats.pending > 0
+                      ? `(${stats.pending})`
+                      : t("actions.uploadAll")}
                   </>
                 )}
               </Button>
@@ -526,7 +550,9 @@ export function BulkUpload({
       {files.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Upload Queue ({files.length})</CardTitle>
+            <CardTitle>
+              {t("fileList.title")} ({files.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -568,11 +594,11 @@ export function BulkUpload({
                       {fileStatus.result &&
                         fileStatus.status === "completed" && (
                           <div className="text-xs text-green-600 mt-1">
-                            Processed successfully • Job #
-                            {
-                              fileStatus.result.processing_result?.metadata
-                                ?.job_number
-                            }
+                            {t("messages.processedSuccessfully", {
+                              jobNumber:
+                                fileStatus.result.processing_result?.metadata
+                                  ?.job_number,
+                            })}
                           </div>
                         )}
 
@@ -580,12 +606,12 @@ export function BulkUpload({
                       {fileStatus.result &&
                         fileStatus.status === "needs_review" && (
                           <div className="text-xs text-orange-600 mt-1">
-                            Uploaded but needs review •{" "}
-                            {
-                              fileStatus.result.processing_result
-                                ?.processed_content?.processing_errors?.length
-                            }{" "}
-                            issues
+                            {t("messages.uploadedNeedsReview", {
+                              count:
+                                fileStatus.result.processing_result
+                                  ?.processed_content?.processing_errors
+                                  ?.length,
+                            })}
                           </div>
                         )}
                     </div>
@@ -593,7 +619,9 @@ export function BulkUpload({
 
                   <div className="flex items-center space-x-2">
                     <Badge className={getStatusColor(fileStatus.status)}>
-                      {fileStatus.status.replace("_", " ")}
+                      {t(
+                        `status.${fileStatus.status === "needs_review" ? "needsReview" : fileStatus.status}`,
+                      )}
                     </Badge>
 
                     {!isUploading && (
@@ -603,7 +631,7 @@ export function BulkUpload({
                             variant="outline"
                             size="sm"
                             onClick={() => uploadSingleFile(fileStatus)}
-                            title="Retry upload"
+                            title={t("accessibility.retryUpload")}
                           >
                             <RefreshCw className="w-4 h-4" />
                           </Button>
@@ -612,7 +640,7 @@ export function BulkUpload({
                           variant="outline"
                           size="sm"
                           onClick={() => removeFile(fileStatus.file)}
-                          title="Remove file"
+                          title={t("accessibility.removeFile")}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -636,25 +664,33 @@ export function BulkUpload({
                   <div className="text-2xl font-bold text-green-600">
                     {stats.completed}
                   </div>
-                  <div className="text-sm text-gray-600">Completed</div>
+                  <div className="text-sm text-gray-600">
+                    {t("summary.completed")}
+                  </div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-orange-600">
                     {stats.needsReview}
                   </div>
-                  <div className="text-sm text-gray-600">Need Review</div>
+                  <div className="text-sm text-gray-600">
+                    {t("summary.needReview")}
+                  </div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-red-600">
                     {stats.failed}
                   </div>
-                  <div className="text-sm text-gray-600">Failed</div>
+                  <div className="text-sm text-gray-600">
+                    {t("summary.failed")}
+                  </div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-blue-600">
                     {stats.processing}
                   </div>
-                  <div className="text-sm text-gray-600">Processing</div>
+                  <div className="text-sm text-gray-600">
+                    {t("summary.processing")}
+                  </div>
                 </div>
               </div>
             </CardContent>
