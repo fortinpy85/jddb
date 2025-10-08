@@ -9,6 +9,7 @@ export interface I18nNamespace {
   jobs: typeof import("@/locales/en/jobs.json");
   errors: typeof import("@/locales/en/errors.json");
   navigation: typeof import("@/locales/en/navigation.json");
+  dashboard: typeof import("@/locales/en/dashboard.json");
 }
 
 declare module "i18next" {

@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { PanelSection } from "@/components/layout/TwoPanelLayout";
 import { CardSkeleton } from "@/components/ui/states";
+import { useTranslation } from "react-i18next";
 
 interface DashboardSidebarProps {
   stats: ProcessingStats | null;
@@ -47,6 +48,8 @@ export function DashboardSidebar({
   collapsed = false,
   className,
 }: DashboardSidebarProps) {
+  const { t } = useTranslation("dashboard");
+
   // If collapsed, show minimal version
   if (collapsed) {
     return (
@@ -58,8 +61,8 @@ export function DashboardSidebar({
           size="sm"
           className="w-full p-2 shadow-button"
           onClick={onNavigateToStatistics}
-          title="Statistics"
-          aria-label="Statistics"
+          title={t("statistics.title")}
+          aria-label={t("statistics.title")}
         >
           <BarChart3 className="w-5 h-5" />
         </Button>
@@ -68,8 +71,8 @@ export function DashboardSidebar({
           size="sm"
           className="w-full p-2 shadow-button"
           onClick={onNavigateToSystemHealth}
-          title="System Health"
-          aria-label="System Health"
+          title={t("systemHealth.title")}
+          aria-label={t("systemHealth.title")}
         >
           <Activity className="w-5 h-5" />
         </Button>
@@ -87,17 +90,17 @@ export function DashboardSidebar({
         <div className="flex items-center space-x-2">
           <Database className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-            Dashboard
+            {t("title")}
           </h2>
         </div>
         <p className="text-xs text-slate-600 dark:text-slate-400">
-          Quick overview of your job database
+          {t("subtitle")}
         </p>
       </div>
 
       {/* Statistics Section */}
       <PanelSection
-        title="Statistics"
+        title={t("statistics.title")}
         icon={BarChart3}
         collapsible
         defaultCollapsed={false}
@@ -110,7 +113,7 @@ export function DashboardSidebar({
 
       {/* System Health Section */}
       <PanelSection
-        title="System Health"
+        title={t("systemHealth.title")}
         icon={Activity}
         collapsible
         defaultCollapsed={false}
@@ -122,7 +125,7 @@ export function DashboardSidebar({
 
       {/* Recent Activity Section */}
       <PanelSection
-        title="Recent Activity"
+        title={t("recentActivity.title")}
         icon={Clock}
         collapsible
         defaultCollapsed={true}
@@ -146,6 +149,8 @@ function StatisticsCards({
   stats,
   onNavigateToStatistics,
 }: StatisticsCardsProps) {
+  const { t } = useTranslation("dashboard");
+
   // Show skeleton loader when stats are loading
   if (!stats) {
     return <CardSkeleton count={4} variant="stat" />;
@@ -153,7 +158,7 @@ function StatisticsCards({
 
   const categories = [
     {
-      label: "Total Jobs",
+      label: t("statistics.totalJobs"),
       value: stats?.total_jobs ?? 0,
       icon: FileText,
       color: "text-blue-600 dark:text-blue-400",
@@ -161,7 +166,7 @@ function StatisticsCards({
       trend: "+12%",
     },
     {
-      label: "Completed",
+      label: t("statistics.completed"),
       value: stats?.processing_status.completed ?? 0,
       icon: CheckCircle,
       color: "text-green-600 dark:text-green-400",
@@ -169,7 +174,7 @@ function StatisticsCards({
       trend: "+5%",
     },
     {
-      label: "In Progress",
+      label: t("statistics.inProgress"),
       value: stats?.processing_status.processing ?? 0,
       icon: Clock,
       color: "text-yellow-600 dark:text-yellow-400",
@@ -177,7 +182,7 @@ function StatisticsCards({
       trend: "+18%",
     },
     {
-      label: "Failed",
+      label: t("statistics.failed"),
       value: stats?.processing_status.failed ?? 0,
       icon: AlertCircle,
       color: "text-red-600 dark:text-red-400",
@@ -238,7 +243,7 @@ function StatisticsCards({
         onClick={onNavigateToStatistics}
       >
         <BarChart3 className="w-4 h-4 mr-2" />
-        View All Statistics
+        {t("statistics.viewAll")}
         <ExternalLink className="w-3 h-3 ml-auto" />
       </Button>
     </div>
@@ -256,34 +261,36 @@ interface SystemHealthCardsProps {
 function SystemHealthCards({
   onNavigateToSystemHealth,
 }: SystemHealthCardsProps) {
+  const { t } = useTranslation("dashboard");
+
   const healthMetrics = [
     {
-      label: "API Performance",
-      value: "98.5%",
+      label: t("systemHealth.api.title"),
+      value: t("systemHealth.api.healthy", { percent: "98.5" }),
       status: "good",
       icon: Zap,
-      subtitle: "Avg response: 124ms",
+      subtitle: t("systemHealth.api.avgResponse", { ms: "124" }),
     },
     {
-      label: "Database",
-      value: "Healthy",
+      label: t("systemHealth.database.title"),
+      value: t("systemHealth.database.healthy"),
       status: "good",
       icon: HardDrive,
-      subtitle: "23% used",
+      subtitle: t("systemHealth.database.usage", { percent: "23" }),
     },
     {
-      label: "AI Services",
-      value: "Active",
+      label: t("systemHealth.aiServices.title"),
+      value: t("systemHealth.aiServices.active"),
       status: "good",
       icon: Cpu,
-      subtitle: "1.2K requests today",
+      subtitle: t("systemHealth.aiServices.requests", { count: "1.2K" }),
     },
     {
-      label: "Network",
-      value: "Stable",
+      label: t("systemHealth.network.title"),
+      value: t("systemHealth.network.stable"),
       status: "warning",
       icon: Network,
-      subtitle: "Latency: 45ms",
+      subtitle: t("systemHealth.network.latency", { ms: "45" }),
     },
   ];
 
@@ -355,7 +362,7 @@ function SystemHealthCards({
         onClick={onNavigateToSystemHealth}
       >
         <Activity className="w-4 h-4 mr-2" />
-        System Dashboard
+        {t("systemHealth.viewDashboard")}
         <ExternalLink className="w-3 h-3 ml-auto" />
       </Button>
     </div>

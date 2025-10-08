@@ -1,0 +1,72 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Quick overview of your job database",
+  "statistics": {
+    "title": "Statistics",
+    "totalJobs": "Total Jobs",
+    "completed": "Completed",
+    "inProgress": "In Progress",
+    "failed": "Failed",
+    "needReview": "Need Review",
+    "viewAll": "View All Statistics",
+    "trends": {
+      "up": "+{{percent}}%",
+      "down": "{{percent}}%",
+      "noChange": "No change"
+    }
+  },
+  "systemHealth": {
+    "title": "System Health",
+    "viewDashboard": "System Dashboard",
+    "api": {
+      "title": "API Performance",
+      "healthy": "{{percent}}%",
+      "avgResponse": "Avg response: {{ms}}ms"
+    },
+    "database": {
+      "title": "Database",
+      "healthy": "Healthy",
+      "degraded": "Degraded",
+      "down": "Down",
+      "usage": "{{percent}}% used"
+    },
+    "aiServices": {
+      "title": "AI Services",
+      "active": "Active",
+      "inactive": "Inactive",
+      "requests": "{{count}} requests today"
+    },
+    "network": {
+      "title": "Network",
+      "stable": "Stable",
+      "unstable": "Unstable",
+      "latency": "Latency: {{ms}}ms"
+    }
+  },
+  "recentActivity": {
+    "title": "Recent Activity",
+    "empty": "No recent activity",
+    "actions": {
+      "created": "Job created",
+      "updated": "Job updated",
+      "deleted": "Job deleted",
+      "approved": "Job approved",
+      "rejected": "Job rejected",
+      "translated": "Translation completed",
+      "improved": "AI improvement completed"
+    },
+    "timeAgo": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}} min ago",
+      "hoursAgo": "{{count}} hr ago",
+      "daysAgo": "{{count}} d ago"
+    }
+  },
+  "quickActions": {
+    "title": "Quick Actions",
+    "uploadJob": "Upload New Job",
+    "searchJobs": "Search Jobs",
+    "viewStatistics": "View Statistics",
+    "systemHealth": "System Health"
+  }
+}

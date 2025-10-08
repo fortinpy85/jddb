@@ -1,0 +1,72 @@
+{
+  "title": "Tableau de bord",
+  "subtitle": "Aperçu rapide de votre base de données d'emplois",
+  "statistics": {
+    "title": "Statistiques",
+    "totalJobs": "Total des postes",
+    "completed": "Terminés",
+    "inProgress": "En cours",
+    "failed": "Échecs",
+    "needReview": "Nécessitent révision",
+    "viewAll": "Voir toutes les statistiques",
+    "trends": {
+      "up": "+{{percent}}%",
+      "down": "{{percent}}%",
+      "noChange": "Aucun changement"
+    }
+  },
+  "systemHealth": {
+    "title": "État du système",
+    "viewDashboard": "Tableau de bord système",
+    "api": {
+      "title": "Performance API",
+      "healthy": "{{percent}}%",
+      "avgResponse": "Réponse moy: {{ms}}ms"
+    },
+    "database": {
+      "title": "Base de données",
+      "healthy": "Saine",
+      "degraded": "Dégradée",
+      "down": "Hors ligne",
+      "usage": "{{percent}}% utilisé"
+    },
+    "aiServices": {
+      "title": "Services IA",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "requests": "{{count}} requêtes aujourd'hui"
+    },
+    "network": {
+      "title": "Réseau",
+      "stable": "Stable",
+      "unstable": "Instable",
+      "latency": "Latence: {{ms}}ms"
+    }
+  },
+  "recentActivity": {
+    "title": "Activité récente",
+    "empty": "Aucune activité récente",
+    "actions": {
+      "created": "Poste créé",
+      "updated": "Poste mis à jour",
+      "deleted": "Poste supprimé",
+      "approved": "Poste approuvé",
+      "rejected": "Poste rejeté",
+      "translated": "Traduction terminée",
+      "improved": "Amélioration IA terminée"
+    },
+    "timeAgo": {
+      "justNow": "À l'instant",
+      "minutesAgo": "Il y a {{count}} min",
+      "hoursAgo": "Il y a {{count}} h",
+      "daysAgo": "Il y a {{count}} j"
+    }
+  },
+  "quickActions": {
+    "title": "Actions rapides",
+    "uploadJob": "Téléverser nouveau poste",
+    "searchJobs": "Rechercher postes",
+    "viewStatistics": "Voir statistiques",
+    "systemHealth": "État du système"
+  }
+}
