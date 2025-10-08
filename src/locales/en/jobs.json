@@ -46,13 +46,28 @@
   },
   "actions": {
     "viewDetails": "View Details",
-    "edit": "Edit Job",
+    "edit": "Edit",
+    "editJob": "Edit Job",
     "delete": "Delete Job",
     "export": "Export",
     "translate": "Translate",
     "improve": "Improve with AI",
     "compare": "Compare",
-    "duplicate": "Duplicate"
+    "duplicate": "Duplicate",
+    "approve": "Approve",
+    "share": "Share",
+    "print": "Print",
+    "archive": "Archive",
+    "backToJobs": "Back to Jobs",
+    "refresh": "Refresh",
+    "confirmDelete": "Are you sure you want to delete job {{jobNumber}}?",
+    "backToJobsAria": "Go back to jobs list",
+    "editJobAria": "Edit job {{jobNumber}}",
+    "approveJobAria": "Approve job {{jobNumber}}",
+    "translateJobAria": "Translate job {{jobNumber}}",
+    "compareJobAria": "Compare job {{jobNumber}}",
+    "exportJobAria": "Export job {{jobNumber}}",
+    "editSectionAria": "Edit {{section}} section"
   },
   "view": {
     "table": "Table View",
@@ -67,5 +82,55 @@
     "titleZA": "Title (Z-A)",
     "qualityHighest": "Quality (Highest)",
     "qualityLowest": "Quality (Lowest)"
+  },
+  "messages": {
+    "loadingDetails": "Loading job details...",
+    "loadFailed": "Failed to load job details",
+    "jobNotFound": "Job Not Found",
+    "jobNotFoundDescription": "The job description you're looking for could not be found",
+    "jobApproved": "Job Approved",
+    "jobApprovedDescription": "Job {{jobNumber}} has been approved successfully",
+    "jobDuplicated": "Job Duplicated",
+    "jobDuplicatedDescription": "Job {{jobNumber}} has been duplicated successfully",
+    "exportingJob": "Exporting Job",
+    "exportingJobDescription": "Exporting job {{jobNumber}}...",
+    "jobArchived": "Job Archived",
+    "jobArchivedDescription": "Job {{jobNumber}} has been archived successfully",
+    "contentUpdated": "Content Updated",
+    "sectionUpdated": "Section \"{{section}}\" has been updated",
+    "deleteSuccess": "Job Deleted",
+    "deleteSuccessDescription": "Job {{jobNumber}} has been deleted successfully"
+  },
+  "details": {
+    "additionalInformation": "Additional Information"
+  },
+  "status": {
+    "draft": "Draft",
+    "review": "Under Review",
+    "approved": "Approved",
+    "published": "Published",
+    "archived": "Archived",
+    "pending": "Pending",
+    "completed": "Completed",
+    "processing": "Processing"
+  },
+  "list": {
+    "title": "Job Descriptions",
+    "noJobs": "No jobs found",
+    "loading": "Loading jobs...",
+    "totalJobs": "{{count}} jobs"
+  },
+  "search": {
+    "placeholder": "Search by title, classification, or description...",
+    "advancedSearch": "Advanced Search",
+    "results": "Search Results",
+    "found": "found",
+    "searching": "Searching",
+    "noResults": "No results found",
+    "features": {
+      "fullText": "Full-text search across all job descriptions",
+      "semantic": "Semantic search powered by AI",
+      "filters": "Advanced filtering by classification, department, and more"
+    }
   }
 }

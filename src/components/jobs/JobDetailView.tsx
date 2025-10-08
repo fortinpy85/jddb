@@ -7,6 +7,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +69,7 @@ function JobDetailView({
   onCompare,
   className,
 }: JobDetailViewProps) {
+  const { t } = useTranslation(["jobs", "common"]);
   const [job, setJob] = useState<JobDescription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -100,7 +102,7 @@ function JobDetailView({
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to load job details",
+        err instanceof Error ? err.message : t("jobs:messages.loadFailed"),
       );
     } finally {
       setLoading(false);
@@ -110,49 +112,57 @@ function JobDetailView({
   // Action handlers
   const handleApprove = () => {
     addToast({
-      title: "Job Approved",
-      description: `Job ${job?.job_number} has been approved`,
+      title: t("jobs:messages.jobApproved"),
+      description: t("jobs:messages.jobApprovedDescription", {
+        jobNumber: job?.job_number,
+      }),
       type: "success",
     });
   };
 
   const handleDuplicate = () => {
     addToast({
-      title: "Job Duplicated",
-      description: `Created a copy of job ${job?.job_number}`,
+      title: t("jobs:messages.jobDuplicated"),
+      description: t("jobs:messages.jobDuplicatedDescription", {
+        jobNumber: job?.job_number,
+      }),
       type: "info",
     });
   };
 
   const handleExport = () => {
     addToast({
-      title: "Exporting Job",
-      description: `Exporting job ${job?.job_number} as PDF...`,
+      title: t("jobs:messages.exportingJob"),
+      description: t("jobs:messages.exportingJobDescription", {
+        jobNumber: job?.job_number,
+      }),
       type: "info",
     });
   };
 
   const handleArchive = () => {
     addToast({
-      title: "Job Archived",
-      description: `Job ${job?.job_number} has been archived`,
+      title: t("jobs:messages.jobArchived"),
+      description: t("jobs:messages.jobArchivedDescription", {
+        jobNumber: job?.job_number,
+      }),
       type: "info",
     });
   };
 
   // Loading state
   if (loading) {
-    return <LoadingState message="Loading job details..." />;
+    return <LoadingState message={t("jobs:messages.loadingDetails")} />;
   }
 
   // Error state
   if (error) {
     return (
       <ErrorState
-        title="Failed to load job"
+        title={t("jobs:messages.loadFailed")}
         message={error}
         onAction={loadJobDetails}
-        actionLabel="Try Again"
+        actionLabel={t("common:actions.tryAgain")}
       />
     );
   }
@@ -162,11 +172,11 @@ function JobDetailView({
     return (
       <EmptyState
         type="general"
-        title="Job not found"
-        description="The requested job description could not be found"
+        title={t("jobs:messages.jobNotFound")}
+        description={t("jobs:messages.jobNotFoundDescription")}
         actions={[
           {
-            label: "Back to Jobs",
+            label: t("jobs:actions.backToJobs"),
             onClick: onBack,
           },
         ]}
@@ -182,10 +192,10 @@ function JobDetailView({
         size="sm"
         onClick={onBack}
         className="-ml-2 shadow-button"
-        aria-label="Navigate back to jobs list"
+        aria-label={t("jobs:actions.backToJobsAria")}
       >
         <ChevronLeft className="w-4 h-4 mr-1" />
-        Back to Jobs
+        {t("jobs:actions.backToJobs")}
       </Button>
 
       {/* Workflow Progress Indicator */}
@@ -216,20 +226,28 @@ function JobDetailView({
                   size="sm"
                   onClick={() => onEdit?.(job)}
                   className="shadow-button"
-                  aria-label={`Edit job ${job.job_number || "description"}`}
+                  aria-label={t("jobs:actions.editJobAria", {
+                    jobNumber: job.job_number || "description",
+                  })}
                 >
                   <Edit className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Edit</span>
+                  <span className="hidden sm:inline">
+                    {t("jobs:actions.edit")}
+                  </span>
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleApprove}
                   className="shadow-button"
-                  aria-label={`Approve job ${job.job_number || "description"}`}
+                  aria-label={t("jobs:actions.approveJobAria", {
+                    jobNumber: job.job_number || "description",
+                  })}
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Approve</span>
+                  <span className="hidden sm:inline">
+                    {t("jobs:actions.approve")}
+                  </span>
                 </Button>
 
                 <Separator
@@ -246,7 +264,7 @@ function JobDetailView({
                     className="shadow-button"
                   >
                     <Languages className="w-4 h-4 mr-2" />
-                    Translate
+                    {t("jobs:actions.translate")}
                   </Button>
                   <Button
                     variant="outline"
@@ -255,7 +273,7 @@ function JobDetailView({
                     className="shadow-button"
                   >
                     <GitCompare className="w-4 h-4 mr-2" />
-                    Compare
+                    {t("jobs:actions.compare")}
                   </Button>
                   <Button
                     variant="outline"
@@ -264,7 +282,7 @@ function JobDetailView({
                     className="shadow-button"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Export
+                    {t("jobs:actions.export")}
                   </Button>
                 </div>
               </div>
@@ -274,7 +292,9 @@ function JobDetailView({
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="shadow-button">
                     <MoreVertical className="w-4 h-4" />
-                    <span className="sr-only">More actions</span>
+                    <span className="sr-only">
+                      {t("jobs:actions.moreActions")}
+                    </span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -285,15 +305,15 @@ function JobDetailView({
                   <div className="md:hidden">
                     <DropdownMenuItem onClick={() => onTranslate?.(job)}>
                       <Languages className="w-4 h-4 mr-2" />
-                      Translate
+                      {t("jobs:actions.translate")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onCompare?.(job)}>
                       <GitCompare className="w-4 h-4 mr-2" />
-                      Compare
+                      {t("jobs:actions.compare")}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleExport}>
                       <Download className="w-4 h-4 mr-2" />
-                      Export
+                      {t("jobs:actions.export")}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </div>
@@ -301,24 +321,24 @@ function JobDetailView({
                   {/* Additional actions */}
                   <DropdownMenuItem onClick={handleDuplicate}>
                     <Copy className="w-4 h-4 mr-2" />
-                    Duplicate
+                    {t("jobs:actions.duplicate")}
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Share2 className="w-4 h-4 mr-2" />
-                    Share
+                    {t("jobs:actions.share")}
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Printer className="w-4 h-4 mr-2" />
-                    Print
+                    {t("jobs:actions.print")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleArchive}>
                     <Archive className="w-4 h-4 mr-2" />
-                    Archive
+                    {t("jobs:actions.archive")}
                   </DropdownMenuItem>
                   <DropdownMenuItem className="text-red-600 dark:text-red-400">
                     <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
+                    {t("jobs:actions.delete")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -338,7 +358,7 @@ function JobDetailView({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                  Classification
+                  {t("jobs:fields.classification")}
                 </p>
                 <div className="mt-1">
                   {job.classification ? (
@@ -358,12 +378,12 @@ function JobDetailView({
         </Card>
         <MetadataCard
           icon={Languages}
-          label="Language"
+          label={t("jobs:fields.language")}
           value={getLanguageName(job.language || "en")}
         />
         <MetadataCard
           icon={Calendar}
-          label="Created"
+          label={t("jobs:fields.createdDate")}
           value={
             job.created_at
               ? new Date(job.created_at).toLocaleDateString()
@@ -372,7 +392,7 @@ function JobDetailView({
         />
         <MetadataCard
           icon={FileText}
-          label="Status"
+          label={t("jobs:fields.status")}
           value="N/A"
           statusBadge="N/A"
         />
@@ -418,8 +438,10 @@ function JobDetailView({
                   };
                 });
                 addToast({
-                  title: "Content Updated",
-                  description: `Section "${section.section_type}" has been updated`,
+                  title: t("jobs:messages.contentUpdated"),
+                  description: t("jobs:messages.sectionUpdated", {
+                    section: section.section_type,
+                  }),
                   type: "success",
                 });
               }}
@@ -436,7 +458,7 @@ function JobDetailView({
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Building className="w-5 h-5" />
-              <span>Additional Information</span>
+              <span>{t("jobs:details.additionalInformation")}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -444,7 +466,7 @@ function JobDetailView({
               {job.metadata.reports_to && (
                 <div>
                   <label className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                    Reports To
+                    {t("jobs:fields.reportsTo")}
                   </label>
                   <p className="text-sm text-slate-900 dark:text-slate-100 mt-1">
                     {job.metadata.reports_to}
@@ -454,7 +476,7 @@ function JobDetailView({
               {job.metadata.department && (
                 <div>
                   <label className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                    Department
+                    {t("jobs:fields.department")}
                   </label>
                   <p className="text-sm text-slate-900 dark:text-slate-100 mt-1">
                     {job.metadata.department}
@@ -464,7 +486,7 @@ function JobDetailView({
               {job.metadata.salary_budget != null && (
                 <div>
                   <label className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                    Budget Authority
+                    {t("jobs:fields.budget")}
                   </label>
                   <p className="text-sm text-slate-900 dark:text-slate-100 mt-1">
                     ${job.metadata.salary_budget?.toLocaleString() ?? "N/A"}
@@ -567,7 +589,9 @@ function JobSectionCard({
               variant="ghost"
               size="sm"
               onClick={() => setShowGenerator(true)}
-              aria-label={`Edit ${title.replace(/_/g, " ")} section`}
+              aria-label={t("jobs:actions.editSectionAria", {
+                section: title.replace(/_/g, " "),
+              })}
             >
               <Edit className="w-4 h-4" />
             </Button>

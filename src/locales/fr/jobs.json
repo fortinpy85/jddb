@@ -46,13 +46,28 @@
   },
   "actions": {
     "viewDetails": "Voir les détails",
-    "edit": "Modifier le poste",
+    "edit": "Modifier",
+    "editJob": "Modifier le poste",
     "delete": "Supprimer le poste",
     "export": "Exporter",
     "translate": "Traduire",
     "improve": "Améliorer avec l'IA",
     "compare": "Comparer",
-    "duplicate": "Dupliquer"
+    "duplicate": "Dupliquer",
+    "approve": "Approuver",
+    "share": "Partager",
+    "print": "Imprimer",
+    "archive": "Archiver",
+    "backToJobs": "Retour aux postes",
+    "refresh": "Actualiser",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer le poste {{jobNumber}} ?",
+    "backToJobsAria": "Retourner à la liste des postes",
+    "editJobAria": "Modifier le poste {{jobNumber}}",
+    "approveJobAria": "Approuver le poste {{jobNumber}}",
+    "translateJobAria": "Traduire le poste {{jobNumber}}",
+    "compareJobAria": "Comparer le poste {{jobNumber}}",
+    "exportJobAria": "Exporter le poste {{jobNumber}}",
+    "editSectionAria": "Modifier la section {{section}}"
   },
   "view": {
     "table": "Vue tableau",
@@ -67,5 +82,55 @@
     "titleZA": "Titre (Z-A)",
     "qualityHighest": "Qualité (Plus élevée)",
     "qualityLowest": "Qualité (Plus faible)"
+  },
+  "messages": {
+    "loadingDetails": "Chargement des détails du poste...",
+    "loadFailed": "Échec du chargement des détails du poste",
+    "jobNotFound": "Poste non trouvé",
+    "jobNotFoundDescription": "La description de poste que vous recherchez est introuvable",
+    "jobApproved": "Poste approuvé",
+    "jobApprovedDescription": "Le poste {{jobNumber}} a été approuvé avec succès",
+    "jobDuplicated": "Poste dupliqué",
+    "jobDuplicatedDescription": "Le poste {{jobNumber}} a été dupliqué avec succès",
+    "exportingJob": "Exportation du poste",
+    "exportingJobDescription": "Exportation du poste {{jobNumber}}...",
+    "jobArchived": "Poste archivé",
+    "jobArchivedDescription": "Le poste {{jobNumber}} a été archivé avec succès",
+    "contentUpdated": "Contenu mis à jour",
+    "sectionUpdated": "La section « {{section}} » a été mise à jour",
+    "deleteSuccess": "Poste supprimé",
+    "deleteSuccessDescription": "Le poste {{jobNumber}} a été supprimé avec succès"
+  },
+  "details": {
+    "additionalInformation": "Informations supplémentaires"
+  },
+  "status": {
+    "draft": "Brouillon",
+    "review": "En révision",
+    "approved": "Approuvé",
+    "published": "Publié",
+    "archived": "Archivé",
+    "pending": "En attente",
+    "completed": "Terminé",
+    "processing": "En traitement"
+  },
+  "list": {
+    "title": "Descriptions de poste",
+    "noJobs": "Aucun poste trouvé",
+    "loading": "Chargement des postes...",
+    "totalJobs": "{{count}} postes"
+  },
+  "search": {
+    "placeholder": "Rechercher par titre, classification ou description...",
+    "advancedSearch": "Recherche avancée",
+    "results": "Résultats de recherche",
+    "found": "trouvé(s)",
+    "searching": "Recherche en cours",
+    "noResults": "Aucun résultat trouvé",
+    "features": {
+      "fullText": "Recherche en texte intégral dans toutes les descriptions de poste",
+      "semantic": "Recherche sémantique alimentée par l'IA",
+      "filters": "Filtrage avancé par classification, ministère et plus encore"
+    }
   }
 }
