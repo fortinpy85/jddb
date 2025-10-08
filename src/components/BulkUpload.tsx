@@ -484,7 +484,7 @@ export function BulkUpload({
               <div className="text-gray-700">
                 <FolderOpen className="w-16 h-16 mx-auto mb-4 text-gray-600 dark:text-gray-400" />
                 <p className="text-xl font-semibold mb-2">
-                  {t("dropzone.dragAndDrop")}
+                  {t("dropzone.title")}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                   {t("dropzone.supportedFormats")}
