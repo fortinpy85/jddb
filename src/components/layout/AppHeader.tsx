@@ -222,7 +222,7 @@ export function AppHeader({
               {/* Icon with gradient glow */}
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur-md opacity-20 group-hover:opacity-40 transition-opacity duration-300" />
-                <Database className="relative w-7 h-7 text-blue-600 dark:text-blue-400 transition-transform duration-300 group-hover:rotate-[-5deg]" />
+                <Database className="relative w-7 h-7 text-blue-700 dark:text-blue-400 transition-transform duration-300 group-hover:rotate-[-5deg]" />
               </div>
 
               {/* Title with gradient */}
@@ -236,7 +236,7 @@ export function AppHeader({
               </div>
 
               {/* Mobile short title */}
-              <span className="ml-3 sm:hidden text-lg font-bold text-blue-600 dark:text-blue-400">
+              <span className="ml-3 sm:hidden text-lg font-bold text-blue-700 dark:text-blue-400">
                 JDDB
               </span>
             </button>
@@ -260,7 +260,7 @@ export function AppHeader({
             <SheetContent side="left" className="w-[280px] sm:w-[320px]">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <Database className="w-5 h-5 text-blue-600" />
+                  <Database className="w-5 h-5 text-blue-700" />
                   JDDB Navigation
                 </SheetTitle>
                 <SheetDescription>
