@@ -366,9 +366,9 @@ def test_get_job_with_metadata(test_client: TestClient, test_session):
     response = test_client.get(f"/api/jobs/{job.id}")
     assert response.status_code == 200
     data = response.json()
-    assert "job_metadata" in data
-    assert data["job_metadata"]["reports_to"] == "Director General"
-    assert data["job_metadata"]["fte_count"] == 12
+    assert "metadata" in data
+    assert data["metadata"]["reports_to"] == "Director General"
+    assert data["metadata"]["fte_count"] == 12
 
 
 @pytest.mark.integration

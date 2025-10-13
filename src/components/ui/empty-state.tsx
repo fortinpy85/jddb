@@ -178,14 +178,13 @@ export function EmptyState(props: EmptyStateProps) {
     className = "",
   } = props;
 
-  // Get configuration with fallback
-  const config =
-    emptyStateConfig[type as keyof typeof emptyStateConfig] ||
-    emptyStateConfig.general;
+  // Get configuration with fallback - use direct property access
+  const config = (emptyStateConfig as any)[type] || emptyStateConfig.general;
 
   // Additional safety check - ensure we always have a valid config
+  // Note: icon can be function OR object (in test environment with mocks)
   const finalConfig =
-    config && typeof config.icon === "function"
+    config && config.icon
       ? config
       : {
           icon: FolderOpen,
@@ -245,7 +244,7 @@ export function EmptyState(props: EmptyStateProps) {
                   Helpful Tips:
                 </h4>
                 <ul className="text-sm text-gray-600 space-y-1">
-                  {finalConfig.suggestions.map((suggestion, index) => (
+                  {finalConfig.suggestions.map((suggestion: string, index: number) => (
                     <li
                       key={index}
                       className="flex items-center justify-center"

@@ -30,6 +30,7 @@ import { formatFileSize, getStatusColor } from "@/lib/utils";
 import { useToast } from "@/components/ui/toast";
 import { useProgressUtils, ProgressController } from "@/hooks/useProgressToast";
 import type { UploadResponse } from "@/types/api";
+import { logger } from "@/utils/logger";
 
 interface FileUploadStatus {
   file: File;
@@ -207,13 +208,13 @@ export function BulkUpload({
       let statusMessage = t("messages.uploadSuccess");
 
       if (
-        result.processing_result.processed_content?.processing_errors?.length >
+        (result.processing_result.processed_content?.processing_errors?.length ?? 0) >
         0
       ) {
         finalStatus = "needs_review";
         statusMessage = t("messages.uploadedNeedsReview", {
           count:
-            result.processing_result.processed_content.processing_errors.length,
+            result.processing_result.processed_content?.processing_errors?.length ?? 0,
         });
       }
 
@@ -348,7 +349,7 @@ export function BulkUpload({
 
       onUploadComplete?.(files);
     } catch (error) {
-      console.error("Bulk upload error:", error);
+      logger.error("Bulk upload error:", error);
       const errorMessage =
         error instanceof Error
           ? error.message
@@ -596,7 +597,7 @@ export function BulkUpload({
                           <div className="text-xs text-green-600 mt-1">
                             {t("messages.processedSuccessfully", {
                               jobNumber:
-                                fileStatus.result.processing_result?.metadata
+                                fileStatus.result.processing_result?.file_metadata
                                   ?.job_number,
                             })}
                           </div>

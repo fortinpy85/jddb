@@ -9,7 +9,8 @@
     "supportedFormats": "Formats pris en charge: .txt, .doc, .docx, .pdf",
     "maxSize": "Taille maximale du fichier: {{size}} Mo",
     "dropHere": "Déposer les fichiers ici",
-    "selectFiles": "Sélectionner des fichiers"
+    "selectFiles": "Sélectionner des fichiers",
+    "releaseToUpload": "Relâcher pour téléverser"
   },
   "fileList": {
     "title": "Fichiers à téléverser",
@@ -19,7 +20,9 @@
     "status": "État",
     "actions": "Actions",
     "remove": "Retirer",
-    "removeAll": "Retirer tout"
+    "removeAll": "Retirer tout",
+    "filesSelected": "{{count}} fichier sélectionné",
+    "filesSelected_plural": "{{count}} fichiers sélectionnés"
   },
   "status": {
     "pending": "En attente",
@@ -27,21 +30,24 @@
     "processing": "Traitement",
     "completed": "Terminé",
     "failed": "Échec",
-    "queued": "En file d'attente"
+    "queued": "En file d'attente",
+    "needsReview": "Nécessite révision"
   },
   "actions": {
     "upload": "Téléverser les fichiers",
     "uploadAll": "Tout téléverser",
     "cancel": "Annuler le téléversement",
     "retry": "Réessayer",
-    "clear": "Effacer les terminés"
+    "clear": "Effacer les terminés",
+    "clearAll": "Tout effacer"
   },
   "progress": {
     "uploading": "Téléversement de {{current}} sur {{total}} fichiers",
     "uploaded": "{{count}} fichier téléversé",
     "uploaded_plural": "{{count}} fichiers téléversés",
     "failed": "{{count}} fichier en échec",
-    "failed_plural": "{{count}} fichiers en échec"
+    "failed_plural": "{{count}} fichiers en échec",
+    "processing": "Traitement en cours..."
   },
   "validation": {
     "fileTooBig": "La taille du fichier dépasse {{max}} Mo",
@@ -59,5 +65,29 @@
     "networkError": "Erreur réseau. Veuillez réessayer.",
     "serverError": "Erreur serveur. Veuillez contacter le support.",
     "invalidFile": "Fichier invalide. Veuillez vérifier le fichier et réessayer."
+  },
+  "messages": {
+    "fileSelectionIssues": "Problèmes de sélection de fichier",
+    "fileSelectionDescription": "{{count}} fichier a des problèmes de validation",
+    "fileSelectionDescription_plural": "{{count}} fichiers ont des problèmes de validation",
+    "uploadSuccess": "Téléversement terminé avec succès",
+    "uploadedNeedsReview": "{{count}} fichier téléversé, nécessite révision",
+    "uploadedNeedsReview_plural": "{{count}} fichiers téléversés, nécessitent révision",
+    "uploadError": "Erreur de téléversement: {{error}}",
+    "bulkUploadFailed": "Échec du téléversement en masse",
+    "retryUpload": "Réessayer le téléversement",
+    "processedSuccessfully": "Traité avec succès: {{jobNumber}}"
+  },
+  "summary": {
+    "completed": "Terminé",
+    "failed": "Échec",
+    "needReview": "À réviser",
+    "processing": "En traitement"
+  },
+  "accessibility": {
+    "selectFiles": "Sélectionner les fichiers à téléverser",
+    "clearAll": "Effacer tous les fichiers",
+    "retryUpload": "Réessayer le téléversement",
+    "removeFile": "Retirer le fichier"
   }
 }

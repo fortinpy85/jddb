@@ -28,9 +28,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { JobDescription } from "@/lib/types";
 import { useStore } from "@/lib/store";
 import { cn, getLanguageName, getStatusColor } from "@/lib/utils";
+import { apiClient } from "@/lib/api";
 import {
   Search,
   Filter,
@@ -85,7 +96,7 @@ function JobsTable({
   onCreateNew,
   className,
 }: JobsTableProps) {
-  const { jobs, loading, error, fetchJobs } = useStore();
+  const { jobs, loading, error, fetchJobs, pagination } = useStore();
   const { addToast } = useToast();
 
   // Local state
@@ -101,6 +112,10 @@ function JobsTable({
   const [filterSkills, setFilterSkills] = useState<number[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+
+  // Delete confirmation dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState<JobDescription | null>(null);
 
   // Filtered and sorted jobs
   const filteredJobs = useMemo(() => {
@@ -252,11 +267,51 @@ function JobsTable({
   };
 
   const handleJobAction = (job: JobDescription, action: string) => {
-    addToast({
-      title: action,
-      description: `${action} job ${job.job_number}`,
-      type: "info",
-    });
+    if (action === "Delete") {
+      // Show delete confirmation dialog
+      setJobToDelete(job);
+      setDeleteDialogOpen(true);
+    } else {
+      // For other actions, just show toast (placeholder)
+      addToast({
+        title: action,
+        description: `${action} job ${job.job_number}`,
+        type: "info",
+      });
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!jobToDelete) return;
+
+    try {
+      // Call delete API using apiClient
+      await apiClient.deleteJob(jobToDelete.id);
+
+      addToast({
+        title: "Job Deleted",
+        description: `Successfully deleted job ${jobToDelete.job_number}`,
+        type: "success",
+      });
+
+      // Refresh jobs list
+      await fetchJobs(true);
+
+      // Close dialog and reset state
+      setDeleteDialogOpen(false);
+      setJobToDelete(null);
+    } catch (error) {
+      addToast({
+        title: "Delete Failed",
+        description: error instanceof Error ? error.message : "Failed to delete job",
+        type: "error",
+      });
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setJobToDelete(null);
   };
 
   // Render sort icon
@@ -336,7 +391,7 @@ function JobsTable({
             Job Descriptions
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            {filteredJobs.length} of {jobs.length} jobs
+            {filteredJobs.length} of {pagination.total} jobs
           </p>
         </div>
 
@@ -762,7 +817,10 @@ function JobsTable({
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              onClick={() => handleJobAction(job, "Delete")}
+                              onSelect={(e) => {
+                                e.preventDefault();
+                                handleJobAction(job, "Delete");
+                              }}
                               className="text-red-600"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
@@ -828,10 +886,40 @@ function JobsTable({
           </CardContent>
         </Card>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Job Description?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete job{" "}
+              <span className="font-semibold">{jobToDelete?.job_number}</span>
+              {jobToDelete?.title && (
+                <>
+                  {" "}
+                  - <span className="font-semibold">{jobToDelete.title}</span>
+                </>
+              )}
+              ? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelDelete}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
 // Export memoized component for performance
-export default React.memo(JobsTable);
 export { JobsTable };

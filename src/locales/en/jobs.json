@@ -27,7 +27,12 @@
     "language": "Language",
     "qualityRange": "Quality Score Range",
     "dateRange": "Date Range",
-    "searchPlaceholder": "Search job descriptions..."
+    "searchPlaceholder": "Search job descriptions...",
+    "departmentPlaceholder": "Filter by department...",
+    "classificationLabel": "Classification filter",
+    "languageLabel": "Language filter",
+    "allClassifications": "All Classifications",
+    "allLanguages": "All Languages"
   },
   "quality": {
     "excellent": "Excellent",
@@ -46,6 +51,7 @@
   },
   "actions": {
     "viewDetails": "View Details",
+    "view": "View",
     "edit": "Edit",
     "editJob": "Edit Job",
     "delete": "Delete Job",
@@ -60,7 +66,15 @@
     "archive": "Archive",
     "backToJobs": "Back to Jobs",
     "refresh": "Refresh",
+    "loadData": "Load Data",
+    "search": "Search",
+    "loadMore": "Load More",
+    "clearSearch": "Clear Search",
+    "browseAll": "Browse All",
+    "uploadFiles": "Upload Files",
+    "moreActions": "More Actions",
     "confirmDelete": "Are you sure you want to delete job {{jobNumber}}?",
+    "confirmDeleteDescription": "This action cannot be undone. This will permanently delete the job description and all associated data.",
     "backToJobsAria": "Go back to jobs list",
     "editJobAria": "Edit job {{jobNumber}}",
     "approveJobAria": "Approve job {{jobNumber}}",
@@ -99,10 +113,19 @@
     "contentUpdated": "Content Updated",
     "sectionUpdated": "Section \"{{section}}\" has been updated",
     "deleteSuccess": "Job Deleted",
-    "deleteSuccessDescription": "Job {{jobNumber}} has been deleted successfully"
+    "deleteSuccessDescription": "Job {{jobNumber}} has been deleted successfully",
+    "deleteFailed": "Delete Failed",
+    "deleteFailedDescription": "Failed to delete job: {{error}}",
+    "updateSuccess": "Job Updated",
+    "updateSuccessDescription": "Job has been updated successfully",
+    "exportSuccess": "Export Successful",
+    "exportSuccessDescription": "Job {{jobNumber}} has been exported successfully",
+    "exportFailed": "Export Failed",
+    "exportFailedDescription": "Failed to export job: {{error}}"
   },
   "details": {
-    "additionalInformation": "Additional Information"
+    "additionalInformation": "Additional Information",
+    "processed": "Processed: {{date}}"
   },
   "status": {
     "draft": "Draft",
@@ -112,13 +135,16 @@
     "archived": "Archived",
     "pending": "Pending",
     "completed": "Completed",
-    "processing": "Processing"
+    "processing": "Processing",
+    "needsReview": "Needs Review",
+    "failed": "Failed"
   },
   "list": {
     "title": "Job Descriptions",
     "noJobs": "No jobs found",
     "loading": "Loading jobs...",
-    "totalJobs": "{{count}} jobs"
+    "totalJobs": "{{count}} jobs",
+    "loadPrompt": "Click the button below to load job data"
   },
   "search": {
     "placeholder": "Search by title, classification, or description...",
@@ -127,10 +153,18 @@
     "found": "found",
     "searching": "Searching",
     "noResults": "No results found",
+    "searchFailed": "Search failed",
+    "searchInSections": "Search in sections",
+    "sortedByRelevance": "Sorted by relevance",
+    "matchingSections": "Matching sections",
+    "description": "Search for job descriptions by title, classification, or content",
     "features": {
       "fullText": "Full-text search across all job descriptions",
       "semantic": "Semantic search powered by AI",
-      "filters": "Advanced filtering by classification, department, and more"
+      "filters": "Advanced filtering by classification, department, and more",
+      "filterBy": "Filter by classification, language, and department",
+      "searchSections": "Search within specific job description sections",
+      "smartSuggestions": "AI-powered search suggestions and auto-complete"
     }
   }
 }

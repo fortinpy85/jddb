@@ -3,48 +3,55 @@
  */
 import React from "react";
 import { render, screen, fireEvent, waitFor, cleanup } from "../test-utils";
-import { describe, test, expect, beforeEach, afterEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { JobList } from "./JobList";
+import { useStore } from "../lib/store";
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+  }),
+}));
+
+vi.mock("../lib/store", () => ({
+  useStore: vi.fn(),
+}));
+
+vi.mock("../lib/utils", () => ({
+  cn: (...args: any[]) => args.filter(Boolean).join(" "),
+  getClassificationLevel: vi.fn(
+    (classification: string) => `Level for ${classification}`,
+  ),
+  getLanguageName: vi.fn((lang: string) =>
+    lang === "EN" ? "English" : "French",
+  ),
+  getStatusColor: vi.fn(() => "bg-green-100 text-green-800"),
+  handleExport: vi.fn(),
+}));
+
+vi.mock("../lib/api", () => ({
+  apiClient: {
+    deleteJob: vi.fn(() => Promise.resolve()),
+  },
+}));
 
 // Mock the store module
-const mockFetchJobs = mock(() => Promise.resolve());
-const mockFetchStats = mock(() => Promise.resolve());
-const mockSetFilters = mock(() => {});
-const mockSearchJobs = mock(() => Promise.resolve());
+const mockFetchJobs = vi.fn(() => Promise.resolve());
+const mockFetchStats = vi.fn(() => Promise.resolve());
+const mockSetFilters = vi.fn(() => {});
+const mockSearchJobs = vi.fn(() => Promise.resolve());
 
 // Create a mock store state that we can modify in tests
 let mockStoreState: any;
 
 // Create a proper mock for useStore that handles selectors
-const mockUseStore = mock((selector?: any) => {
+const mockUseStore = vi.fn((selector?: any) => {
   if (typeof selector === "function") {
     return selector(mockStoreState);
   }
   return mockStoreState;
 });
 
-mock.module("../lib/store", () => ({
-  useStore: mockUseStore,
-}));
-
-// Mock utility functions
-mock.module("../lib/utils", () => ({
-  getClassificationLevel: mock(
-    (classification: string) => `Level for ${classification}`,
-  ),
-  getLanguageName: mock((lang: string) =>
-    lang === "EN" ? "English" : "French",
-  ),
-  getStatusColor: mock(() => "bg-green-100 text-green-800"),
-  handleExport: mock(),
-}));
-
-// Mock API client for delete operations
-mock.module("../lib/api", () => ({
-  apiClient: {
-    deleteJob: mock(() => Promise.resolve()),
-  },
-}));
+(vi.mocked as any)(useStore).mockImplementation(mockUseStore);
 
 const mockJobs = [
   {
@@ -117,7 +124,8 @@ describe("JobList Component", () => {
   test("renders job list container", async () => {
     render(<JobList />);
 
-    expect(screen.getByText(/job descriptions \(2\)/i)).toBeInTheDocument();
+    // Component uses i18n key, mock returns the key itself
+    expect(screen.getByText(/jobs:list.title/i)).toBeInTheDocument();
   });
 
   test("renders jobs after loading", async () => {
@@ -158,7 +166,8 @@ describe("JobList Component", () => {
   test("shows total count in header", async () => {
     render(<JobList />);
 
-    expect(screen.getByText(/job descriptions \(2\)/i)).toBeInTheDocument();
+    // Component uses i18n key, mock returns the key itself
+    expect(screen.getByText(/jobs:list.title/i)).toBeInTheDocument();
   });
 
   test("handles empty job list", async () => {
@@ -186,12 +195,12 @@ describe("JobList Component", () => {
     render(<JobList />);
 
     // When component first renders with no jobs, it shows initialization UI
-    // Check for the initialization UI elements instead
-    expect(screen.getByText("Job Descriptions")).toBeInTheDocument();
+    // Check for the initialization UI elements instead using i18n keys
+    expect(screen.getByText(/jobs:list.title/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/click the button below to load job data/i),
+      screen.getByText(/jobs:list.loadPrompt/i),
     ).toBeInTheDocument();
-    expect(screen.getByText("Load Job Data")).toBeInTheDocument();
+    expect(screen.getByText(/jobs:actions.loadData/i)).toBeInTheDocument();
   });
 
   test("handles error gracefully", async () => {
@@ -223,10 +232,10 @@ describe("JobList Component", () => {
   test("filters by search term", async () => {
     render(<JobList />);
 
-    const searchInput = screen.getByPlaceholderText(/search job descriptions/i);
+    const searchInput = screen.getByPlaceholderText(/jobs:search.placeholder/i);
     fireEvent.change(searchInput, { target: { value: "director" } });
 
-    const searchButton = screen.getByText("Search");
+    const searchButton = screen.getByText(/jobs:actions.search/i);
     fireEvent.click(searchButton);
 
     expect(mockSearchJobs).toHaveBeenCalledWith("director");
@@ -235,7 +244,7 @@ describe("JobList Component", () => {
   test("filters by classification", async () => {
     render(<JobList />);
 
-    const classificationSelect = screen.getByLabelText("Classification filter");
+    const classificationSelect = screen.getByLabelText(/jobs:filters.classificationLabel/i);
     fireEvent.change(classificationSelect, { target: { value: "EX-01" } });
 
     expect(mockSetFilters).toHaveBeenCalledWith(
@@ -248,7 +257,7 @@ describe("JobList Component", () => {
   test("filters by language", async () => {
     render(<JobList />);
 
-    const languageSelect = screen.getByLabelText("Language filter");
+    const languageSelect = screen.getByLabelText(/jobs:filters.languageLabel/i);
     fireEvent.change(languageSelect, { target: { value: "EN" } });
 
     expect(mockSetFilters).toHaveBeenCalledWith(
@@ -271,7 +280,7 @@ describe("JobList Component", () => {
 
     render(<JobList />);
 
-    expect(screen.getByText("Load More")).toBeInTheDocument();
+    expect(screen.getByText(/jobs:actions.loadMore/i)).toBeInTheDocument();
   });
 
   test("loads more jobs on button click", async () => {
@@ -287,7 +296,7 @@ describe("JobList Component", () => {
 
     render(<JobList />);
 
-    const loadMoreButton = screen.getByText("Load More");
+    const loadMoreButton = screen.getByText(/jobs:actions.loadMore/i);
     fireEvent.click(loadMoreButton);
 
     expect(mockFetchJobs).toHaveBeenCalled();
@@ -317,7 +326,7 @@ describe("JobList Component", () => {
   test("refreshes data on refresh button click", async () => {
     render(<JobList />);
 
-    const refreshButton = screen.getByText("Refresh");
+    const refreshButton = screen.getByText(/jobs:actions.refresh/i);
     fireEvent.click(refreshButton);
 
     expect(mockFetchJobs).toHaveBeenCalledWith(true);
@@ -347,11 +356,13 @@ describe("JobList Component", () => {
 
     render(<JobList />);
 
-    // When loading with no jobs, component shows initialization UI with disabled button
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    // When loading with no jobs, component shows initialization UI with disabled button showing "Loading..."
+    const loadButton = screen.getByRole("button", { name: /loading/i });
+    expect(loadButton).toBeInTheDocument();
+    expect(loadButton.hasAttribute("disabled")).toBe(true);
   });
 
-  test("calls fetch and stats when Load Job Data button is clicked", async () => {
+  test("calls fetch and stats when Load Data button is clicked", async () => {
     // Start with empty jobs to show init UI
     mockStoreState = {
       ...mockStoreState,
@@ -362,8 +373,8 @@ describe("JobList Component", () => {
 
     render(<JobList />);
 
-    // Find and click the Load Job Data button
-    const loadButton = screen.getByText("Load Job Data");
+    // Find and click the Load Data button using i18n key
+    const loadButton = screen.getByText(/jobs:actions.loadData/i);
     fireEvent.click(loadButton);
 
     // Now the fetch functions should be called
@@ -399,7 +410,7 @@ describe("JobList Component", () => {
   test("handles keyboard search on Enter", async () => {
     render(<JobList />);
 
-    const searchInput = screen.getByPlaceholderText(/search job descriptions/i);
+    const searchInput = screen.getByPlaceholderText(/jobs:search.placeholder/i);
     fireEvent.change(searchInput, { target: { value: "analyst" } });
     fireEvent.keyDown(searchInput, { key: "Enter" });
 
@@ -409,11 +420,11 @@ describe("JobList Component", () => {
   test("shows processing status overview", async () => {
     render(<JobList />);
 
-    // Check that status labels are present using queryAllByText to avoid strict matching
-    expect(screen.queryAllByText("Completed").length).toBeGreaterThan(0);
-    expect(screen.queryAllByText("Processing").length).toBeGreaterThan(0);
-    expect(screen.queryAllByText("Pending").length).toBeGreaterThan(0);
-    expect(screen.queryAllByText("Needs Review").length).toBeGreaterThan(0);
-    expect(screen.queryAllByText("Failed").length).toBeGreaterThan(0);
+    // Check that status labels are present using i18n keys
+    expect(screen.queryAllByText(/jobs:status.completed/i).length).toBeGreaterThan(0);
+    expect(screen.queryAllByText(/jobs:status.processing/i).length).toBeGreaterThan(0);
+    expect(screen.queryAllByText(/jobs:status.pending/i).length).toBeGreaterThan(0);
+    expect(screen.queryAllByText(/jobs:status.needsReview/i).length).toBeGreaterThan(0);
+    expect(screen.queryAllByText(/jobs:status.failed/i).length).toBeGreaterThan(0);
   });
 });

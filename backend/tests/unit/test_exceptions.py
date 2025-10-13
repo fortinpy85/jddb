@@ -531,6 +531,8 @@ class TestExceptionInheritance:
             # Create instance with minimal parameters
             if exception_class == DatabaseQueryException:
                 exc = exception_class(query="SELECT 1", message="Test")
+            elif exception_class == FileValidationException:
+                exc = exception_class(file_path="/test/path", validation_errors=["Test error"])
             elif exception_class in [
                 FileProcessingException,
                 FileNotFoundException,

@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
 import { Template } from "./SmartTemplateSelector";
+import { logger } from "@/utils/logger";
 
 interface TemplateCustomizerProps {
   template: Template;
@@ -142,7 +143,7 @@ export const TemplateCustomizer: React.FC<TemplateCustomizerProps> = ({
         setPreviewOpen(true);
       }
     } catch (error) {
-      console.error("Failed to customize template:", error);
+      logger.error("Failed to customize template:", error);
     } finally {
       setLoading(false);
     }

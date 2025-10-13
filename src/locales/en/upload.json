@@ -9,7 +9,8 @@
     "supportedFormats": "Supported formats: .txt, .doc, .docx, .pdf",
     "maxSize": "Maximum file size: {{size}} MB",
     "dropHere": "Drop files here",
-    "selectFiles": "Select Files"
+    "selectFiles": "Select Files",
+    "releaseToUpload": "Release to upload"
   },
   "fileList": {
     "title": "Files to Upload",
@@ -19,7 +20,9 @@
     "status": "Status",
     "actions": "Actions",
     "remove": "Remove",
-    "removeAll": "Remove All"
+    "removeAll": "Remove All",
+    "filesSelected": "{{count}} file selected",
+    "filesSelected_plural": "{{count}} files selected"
   },
   "status": {
     "pending": "Pending",
@@ -27,21 +30,24 @@
     "processing": "Processing",
     "completed": "Completed",
     "failed": "Failed",
-    "queued": "Queued"
+    "queued": "Queued",
+    "needsReview": "Needs Review"
   },
   "actions": {
     "upload": "Upload Files",
     "uploadAll": "Upload All",
     "cancel": "Cancel Upload",
     "retry": "Retry",
-    "clear": "Clear Completed"
+    "clear": "Clear Completed",
+    "clearAll": "Clear All"
   },
   "progress": {
     "uploading": "Uploading {{current}} of {{total}} files",
     "uploaded": "{{count}} file uploaded",
     "uploaded_plural": "{{count}} files uploaded",
     "failed": "{{count}} file failed",
-    "failed_plural": "{{count}} files failed"
+    "failed_plural": "{{count}} files failed",
+    "processing": "Processing..."
   },
   "validation": {
     "fileTooBig": "File size exceeds {{max}} MB",
@@ -59,5 +65,29 @@
     "networkError": "Network error. Please try again.",
     "serverError": "Server error. Please contact support.",
     "invalidFile": "Invalid file. Please check the file and try again."
+  },
+  "messages": {
+    "fileSelectionIssues": "File Selection Issues",
+    "fileSelectionDescription": "{{count}} file has validation issues",
+    "fileSelectionDescription_plural": "{{count}} files have validation issues",
+    "uploadSuccess": "Upload completed successfully",
+    "uploadedNeedsReview": "{{count}} file uploaded, needs review",
+    "uploadedNeedsReview_plural": "{{count}} files uploaded, need review",
+    "uploadError": "Upload error: {{error}}",
+    "bulkUploadFailed": "Bulk upload failed",
+    "retryUpload": "Retry Upload",
+    "processedSuccessfully": "Processed successfully: {{jobNumber}}"
+  },
+  "summary": {
+    "completed": "Completed",
+    "failed": "Failed",
+    "needReview": "Need Review",
+    "processing": "Processing"
+  },
+  "accessibility": {
+    "selectFiles": "Select files to upload",
+    "clearAll": "Clear all files",
+    "retryUpload": "Retry upload",
+    "removeFile": "Remove file"
   }
 }

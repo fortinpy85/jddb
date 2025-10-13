@@ -1,4 +1,4 @@
 @echo off
 echo Starting JDDB Frontend...
-call bun --cwd . run dev
+call npm run dev
 pause

@@ -502,40 +502,7 @@ async def complete_section(
         )
 
 
-@router.post("/enhance-content", response_model=ContentEnhancementResponse)
-async def enhance_content(
-    request: ContentEnhancementRequest,
-    db: AsyncSession = Depends(get_async_session),
-):
-    """
-    Enhance job description content for clarity, active voice, and professionalism.
 
-    Enhancement types available:
-    - **clarity**: Simplify complex sentences
-    - **active_voice**: Convert passive to active voice
-    - **conciseness**: Remove redundancy and wordiness
-    - **formality**: Adjust tone for government standards
-    - **bias_free**: Remove biased or non-inclusive language
-    """
-    try:
-        service = AIEnhancementService(db)
-        result = await service.enhance_content(
-            text=request.text,
-            enhancement_types=request.enhancement_types,
-            language=request.language,
-        )
-
-        logger.info(
-            f"Content enhanced with {len(result.get('changes', []))} changes ({request.enhancement_types})"
-        )
-
-        return ContentEnhancementResponse(**result)
-
-    except Exception as e:
-        logger.error(f"Error enhancing content: {e}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to enhance content: {str(e)}"
-        )
 
 
 @router.post("/inline-suggestions", response_model=InlineSuggestionsResponse)

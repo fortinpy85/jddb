@@ -1,4 +1,4 @@
-import { jest, describe, beforeEach, it, expect } from "@jest/globals";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
@@ -54,7 +54,7 @@ describe("Design System Components", () => {
       );
 
       const { container: compactContainer } = render(
-        <ContentSection variant="compact">
+        <ContentSection title="Test" variant="compact">
           <div />
         </ContentSection>,
       );
@@ -86,7 +86,7 @@ describe("Design System Components", () => {
     });
 
     it("calls onClick when clicked", () => {
-      const onClick = jest.fn();
+      const onClick = vi.fn();
       render(
         <StatsCard title="Test" value="123" icon={Home} onClick={onClick} />,
       );
@@ -118,7 +118,7 @@ describe("Design System Components", () => {
     });
 
     it("calls onClick when clicked", () => {
-      const onClick = jest.fn();
+      const onClick = vi.fn();
       render(<ActionButton onClick={onClick}>Test</ActionButton>);
       fireEvent.click(screen.getByRole("button"));
       expect(onClick).toHaveBeenCalledTimes(1);
@@ -158,9 +158,9 @@ describe("Design System Components", () => {
     });
 
     it("calls onView, onExport, and onDelete", () => {
-      const onView = jest.fn();
-      const onExport = jest.fn();
-      const onDelete = jest.fn();
+      const onView = vi.fn();
+      const onExport = vi.fn();
+      const onDelete = vi.fn();
 
       render(
         <JobCard

@@ -26,22 +26,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `cd backend && poetry run uvicorn jd_ingestion.api.main:app --reload` - Start server directly
 - `cd backend && poetry shell` - Activate virtual environment for development
 
-### Frontend (React/TypeScript with Bun)
+### Frontend (React/TypeScript with Vite)
 
-**Package Management**: Uses Bun as both package manager and JavaScript runtime for faster development.
+**Build Tool**: Uses Vite for fast development and optimized production builds.
+**Package Management**: Uses npm for dependency management (Bun had bundler issues with closures).
 
-- `bun install` - Install dependencies (faster alternative to npm/yarn)
-- `bun dev` - Start development server (http://localhost:3000)
-- `bun run build` - Production build using custom build.ts script
-- `bun test` - Run unit tests (src/ directory only)
-- `bun run test:unit` - Run unit tests explicitly
-- `bun run test:unit:watch` - Run unit tests in watch mode
-- `bun run test:unit:coverage` - Run unit tests with coverage
-- `bun run test:e2e` - Run end-to-end tests with Playwright
-- `bun run test:e2e:headed` - Run e2e tests in headed mode (visible browser)
-- `bun run test:all` - Run both unit and e2e tests sequentially
-- `bun run lint` - Run ESLint for code quality
-- `bun run type-check` - TypeScript type checking
+- `npm install` - Install dependencies
+- `npm run dev` - Start Vite development server (http://localhost:3006, auto-increments if port busy)
+- `npm run build` - Production build using Vite
+- `npm run start` - Preview production build (http://localhost:3002)
+- `npm test` - Run unit tests with Vitest
+- `npm run test:unit` - Run unit tests explicitly
+- `npm run test:unit:watch` - Run unit tests in watch mode
+- `npm run test:unit:coverage` - Run unit tests with coverage
+- `npm run test:e2e` - Run end-to-end tests with Playwright
+- `npm run test:e2e:headed` - Run e2e tests in headed mode (visible browser)
+- `npm run test:all` - Run both unit and e2e tests sequentially
+- `npm run lint` - Run ESLint for code quality
+- `npm run type-check` - TypeScript type checking
 
 **API Documentation**: Available at http://localhost:8000/api/docs when backend is running
 
@@ -64,15 +66,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Database Models**: `backend/src/jd_ingestion/database/` - SQLAlchemy models and connections
 - **Configuration**: `backend/src/jd_ingestion/config/settings.py` - Environment-based settings using Pydantic
 
-### Frontend Structure (React/TypeScript/Bun)
+### Frontend Structure (React/TypeScript/Vite)
 
-The frontend uses a **custom Bun-based architecture** rather than traditional Next.js:
+The frontend uses **Vite** as the build tool and development server:
 
-#### **Unique Architecture Components**
-- **Bun Server**: `src/index.tsx` - Custom server handling both API routes and SPA serving
+#### **Architecture Components**
+- **Vite Entry Point**: `src/main.tsx` - Imports CSS and initializes React app
 - **React Entry**: `src/frontend.tsx` - React app initialization and root rendering
-- **HTML Template**: `src/index.html` - Simple HTML template loaded by Bun server
-- **Custom Build**: `build.ts` - Bun-native bundler with Tailwind plugin integration
+- **HTML Template**: `index.html` - Root HTML file (at project root, required by Vite)
+- **Build Config**: `vite.config.ts` - Vite configuration with React plugin and Tailwind PostCSS
 
 #### **Application Structure**
 - **Main App**: `src/app/page.tsx` - Dashboard with tabs for jobs, upload, search
@@ -80,22 +82,24 @@ The frontend uses a **custom Bun-based architecture** rather than traditional Ne
 - **State Management**: `src/lib/store.ts` - Zustand for global state
 - **Components**: UI components using Radix UI and Tailwind CSS
 - **Configuration**: `src/lib/constants.ts` - Centralized type-safe constants
+- **Styles**: `src/index.css` - Tailwind directives and custom CSS (must be imported in main.tsx)
 
 #### **Development vs Production Flow**
-- **Development**: `bun dev` → Hot-reloading Bun server with React SPA
-- **Production**: `bun run build` → Static bundling, then `bun start` → Production server
-- **Testing**: Bun test runner for unit tests + Playwright for E2E tests
+- **Development**: `npm run dev` → Vite dev server with HMR (Hot Module Replacement)
+- **Production**: `npm run build` → Optimized static build → `npm run start` → Preview server
+- **Testing**: Vitest for unit tests + Playwright for E2E tests
 
-#### **Why This Architecture vs Next.js?**
-- **Performance**: Bun's native speed advantage for both bundling and serving
-- **Simplicity**: Single runtime eliminates Node.js/build tool complexity
-- **Full Control**: Custom server allows precise API proxy and routing control
-- **Modern**: Leverages Bun's cutting-edge JavaScript runtime capabilities
+#### **Why Vite Over Bun Bundler?**
+- **Stability**: Bun v1.2.23 bundler has critical closure bugs that break React components
+- **Reliability**: Vite is production-proven with mature ecosystem and extensive plugin support
+- **Performance**: Fast HMR, optimized builds, and excellent development experience
+- **Community**: Large community, extensive documentation, and established best practices
 
-#### **Trade-offs Compared to Next.js**
-- **✅ Advantages**: Faster builds, simpler deployment, unified runtime, better development experience
-- **⚠️ Considerations**: Less mature ecosystem, fewer built-in optimizations, custom routing required
-- **🔧 Maintenance**: Requires understanding of Bun-specific patterns vs industry-standard Next.js
+#### **Migration from Bun Bundler (October 2025)**
+- **Issue**: Bun bundler broke JavaScript closures in React components
+- **Solution**: Migrated to Vite while keeping npm for package management
+- **Files Archived**: `archive/build.bun.ts`, `archive/index.bun.tsx`
+- **Critical Fix**: Added `import "./index.css"` to `src/main.tsx` for Tailwind CSS loading
 
 ### Database Schema (PostgreSQL + pgvector)
 
@@ -115,14 +119,14 @@ The frontend uses a **custom Bun-based architecture** rather than traditional Ne
 - `backend/src/jd_ingestion/config/settings.py` - Pydantic settings with environment variable loading
 - `backend/alembic/` - Database migrations managed via Poetry virtual environment
 
-### Frontend Configuration (Bun)
+### Frontend Configuration (npm + Vite)
 
-- `package.json` - **Bun/Node.js dependencies**: Frontend packages and scripts
-- `bun.lockb` - **Bun lock file**: Binary format for exact dependency versions (commit to version control)
+- `package.json` - **npm dependencies**: Frontend packages and scripts
+- `package-lock.json` - **npm lock file**: Exact dependency versions (commit to version control)
 - `.env.local` - `NEXT_PUBLIC_API_URL=http://localhost:8000/api`
 - `tsconfig.json` - TypeScript configuration with `@/*` path mapping
 - `components.json` - Radix UI components configuration
-- `build.ts` - **Custom Bun build script**: Uses Bun's native bundling instead of traditional webpack/vite
+- `vite.config.ts` - **Vite configuration**: React plugin, PostCSS, Tailwind CSS integration
 
 ## File Processing Pipeline
 
@@ -144,11 +148,11 @@ The system processes government job description files with these patterns:
 - Dependencies defined in `backend/pyproject.toml` and locked in `backend/poetry.lock`
 - Use `cd backend && poetry install` for initial setup or after dependency changes
 
-**Frontend (Bun)**:
-- Bun serves as both package manager and JavaScript runtime
-- Significantly faster than npm/yarn for dependency installation and script execution
-- Dependencies defined in `package.json` and locked in `bun.lockb` (binary format)
-- Use `bun install` for initial setup or after dependency changes
+**Frontend (npm + Vite)**:
+- npm manages JavaScript/TypeScript dependencies
+- Vite provides fast development server with Hot Module Replacement (HMR)
+- Dependencies defined in `package.json` and locked in `package-lock.json`
+- Use `npm install` for initial setup or after dependency changes
 
 ### Development Steps
 
@@ -158,9 +162,9 @@ The system processes government job description files with these patterns:
    - Hot reloading enabled for code changes
 
 2. **Frontend Development**:
-   - Use `bun dev` for development server with hot reloading
+   - Use `npm run dev` for Vite development server with hot reloading
    - Automatically connects to backend API at http://localhost:8000/api
-   - Faster build times and dependency installation compared to npm/yarn
+   - Fast HMR and optimized development experience with Vite
 
 3. **Database Changes**:
    - Create Alembic migrations: `cd backend && poetry run alembic revision --autogenerate -m "description"`
@@ -168,13 +172,13 @@ The system processes government job description files with these patterns:
 
 4. **Testing**:
    - Backend: `cd backend && make test` (preferred) or `poetry run pytest tests/`
-   - Frontend Unit Tests: `bun test` or `bun run test:unit` (fast, JSDOM environment)
-   - Frontend E2E Tests: `bun run test:e2e` (browser-based with Playwright)
-   - Run All Tests: `bun run test:all` (unit tests followed by e2e tests)
+   - Frontend Unit Tests: `npm test` or `npm run test:unit` (Vitest with JSDOM)
+   - Frontend E2E Tests: `npm run test:e2e` (browser-based with Playwright)
+   - Run All Tests: `npm run test:all` (unit tests followed by e2e tests)
 
 5. **Code Quality**:
    - Backend: `cd backend && make check` (format, lint, type-check) via Poetry
-   - Frontend: `bun run lint` and `bun run type-check` for code quality
+   - Frontend: `npm run lint` and `npm run type-check` for code quality
 
 ## Project Documentation
 
@@ -228,17 +232,15 @@ The frontend uses a singleton API client (`src/lib/api.ts`) with:
 - **Solution**: Fixed join statement to use proper relationship: `base_query.join(JobDescription.job_metadata)`
 - **Files**: `backend/src/jd_ingestion/api/endpoints/jobs.py:35`
 
-#### Test Framework Conflicts
+#### Test Framework Migration to Vitest
 
-- **Issue**: `bun test` command failed due to conflicts between unit tests (Bun) and e2e tests (Playwright)
-  - Error: "Playwright Test did not expect test.describe() to be called here"
-  - Cause: Bun test runner was attempting to execute Playwright test files from `tests/` directory
-- **Solution**: Separated test frameworks by directory and updated package.json scripts
-  - Unit tests: `src/` directory using Bun's native test runner with JSDOM
+- **Previous Issue**: Bun test runner had conflicts with Playwright tests
+- **Solution**: Migrated to Vitest for unit tests, kept Playwright for E2E
+  - Unit tests: `src/` directory using Vitest with JSDOM environment
   - E2E tests: `tests/` directory using Playwright with browser automation
-  - Updated commands: `bun test` runs unit tests only, `bun run test:e2e` runs Playwright tests
-- **Files**: `package.json`, `bunfig.toml`
-- **Result**: Clean separation with 44/44 unit tests passing (100% success rate)
+  - Commands: `npm test` runs unit tests, `npm run test:e2e` runs Playwright tests
+- **Files**: `package.json`, `vite.config.ts`, `src/test-setup.ts`
+- **Result**: Stable test infrastructure with full Vite ecosystem integration
 
 ### Development Environment Setup
 
@@ -290,15 +292,15 @@ The frontend uses a singleton API client (`src/lib/api.ts`) with:
 ### Testing Issues
 
 #### Unit Test Failures
-1. Run `bun test` or `bun run test:unit` for fast unit tests
+1. Run `npm test` or `npm run test:unit` for fast unit tests with Vitest
 2. Check that `.env.local` exists with `NEXT_PUBLIC_API_URL=http://localhost:8000/api`
 3. Ensure test files are in `src/` directory with `.test.ts` or `.test.tsx` extensions
 
 #### E2E Test Issues
-1. Use `bun run test:e2e` to run Playwright tests
+1. Use `npm run test:e2e` to run Playwright tests
 2. Ensure backend server is running on port 8000
 3. Playwright will automatically start frontend server on port 3000
-4. For debugging: `bun run test:e2e:headed` to see browser actions
+4. For debugging: `npm run test:e2e:headed` to see browser actions
 
 #### Backend Test Discovery
 1. Run `cd backend && make test` to execute all backend tests
@@ -329,32 +331,32 @@ python script.py
 pytest tests/
 ```
 
-### When to Use Bun (Frontend)
+### When to Use npm (Frontend)
 ```bash
 # In root directory (where package.json is located)
 
 # Initial setup
-bun install
+npm install
 
 # Add new dependency
-bun add package-name
-bun add -d package-name  # Development dependency
+npm install package-name
+npm install --save-dev package-name  # Development dependency
 
 # Run scripts
-bun dev
-bun test                    # Unit tests only
-bun run test:unit          # Unit tests explicitly
-bun run test:unit:watch    # Unit tests in watch mode
-bun run test:e2e           # E2E tests with Playwright
-bun run test:all           # All tests (unit + e2e)
-bun run build
-bun run lint
+npm run dev                # Vite development server
+npm test                   # Unit tests with Vitest
+npm run test:unit          # Unit tests explicitly
+npm run test:unit:watch    # Unit tests in watch mode
+npm run test:e2e           # E2E tests with Playwright
+npm run test:all           # All tests (unit + e2e)
+npm run build              # Production build with Vite
+npm run lint               # ESLint
 
-# Direct execution
-bun run script.ts
+# Preview production build
+npm run start
 ```
 
 ### Key Differences
-- **Poetry**: Python-specific, creates isolated virtual environments, slower but more robust
-- **Bun**: JavaScript/TypeScript runtime and package manager, significantly faster than npm/yarn
-- **Lock Files**: Both `poetry.lock` and `bun.lockb` should be committed to version control
+- **Poetry**: Python-specific, creates isolated virtual environments for backend
+- **npm + Vite**: Standard JavaScript package manager with fast, modern build tool
+- **Lock Files**: Both `poetry.lock` and `package-lock.json` should be committed to version control

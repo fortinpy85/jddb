@@ -10,6 +10,7 @@
 
 import { useState, useCallback } from "react";
 import { API_BASE_URL } from "@/lib/api";
+import { logger } from "@/utils/logger";
 
 export interface TranslationMatch {
   id: number;
@@ -93,8 +94,9 @@ export function useTranslationMemory(
           limit: (params.limit || 10).toString(),
         });
 
+        // Add domain parameter if provided (backend ready, implementation pending)
         if (params.domain) {
-          // Note: API doesn't have domain parameter, but we include it for future use
+          queryParams.append("domain", params.domain);
         }
 
         const response = await fetch(
@@ -117,7 +119,7 @@ export function useTranslationMemory(
         const errorMessage =
           err instanceof Error ? err.message : "Failed to search translations";
         setError(errorMessage);
-        console.error("Error searching translation memory:", err);
+        logger.error("Error searching translation memory:", err);
       } finally {
         setIsLoading(false);
       }
@@ -159,7 +161,7 @@ export function useTranslationMemory(
         const errorMessage =
           err instanceof Error ? err.message : "Failed to add translation";
         setError(errorMessage);
-        console.error("Error adding translation:", err);
+        logger.error("Error adding translation:", err);
       } finally {
         setIsLoading(false);
       }
@@ -175,7 +177,7 @@ export function useTranslationMemory(
       try {
         // Note: Update endpoint not implemented in backend yet
         // This is a placeholder for future implementation
-        console.warn("Update translation endpoint not yet implemented");
+        logger.warn("Update translation endpoint not yet implemented");
 
         // Update local match optimistically
         setMatches((prev) =>
@@ -187,7 +189,7 @@ export function useTranslationMemory(
         const errorMessage =
           err instanceof Error ? err.message : "Failed to update translation";
         setError(errorMessage);
-        console.error("Error updating translation:", err);
+        logger.error("Error updating translation:", err);
       } finally {
         setIsLoading(false);
       }
@@ -225,7 +227,7 @@ export function useTranslationMemory(
       const errorMessage =
         err instanceof Error ? err.message : "Failed to rate translation";
       setError(errorMessage);
-      console.error("Error rating translation:", err);
+      logger.error("Error rating translation:", err);
     } finally {
       setIsLoading(false);
     }

@@ -55,6 +55,7 @@ interface CompareViewProps {
   jobId2?: number;
   onBack?: () => void;
   className?: string;
+  onNavigate?: (view: string) => void;
 }
 
 interface ComparisonMetric {
@@ -76,8 +77,9 @@ function CompareView({
   jobId2: initialJobId2,
   onBack,
   className,
+  onNavigate,
 }: CompareViewProps) {
-  const { jobs } = useStore();
+  const { jobs, setMergedJob } = useStore();
   const { addToast } = useToast();
 
   const [selectedJobId1, setSelectedJobId1] = useState<number | undefined>(
@@ -127,7 +129,8 @@ function CompareView({
   };
 
   const confirmMerge = async () => {
-    // Implement merge logic
+    if (!selectedJobId1 || !selectedJobId2) return;
+
     addToast({
       title: "Merge Initiated",
       description: `Creating merged job description with strategy: ${mergeStrategy}`,
@@ -135,11 +138,21 @@ function CompareView({
     });
     setShowMergeDialog(false);
 
-    // Future Enhancement: Navigate to editing view with merged content
-    // This will require:
-    // 1. Backend endpoint to create merged job description
-    // 2. State management for merged document
-    // 3. Navigation to editing view with pre-populated content
+    try {
+      const mergedJob = await apiClient.mergeJobs(
+        selectedJobId1,
+        selectedJobId2,
+        mergeStrategy,
+      );
+      setMergedJob(mergedJob);
+      onNavigate?.("editing");
+    } catch (error) {
+      addToast({
+        title: "Merge Failed",
+        description: error instanceof Error ? error.message : "Unknown error",
+        type: "error",
+      });
+    }
   };
 
   const comparisonMetrics: ComparisonMetric[] =

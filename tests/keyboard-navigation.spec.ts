@@ -8,7 +8,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Keyboard Navigation', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the app
-    await page.goto('http://localhost:3002');
+    await page.goto('/');
 
     // Wait for the app to load
     await page.waitForSelector('[data-testid="jddb-layout"]', { timeout: 10000 });
@@ -196,7 +196,7 @@ test.describe('Keyboard Navigation', () => {
 
 test.describe('Keyboard Navigation Performance', () => {
   test('should respond to shortcuts quickly', async ({ page }) => {
-    await page.goto('http://localhost:3002');
+    await page.goto('/');
     await page.waitForSelector('[data-testid="jddb-layout"]');
 
     const startTime = Date.now();

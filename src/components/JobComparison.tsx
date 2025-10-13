@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useStore } from "@/lib/store";
 import { apiClient } from "@/lib/api";
+import { logger } from "@/utils/logger";
 import type { JobDescription } from "@/lib/types";
 import { ErrorBoundaryWrapper } from "@/components/ui/error-boundary";
 import { useProgressUtils } from "@/hooks/useProgressToast";
@@ -91,7 +92,7 @@ function JobComparison(_props: JobComparisonProps) {
         .filter(Boolean) as JobDescription[];
       setSuggestedJobsB(similarJobDetails);
     } catch (error) {
-      console.error("Failed to load similar jobs:", error);
+      logger.error("Failed to load similar jobs:", error);
       setSuggestedJobsB([]);
     }
   };
@@ -147,7 +148,7 @@ function JobComparison(_props: JobComparisonProps) {
         `Comparison complete: ${overallSimilarity}% similarity found between "${selectedJobA.title}" and "${selectedJobB.title}"`,
       );
     } catch (error) {
-      console.error("Failed to compare jobs:", error);
+      logger.error("Failed to compare jobs:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Failed to compare jobs";
       progress.error(`Comparison failed: ${errorMessage}`);

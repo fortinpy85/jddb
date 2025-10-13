@@ -78,10 +78,10 @@ export function ThreeColumnLayout({
     >
       {header && <div className="flex-shrink-0 relative z-50">{header}</div>}
       {profileHeader && (
-        <div className="flex-shrink-0 relative z-40">{profileHeader}</div>
+        <header className="flex-shrink-0 relative z-40">{profileHeader}</header>
       )}
       {alertBanner && (
-        <div className="flex-shrink-0 relative z-30 mt-32">{alertBanner}</div>
+        <aside className="flex-shrink-0 relative z-30 mt-32" role="status">{alertBanner}</aside>
       )}
 
       <div className="flex flex-1 overflow-hidden pt-32">

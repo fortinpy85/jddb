@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { JobDescription } from "@/lib/types";
 import { apiClient } from "@/lib/api";
+import { logger } from "@/utils/logger";
 import { getClassificationLevel, getLanguageName } from "@/lib/utils";
 import { useStore } from "@/lib/store";
 import {
@@ -21,11 +22,25 @@ import {
   Upload,
   Calendar,
   Database,
+  Edit,
 } from "lucide-react";
 import EmptyState from "@/components/ui/empty-state";
 import SkeletonLoader from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { ErrorBoundaryWrapper } from "@/components/ui/error-boundary";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { EditJobModal } from "@/components/jobs/EditJobModal";
+
 interface JobListProps {
   onJobSelect?: (job: JobDescription) => void;
   showFilters?: boolean;
@@ -62,6 +77,9 @@ export function JobList({
 
   const [searchQuery, setSearchQuery] = useState("");
   const { addToast } = useToast();
+  const [deleteTarget, setDeleteTarget] = useState<JobDescription | null>(null);
+  const [editTarget, setEditTarget] = useState<JobDescription | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Manual initialization only - prevent any automatic loading
   const [initialized, setInitialized] = useState(false);
@@ -80,7 +98,7 @@ export function JobList({
       setInitialized(true);
       setIsInitializing(false);
     } catch (error) {
-      console.error("Failed to initialize data:", error);
+      logger.error("Failed to initialize data:", error);
       setIsInitializing(false);
     }
   };
@@ -102,20 +120,40 @@ export function JobList({
     onJobSelect?.(job);
   };
 
-  const handleJobDelete = async (jobId: number, jobNumber: string) => {
-    if (!confirm(t("jobs:actions.confirmDelete", { jobNumber }))) {
-      return;
-    }
+  const handleJobEdit = (job: JobDescription) => {
+    setEditTarget(job);
+    setIsEditModalOpen(true);
+  };
+
+  const handleJobUpdated = (jobId: number) => {
+    fetchJobs(true); // Refetch jobs after update
+    fetchStats(); // Refresh stats
+
+    addToast({
+      type: "success",
+      title: t("jobs:messages.updateSuccess"),
+      description: t("jobs:messages.updateSuccessDescription"),
+    });
+  };
+
+  const handleJobDelete = async (job: JobDescription) => {
+    setDeleteTarget(job);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
 
     try {
-      await apiClient.deleteJob(jobId);
+      await apiClient.deleteJob(deleteTarget.id);
       fetchJobs(true); // Refetch jobs after deletion
       fetchStats(); // Refresh stats
 
       addToast({
         type: "success",
         title: t("jobs:messages.deleteSuccess"),
-        description: t("jobs:messages.deleteSuccessDescription", { jobNumber }),
+        description: t("jobs:messages.deleteSuccessDescription", {
+          jobNumber: deleteTarget.job_number,
+        }),
       });
     } catch (err) {
       addToast({
@@ -126,6 +164,8 @@ export function JobList({
             err instanceof Error ? err.message : t("common:errors.unknown"),
         }),
       });
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -224,16 +264,12 @@ ${Object.entries(fullJob.metadata)
     }
   };
 
-  console.log(
-    "🎯 JobList render - initialized:",
+  logger.debug("🎯 JobList render", {
     initialized,
-    "isInitializing:",
     isInitializing,
-    "loading:",
     loading,
-    "jobs.length:",
-    jobs.length,
-  );
+    jobsLength: jobs.length,
+  });
 
   // Show initialization UI if not initialized AND no jobs data available
   const hasJobData = jobs.length > 0;
@@ -488,6 +524,16 @@ ${Object.entries(fullJob.metadata)
                 <Button
                   variant="outline"
                   size="sm"
+                  onClick={() => handleJobEdit(job)}
+                  className="transition-all duration-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 group/btn px-3"
+                  title={t("jobs:actions.edit")}
+                >
+                  <Edit className="w-4 h-4 group-hover/btn:scale-110 transition-transform duration-200" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => handleJobExport(job)}
                   className="flex-1 transition-all duration-200 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 group/btn"
                 >
@@ -498,7 +544,7 @@ ${Object.entries(fullJob.metadata)
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleJobDelete(job.id, job.job_number)}
+                  onClick={() => handleJobDelete(job)}
                   className="transition-all duration-200 hover:bg-red-50 hover:border-red-300 hover:text-red-700 group/btn px-3"
                   title={t("jobs:actions.delete")}
                 >
@@ -567,6 +613,41 @@ ${Object.entries(fullJob.metadata)
           }
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("jobs:actions.confirmDelete", {
+                jobNumber: deleteTarget?.job_number,
+              })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("jobs:actions.confirmDeleteDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteTarget(null)}>
+              {t("common:actions.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              {t("common:actions.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Job Modal */}
+      <EditJobModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditTarget(null);
+        }}
+        onJobUpdated={handleJobUpdated}
+        job={editTarget}
+      />
     </div>
   );
 }

@@ -4,8 +4,8 @@ import { API_KEY, makeAuthenticatedRequest } from './utils/test-helpers';
 test.describe('Phase 2 Features - Collaborative Editing', () => {
 
   test.beforeEach(async ({ page }) => {
-    // Navigate to the application (use configured baseURL port 3002)
-    await page.goto('http://localhost:3002');
+    // Navigate to the application
+    await page.goto('/');
 
     // Wait for the page to load completely
     await page.waitForLoadState('networkidle');
@@ -127,7 +127,7 @@ test.describe('Phase 2 Features - User Interface', () => {
   test('should have responsive design for collaborative features', async ({ page }) => {
     // Test different viewport sizes
     await page.setViewportSize({ width: 1280, height: 720 });
-    await page.goto('http://localhost:3002');
+    await page.goto('/');
     await page.getByRole('tab', { name: /edit/i }).click();
     await page.waitForTimeout(2000);
 
@@ -144,7 +144,7 @@ test.describe('Phase 2 Features - User Interface', () => {
   });
 
   test('should handle tab navigation properly', async ({ page }) => {
-    await page.goto('http://localhost:3002');
+    await page.goto('/');
 
     // Test navigation between tabs
     const tabs = ['Jobs', 'Upload', 'Search', 'Edit', 'Statistics'];
@@ -162,7 +162,7 @@ test.describe('Phase 2 Features - User Interface', () => {
   });
 
   test('should display proper loading states', async ({ page }) => {
-    await page.goto('http://localhost:3002');
+    await page.goto('/');
 
     // Check initial loading
     const loadingIndicator = page.locator('[data-testid="loading"]');
@@ -183,7 +183,7 @@ test.describe('Phase 2 Features - User Interface', () => {
 test.describe('Phase 2 Features - Error Handling', () => {
 
   test('should handle API errors gracefully', async ({ page }) => {
-    await page.goto('http://localhost:3002');
+    await page.goto('/');
 
     // Navigate to Edit tab
     await page.getByRole('tab', { name: /edit/i }).click();
@@ -198,7 +198,7 @@ test.describe('Phase 2 Features - Error Handling', () => {
   });
 
   test('should provide user feedback for actions', async ({ page }) => {
-    await page.goto('http://localhost:3002');
+    await page.goto('/');
 
     // Navigate to Edit tab
     await page.getByRole('tab', { name: /edit/i }).click();

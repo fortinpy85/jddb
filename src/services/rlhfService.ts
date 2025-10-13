@@ -5,6 +5,7 @@
  * Handles batching, retry logic, and localStorage synchronization.
  */
 
+import { logger } from "@/utils/logger";
 import type { RLHFEvent } from "@/hooks/useLiveImprovement";
 
 const API_BASE_URL =
@@ -82,7 +83,7 @@ export class RLHFService {
         this.scheduleBatchSend();
       }
     } catch (error) {
-      console.error("Failed to capture RLHF feedback:", error);
+      logger.error("Failed to capture RLHF feedback:", error);
     }
   }
 
@@ -121,7 +122,7 @@ export class RLHFService {
       // Clear localStorage after successful sync
       this.clearLocalStorage();
     } catch (error) {
-      console.error("Failed to sync RLHF data to backend:", error);
+      logger.error("Failed to sync RLHF data to backend:", error);
       throw error;
     }
   }
@@ -138,7 +139,7 @@ export class RLHFService {
     try {
       await this.sendBulkFeedback(batch);
     } catch (error) {
-      console.error("Failed to send RLHF batch:", error);
+      logger.error("Failed to send RLHF batch:", error);
       // Re-queue failed items
       this.batchQueue.unshift(...batch);
     }
@@ -249,7 +250,7 @@ export class RLHFService {
       });
       localStorage.setItem("rlhf_pending", JSON.stringify(existing));
     } catch (error) {
-      console.error("Failed to save RLHF data to localStorage:", error);
+      logger.error("Failed to save RLHF data to localStorage:", error);
     }
   }
 
@@ -261,7 +262,7 @@ export class RLHFService {
       const data = localStorage.getItem("rlhf_live_events") || "[]";
       return JSON.parse(data);
     } catch (error) {
-      console.error("Failed to read RLHF data from localStorage:", error);
+      logger.error("Failed to read RLHF data from localStorage:", error);
       return [];
     }
   }
@@ -274,7 +275,7 @@ export class RLHFService {
       localStorage.removeItem("rlhf_live_events");
       localStorage.removeItem("rlhf_pending");
     } catch (error) {
-      console.error("Failed to clear RLHF data from localStorage:", error);
+      logger.error("Failed to clear RLHF data from localStorage:", error);
     }
   }
 
@@ -293,13 +294,13 @@ export const rlhfService = RLHFService.getInstance();
 // Auto-sync on page load (after delay)
 if (typeof window !== "undefined") {
   setTimeout(() => {
-    rlhfService.syncLocalStorageToBackend().catch(console.error);
+    rlhfService.syncLocalStorageToBackend().catch((err) => logger.error("Auto-sync error:", err));
   }, 5000); // Wait 5 seconds after page load
 }
 
 // Flush on page unload
 if (typeof window !== "undefined") {
   window.addEventListener("beforeunload", () => {
-    rlhfService.flush().catch(console.error);
+    rlhfService.flush().catch((err) => logger.error("Flush error:", err));
   });
 }

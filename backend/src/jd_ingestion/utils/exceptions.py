@@ -230,7 +230,7 @@ class FileValidationException(ValidationException):
 class FileProcessingException(JDDBBaseException):
     """Exceptions related to file processing operations."""
 
-    def __init__(self, file_path: str, message: str, **kwargs):
+    def __init__(self, file_path: str, message: str = "File processing failed", **kwargs):
         context = kwargs.get("context", {})
         context["file_path"] = file_path
         kwargs["context"] = context
@@ -363,7 +363,7 @@ class BusinessLogicException(JDDBBaseException):
         return "The operation could not be completed due to business rules."
 
 
-class InsufficientPermissionsException(BusinessLogicException):
+class InsufficientPermissionsException(JDDBBaseException):
     """User lacks required permissions for operation."""
 
     def __init__(
@@ -477,16 +477,17 @@ class MemoryException(SystemResourceException):
         context["operation"] = operation
         kwargs["context"] = context
 
+        # Set other parameters in kwargs (severity is set by parent)
+        kwargs["recoverable"] = True
+        kwargs["recovery_suggestions"] = [
+            "Reduce batch size or chunk size",
+            "Process data in smaller segments",
+            "Restart the service",
+            "Contact administrator to increase memory allocation",
+        ]
+
         super().__init__(
             resource_type="memory",
             message=f"Insufficient memory for operation: {operation}",
-            severity=ErrorSeverity.HIGH,
-            recoverable=True,
-            recovery_suggestions=[
-                "Reduce batch size or chunk size",
-                "Process data in smaller segments",
-                "Restart the service",
-                "Contact administrator to increase memory allocation",
-            ],
             **kwargs,
         )

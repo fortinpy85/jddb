@@ -69,7 +69,7 @@ export function SkipLinks() {
             "hover:bg-blue-700",
           )}
         >
-          {t(link.labelKey)}
+          {(t as any)(link.labelKey)}
         </a>
       ))}
     </div>

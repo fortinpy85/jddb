@@ -40,6 +40,7 @@ import {
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import type { JobDescription } from "@/lib/types";
+import { logger } from "@/utils/logger";
 
 interface PredictionResult {
   applicationVolume: {
@@ -102,7 +103,7 @@ export function PredictiveAnalytics() {
         const response = await apiClient.getJobs({ limit: 100 });
         setJobs(response.jobs || []);
       } catch (error) {
-        console.error("Failed to load jobs:", error);
+        logger.error("Failed to load jobs", error);
       }
     };
     loadJobs();
@@ -128,7 +129,7 @@ export function PredictiveAnalytics() {
         location: job.metadata?.location || "",
         content: job.sections?.map((s) => s.section_content).join("\n\n") || "",
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Error loading job",
         description: "Failed to load job details",
@@ -150,164 +151,11 @@ export function PredictiveAnalytics() {
 
     setIsLoading(true);
     try {
-      // Mock prediction logic - in a real implementation, this would call a backend ML service
-      // For now, we'll generate predictions based on available data patterns
+      const result = await apiClient.runPredictiveAnalysis({
+        job_id: input.jobId!,  // Non-null assertion since we check !input.jobId above
+      });
 
-      const skillsArray = input.skills || [];
-      const hasHighDemandSkills = skillsArray.some((skill) =>
-        ["Python", "Cloud", "AI", "Machine Learning", "Data Science"].some(
-          (s) => skill.toLowerCase().includes(s.toLowerCase()),
-        ),
-      );
-
-      const contentLength = input.content?.length || 0;
-      const contentQualityScore = Math.min(
-        100,
-        Math.max(
-          40,
-          40 +
-            (contentLength > 1000 ? 30 : (contentLength / 1000) * 30) +
-            (skillsArray.length > 5 ? 20 : (skillsArray.length / 5) * 20) +
-            (input.classification ? 10 : 0),
-        ),
-      );
-
-      // Predict application volume based on content quality, skills demand, and classification
-      const baseVolume = 25;
-      const skillMultiplier = hasHighDemandSkills ? 1.8 : 1.2;
-      const qualityMultiplier = contentQualityScore / 100;
-      const predictedApplications = Math.round(
-        baseVolume * skillMultiplier * qualityMultiplier,
-      );
-
-      // Predict time to fill based on skills demand and classification
-      const baseDays = 45;
-      const skillFactor = hasHighDemandSkills ? 0.7 : 1.1;
-      const classificationFactor = input.classification?.startsWith("EX")
-        ? 1.3
-        : 1.0;
-      const predictedDays = Math.round(
-        baseDays * skillFactor * classificationFactor,
-      );
-
-      const result: PredictionResult = {
-        applicationVolume: {
-          predicted: predictedApplications,
-          confidence: 75 + Math.random() * 15,
-          range: {
-            low: Math.round(predictedApplications * 0.7),
-            high: Math.round(predictedApplications * 1.4),
-          },
-          factors: [
-            contentQualityScore > 70
-              ? "High-quality content"
-              : "Content quality could be improved",
-            hasHighDemandSkills
-              ? "In-demand skills listed"
-              : "Standard skill requirements",
-            input.location
-              ? "Clear location specified"
-              : "Location not specified",
-            `${skillsArray.length} skills listed`,
-          ],
-          trend:
-            predictedApplications > 40
-              ? "high"
-              : predictedApplications > 25
-                ? "medium"
-                : "low",
-        },
-        timeToFill: {
-          predictedDays,
-          confidence: 70 + Math.random() * 15,
-          range: {
-            low: Math.round(predictedDays * 0.8),
-            high: Math.round(predictedDays * 1.3),
-          },
-          factors: [
-            hasHighDemandSkills
-              ? "High demand skills may slow recruitment"
-              : "Standard skill demand",
-            input.classification?.startsWith("EX")
-              ? "Executive role requires longer search"
-              : "Standard classification level",
-            skillsArray.length > 10
-              ? "Many required skills may reduce pool"
-              : "Reasonable skill requirements",
-            input.location === "Remote" ||
-            input.location?.toLowerCase().includes("remote")
-              ? "Remote work expands candidate pool"
-              : "On-site position",
-          ],
-          category:
-            predictedDays < 35
-              ? "fast"
-              : predictedDays < 60
-                ? "average"
-                : "slow",
-        },
-        contentQuality: {
-          score: contentQualityScore,
-          strengths: [
-            contentLength > 1000 && "Comprehensive description",
-            skillsArray.length >= 5 && "Clear skill requirements",
-            input.classification && "Classification specified",
-            input.location && "Location clearly stated",
-          ].filter(Boolean) as string[],
-          improvements: [
-            contentLength < 800 && "Add more detailed responsibilities",
-            skillsArray.length < 5 && "List more specific required skills",
-            !input.location && "Specify work location",
-            !input.classification && "Add classification level",
-          ].filter(Boolean) as string[],
-        },
-        competitiveness: {
-          score: Math.round(60 + Math.random() * 30),
-          marketComparison: hasHighDemandSkills
-            ? "Above average - includes sought-after skills"
-            : "Average competitiveness for similar roles",
-          recommendations: [
-            "Highlight unique opportunities or growth potential",
-            "Consider emphasizing benefits and work culture",
-            hasHighDemandSkills
-              ? "Competitive salary recommended for in-demand skills"
-              : "Ensure salary is market-competitive",
-          ],
-        },
-        skillDemand: {
-          highDemand: skillsArray.filter((skill) =>
-            [
-              "Python",
-              "Cloud",
-              "AI",
-              "Machine Learning",
-              "Data Science",
-              "DevOps",
-              "Kubernetes",
-            ].some((s) => skill.toLowerCase().includes(s.toLowerCase())),
-          ),
-          lowDemand: skillsArray.filter(
-            (skill) =>
-              ![
-                "Python",
-                "Cloud",
-                "AI",
-                "Machine Learning",
-                "Data Science",
-                "DevOps",
-                "Kubernetes",
-              ].some((s) => skill.toLowerCase().includes(s.toLowerCase())),
-          ),
-          marketTrends: skillsArray.slice(0, 5).map((skill) => ({
-            skill,
-            trend: (["rising", "stable", "declining"] as const)[
-              Math.floor(Math.random() * 3)
-            ],
-          })),
-        },
-      };
-
-      setPrediction(result);
+      setPrediction(result.analysis);
       toast({
         title: "Analysis complete",
         description: "Predictions generated successfully",

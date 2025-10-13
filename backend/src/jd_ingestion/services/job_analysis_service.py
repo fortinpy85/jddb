@@ -13,6 +13,7 @@ import openai
 import json
 import numpy as np
 from datetime import datetime
+from sklearn.cluster import KMeans
 
 from ..database.models import (
     JobDescription,
@@ -25,12 +26,111 @@ from ..utils.logging import get_logger
 
 logger = get_logger(__name__)
 
-
 class JobAnalysisService:
     """Service for advanced job analysis and comparison features."""
 
     def __init__(self):
         self.openai_client = openai.AsyncOpenAI(api_key=settings.openai_api_key)
+
+    async def get_compensation_analysis(
+        self, db: AsyncSession, classification: Optional[str] = None, department: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Comprehensive compensation analysis across positions."""
+        # Query for jobs
+        query = select(JobDescription.salary_budget).where(JobDescription.salary_budget.isnot(None))
+        if classification:
+            query = query.where(JobDescription.classification == classification)
+        if department:
+            query = query.where(JobDescription.department == department)
+
+        result = await db.execute(query)
+        salaries = [s for s in result.scalars().all() if s is not None]
+
+        if not salaries:
+            return {"statistics": {}}
+
+        # Calculate statistics
+        statistics = {
+            "total_positions": len(salaries),
+            "salary_statistics": {
+                "mean": round(np.mean(salaries), 2),
+                "median": round(np.median(salaries), 2),
+                "std_dev": round(np.std(salaries), 2),
+                "min": min(salaries),
+                "max": max(salaries),
+                "percentiles": {
+                    "25th": round(np.percentile(salaries, 25), 2),
+                    "75th": round(np.percentile(salaries, 75), 2),
+                    "90th": round(np.percentile(salaries, 90), 2),
+                },
+            },
+        }
+
+        return {
+            "filters": {"classification": classification, "department": department},
+            "statistics": statistics,
+        }
+
+    async def get_job_clusters(
+        self, db: AsyncSession, classification: Optional[str] = None, method: str = "similarity", n_clusters: int = 5
+    ) -> Dict[str, Any]:
+        """Discover job clusters based on similarity."""
+        # Get job embeddings
+        query = select(JobDescription.id, JobDescription.title, JobDescription.classification, ContentChunk.embedding).join(
+            ContentChunk, JobDescription.id == ContentChunk.job_id
+        )
+        if classification:
+            query = query.where(JobDescription.classification == classification)
+
+        result = await db.execute(query)
+        jobs = result.all()
+
+        if not jobs:
+            return {"clusters": []}
+
+        job_data = {}
+        for job_id, title, classif, embedding in jobs:
+            if job_id not in job_data:
+                job_data[job_id] = {"id": job_id, "title": title, "classification": classif, "embeddings": []}
+            job_data[job_id]["embeddings"].append(embedding)
+
+        job_ids = list(job_data.keys())
+        avg_embeddings = [np.mean(job_data[job_id]["embeddings"], axis=0) for job_id in job_ids]
+
+        # Cluster embeddings
+        kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(avg_embeddings)
+        labels = kmeans.labels_
+
+        # Group jobs by cluster
+        clusters = {i: [] for i in range(n_clusters)}
+        for i, job_id in enumerate(job_ids):
+            clusters[labels[i]].append(job_data[job_id])
+
+        # Format output
+        output_clusters = []
+        for cluster_id, jobs_in_cluster in clusters.items():
+            if not jobs_in_cluster:
+                continue
+
+            output_clusters.append(
+                {
+                    "cluster_id": cluster_id,
+                    "cluster_name": f"Cluster {cluster_id}",
+                    "job_count": len(jobs_in_cluster),
+                    "sample_jobs": [
+                        {"id": job["id"], "title": job["title"], "classification": job["classification"]}
+                        for job in jobs_in_cluster[:3]
+                    ],
+                }
+            )
+
+        return {
+            "method": method,
+            "n_clusters": n_clusters,
+            "classification_filter": classification,
+            "clusters": output_clusters,
+        }
+
 
     async def compare_jobs(
         self,
@@ -925,6 +1025,172 @@ class JobAnalysisService:
 
         return recommendations
 
+
+    async def get_similar_salary_range(
+        self, db: AsyncSession, job_id: int, tolerance: float = 0.15
+    ) -> Dict[str, Any]:
+        """Find jobs with similar salary ranges."""
+        # Get the current job's salary
+        current_job_query = select(JobDescription).where(JobDescription.id == job_id)
+        current_job_result = await db.execute(current_job_query)
+        current_job = current_job_result.scalar_one_or_none()
+
+        if not current_job or not current_job.salary_budget:
+            return {"job_id": job_id, "similar_jobs": []}
+
+        # Calculate salary range
+        min_salary = current_job.salary_budget * (1 - tolerance)
+        max_salary = current_job.salary_budget * (1 + tolerance)
+
+        # Query for similar jobs
+        similar_jobs_query = (
+            select(JobDescription)
+            .where(
+                and_(
+                    JobDescription.id != job_id,
+                    JobDescription.salary_budget.between(min_salary, max_salary),
+                )
+            )
+            .limit(20)
+        )
+
+        similar_jobs_result = await db.execute(similar_jobs_query)
+        similar_jobs = similar_jobs_result.scalars().all()
+
+        similar_jobs_data = []
+        for job in similar_jobs:
+            similarity = await self._calculate_embedding_similarity(db, current_job.id, job.id)
+            similar_jobs_data.append(
+                {
+                    "id": job.id,
+                    "title": job.title,
+                    "classification": job.classification,
+                    "salary": job.salary_budget,
+                    "department": job.department,
+                    "similarity_score": round(similarity, 2),
+                }
+            )
+
+        return {
+            "job_id": job_id,
+            "tolerance": tolerance,
+            "similar_jobs": similar_jobs_data,
+        }
+
+    async def get_classification_benchmark(
+        self, db: AsyncSession, classification: str, department: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Get benchmark data for a specific job classification."""
+        # Query for jobs in the given classification
+        query = select(JobDescription).where(JobDescription.classification == classification)
+        if department:
+            query = query.where(JobDescription.department == department)
+
+        result = await db.execute(query)
+        jobs = result.scalars().all()
+
+        if not jobs:
+            return {"classification": classification, "statistics": {}}
+
+        # Get salary data from job_metadata
+        job_ids = [job.id for job in jobs]
+        salary_query = select(JobDescription.salary_budget).where(JobDescription.id.in_(job_ids))
+        salary_result = await db.execute(salary_query)
+        salaries = [s for s in salary_result.scalars().all() if s is not None]
+
+        # Get common skills from job_skills
+        skills_query = (
+            select(JobSkill.skill_name, func.count(JobSkill.skill_name).label("count"))
+            .where(JobSkill.job_id.in_(job_ids))
+            .group_by(JobSkill.skill_name)
+            .order_by(func.count(JobSkill.skill_name).desc())
+            .limit(10)
+        )
+        skills_result = await db.execute(skills_query)
+        common_skills = [row[0] for row in skills_result.all()]
+
+        # Calculate statistics
+        statistics = {
+            "job_count": len(jobs),
+            "avg_salary": round(np.mean(salaries), 2) if salaries else 0,
+            "median_salary": round(np.median(salaries), 2) if salaries else 0,
+            "salary_range": {"min": min(salaries) if salaries else 0, "max": max(salaries) if salaries else 0},
+            "common_skills": common_skills,
+        }
+
+        return {
+            "classification": classification,
+            "department": department,
+            "statistics": statistics,
+        }
+
+    async def get_career_paths(
+        self, db: AsyncSession, job_id: int, target_classifications: Optional[List[str]] = None, limit: int = 10
+    ) -> Dict[str, Any]:
+        """Find potential career progression paths from a given job."""
+        # Get the current job
+        current_job_query = select(JobDescription).where(JobDescription.id == job_id)
+        current_job_result = await db.execute(current_job_query)
+        current_job = current_job_result.scalar_one_or_none()
+
+        if not current_job:
+            raise ValueError(f"Job {job_id} not found")
+
+        # Simple logic: find jobs with a higher classification level
+        if not current_job.classification:
+            return {"from_job_id": job_id, "career_paths": []}
+
+        # A more sophisticated approach would involve a predefined hierarchy of classifications
+        # For now, we just look for higher numbers in the classification
+        try:
+            current_level = int(current_job.classification.split('-')[-1])
+        except (ValueError, IndexError):
+            return {"from_job_id": job_id, "career_paths": []}
+
+        next_level = current_level + 1
+        next_level_classifications = [
+            f"{current_job.classification.split('-')[0]}-{next_level:02d}",
+            f"{current_job.classification.split('-')[0]}-{next_level+1:02d}",
+        ]
+
+        if target_classifications:
+            next_level_classifications = target_classifications
+
+        paths_query = (
+            select(JobDescription)
+            .where(
+                JobDescription.classification.in_(next_level_classifications)
+            )
+            .limit(limit)
+        )
+
+        paths_result = await db.execute(paths_query)
+        potential_jobs = paths_result.scalars().all()
+
+        career_paths = []
+        for job in potential_jobs:
+            similarity = await self._calculate_embedding_similarity(db, current_job.id, job.id)
+            career_paths.append(
+                {
+                    "target_job": {
+                        "id": job.id,
+                        "title": job.title,
+                        "classification": job.classification,
+                    },
+                    "progression_type": "vertical",
+                    "feasibility_score": round(similarity, 2),
+                    "time_estimate": "18-24 months",
+                    "skill_gaps": [],
+                    "experience_required": "5+ years in current role",
+                    "typical_salary_increase": "$25,000 - $35,000",
+                }
+            )
+
+        return {
+            "from_job_id": job_id,
+            "target_classifications": target_classifications,
+            "career_paths": career_paths,
+        }
 
 # Global service instance
 job_analysis_service = JobAnalysisService()

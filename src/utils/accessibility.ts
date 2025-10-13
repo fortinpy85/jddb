@@ -4,6 +4,7 @@
  */
 
 import type React from "react";
+import { logger } from "@/utils/logger";
 
 /**
  * Initialize axe-core accessibility testing in development mode
@@ -56,16 +57,12 @@ export async function initializeAxe(
         ],
       });
 
-      console.log(
-        "%c[Accessibility] axe-core initialized successfully",
-        "color: #22c55e; font-weight: bold",
-      );
-      console.log(
-        "%c[Accessibility] Automated WCAG 2.0 audits will run after each render",
-        "color: #3b82f6",
-      );
+      logger.info("[Accessibility] axe-core initialized successfully");
+      logger.info("[Accessibility] Automated WCAG 2.0 audits will run after each render");
     } catch (error) {
-      console.warn("[Accessibility] Failed to initialize axe-core:", error);
+      logger.warn("[Accessibility] Failed to initialize axe-core:", {
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   }
 }
@@ -85,47 +82,40 @@ export async function runAccessibilityAudit() {
     const axe = await import("axe-core");
     const results = await axe.default.run();
 
-    console.group(
-      "%c[Accessibility Audit] Results",
-      "color: #8b5cf6; font-weight: bold; font-size: 14px",
-    );
-    console.log("Violations:", results.violations.length);
-    console.log("Passes:", results.passes.length);
-    console.log("Incomplete:", results.incomplete.length);
-    console.log("Inapplicable:", results.inapplicable.length);
+    logger.info("[Accessibility Audit] Results", {
+      violations: results.violations.length,
+      passes: results.passes.length,
+      incomplete: results.incomplete.length,
+      inapplicable: results.inapplicable.length,
+    });
 
     if (results.violations.length > 0) {
-      console.group("❌ Violations");
       results.violations.forEach((violation) => {
-        console.group(
-          `%c${violation.impact?.toUpperCase()} - ${violation.help}`,
-          `color: ${violation.impact === "critical" || violation.impact === "serious" ? "#ef4444" : "#f59e0b"}; font-weight: bold`,
-        );
-        console.log("Description:", violation.description);
-        console.log("Help URL:", violation.helpUrl);
-        console.log("Affected nodes:", violation.nodes.length);
-        violation.nodes.forEach((node, index) => {
-          console.log(`  ${index + 1}.`, node.html);
-          console.log("     Fix:", node.failureSummary);
+        logger.error(`${violation.impact?.toUpperCase()} - ${violation.help}`, {
+          description: violation.description,
+          helpUrl: violation.helpUrl,
+          affectedNodes: violation.nodes.length,
+          nodes: violation.nodes.map((node, index) => ({
+            index: index + 1,
+            html: node.html,
+            fix: node.failureSummary,
+          })),
         });
-        console.groupEnd();
       });
-      console.groupEnd();
     }
 
     if (results.incomplete.length > 0) {
-      console.group("⚠️  Incomplete Checks");
-      results.incomplete.forEach((item) => {
-        console.log(`${item.help} - ${item.description}`);
+      logger.warn("Incomplete accessibility checks", {
+        items: results.incomplete.map((item) => ({
+          help: item.help,
+          description: item.description,
+        })),
       });
-      console.groupEnd();
     }
-
-    console.groupEnd();
 
     return results;
   } catch (error) {
-    console.error("[Accessibility] Audit failed:", error);
+    logger.error("[Accessibility] Audit failed:", error);
     return null;
   }
 }
@@ -174,43 +164,34 @@ export async function exportAccessibilityReport() {
 
   const score = await getAccessibilityScore();
 
-  console.group(
-    "%c📊 Accessibility Report",
-    "color: #06b6d4; font-weight: bold; font-size: 16px",
-  );
-  console.log(`Score: ${score}/100`);
-  console.log(
-    `Total Rules Checked: ${results.passes.length + results.violations.length}`,
-  );
-  console.log(
-    `WCAG 2.0 Level: ${results.violations.some((v) => v.impact === "critical" || v.impact === "serious") ? "❌ FAIL" : "✅ PASS"}`,
-  );
-  console.log("\nSummary:");
-  console.log(`  ✅ Passes: ${results.passes.length}`);
-  console.log(`  ❌ Violations: ${results.violations.length}`);
-  console.log(`  ⚠️  Incomplete: ${results.incomplete.length}`);
-  console.log(`  ℹ️  Inapplicable: ${results.inapplicable.length}`);
+  const byImpact = {
+    critical: results.violations.filter((v) => v.impact === "critical"),
+    serious: results.violations.filter((v) => v.impact === "serious"),
+    moderate: results.violations.filter((v) => v.impact === "moderate"),
+    minor: results.violations.filter((v) => v.impact === "minor"),
+  };
 
-  if (results.violations.length > 0) {
-    console.log("\nTop Issues by Impact:");
-    const byImpact = {
-      critical: results.violations.filter((v) => v.impact === "critical"),
-      serious: results.violations.filter((v) => v.impact === "serious"),
-      moderate: results.violations.filter((v) => v.impact === "moderate"),
-      minor: results.violations.filter((v) => v.impact === "minor"),
-    };
+  const wcagPass = !results.violations.some(
+    (v) => v.impact === "critical" || v.impact === "serious",
+  );
 
-    if (byImpact.critical.length > 0)
-      console.log(`  🔴 Critical: ${byImpact.critical.length}`);
-    if (byImpact.serious.length > 0)
-      console.log(`  🟠 Serious: ${byImpact.serious.length}`);
-    if (byImpact.moderate.length > 0)
-      console.log(`  🟡 Moderate: ${byImpact.moderate.length}`);
-    if (byImpact.minor.length > 0)
-      console.log(`  🟢 Minor: ${byImpact.minor.length}`);
-  }
-
-  console.groupEnd();
+  logger.info("📊 Accessibility Report", {
+    score: `${score}/100`,
+    totalRulesChecked: results.passes.length + results.violations.length,
+    wcag2Level: wcagPass ? "PASS" : "FAIL",
+    summary: {
+      passes: results.passes.length,
+      violations: results.violations.length,
+      incomplete: results.incomplete.length,
+      inapplicable: results.inapplicable.length,
+    },
+    topIssuesByImpact: {
+      critical: byImpact.critical.length,
+      serious: byImpact.serious.length,
+      moderate: byImpact.moderate.length,
+      minor: byImpact.minor.length,
+    },
+  });
 
   return {
     score,
@@ -231,11 +212,11 @@ if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
     report: exportAccessibilityReport,
   };
 
-  console.log(
-    "%c[Accessibility] Global utilities available:",
-    "color: #8b5cf6; font-weight: bold",
-  );
-  console.log("  window.a11y.audit()  - Run accessibility audit");
-  console.log("  window.a11y.score()  - Get accessibility score");
-  console.log("  window.a11y.report() - Export detailed report");
+  logger.info("[Accessibility] Global utilities available", {
+    methods: [
+      "window.a11y.audit()  - Run accessibility audit",
+      "window.a11y.score()  - Get accessibility score",
+      "window.a11y.report() - Export detailed report",
+    ],
+  });
 }

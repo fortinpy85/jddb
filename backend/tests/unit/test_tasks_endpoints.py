@@ -83,25 +83,29 @@ class TestUploadAndProcessEndpoint:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tmp_file:
             tmp_file.write(test_content)
             tmp_file.flush()
+            tmp_file_path = tmp_file.name
 
+        try:
+            with patch("builtins.open", mock_open()) as _mock_file:
+                with patch("pathlib.Path.mkdir"):
+                    with open(tmp_file_path, "rb") as file:
+                        response = client.post(
+                            "/api/tasks/upload",
+                            files={"file": ("test.txt", file, "text/plain")},
+                            params={"generate_embeddings": True},
+                        )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "accepted"
+            assert data["task_id"] == "upload-task-123"
+            assert data["filename"] == "test.txt"
+
+        finally:
             try:
-                with patch("builtins.open", mock_open()) as _mock_file:
-                    with patch("pathlib.Path.mkdir"):
-                        with open(tmp_file.name, "rb") as file:
-                            response = client.post(
-                                "/api/tasks/upload",
-                                files={"file": ("test.txt", file, "text/plain")},
-                                params={"generate_embeddings": True},
-                            )
-
-                assert response.status_code == 200
-                data = response.json()
-                assert data["status"] == "accepted"
-                assert data["task_id"] == "upload-task-123"
-                assert data["filename"] == "test.txt"
-
-            finally:
-                os.unlink(tmp_file.name)
+                os.unlink(tmp_file_path)
+            except (PermissionError, OSError):
+                pass  # Ignore file locking issues on Windows
 
     def test_upload_file_no_filename(self, client):
         """Test upload with no filename."""
@@ -121,19 +125,23 @@ class TestUploadAndProcessEndpoint:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".xyz") as tmp_file:
             tmp_file.write(test_content)
             tmp_file.flush()
+            tmp_file_path = tmp_file.name
 
+        try:
+            with open(tmp_file_path, "rb") as file:
+                response = client.post(
+                    "/api/tasks/upload",
+                    files={"file": ("test.xyz", file, "application/octet-stream")},
+                )
+
+            assert response.status_code == 400
+            assert "Unsupported file extension" in response.json()["detail"]
+
+        finally:
             try:
-                with open(tmp_file.name, "rb") as file:
-                    response = client.post(
-                        "/api/tasks/upload",
-                        files={"file": ("test.xyz", file, "application/octet-stream")},
-                    )
-
-                assert response.status_code == 400
-                assert "Unsupported file extension" in response.json()["detail"]
-
-            finally:
-                os.unlink(tmp_file.name)
+                os.unlink(tmp_file_path)
+            except (PermissionError, OSError):
+                pass  # Ignore file locking issues on Windows
 
     @patch("jd_ingestion.api.endpoints.tasks.settings")
     def test_upload_file_too_large(self, mock_settings, client):
@@ -147,21 +155,25 @@ class TestUploadAndProcessEndpoint:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tmp_file:
             tmp_file.write(large_content)
             tmp_file.flush()
+            tmp_file_path = tmp_file.name
 
+        try:
+            # Mock the UploadFile to have a size attribute
+            with patch("fastapi.UploadFile") as _mock_upload_file:
+                mock_file = Mock()
+                mock_file.filename = "large.txt"
+                mock_file.size = 2 * 1024 * 1024  # 2MB
+                mock_file.read = AsyncMock(return_value=large_content)
+
+                # This would typically be handled by FastAPI's validation
+                # In actual usage, the file size check happens before our endpoint
+                pass
+
+        finally:
             try:
-                # Mock the UploadFile to have a size attribute
-                with patch("fastapi.UploadFile") as _mock_upload_file:
-                    mock_file = Mock()
-                    mock_file.filename = "large.txt"
-                    mock_file.size = 2 * 1024 * 1024  # 2MB
-                    mock_file.read = AsyncMock(return_value=large_content)
-
-                    # This would typically be handled by FastAPI's validation
-                    # In actual usage, the file size check happens before our endpoint
-                    pass
-
-            finally:
-                os.unlink(tmp_file.name)
+                os.unlink(tmp_file_path)
+            except (PermissionError, OSError):
+                pass  # Ignore file locking issues on Windows
 
 
 class TestBatchProcessEndpoint:
@@ -612,18 +624,22 @@ class TestTaskEndpointsIntegration:
                         ) as tmp_file:
                             tmp_file.write(test_content)
                             tmp_file.flush()
+                            tmp_file_path = tmp_file.name
 
+                        try:
+                            with open(tmp_file_path, "rb") as file:
+                                response = client.post(
+                                    "/api/tasks/upload",
+                                    files={
+                                        "file": ("test.txt", file, "text/plain")
+                                    },
+                                )
+                            assert response.status_code == 200
+                        finally:
                             try:
-                                with open(tmp_file.name, "rb") as file:
-                                    response = client.post(
-                                        "/api/tasks/upload",
-                                        files={
-                                            "file": ("test.txt", file, "text/plain")
-                                        },
-                                    )
-                                assert response.status_code == 200
-                            finally:
-                                os.unlink(tmp_file.name)
+                                os.unlink(tmp_file_path)
+                            except (PermissionError, OSError):
+                                pass  # Ignore file locking issues on Windows
 
     def test_task_endpoint_error_logging(self, client):
         """Test that task endpoints properly log errors."""

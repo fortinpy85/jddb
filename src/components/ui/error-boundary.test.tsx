@@ -1,11 +1,4 @@
-import {
-  jest,
-  describe,
-  beforeEach,
-  it,
-  expect,
-  afterEach,
-} from "@jest/globals";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
@@ -17,13 +10,15 @@ const ErrorComponent = () => {
 };
 
 describe("ErrorBoundary", () => {
-  // Suppress console.error output from jsdom
+  let consoleErrorSpy: any;
+
+  // Suppress console.error output
   beforeEach(() => {
-    jest.spyOn(console, "error").mockImplementation(() => {});
+    consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    consoleErrorSpy?.mockRestore();
   });
 
   it("renders children when there is no error", () => {
@@ -57,7 +52,7 @@ describe("ErrorBoundary", () => {
   });
 
   it("calls onError callback when an error is caught", () => {
-    const onError = jest.fn();
+    const onError = vi.fn(() => {});
     render(
       <ErrorBoundary onError={onError}>
         <ErrorComponent />
@@ -76,7 +71,7 @@ describe("ErrorBoundary", () => {
 
     expect(screen.getByText("Technical Details")).toBeInTheDocument();
     fireEvent.click(screen.getByText("Technical Details"));
-    expect(screen.getByText(/Test Error/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Test Error/)[0]).toBeInTheDocument();
   });
 
   it("resets the error state when resetKeys prop changes", () => {
@@ -88,55 +83,74 @@ describe("ErrorBoundary", () => {
 
     expect(screen.getByText("Oops! Something went wrong")).toBeInTheDocument();
 
+    // When resetKeys change, error resets but children component needs to NOT throw
     rerender(
       <ErrorBoundary resetKeys={["key2"]}>
-        <ErrorComponent />
+        <div>Recovered Children</div>
       </ErrorBoundary>,
     );
 
     expect(
       screen.queryByText("Oops! Something went wrong"),
-    ).not.toBeInTheDocument();
+    ).toBeNull();
+    expect(screen.getByText("Recovered Children")).toBeInTheDocument();
   });
 
   it("calls handleRetry, handleReload, and handleGoHome", () => {
-    render(
+    // Mock window.location.reload and window.location.href
+    const reload = vi.fn(() => {});
+    Object.defineProperty(window, "location", {
+      value: {
+        reload,
+        href: "/home",
+      },
+      writable: true,
+    });
+
+    // Test handleRetry - clicking Try Again should reset error boundary
+    let shouldThrow = true;
+    const ConditionalErrorComponent = () => {
+      if (shouldThrow) {
+        throw new Error("Test Error");
+      }
+      return <div>Recovered Content</div>;
+    };
+
+    const { rerender } = render(
       <ErrorBoundary>
-        <ErrorComponent />
+        <ConditionalErrorComponent />
       </ErrorBoundary>,
     );
 
     const retryButton = screen.getByRole("button", { name: "Try Again" });
-    const reloadButton = screen.getByRole("button", { name: "Reload Page" });
-    const goHomeButton = screen.getByRole("button", { name: "Go Home" });
 
-    // Mock window.location.reload and window.location.href
-    const reload = jest.fn();
-    const goHome = jest.fn();
-    Object.defineProperty(window, "location", {
-      value: {
-        reload,
-        href: "",
-      },
-      writable: true,
-    });
-    window.location.reload = reload;
-    window.location.href = "/home";
-
+    // Stop throwing and click retry
+    shouldThrow = false;
     fireEvent.click(retryButton);
-    expect(
-      screen.queryByText("Oops! Something went wrong"),
-    ).not.toBeInTheDocument();
 
+    // Force re-render to trigger the recovered component
+    rerender(
+      <ErrorBoundary>
+        <ConditionalErrorComponent />
+      </ErrorBoundary>,
+    );
+
+    expect(screen.queryByText("Oops! Something went wrong")).toBeNull();
+    expect(screen.getByText("Recovered Content")).toBeInTheDocument();
+
+    // Test handleReload - clicking Reload Page should call window.location.reload
     render(
       <ErrorBoundary>
         <ErrorComponent />
       </ErrorBoundary>,
     );
 
+    const reloadButton = screen.getByRole("button", { name: "Reload Page" });
     fireEvent.click(reloadButton);
     expect(reload).toHaveBeenCalledTimes(1);
 
+    // Test handleGoHome - clicking Go Home should navigate to "/"
+    const goHomeButton = screen.getByRole("button", { name: "Go Home" });
     fireEvent.click(goHomeButton);
     expect(window.location.href).toBe("/");
   });

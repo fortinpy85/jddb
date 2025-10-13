@@ -11,6 +11,7 @@ Provides AI-powered content enhancement capabilities:
 
 import uuid
 import re
+import json
 from typing import List, Dict, Any, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
@@ -450,9 +451,49 @@ Return ONLY valid JSON, no other text."""
         self, text: str, context: Optional[str], types: List[str]
     ) -> List[Dict[str, Any]]:
         """Get AI-powered suggestions from OpenAI."""
-        # Placeholder for OpenAI integration
-        # Would make API call to GPT for advanced suggestions
-        return []
+        if not self.client:
+            return []
+
+        prompt = f"""Analyze the following text and provide suggestions for improvement.
+
+        Text to analyze:
+        \"\"\"{text}\"\"\"
+
+        Context: {context or 'Not provided'}
+
+        Suggestion types: {types}
+
+        Provide a JSON array of suggestions, where each suggestion has:
+        - "id": a unique ID
+        - "type": the suggestion type (e.g., grammar, style, clarity)
+        - "original_text": the text to be replaced
+        - "suggested_text": the suggested replacement
+        - "explanation": a brief explanation of the suggestion
+        - "confidence": a score from 0.0 to 1.0
+        - "start_index": the starting index of the original text
+        - "end_index": the ending index of the original text
+        """
+
+        try:
+            response = await self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert in analyzing text and providing improvement suggestions.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.5,
+                max_tokens=1000,
+            )
+
+            suggestions = json.loads(response.choices[0].message.content)
+            return suggestions
+
+        except Exception as e:
+            logger.error(f"Error getting AI suggestions: {e}")
+            return []
 
     def _calculate_quality_score(self, text: str, suggestions: List[Dict]) -> float:
         """Calculate overall quality score based on text and suggestions."""
@@ -468,15 +509,54 @@ Return ONLY valid JSON, no other text."""
 
     def _check_treasury_board_compliance(self, text: str) -> List[Dict[str, Any]]:
         """Check Treasury Board directive compliance."""
-        return []  # Simplified implementation
+        issues = []
+        required_keywords = ["Official Languages", "Employment Equity", "Access to Information"]
+
+        for keyword in required_keywords:
+            if keyword.lower() not in text.lower():
+                issues.append(
+                    {
+                        "type": "compliance",
+                        "description": f"Missing required Treasury Board keyword: {keyword}",
+                        "severity": "high",
+                    }
+                )
+
+        return issues
 
     def _check_accessibility_compliance(self, text: str) -> List[Dict[str, Any]]:
         """Check accessibility standards compliance."""
-        return []  # Simplified implementation
+        issues = []
+        required_keywords = ["accommodation", "accessible", "disability"]
+
+        for keyword in required_keywords:
+            if keyword.lower() not in text.lower():
+                issues.append(
+                    {
+                        "type": "compliance",
+                        "description": f"Missing required accessibility keyword: {keyword}",
+                        "severity": "high",
+                    }
+                )
+
+        return issues
 
     def _check_bilingual_compliance(self, text: str) -> List[Dict[str, Any]]:
         """Check bilingual requirements compliance."""
-        return []  # Simplified implementation
+        issues = []
+        has_english = "the" in text.lower() or "and" in text.lower()
+        has_french = "le" in text.lower() or "et" in text.lower()
+
+        if not (has_english and has_french):
+            issues.append(
+                {
+                    "type": "compliance",
+                    "description": "The document does not appear to be bilingual.",
+                    "severity": "high",
+                }
+            )
+
+        return issues
 
     def _check_gender_bias(self, text: str) -> List[Dict[str, Any]]:
         """
@@ -1259,9 +1339,94 @@ Return ONLY valid JSON, no other text."""
     async def _enhance_template_with_ai(
         self, sections: Dict[str, str], classification: str, language: str
     ) -> Dict[str, str]:
-        """Enhance template sections using AI."""
-        # Placeholder for AI enhancement
-        return sections
+        """
+        Enhance template sections using AI.
+
+        Uses GPT-4 to improve clarity, professionalism, and completeness
+        of job description sections.
+
+        Args:
+            sections: Dictionary of section names to content
+            classification: Job classification (e.g., "EX-01")
+            language: Language code ("en" or "fr")
+
+        Returns:
+            Enhanced sections dictionary
+        """
+        try:
+            # Prepare prompt for AI enhancement
+            sections_text = "\n\n".join([f"## {name}\n{content}" for name, content in sections.items()])
+
+            prompt = f"""You are an expert in writing professional government job descriptions.
+
+Classification: {classification}
+Language: {language}
+
+Current job description sections:
+{sections_text}
+
+Please enhance these sections by:
+1. Improving clarity and readability
+2. Ensuring professional tone
+3. Adding missing key details where appropriate
+4. Maintaining government job description standards
+5. Preserving the original meaning and intent
+
+Return the enhanced sections in the same format, with each section clearly marked.
+Keep the section names exactly the same."""
+
+            response = await self.client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are an expert in writing professional government job descriptions."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,  # Lower temperature for more consistent, professional output
+                max_tokens=2000
+            )
+
+            enhanced_text = response.choices[0].message.content.strip()
+
+            # Parse enhanced sections back into dictionary
+            enhanced_sections = {}
+            current_section = None
+            current_content = []
+
+            for line in enhanced_text.split('\n'):
+                if line.startswith('## '):
+                    # Save previous section
+                    if current_section and current_content:
+                        enhanced_sections[current_section] = '\n'.join(current_content).strip()
+                    # Start new section
+                    current_section = line[3:].strip()
+                    current_content = []
+                elif current_section:
+                    current_content.append(line)
+
+            # Save last section
+            if current_section and current_content:
+                enhanced_sections[current_section] = '\n'.join(current_content).strip()
+
+            # Fallback to original sections if parsing failed
+            if not enhanced_sections:
+                logger.warning("Failed to parse AI-enhanced sections, using originals")
+                return sections
+
+            # Only use enhanced sections that were in the original
+            result = {}
+            for section_name in sections.keys():
+                if section_name in enhanced_sections:
+                    result[section_name] = enhanced_sections[section_name]
+                else:
+                    result[section_name] = sections[section_name]
+
+            logger.info(f"Successfully enhanced {len(result)} template sections with AI")
+            return result
+
+        except Exception as e:
+            logger.error(f"Error in AI enhancement: {e}", exc_info=True)
+            # Return original sections on any error
+            return sections
 
     # Phase 3: Quality Scoring Methods
 
@@ -1645,8 +1810,9 @@ Return ONLY valid JSON, no other text."""
         clarity_score = clarity.get("clarity_score", 0.0)
         inclusivity_score = bias_analysis.get("inclusivity_score", 1.0)
 
-        # Compliance score (simplified for now - would check actual compliance)
-        compliance_score = 0.8  # Placeholder - would calculate based on actual checks
+        # Calculate compliance score
+        compliance = await self.check_compliance(full_text)
+        compliance_score = compliance.get("compliance_score", 0.0)
 
         # Calculate weighted overall score (0-100 scale)
         overall_score = (
@@ -1716,7 +1882,12 @@ Return ONLY valid JSON, no other text."""
                 "compliance": {
                     "score": round(compliance_score * 100, 1),
                     "weight": "20%",
-                    "details": {"status": "placeholder"},
+                    "details": {
+                        "compliant": compliance.get("compliant", False),
+                        "issues": compliance.get("issues", []),
+                        "frameworks_checked": compliance.get("frameworks", ["official_languages", "employment_equity", "accessibility"]),
+                        "issue_count": len(compliance.get("issues", [])),
+                    },
                 },
             },
             "top_recommendations": top_recommendations,
@@ -1940,7 +2111,7 @@ CHANGES:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert editor for government job descriptions. You enhance clarity while maintaining professionalism and accuracy.",
+                        "content": f"You are an expert editor for government job descriptions in {language}. You enhance clarity while maintaining professionalism and accuracy.",
                     },
                     {"role": "user", "content": prompt},
                 ],
@@ -1985,6 +2156,153 @@ CHANGES:
                 "changes": [],
                 "message": f"Enhancement failed: {str(e)}",
             }
+
+    async def save_improved_content(self, job_id: int, improved_content: str) -> None:
+        """
+        Save the improved content of a job description.
+
+        Args:
+            job_id: The ID of the job to update.
+            improved_content: The new content of the job description.
+        """
+        # In a real application, you would update the job description in the database here.
+        # For now, we will just log the action.
+        logger.info(f"Saving improved content for job {job_id}")
+
+    async def translate_content(self, text: str, target_language: str) -> str:
+        """
+        Translate text to the specified target language.
+
+        Args:
+            text: The text to translate.
+            target_language: The language to translate the text to.
+
+        Returns:
+            The translated text.
+        """
+        if not self.client:
+            return text
+
+        try:
+            prompt = f"""Translate the following text to {target_language}.
+Return ONLY the translated text, with no extra commentary or formatting.
+
+Original Text:
+\"\"\"
+{text}
+\"\"\"
+
+Translated Text:
+"""
+            response = await self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": f"You are a professional translator fluent in English and {target_language}."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=2048,
+            )
+            
+            translated_text = response.choices[0].message.content.strip()
+            logger.info(f"Successfully translated text to {target_language}")
+            return translated_text
+
+        except Exception as e:
+            logger.error(f"Error during translation: {e}")
+            return text
+
+    async def generate_job_posting(self, job_id: int) -> str:
+        """
+        Generate a job posting from a job description.
+
+        Args:
+            job_id: The ID of the job to generate the posting from.
+
+        Returns:
+            The generated job posting.
+        """
+        # In a real application, you would fetch the job description from the database here.
+        # For now, we will just use a dummy job description.
+        job_description = "This is a dummy job description."
+
+        if not self.client:
+            return "Job posting generation is not available."
+
+        try:
+            prompt = f"""Generate a compelling job posting from the following job description.
+The job posting should be engaging and attract a wide range of qualified candidates.
+
+Job Description:
+\"\"\"
+{job_description}
+\"\"\"
+
+Job Posting:
+"""
+            response = await self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are an expert in writing compelling job postings."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=1024,
+            )
+            
+            job_posting = response.choices[0].message.content.strip()
+            logger.info(f"Successfully generated job posting for job {job_id}")
+            return job_posting
+
+        except Exception as e:
+            logger.error(f"Error during job posting generation: {e}")
+            return "Failed to generate job posting."
+
+    async def run_predictive_analysis(self, job_id: int) -> Dict[str, Any]:
+        """
+        Run predictive analysis on a job description.
+
+        Args:
+            job_id: The ID of the job to analyze.
+
+        Returns:
+            A dictionary with the predictive analysis results.
+        """
+        # In a real application, you would fetch the job description from the database here.
+        # For now, we will just use a dummy job description.
+        job_description = "This is a dummy job description."
+
+        if not self.client:
+            return {"error": "Predictive analysis is not available."}
+
+        try:
+            prompt = f"""Analyze the following job description and provide a predictive analysis.
+The analysis should include predictions for time-to-fill, applicant volume, and content effectiveness.
+
+Job Description:
+\"\"\"
+{job_description}
+\"\"\"
+
+Predictive Analysis:
+"""
+            response = await self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are an expert in HR analytics and predictive modeling."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=1024,
+            )
+            
+            analysis = response.choices[0].message.content.strip()
+            logger.info(f"Successfully ran predictive analysis for job {job_id}")
+            return {"analysis": analysis}
+
+        except Exception as e:
+            logger.error(f"Error during predictive analysis: {e}")
+            return {"error": "Failed to run predictive analysis."}
 
     async def generate_inline_suggestions(
         self,

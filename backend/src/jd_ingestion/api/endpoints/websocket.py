@@ -142,6 +142,38 @@ class ConnectionManager:
         for connection in disconnected:
             self.disconnect(connection)
 
+    def _apply_insert_operation(self, document: str, operation: dict) -> str:
+        """Apply an insert operation to a document."""
+        position = operation.get("position", 0)
+        text = operation.get("text", "")
+
+        # Validate position
+        if position < 0 or position > len(document):
+            return document  # Invalid position, no change
+
+        # Empty text insertion
+        if not text:
+            return document
+
+        # Insert text at position
+        return document[:position] + text + document[position:]
+
+    def _apply_delete_operation(self, document: str, operation: dict) -> str:
+        """Apply a delete operation to a document."""
+        start = operation.get("start", 0)
+        end = operation.get("end", 0)
+
+        # Validate range
+        if start < 0 or end < 0 or start >= end or start >= len(document):
+            return document  # Invalid range, no change
+
+        # Out of bounds check
+        if end > len(document):
+            return document  # No change
+
+        # Delete text from start to end
+        return document[:start] + document[end:]
+
     async def apply_operation(
         self, session_id: str, operation: dict, websocket: WebSocket
     ):

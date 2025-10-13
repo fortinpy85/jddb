@@ -87,86 +87,28 @@ def test_session():
     # Use in-memory database for sync tests
     from sqlalchemy import (
         create_engine,
-        Column,
-        Integer,
-        String,
-        Text,
-        DateTime,
-        Float,
-        ForeignKey,
     )
-    from sqlalchemy.orm import sessionmaker, relationship
-    from sqlalchemy.orm import declarative_base
+    from sqlalchemy.orm import sessionmaker
     from sqlalchemy.pool import StaticPool
-    import datetime
 
-    # Create a completely isolated test database with only required tables
-    TestBase = declarative_base()
-
-    class TestJobDescription(TestBase):
-        __tablename__ = "job_descriptions"
-
-        id = Column(Integer, primary_key=True)
-        job_number = Column(String(50), unique=True, nullable=False)
-        title = Column(String(255), nullable=False)
-        classification = Column(String(10), nullable=False)
-        language = Column(String(2), nullable=False)
-        file_path = Column(Text, nullable=False)
-        raw_content = Column(Text, nullable=False)
-        processed_date = Column(DateTime)
-        file_hash = Column(String(64))
-        created_at = Column(DateTime, default=datetime.datetime.utcnow)
-        updated_at = Column(
-            DateTime,
-            default=datetime.datetime.utcnow,
-            onupdate=datetime.datetime.utcnow,
-        )
-
-        # Add relationships for test compatibility
-        sections = relationship("TestJobSection", back_populates="job")
-        job_metadata = relationship(
-            "TestJobMetadata", back_populates="job", uselist=False
-        )
-
-    class TestJobSection(TestBase):
-        __tablename__ = "job_sections"
-
-        id = Column(Integer, primary_key=True)
-        job_id = Column(Integer, ForeignKey("job_descriptions.id"), nullable=False)
-        section_type = Column(String(100), nullable=False)
-        section_content = Column(Text, nullable=False)
-        section_order = Column(Integer, nullable=False)
-        created_at = Column(DateTime, default=datetime.datetime.utcnow)
-
-        job = relationship("TestJobDescription", back_populates="sections")
-
-    class TestJobMetadata(TestBase):
-        __tablename__ = "job_metadata"
-
-        id = Column(Integer, primary_key=True)
-        job_id = Column(Integer, ForeignKey("job_descriptions.id"), nullable=False)
-        reports_to = Column(String(500))
-        department = Column(String(200))
-        location = Column(String(200))
-        fte_count = Column(Integer)
-        salary_budget = Column(Float)
-        effective_date = Column(DateTime)
-        created_at = Column(DateTime, default=datetime.datetime.utcnow)
-
-        job = relationship("TestJobDescription", back_populates="job_metadata")
-
+    # Use the actual Base from models to include all tables
     sync_engine = create_engine(
         "sqlite:///:memory:",
         echo=False,
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    TestBase.metadata.create_all(sync_engine)
+
+    # Create all tables using the actual Base metadata (includes data_quality_metrics)
+    Base.metadata.create_all(sync_engine)
 
     Session = sessionmaker(bind=sync_engine)
     test_session = Session()
 
-    yield test_session, TestJobDescription, TestJobSection, TestJobMetadata
+    # Import actual models instead of creating test-specific ones
+    from jd_ingestion.database.models import JobDescription, JobSection, JobMetadata
+
+    yield test_session, JobDescription, JobSection, JobMetadata
 
     test_session.close()
 
@@ -174,21 +116,9 @@ def test_session():
 @pytest.fixture
 def test_client(test_session):
     """Create test client with database override for sync tests."""
-    session, TestJobDescription, TestJobSection, TestJobMetadata = test_session
+    session, JobDescription, JobSection, JobMetadata = test_session
 
-    # Mock the database models for testing - preserve original Base to avoid affecting other models
-    import jd_ingestion.database.models as models
-
-    original_models = {
-        "JobDescription": models.JobDescription,
-        "JobSection": models.JobSection,
-        "JobMetadata": models.JobMetadata,
-    }
-
-    # Temporarily replace the models with test models
-    models.JobDescription = TestJobDescription
-    models.JobSection = TestJobSection
-    models.JobMetadata = TestJobMetadata
+    # No need to mock models - we're using the real ones now
 
     # Enhanced async wrapper for the sync session
     class AsyncSessionWrapper:
@@ -251,10 +181,7 @@ def test_client(test_session):
     with TestClient(app) as client:
         yield client
 
-    # Restore original models and functions
-    for name, model in original_models.items():
-        setattr(models, name, model)
-
+    # Restore original configure_mappers function
     connection.configure_mappers = original_configure_mappers
     app.dependency_overrides.clear()
 

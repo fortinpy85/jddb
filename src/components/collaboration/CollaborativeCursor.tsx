@@ -10,6 +10,8 @@
 "use client";
 
 import React from "react";
+import "./CollaborativeCursor.css";
+import { logger } from "@/utils/logger";
 
 export interface CursorPosition {
   userId: number;
@@ -66,7 +68,7 @@ function getPixelPositionFromCharPosition(
 
     return { top, left };
   } catch (error) {
-    console.error("Error calculating cursor position:", error);
+    logger.error("Error calculating cursor position:", error);
     return null;
   }
 }
@@ -101,28 +103,25 @@ export const CollaborativeCursor: React.FC<CollaborativeCursorProps> = ({
         return (
           <div
             key={cursor.userId}
-            className="absolute transition-all duration-200"
-            style={{
-              top: `${position.top}px`,
-              left: `${position.left}px`,
-            }}
+            className="collaborative-cursor absolute transition-all duration-200"
+            data-top={position.top}
+            data-left={position.left}
           >
-            {/* Cursor line */}
             <div
-              className="w-0.5 h-6 animate-pulse"
-              style={{ backgroundColor: color }}
+              className={`collaborative-cursor-line w-0.5 h-6 animate-pulse`}
+              data-color={color}
             />
 
             {/* Username label */}
             <div
-              className="absolute top-0 left-1 text-xs px-2 py-0.5 rounded whitespace-nowrap font-medium text-white shadow-lg"
-              style={{ backgroundColor: color }}
+              className={`collaborative-cursor-label absolute top-0 left-1 text-xs px-2 py-0.5 rounded whitespace-nowrap font-medium text-white shadow-lg`}
+              data-color={color}
             >
               {username}
             </div>
-          </div>
-        );
-      })}
+            </div>
+          );
+        })}
     </div>
   );
 };

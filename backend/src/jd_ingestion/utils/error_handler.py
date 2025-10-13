@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Type, TypeVar
 
 from fastapi import Request
+from fastapi.exceptions import HTTPException
 from sqlalchemy.exc import (
     DisconnectionError,
     IntegrityError,
@@ -249,6 +250,9 @@ class ErrorHandler:
             logger.info(f"Starting operation: {operation_name}", **operation_context)
             yield
             logger.info(f"Operation completed successfully: {operation_name}")
+        except HTTPException:
+            # Re-raise HTTPExceptions without modification
+            raise
         except Exception as e:
             logger.error(f"Operation failed: {operation_name}", error=str(e))
             if raise_on_error:
@@ -281,6 +285,9 @@ class ErrorHandler:
             logger.info(f"Starting operation: {operation_name}", **operation_context)
             yield
             logger.info(f"Operation completed successfully: {operation_name}")
+        except HTTPException:
+            # Re-raise HTTPExceptions without modification
+            raise
         except Exception as e:
             logger.error(f"Operation failed: {operation_name}", error=str(e))
             if raise_on_error:

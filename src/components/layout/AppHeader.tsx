@@ -281,29 +281,30 @@ export function AppHeader({
 
                   // Get translated label and description
                   const label = item.labelKey.startsWith("navigation.")
-                    ? t(item.labelKey.replace("navigation.", ""))
+                    ? (t as any)(item.labelKey.replace("navigation.", ""))
                     : item.labelKey;
                   const description = item.descriptionKey?.startsWith(
                     "navigation.",
                   )
-                    ? t(item.descriptionKey.replace("navigation.", ""))
+                    ? (t as any)(item.descriptionKey.replace("navigation.", ""))
                     : item.descriptionKey;
 
                   const tooltipText = isDisabled
                     ? t("tooltips.selectJobFirst")
-                    : description;
+                    : (description as string | undefined);
 
                   return (
                     <Button
                       key={item.id}
                       id={`${item.id}-tab`}
                       variant={isActive ? "secondary" : "ghost"}
-                      onClick={() => !isDisabled && handleNavigation(item.id)}
+                      onClick={isDisabled ? undefined : () => handleNavigation(item.id)}
                       disabled={isDisabled}
                       role="tab"
                       aria-selected={isActive}
-                      aria-controls={`${item.id}-panel`}
-                      tabIndex={isActive ? 0 : -1}
+                      aria-controls={isDisabled ? undefined : `${item.id}-panel`}
+                      aria-disabled={isDisabled}
+                      tabIndex={isDisabled ? -1 : isActive ? 0 : -1}
                       className={cn(
                         "w-full justify-start gap-3 h-11",
                         isActive &&
@@ -352,15 +353,15 @@ export function AppHeader({
 
               // Get translated label and description
               const label = item.labelKey.startsWith("navigation.")
-                ? t(item.labelKey.replace("navigation.", ""))
+                ? (t as any)(item.labelKey.replace("navigation.", ""))
                 : item.labelKey;
               const description = item.descriptionKey?.startsWith("navigation.")
-                ? t(item.descriptionKey.replace("navigation.", ""))
+                ? (t as any)(item.descriptionKey.replace("navigation.", ""))
                 : item.descriptionKey;
 
               const tooltipText = isDisabled
                 ? t("tooltips.selectJobFirst")
-                : description;
+                : (description as string | undefined);
 
               return (
                 <Button
@@ -368,13 +369,14 @@ export function AppHeader({
                   id={`${item.id}-tab`}
                   variant="ghost"
                   size="sm"
-                  onClick={() => !isDisabled && handleNavigation(item.id)}
+                  onClick={isDisabled ? undefined : () => handleNavigation(item.id)}
                   disabled={isDisabled}
                   role="tab"
                   aria-selected={isActive}
-                  aria-controls={`${item.id}-panel`}
+                  aria-controls={isDisabled ? undefined : `${item.id}-panel`}
+                  aria-disabled={isDisabled}
                   aria-label={label}
-                  tabIndex={isActive ? 0 : -1}
+                  tabIndex={isDisabled ? -1 : isActive ? 0 : -1}
                   className={cn(
                     // Base styles
                     "relative px-3 py-2 h-auto",

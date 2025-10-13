@@ -16,6 +16,7 @@ class TestGetApiKey:
     def test_valid_api_key(self, mock_settings):
         """Test API key validation with correct key."""
         mock_settings.API_KEY = "valid_api_key_123"
+        mock_settings.is_development = False  # Ensure production mode for authentication tests
 
         result = get_api_key("valid_api_key_123")
 
@@ -25,6 +26,7 @@ class TestGetApiKey:
     def test_invalid_api_key(self, mock_settings):
         """Test API key validation with incorrect key."""
         mock_settings.API_KEY = "valid_api_key_123"
+        mock_settings.is_development = False
 
         with pytest.raises(HTTPException) as exc_info:
             get_api_key("invalid_key")
@@ -36,6 +38,7 @@ class TestGetApiKey:
     def test_empty_api_key(self, mock_settings):
         """Test API key validation with empty key."""
         mock_settings.API_KEY = "valid_api_key_123"
+        mock_settings.is_development = False
 
         with pytest.raises(HTTPException) as exc_info:
             get_api_key("")
@@ -46,6 +49,7 @@ class TestGetApiKey:
     def test_none_api_key(self, mock_settings):
         """Test API key validation with None key."""
         mock_settings.API_KEY = "valid_api_key_123"
+        mock_settings.is_development = False
 
         with pytest.raises(HTTPException) as exc_info:
             get_api_key(None)
@@ -56,6 +60,7 @@ class TestGetApiKey:
     def test_case_sensitive_api_key(self, mock_settings):
         """Test that API key validation is case sensitive."""
         mock_settings.API_KEY = "Valid_API_Key_123"
+        mock_settings.is_development = False
 
         # Correct case should work
         result = get_api_key("Valid_API_Key_123")
@@ -72,6 +77,7 @@ class TestGetApiKey:
     def test_whitespace_handling(self, mock_settings):
         """Test API key validation with whitespace."""
         mock_settings.API_KEY = "valid_key"
+        mock_settings.is_development = False
 
         # Leading/trailing whitespace should fail
         with pytest.raises(HTTPException):
@@ -88,6 +94,7 @@ class TestGetApiKey:
         """Test API key validation with special characters."""
         special_key = "key-with_special.chars@123!"
         mock_settings.API_KEY = special_key
+        mock_settings.is_development = False
 
         result = get_api_key(special_key)
         assert result == special_key
@@ -97,6 +104,7 @@ class TestGetApiKey:
         """Test API key validation with very long key."""
         long_key = "a" * 1000  # 1000 character key
         mock_settings.API_KEY = long_key
+        mock_settings.is_development = False
 
         result = get_api_key(long_key)
         assert result == long_key
@@ -104,6 +112,8 @@ class TestGetApiKey:
     @patch("jd_ingestion.auth.api_key.settings")
     def test_settings_api_key_change(self, mock_settings):
         """Test that API key validation uses current settings value."""
+        mock_settings.is_development = False
+
         # First validation with initial key
         mock_settings.API_KEY = "initial_key"
         result = get_api_key("initial_key")
@@ -142,6 +152,7 @@ class TestApiKeyIntegration:
     def test_function_signature_compatibility(self, mock_settings):
         """Test that get_api_key function signature is compatible with FastAPI."""
         mock_settings.API_KEY = "test_key"
+        mock_settings.is_development = False
 
         # Function should work when called with the expected Security dependency pattern
         # This simulates how FastAPI would call it with the API key from headers
@@ -159,6 +170,7 @@ class TestApiKeyIntegration:
     def test_error_message_security(self, mock_settings):
         """Test that error messages don't leak sensitive information."""
         mock_settings.API_KEY = "secret_production_key"
+        mock_settings.is_development = False
 
         with pytest.raises(HTTPException) as exc_info:
             get_api_key("wrong_key")
@@ -174,6 +186,7 @@ class TestApiKeyIntegration:
         """Test API key validation with Unicode characters."""
         unicode_key = "key_with_unicode_café_🔑"
         mock_settings.API_KEY = unicode_key
+        mock_settings.is_development = False
 
         result = get_api_key(unicode_key)
         assert result == unicode_key
@@ -183,6 +196,7 @@ class TestApiKeyIntegration:
         """Test API key validation with numeric key."""
         numeric_key = "123456789"
         mock_settings.API_KEY = numeric_key
+        mock_settings.is_development = False
 
         result = get_api_key(numeric_key)
         assert result == numeric_key
@@ -191,6 +205,7 @@ class TestApiKeyIntegration:
     def test_settings_access_pattern(self, mock_settings):
         """Test that settings.API_KEY is accessed correctly."""
         mock_settings.API_KEY = "test_access_key"
+        mock_settings.is_development = False
 
         get_api_key("test_access_key")
 

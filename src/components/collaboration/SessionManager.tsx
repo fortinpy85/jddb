@@ -10,7 +10,7 @@
 
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,6 @@ import {
   Users,
   UserPlus,
   Share2,
-  Copy,
   CheckCircle,
   Settings,
   Crown,
@@ -43,6 +42,7 @@ import {
   X,
   Link as LinkIcon,
 } from "lucide-react";
+import { logger } from "@/utils/logger";
 
 export type UserRole = "owner" | "editor" | "viewer";
 
@@ -83,7 +83,6 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
   onChangeRole,
   onRemoveParticipant,
   onLeaveSession,
-  onUpdateSettings,
   className,
 }) => {
   const [inviteEmail, setInviteEmail] = useState("");
@@ -107,7 +106,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
       setInviteEmail("");
       setInviteDialogOpen(false);
     } catch (error) {
-      console.error("Failed to invite user:", error);
+      logger.error("Failed to invite user:", error);
     } finally {
       setIsInviting(false);
     }

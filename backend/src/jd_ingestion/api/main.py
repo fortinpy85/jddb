@@ -116,12 +116,33 @@ app = FastAPI(
     ],
 )
 
-# Add CORS middleware with development configuration
-# Temporarily using wildcard for development - change to specific origins in production
+# Configure CORS based on environment
+# Development: Allow all origins for easier local development
+# Production: Restrict to specific trusted origins only
+if settings.is_development:
+    logger.warning("⚠️  CORS configured for DEVELOPMENT mode - allowing all origins")
+    cors_origins = ["*"]
+    cors_credentials = False  # Must be False when using wildcard
+else:
+    # PRODUCTION: Restrict to specific trusted origins
+    # Set CORS_ALLOWED_ORIGINS environment variable with comma-separated list
+    # Example: CORS_ALLOWED_ORIGINS=https://app.example.com,https://admin.example.com
+    cors_origins = [
+        origin.strip()
+        for origin in settings.cors_allowed_origins.split(",")
+        if origin.strip()
+    ]
+    cors_credentials = settings.cors_allow_credentials
+
+    if not cors_origins or cors_origins == [""]:
+        logger.error("🚨 PRODUCTION mode requires CORS_ALLOWED_ORIGINS environment variable!")
+        logger.error("   Set CORS_ALLOWED_ORIGINS=https://your-frontend-domain.com")
+        raise RuntimeError("CORS origins not configured for production environment")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development
-    allow_credentials=False,  # Must be False when using wildcard
+    allow_origins=cors_origins,
+    allow_credentials=cors_credentials,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],

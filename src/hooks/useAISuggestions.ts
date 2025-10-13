@@ -13,6 +13,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { api } from "@/lib/api";
 import type { BiasAnalysisResponse, QualityScoreResponse } from "@/types/ai";
+import { logger } from "@/utils/logger";
 
 export interface AISuggestion {
   id: string;
@@ -98,7 +99,7 @@ export function useAISuggestions(
         const errorMessage =
           err instanceof Error ? err.message : "Failed to fetch suggestions";
         setError(errorMessage);
-        console.error("Error fetching AI suggestions:", err);
+        logger.error("Error fetching AI suggestions:", err);
       } finally {
         setIsLoading(false);
       }
@@ -128,7 +129,7 @@ export function useAISuggestions(
         const errorMessage =
           err instanceof Error ? err.message : "Failed to analyze bias";
         setError(errorMessage);
-        console.error("Error analyzing bias:", err);
+        logger.error("Error analyzing bias:", err);
         setBiasAnalysis(null);
       } finally {
         setIsLoading(false);
@@ -151,7 +152,7 @@ export function useAISuggestions(
             ? err.message
             : "Failed to calculate quality score";
         setError(errorMessage);
-        console.error("Error calculating quality:", err);
+        logger.error("Error calculating quality:", err);
         setQualityScore(null);
       } finally {
         setIsLoading(false);
@@ -246,7 +247,7 @@ export function useDebouncedAIAnalysis(options: {
             onBiasAnalysis(biasResult);
           }
         } catch (err) {
-          console.error("Debounced analysis failed:", err);
+          logger.error("Debounced analysis failed:", err);
         } finally {
           setIsAnalyzing(false);
         }

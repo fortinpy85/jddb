@@ -38,6 +38,8 @@ import {
   X,
 } from "lucide-react";
 import { WorkflowStepper } from "@/components/ui/workflow-stepper";
+import { apiClient } from "@/lib/api";
+import { logger } from "@/utils/logger";
 import { ErrorBoundaryWrapper } from "@/components/ui/error-boundary";
 
 export interface ImprovementViewProps {
@@ -118,33 +120,38 @@ function ImprovementView({
   const handleGenerateImprovement = async () => {
     setIsGenerating(true);
     try {
-      // Fetch AI suggestions
-      await fetchSuggestions(originalText, "job_description", [
-        "grammar",
-        "style",
-        "clarity",
-        "bias",
-        "compliance",
-      ]);
-
-      // Simulate AI improvement (in real app, call backend API)
-      // For now, we'll use the suggestions to build improved text
-      setTimeout(() => {
-        // This is placeholder - real implementation would call backend
-        const improved = simulateImprovement(originalText, suggestions);
-        setImprovedText(improved);
-        setIsGenerating(false);
-      }, 1500);
+      const { enhanced_text } = await apiClient.enhanceContent({
+        text: originalText,
+        enhancement_types: [
+          "grammar",
+          "style",
+          "clarity",
+          "bias",
+          "compliance",
+        ],
+      });
+      setImprovedText(enhanced_text);
+      setIsGenerating(false);
     } catch (error) {
-      console.error("Failed to generate improvement:", error);
+      logger.error("Failed to generate improvement:", error);
       setIsGenerating(false);
     }
   };
 
   // Save final version
-  const handleSave = () => {
+  const handleSave = async () => {
     const finalText = improvement.applyAcceptedChanges();
-    onSave?.(finalText);
+    if (jobId) {
+      try {
+        await apiClient.saveImprovedContent({
+          job_id: jobId,
+          improved_content: finalText,
+        });
+        onSave?.(finalText);
+      } catch (error) {
+        logger.error("Failed to save changes:", error);
+      }
+    }
   };
 
   // Sync original text with live improvement hook
@@ -682,19 +689,4 @@ function SplitView({
   );
 }
 
-/**
- * Simulate improvement (placeholder for real AI backend)
- */
-function simulateImprovement(originalText: string, suggestions: any[]): string {
-  // This is a placeholder - real implementation would call backend API
-  let improved = originalText;
 
-  // Apply some basic improvements for demo
-  improved = improved
-    .replace(/he\/she/gi, "they")
-    .replace(/his\/her/gi, "their")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  return improved;
-}

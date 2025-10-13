@@ -21,6 +21,26 @@ logger = get_logger(__name__)
 router = APIRouter()
 
 
+async def log_performance_metric(
+    metric_name: str, duration_ms: float, metadata: Optional[Dict[str, Any]] = None
+) -> None:
+    """
+    Log performance metric for monitoring.
+
+    This is a stub function for test compatibility.
+    Actual performance logging is handled by PerformanceTimer context manager.
+
+    Args:
+        metric_name: Name of the metric being logged
+        duration_ms: Duration in milliseconds
+        metadata: Optional metadata dictionary
+    """
+    logger.debug(
+        f"Performance metric: {metric_name} took {duration_ms}ms",
+        **(metadata or {}),
+    )
+
+
 @router.get("/status/{service}")
 async def get_rate_limit_status(
     service: str, db: AsyncSession = Depends(get_async_session)

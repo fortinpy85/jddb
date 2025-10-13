@@ -1,4 +1,4 @@
-import { jest, describe, beforeEach, it, expect } from "@jest/globals";
+import { describe, beforeEach, it, expect } from "vitest";
 import React from "react";
 import { render, screen, act, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";

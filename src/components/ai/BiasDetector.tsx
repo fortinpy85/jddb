@@ -11,7 +11,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
@@ -32,6 +31,7 @@ interface BiasDetectorProps {
   onReplace?: (original: string, replacement: string) => void;
   onIgnore?: (issue: BiasIssue) => void;
   enabled?: boolean;
+  compact?: boolean;  // Compact mode for inline display
   className?: string;
 }
 
@@ -74,6 +74,7 @@ export function BiasDetector({
   onReplace,
   onIgnore,
   enabled = true,
+  compact = false,
   className = "",
 }: BiasDetectorProps) {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([

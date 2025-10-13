@@ -135,11 +135,13 @@ export function AlertBanner({
           {/* Content */}
           <div className="flex-1 min-w-0">
             {title && (
-              <h3
+              <div
                 className={cn("text-sm font-semibold mb-1", config.titleClass)}
+                role="heading"
+                aria-level={3}
               >
                 {title}
-              </h3>
+              </div>
             )}
             <p className={cn("text-sm", config.messageClass)}>{message}</p>
 

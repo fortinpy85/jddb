@@ -41,6 +41,7 @@ import {
   Search,
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
+import { logger } from "@/utils/logger";
 
 export interface Template {
   classification: string;
@@ -98,7 +99,7 @@ export const SmartTemplateSelector: React.FC<SmartTemplateSelectorProps> = ({
       const data = await response.json();
       setClassifications(data);
     } catch (error) {
-      console.error("Failed to load classifications:", error);
+      logger.error("Failed to load classifications:", error);
     }
   };
 
@@ -121,7 +122,7 @@ export const SmartTemplateSelector: React.FC<SmartTemplateSelectorProps> = ({
         setTemplate(data.template);
       }
     } catch (error) {
-      console.error("Failed to load template:", error);
+      logger.error("Failed to load template:", error);
     } finally {
       setLoading(false);
     }

@@ -184,29 +184,23 @@ async def get_career_paths(
         if target_classifications:
             target_classes = [cls.strip() for cls in target_classifications.split(",")]
 
-        # For now, return a placeholder structure
-        # This would be implemented with career path analysis logic
+        result = await job_analysis_service.get_career_paths(
+            db=db,
+            job_id=job_id,
+            target_classifications=target_classes,
+            limit=limit,
+        )
 
-        return {
-            "from_job_id": job_id,
-            "target_classifications": target_classes,
-            "career_paths": [
-                {
-                    "target_job": {
-                        "id": 789,
-                        "title": "Senior Director",
-                        "classification": "EX-03",
-                    },
-                    "progression_type": "vertical",
-                    "feasibility_score": 0.82,
-                    "time_estimate": "18-24 months",
-                    "skill_gaps": ["Advanced Finance", "Executive Leadership"],
-                    "experience_required": "5+ years in current role",
-                    "typical_salary_increase": "$25,000 - $35,000",
-                }
-            ],
-        }
+        logger.info(
+            "Career path analysis completed",
+            from_job_id=job_id,
+            targets=target_classes,
+        )
 
+        return result
+
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error("Career path analysis failed", error=str(e))
         raise HTTPException(status_code=500, detail="Career path analysis failed")
@@ -253,32 +247,17 @@ async def get_classification_benchmark(
     for positions within the classification level.
     """
     try:
-        # For now, return placeholder data
-        # This would query the classification_benchmarks table
+        result = await job_analysis_service.get_classification_benchmark(
+            db=db, classification=classification, department=department
+        )
 
-        return {
-            "classification": classification,
-            "department": department,
-            "statistics": {
-                "job_count": 45,
-                "avg_salary": 89500,
-                "median_salary": 87000,
-                "salary_range": {"min": 72000, "max": 108000},
-                "avg_fte_supervised": 3.2,
-                "common_skills": [
-                    "Strategic Planning",
-                    "Project Management",
-                    "Team Leadership",
-                    "Budget Management",
-                ],
-                "typical_reports_to": "Director General",
-                "typical_departments": [
-                    "Policy Development",
-                    "Operations",
-                    "Strategic Planning",
-                ],
-            },
-        }
+        logger.info(
+            "Classification benchmark analysis completed",
+            classification=classification,
+            department=department,
+        )
+
+        return result
 
     except Exception as e:
         logger.error("Classification benchmark failed", error=str(e))
@@ -339,31 +318,17 @@ async def get_similar_salary_range(
     career planning and market analysis.
     """
     try:
-        # For now, return placeholder data
-        # This would query jobs with similar salary_budget values
+        result = await job_analysis_service.get_similar_salary_range(
+            db=db, job_id=job_id, tolerance=tolerance
+        )
 
-        return {
-            "job_id": job_id,
-            "tolerance": tolerance,
-            "similar_jobs": [
-                {
-                    "id": 123,
-                    "title": "Senior Policy Advisor",
-                    "classification": "EX-01",
-                    "salary": 85000,
-                    "department": "Treasury Board",
-                    "similarity_score": 0.89,
-                },
-                {
-                    "id": 456,
-                    "title": "Program Manager",
-                    "classification": "EX-01",
-                    "salary": 87500,
-                    "department": "Finance",
-                    "similarity_score": 0.82,
-                },
-            ],
-        }
+        logger.info(
+            "Similar salary range analysis completed",
+            job_id=job_id,
+            tolerance=tolerance,
+        )
+
+        return result
 
     except Exception as e:
         logger.error("Salary range analysis failed", error=str(e))
@@ -384,54 +349,21 @@ async def get_job_clusters(
     skill groups, and organizational patterns.
     """
     try:
-        # For now, return placeholder data
-        # This would implement clustering using job embeddings
+        result = await job_analysis_service.get_job_clusters(
+            db=db,
+            classification=classification,
+            method=method,
+            n_clusters=n_clusters,
+        )
 
-        return {
-            "method": method,
-            "n_clusters": n_clusters,
-            "classification_filter": classification,
-            "clusters": [
-                {
-                    "cluster_id": 1,
-                    "cluster_name": "Strategic Leadership",
-                    "job_count": 12,
-                    "avg_similarity": 0.78,
-                    "common_skills": ["Strategic Planning", "Team Leadership"],
-                    "sample_jobs": [
-                        {
-                            "id": 123,
-                            "title": "Director, Policy",
-                            "classification": "EX-02",
-                        },
-                        {
-                            "id": 456,
-                            "title": "Senior Manager",
-                            "classification": "EX-01",
-                        },
-                    ],
-                },
-                {
-                    "cluster_id": 2,
-                    "cluster_name": "Technical Analysis",
-                    "job_count": 8,
-                    "avg_similarity": 0.82,
-                    "common_skills": ["Data Analysis", "Research"],
-                    "sample_jobs": [
-                        {
-                            "id": 789,
-                            "title": "Senior Analyst",
-                            "classification": "AS-05",
-                        },
-                        {
-                            "id": 101,
-                            "title": "Research Officer",
-                            "classification": "AS-04",
-                        },
-                    ],
-                },
-            ],
-        }
+        logger.info(
+            "Job clustering analysis completed",
+            classification=classification,
+            method=method,
+            n_clusters=n_clusters,
+        )
+
+        return result
 
     except Exception as e:
         logger.error("Job clustering failed", error=str(e))
@@ -451,33 +383,17 @@ async def get_compensation_analysis(
     trends for similar positions.
     """
     try:
-        # For now, return placeholder data
-        # This would analyze salary_budget data from job_metadata
+        result = await job_analysis_service.get_compensation_analysis(
+            db=db, classification=classification, department=department
+        )
 
-        return {
-            "filters": {"classification": classification, "department": department},
-            "statistics": {
-                "total_positions": 156,
-                "salary_statistics": {
-                    "mean": 89750,
-                    "median": 87500,
-                    "std_dev": 12300,
-                    "min": 65000,
-                    "max": 125000,
-                    "percentiles": {"25th": 78000, "75th": 98000, "90th": 110000},
-                },
-                "fte_statistics": {
-                    "avg_supervised": 2.8,
-                    "median_supervised": 2,
-                    "max_supervised": 15,
-                },
-            },
-            "trends": {
-                "salary_growth": "3.2% annually",
-                "market_position": "competitive",
-                "comparison_to_private": "-8% to -12%",
-            },
-        }
+        logger.info(
+            "Compensation analysis completed",
+            classification=classification,
+            department=department,
+        )
+
+        return result
 
     except Exception as e:
         logger.error("Compensation analysis failed", error=str(e))

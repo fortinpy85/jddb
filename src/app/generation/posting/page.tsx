@@ -1,11 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { JobPostingGenerator } from "@/components/generation/JobPostingGenerator";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { JobDescription } from "@/types/api";
 
 export default function JobPostingGeneratorPage() {
+  const [selectedJob, setSelectedJob] = useState<JobDescription | null>(null);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-6 px-4">
@@ -26,7 +29,7 @@ export default function JobPostingGeneratorPage() {
             </p>
           </div>
         </div>
-        <JobPostingGenerator />
+        <JobPostingGenerator selectedJob={selectedJob} />
       </div>
     </div>
   );

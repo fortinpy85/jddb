@@ -129,12 +129,9 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
     try {
       setLoading(true);
       setError(null);
-      // Use window.location to construct API URL for browser environment
-      const apiBaseUrl =
-        typeof window !== "undefined"
-          ? `${window.location.protocol}//${window.location.hostname}:8000/api`
-          : "http://localhost:8000/api";
-      const response = await fetch(`${apiBaseUrl}/bilingual-documents/${id}`);
+      // Use API_BASE_URL from lib/api
+      const { API_BASE_URL } = await import("@/lib/api");
+      const response = await fetch(`${API_BASE_URL}/bilingual-documents/${id}`);
 
       if (!response.ok) {
         throw new Error(
@@ -149,16 +146,18 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
           id: data.document.id || `doc-${id}`,
           job_id: id,
           title: data.document.title || `Job ${id}`,
-          segments: data.document.segments.map((seg: any, index: number) => ({
-            id: seg.id || `segment-${index}`,
-            english: seg.english || "",
-            french: seg.french || "",
-            status: seg.status || "draft",
-            lastModified: seg.lastModified
-              ? new Date(seg.lastModified)
-              : new Date(),
-            modifiedBy: seg.modifiedBy,
-          })) as BilingualSegment[],
+          segments: Array.isArray(data.document.segments)
+            ? data.document.segments.map((seg: any, index: number) => ({
+                id: seg.id || `segment-${index}`,
+                english: seg.english || "",
+                french: seg.french || "",
+                status: seg.status || "draft",
+                lastModified: seg.lastModified
+                  ? new Date(seg.lastModified)
+                  : new Date(),
+                modifiedBy: seg.modifiedBy,
+              }))
+            : [],
           metadata: {
             created: data.document.metadata?.created
               ? new Date(data.document.metadata.created)
@@ -571,7 +570,7 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
   }
 
   // Handle error state
-  if (error || !document) {
+  if (error || !document || !document.segments || document.segments.length === 0) {
     return (
       <Card className={className}>
         <CardHeader>
@@ -589,7 +588,7 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
             <AlertCircle className="w-12 h-12 text-red-600" />
             <div className="text-center">
               <p className="text-sm font-medium text-red-600">
-                {error || "Failed to load bilingual document"}
+                {error || (!document ? "Failed to load bilingual document" : "No segments available for this document.")}
               </p>
               <p className="text-xs text-muted-foreground mt-2">
                 Please try again or select a different job.

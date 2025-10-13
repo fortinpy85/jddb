@@ -5,7 +5,7 @@
 
 import { test, expect } from '@playwright/test';
 
-const FRONTEND_URL = 'http://localhost:3002';
+const FRONTEND_URL = '/'; // Use baseURL from playwright config
 const API_URL = 'http://localhost:8000/api';
 
 test.describe('JDDB Usability Validation', () => {

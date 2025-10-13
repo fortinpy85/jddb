@@ -3,11 +3,11 @@
  */
 import React from "react";
 import { render, screen, fireEvent } from "../../test-utils";
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, vi } from "vitest";
 import { QuickActionsGrid } from "./QuickActionsGrid";
 
 // Mock the UI components
-mock.module("@/components/layout/JDDBLayout", () => ({
+vi.mock("@/components/layout/JDDBLayout", () => ({
   ContentSection: ({
     title,
     children,
@@ -24,13 +24,12 @@ mock.module("@/components/layout/JDDBLayout", () => ({
   ),
 }));
 
-mock.module("@/components/ui/design-system", () => ({
+vi.mock("@/components/ui/design-system", () => ({
   ActionButton: ({
     children,
     onClick,
     variant,
     color,
-    icon,
     className,
   }: {
     children: React.ReactNode;
@@ -53,10 +52,10 @@ mock.module("@/components/ui/design-system", () => ({
 }));
 
 describe("QuickActionsGrid Component", () => {
-  const mockOnNavigateToUpload = mock(() => {});
-  const mockOnNavigateToJobs = mock(() => {});
-  const mockOnNavigateToSearch = mock(() => {});
-  const mockOnNavigateToCompare = mock(() => {});
+  const mockOnNavigateToUpload = vi.fn(() => {});
+  const mockOnNavigateToJobs = vi.fn(() => {});
+  const mockOnNavigateToSearch = vi.fn(() => {});
+  const mockOnNavigateToCompare = vi.fn(() => {});
 
   beforeEach(() => {
     if (mockOnNavigateToUpload.mockReset) mockOnNavigateToUpload.mockReset();

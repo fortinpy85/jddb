@@ -11,6 +11,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useWebSocket } from "./useWebSocket";
 import { WebSocketMessage } from "@/lib/websocket-client";
+import { logger } from "@/utils/logger";
 
 export interface Participant {
   userId: number;
@@ -47,8 +48,10 @@ export interface UseCollaborativeEditorReturn {
   isConnected: boolean;
   sessionState: SessionState | null;
   participants: Participant[];
+  typingUsers: number[];
   applyOperation: (operation: Operation) => void;
   updateCursorPosition: (position: number) => void;
+  sendMessage: (message: any) => void;
   connectionState: string;
 }
 
@@ -64,8 +67,10 @@ export function useCollaborativeEditor(
       isConnected: false,
       sessionState: null,
       participants: [],
+      typingUsers: [],
       applyOperation: () => {},
       updateCursorPosition: () => {},
+      sendMessage: () => {},
       connectionState: "disconnected",
     };
   }
@@ -82,6 +87,7 @@ export function useCollaborativeEditor(
 
   const [sessionState, setSessionState] = useState<SessionState | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
+  const [typingUsers, setTypingUsers] = useState<number[]>([]);
   const operationQueueRef = useRef<Operation[]>([]);
 
   // Construct WebSocket URL
@@ -152,6 +158,14 @@ export function useCollaborativeEditor(
           });
           break;
 
+        case "typing_start":
+          setTypingUsers((prev) => [...prev, message.user_id]);
+          break;
+
+        case "typing_stop":
+          setTypingUsers((prev) => prev.filter((id) => id !== message.user_id));
+          break;
+
         default:
         // Unknown message type
       }
@@ -175,9 +189,15 @@ export function useCollaborativeEditor(
       // Disconnected from session
     },
     onError: (error) => {
-      console.error("WebSocket error:", error);
+      logger.error("WebSocket error:", error);
     },
   });
+
+  const sendMessage = useCallback((message: any) => {
+    if (isConnected) {
+      send(message);
+    }
+  }, [isConnected, send]);
 
   /**
    * Apply a local operation and broadcast to other participants
@@ -228,8 +248,10 @@ export function useCollaborativeEditor(
     isConnected,
     sessionState,
     participants,
+    typingUsers,
     applyOperation,
     updateCursorPosition,
+    sendMessage,
     connectionState,
   };
 }

@@ -59,6 +59,7 @@ import {
   Monitor,
   Globe,
 } from "lucide-react";
+import { logger } from "@/utils/logger";
 
 export function UIShowcase() {
   const [activeDemo, setActiveDemo] = useState("overview");
@@ -274,13 +275,13 @@ export function UIShowcase() {
         <Card className="p-6">
           <h4 className="font-semibold mb-4">Empty States</h4>
           <EmptyState
-            icon="search"
+            type="no-search-results"
             title="No Results"
             description="Try adjusting your search criteria"
-            action={{
+            actions={[{
               label: "Clear Filters",
-              onClick: () => console.log("Clear filters"),
-            }}
+              onClick: () => logger.debug("Clear filters", {}),
+            }]}
           />
         </Card>
 

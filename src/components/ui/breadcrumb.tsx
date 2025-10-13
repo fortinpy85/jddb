@@ -3,6 +3,7 @@
 import React from "react";
 import { ChevronRight, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logger } from "@/utils/logger";
 
 export interface BreadcrumbItem {
   label: string;
@@ -58,7 +59,7 @@ export function Breadcrumb({
                       item.onClick();
                     } else if (item.href) {
                       // Handle href navigation if needed
-                      console.log("Navigate to:", item.href);
+                      logger.debug("Navigate to:", { href: item.href });
                     }
                   }}
                   className={cn(

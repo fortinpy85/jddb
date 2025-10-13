@@ -8,6 +8,7 @@ import ReactDOM from "react-dom/client";
 import HomePage from "./app/page";
 import "./i18n/config"; // Initialize i18next for bilingual support
 import { initializeAxe } from "./utils/accessibility"; // Accessibility testing
+import { logger } from "./utils/logger";
 
 async function main() {
   try {
@@ -30,7 +31,7 @@ async function main() {
       await initializeAxe(React, ReactDOM, 1000);
     }
   } catch (error) {
-    console.error("Failed to render the app:", error);
+    logger.error("Failed to render the app:", error);
   }
 }
 

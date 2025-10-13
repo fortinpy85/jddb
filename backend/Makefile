@@ -60,7 +60,7 @@ seed-phase2: db-migrate
 
 # Development server
 server:
-	python scripts/dev_server.py
+	poetry run python scripts/dev_server.py
 
 # Testing
 test:

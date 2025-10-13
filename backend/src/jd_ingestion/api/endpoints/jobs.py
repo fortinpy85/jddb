@@ -47,6 +47,20 @@ class JobDescriptionCreate(BaseModel):
     sections: Optional[Dict[str, str]] = Field(None, description="Job sections by type")
 
 
+class JobUpdate(BaseModel):
+    """Model for updating an existing job description"""
+
+    title: Optional[str] = Field(None, description="Job title")
+    classification: Optional[str] = Field(None, description="Classification level (e.g., EX-01)")
+    language: Optional[str] = Field(None, description="Language code (en/fr)")
+    raw_content: Optional[str] = Field(None, description="Full job description content")
+    department: Optional[str] = Field(None, description="Department name")
+    reports_to: Optional[str] = Field(None, description="Reports to position")
+
+    class Config:
+        from_attributes = True
+
+
 @router.get("/")
 @retry_on_failure()
 async def list_jobs(
@@ -694,6 +708,94 @@ async def delete_job(
         logger.error("Unexpected error deleting job", job_id=job_id, error=str(e))
         await db.rollback()
         raise HTTPException(status_code=500, detail="Failed to delete job description")
+
+
+@router.patch("/{job_id}")
+async def update_job(
+    job_id: int,
+    job_update: JobUpdate,
+    db: AsyncSession = Depends(get_async_session),
+    api_key: str = Security(get_api_key),
+):
+    """Update a job description (partial update)."""
+    try:
+        # Get existing job
+        query = select(JobDescription).where(JobDescription.id == job_id)
+        result = await db.execute(query)
+        job = result.scalar_one_or_none()
+
+        if not job:
+            raise HTTPException(status_code=404, detail="Job description not found")
+
+        # Update only the fields that were provided
+        update_data = job_update.model_dump(exclude_unset=True)
+
+        # Handle metadata fields separately (department, reports_to)
+        metadata_fields = {}
+        if "department" in update_data:
+            metadata_fields["department"] = update_data.pop("department")
+        if "reports_to" in update_data:
+            metadata_fields["reports_to"] = update_data.pop("reports_to")
+
+        # Update job description fields
+        for field, value in update_data.items():
+            setattr(job, field, value)
+
+        # Update metadata if metadata fields were provided
+        if metadata_fields:
+            # Get or create metadata record
+            metadata_query = select(JobMetadata).where(JobMetadata.job_id == job_id)
+            metadata_result = await db.execute(metadata_query)
+            metadata = metadata_result.scalar_one_or_none()
+
+            if metadata:
+                # Update existing metadata
+                for field, value in metadata_fields.items():
+                    setattr(metadata, field, value)
+            else:
+                # Create new metadata
+                metadata = JobMetadata(job_id=job_id, **metadata_fields)
+                db.add(metadata)
+
+        # Update timestamp
+        job.updated_at = datetime.utcnow()
+
+        await db.commit()
+        await db.refresh(job)
+
+        logger.info(
+            "Job description updated",
+            job_id=job_id,
+            job_number=job.job_number,
+            fields_updated=list(update_data.keys()) + list(metadata_fields.keys()),
+        )
+
+        return {
+            "status": "success",
+            "message": f"Job description {job.job_number} updated successfully",
+            "job_id": job.id,
+            "job": {
+                "id": job.id,
+                "job_number": job.job_number,
+                "title": job.title,
+                "classification": job.classification,
+                "language": job.language,
+                "updated_at": job.updated_at.isoformat() if job.updated_at else None,
+            },
+        }
+
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error("Database error updating job", job_id=job_id, error=str(e))
+        await db.rollback()
+        raise HTTPException(
+            status_code=500, detail="Database error updating job description"
+        )
+    except Exception as e:
+        logger.error("Unexpected error updating job", job_id=job_id, error=str(e))
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to update job description")
 
 
 @router.post("/export/bulk")

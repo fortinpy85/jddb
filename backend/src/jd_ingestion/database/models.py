@@ -16,8 +16,27 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, DeclarativeBase
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.types import TypeDecorator
 from pgvector.sqlalchemy import Vector
 from datetime import datetime
+
+
+# Type adapter that uses JSONB for PostgreSQL, JSON for other databases (like SQLite)
+class JSONBType(TypeDecorator):
+    """
+    Platform-agnostic JSON/JSONB type.
+
+    Uses JSONB for PostgreSQL for better performance and indexing.
+    Falls back to JSON for other databases like SQLite.
+    """
+    impl = JSON
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'postgresql':
+            return dialect.type_descriptor(JSONB())
+        else:
+            return dialect.type_descriptor(JSON())
 
 
 class Base(DeclarativeBase):
@@ -131,7 +150,7 @@ class SavedSearch(Base):
     session_id = Column(String, nullable=True)
     search_query = Column(Text, nullable=True)
     search_type = Column(String, default="general", nullable=False)
-    search_filters = Column(JSONB, nullable=True)
+    search_filters = Column(JSONBType, nullable=True)
     is_public = Column(String, default="false", nullable=False)
     is_favorite = Column(String, default="false", nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -140,7 +159,7 @@ class SavedSearch(Base):
     use_count = Column(Integer, default=0, nullable=False)
     last_result_count = Column(Integer, nullable=True)
     last_execution_time_ms = Column(Integer, nullable=True)
-    search_metadata = Column(JSONB, nullable=True)
+    search_metadata = Column(JSONBType, nullable=True)
 
 
 # Core job description models
@@ -231,15 +250,15 @@ class SearchAnalytics(Base):
     query_text = Column(Text, nullable=True)
     query_hash = Column(String(64), nullable=True)
     search_type = Column(String(20), nullable=True)
-    filters_applied = Column(JSONB, nullable=True)
+    filters_applied = Column(JSONBType, nullable=True)
     execution_time_ms = Column(Integer, nullable=True)
     total_response_time_ms = Column(Integer, nullable=True)
     embedding_time_ms = Column(Integer, nullable=True)
     total_results = Column(Integer, nullable=True)
     returned_results = Column(Integer, nullable=True)
     has_results = Column(String(10), nullable=True)
-    clicked_results = Column(JSONB, nullable=True)
-    result_rankings = Column(JSONB, nullable=True)
+    clicked_results = Column(JSONBType, nullable=True)
+    result_rankings = Column(JSONBType, nullable=True)
     user_satisfaction = Column(Integer, nullable=True)
     timestamp = Column(DateTime, nullable=True)
     api_version = Column(String(10), nullable=True)
@@ -254,9 +273,9 @@ class DataQualityMetrics(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     job_id = Column(Integer, ForeignKey("job_descriptions.id"), nullable=False)
-    content_completeness_score = Column(DECIMAL(4, 3), nullable=True)
-    sections_completeness_score = Column(DECIMAL(4, 3), nullable=True)
-    metadata_completeness_score = Column(DECIMAL(4, 3), nullable=True)
+    content_completeness_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
+    sections_completeness_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
+    metadata_completeness_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
     has_structured_fields = Column(String(10), nullable=True)
     has_all_sections = Column(String(10), nullable=True)
     has_embeddings = Column(String(10), nullable=True)
@@ -267,10 +286,10 @@ class DataQualityMetrics(Base):
     processed_content_length = Column(Integer, nullable=True)
     sections_extracted_count = Column(Integer, nullable=True)
     chunks_generated_count = Column(Integer, nullable=True)
-    language_detection_confidence = Column(DECIMAL(4, 3), nullable=True)
+    language_detection_confidence: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
     encoding_issues_detected = Column(String(10), nullable=True)
-    validation_results = Column(JSONB, nullable=True)
-    quality_flags = Column(JSONB, nullable=True)
+    validation_results = Column(JSONBType, nullable=True)
+    quality_flags = Column(JSONBType, nullable=True)
     last_calculated = Column(DateTime, nullable=True)
     calculation_version = Column(String(20), nullable=True)
 
@@ -286,8 +305,8 @@ class JobComparison(Base):
     job1_id = Column(Integer, ForeignKey("job_descriptions.id"), nullable=False)
     job2_id = Column(Integer, ForeignKey("job_descriptions.id"), nullable=False)
     comparison_type = Column(String(50), nullable=True)
-    similarity_score = Column(DECIMAL(4, 3), nullable=True)
-    differences = Column(JSONB, nullable=True)
+    similarity_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
+    differences = Column(JSONBType, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
@@ -317,7 +336,7 @@ class Skill(Base):
     description = Column(Text, nullable=True)  # Skill description
     category = Column(String(200), nullable=True)  # Additional categorization
     subcategory = Column(String(200), nullable=True)
-    skill_metadata = Column(JSONB, nullable=True)  # Additional Lightcast metadata
+    skill_metadata = Column(JSONBType, nullable=True)  # Additional Lightcast metadata
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, onupdate=datetime.utcnow, nullable=True)
 
@@ -347,7 +366,7 @@ class JobSkill(Base):
     proficiency_level = Column(String(50), nullable=True)
     is_required = Column(Boolean, default=False, nullable=False)
     extracted_context = Column(Text, nullable=True)
-    confidence_score = Column(DECIMAL(4, 3), nullable=True)
+    confidence_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
 
     # Relationships
     job = relationship("JobDescription")
@@ -370,11 +389,11 @@ class UsageAnalytics(Base):
     response_time_ms = Column(Integer, nullable=True)
     status_code = Column(Integer, nullable=True)
     search_query = Column(Text, nullable=True)
-    search_filters = Column(JSONB, nullable=True)
+    search_filters = Column(JSONBType, nullable=True)
     results_count = Column(Integer, nullable=True)
     processing_time_ms = Column(Integer, nullable=True)
     files_processed = Column(Integer, nullable=True)
-    request_metadata = Column(JSONB, nullable=True)
+    request_metadata = Column(JSONBType, nullable=True)
 
 
 class SystemMetrics(Base):
@@ -389,17 +408,17 @@ class SystemMetrics(Base):
     total_uploads = Column(Integer, nullable=True)
     total_exports = Column(Integer, nullable=True)
     avg_response_time_ms = Column(Integer, nullable=True)
-    error_rate = Column(DECIMAL(5, 4), nullable=True)
+    error_rate: DECIMAL = Column(DECIMAL(5, 4), nullable=True)
     total_ai_requests = Column(Integer, nullable=True)
     total_tokens_used = Column(Integer, nullable=True)
-    total_ai_cost_usd = Column(DECIMAL(12, 6), nullable=True)
+    total_ai_cost_usd: DECIMAL = Column(DECIMAL(12, 6), nullable=True)
     total_jobs_processed = Column(Integer, nullable=True)
     total_embeddings_generated = Column(Integer, nullable=True)
     storage_size_bytes = Column(Integer, nullable=True)
-    avg_data_quality_score = Column(DECIMAL(4, 3), nullable=True)
+    avg_data_quality_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
     period_start = Column(DateTime, nullable=True)
     period_end = Column(DateTime, nullable=True)
-    detailed_metrics = Column(JSONB, nullable=True)
+    detailed_metrics = Column(JSONBType, nullable=True)
 
 
 class AIUsageTracking(Base):
@@ -412,12 +431,12 @@ class AIUsageTracking(Base):
     input_tokens = Column(Integer, nullable=True)
     output_tokens = Column(Integer, nullable=True)
     total_tokens = Column(Integer, nullable=True)
-    cost_usd = Column(DECIMAL(10, 6), nullable=True)
+    cost_usd: DECIMAL = Column(DECIMAL(10, 6), nullable=True)
     request_id = Column(String(100), nullable=True)
     model_name = Column(String(100), nullable=True)
     success = Column(String(10), nullable=True)
     error_message = Column(Text, nullable=True)
-    request_metadata = Column(JSONB, nullable=True)
+    request_metadata = Column(JSONBType, nullable=True)
 
 
 class RLHFFeedback(Base):
@@ -452,11 +471,11 @@ class RLHFFeedback(Base):
     user_action = Column(
         String(50), nullable=False, index=True
     )  # accepted, rejected, modified
-    confidence = Column(
+    confidence: DECIMAL = Column(
         DECIMAL(4, 3), nullable=True
     )  # AI confidence score (0.000-1.000)
     feedback_metadata = Column(
-        JSONB, nullable=True
+        JSONBType, nullable=True
     )  # Additional context (renamed from 'metadata' to avoid SQLAlchemy reserved name)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
 

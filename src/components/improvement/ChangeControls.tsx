@@ -10,6 +10,7 @@
 import React, { useEffect, useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { logger } from "@/utils/logger";
 import {
   Select,
   SelectContent,
@@ -143,7 +144,7 @@ export function ChangeControls({
       onAcceptAll(selectedCategory === "all" ? undefined : selectedCategory);
       setShowAcceptAllDialog(false);
     } catch (error) {
-      console.error("Failed to accept all changes:", error);
+      logger.error("Failed to accept all changes:", error);
       alert("Failed to accept all changes. Please try again.");
     } finally {
       setIsProcessing(false);
@@ -158,7 +159,7 @@ export function ChangeControls({
       onRejectAll(selectedCategory === "all" ? undefined : selectedCategory);
       setShowRejectAllDialog(false);
     } catch (error) {
-      console.error("Failed to reject all changes:", error);
+      logger.error("Failed to reject all changes:", error);
       alert("Failed to reject all changes. Please try again.");
     } finally {
       setIsProcessing(false);
@@ -215,7 +216,7 @@ export function ChangeControls({
 
       setExportFormat(null);
     } catch (error) {
-      console.error("Export failed:", error);
+      logger.error("Export failed:", error);
       alert("Export failed. Please try again.");
     }
   };

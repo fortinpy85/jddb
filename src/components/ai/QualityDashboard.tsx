@@ -277,8 +277,8 @@ function DimensionScore({
       <div className="relative">
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className={`h-full ${getProgressColor(dimension.score)} transition-all duration-500`}
-            style={{ width: `${dimension.score}%` }}
+            className={`h-full ${getProgressColor(dimension.score)} transition-all duration-500 dimension-progress-bar`}
+            data-score={dimension.score}
           />
         </div>
       </div>
@@ -317,23 +317,6 @@ function CompactQualityView({
             : "All dimensions meeting standards"}
         </div>
       </div>
-    </div>
-  );
-}
-
-/**
- * Quality Trend Chart - Optional visualization (requires recharts)
- * TODO: Implement once historical data is available
- */
-export function QualityTrendChart({
-  historicalScores: _historicalScores,
-}: {
-  historicalScores: Array<{ date: string; score: number }>;
-}) {
-  // Placeholder for Phase 4
-  return (
-    <div className="text-sm text-gray-500 text-center p-4">
-      Quality trend visualization coming in Phase 4
     </div>
   );
 }

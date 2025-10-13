@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
+import { logger } from "@/utils/logger";
 
 interface BilingualEditorWrapperProps {
   jobId: number;
@@ -89,7 +90,7 @@ const BilingualEditorWrapper: React.FC<BilingualEditorWrapperProps> = ({
         throw new Error("Invalid response format from server");
       }
     } catch (err) {
-      console.error("Error fetching bilingual document:", err);
+      logger.error("Error fetching bilingual document:", err);
       setError(
         err instanceof Error
           ? err.message
@@ -128,10 +129,10 @@ const BilingualEditorWrapper: React.FC<BilingualEditorWrapperProps> = ({
 
       if (data.success) {
         // Optionally show success notification
-        console.log("Document saved successfully");
+        logger.info("Document saved successfully");
       }
     } catch (err) {
-      console.error("Error saving bilingual document:", err);
+      logger.error("Error saving bilingual document:", err);
       // Optionally show error notification
       alert("Failed to save changes. Please try again.");
     }
@@ -150,7 +151,7 @@ const BilingualEditorWrapper: React.FC<BilingualEditorWrapperProps> = ({
         },
       );
     } catch (err) {
-      console.error("Error updating segment:", err);
+      logger.error("Error updating segment:", err);
     }
   };
 
@@ -170,7 +171,7 @@ const BilingualEditorWrapper: React.FC<BilingualEditorWrapperProps> = ({
         },
       );
     } catch (err) {
-      console.error("Error updating segment status:", err);
+      logger.error("Error updating segment status:", err);
     }
   };
 

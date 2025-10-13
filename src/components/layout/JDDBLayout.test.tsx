@@ -1,4 +1,4 @@
-import { jest, describe, beforeEach, it, expect } from "@jest/globals";
+import { vi, describe, beforeEach, it, expect, type Mock } from "vitest";
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
@@ -7,15 +7,15 @@ import { useStore } from "@/lib/store";
 import { useLoadingContext } from "@/contexts/LoadingContext";
 
 // Mock the custom hooks
-jest.mock("@/lib/store", () => ({
-  useStore: jest.fn(),
+vi.mock("@/lib/store", () => ({
+  useStore: vi.fn(),
 }));
-jest.mock("@/contexts/LoadingContext", () => ({
-  useLoadingContext: jest.fn(),
+vi.mock("@/contexts/LoadingContext", () => ({
+  useLoadingContext: vi.fn(),
 }));
 
-const mockUseStore = useStore as jest.Mock;
-const mockUseLoadingContext = useLoadingContext as jest.Mock;
+const mockUseStore = useStore as unknown as Mock;
+const mockUseLoadingContext = useLoadingContext as unknown as Mock;
 
 describe("JDDBLayout", () => {
   beforeEach(() => {
@@ -41,15 +41,15 @@ describe("JDDBLayout", () => {
   });
 
   it("renders the header with title and subtitle", () => {
-    render(<JDDBLayout title="Test Title" subtitle="Test Subtitle" />);
+    render(<JDDBLayout title="Test Title" subtitle="Test Subtitle"><div /></JDDBLayout>);
 
     expect(screen.getByText("Test Title")).toBeInTheDocument();
     expect(screen.getByText("Test Subtitle")).toBeInTheDocument();
   });
 
   it("shows the back button and handles onBack event", () => {
-    const onBack = jest.fn();
-    render(<JDDBLayout showBackButton onBack={onBack} />);
+    const onBack = vi.fn();
+    render(<JDDBLayout showBackButton onBack={onBack}><div /></JDDBLayout>);
 
     const backButton = screen.getByRole("button", { name: /back/i });
     expect(backButton).toBeInTheDocument();
@@ -58,8 +58,8 @@ describe("JDDBLayout", () => {
   });
 
   it("renders the navigation tabs and handles tab change", () => {
-    const onTabChange = jest.fn();
-    render(<JDDBLayout activeTab="dashboard" onTabChange={onTabChange} />);
+    const onTabChange = vi.fn();
+    render(<JDDBLayout activeTab="dashboard" onTabChange={onTabChange}><div /></JDDBLayout>);
 
     const dashboardTab = screen.getByTestId("active-tab");
     expect(dashboardTab).toHaveTextContent("Dashboard");
@@ -70,7 +70,7 @@ describe("JDDBLayout", () => {
   });
 
   it("toggles the sidebar when the menu/close button is clicked", async () => {
-    render(<JDDBLayout />);
+    render(<JDDBLayout><div /></JDDBLayout>);
 
     const toggleButton = screen.getByTestId("sidebar-toggle");
     const sidebar = screen.getByTestId("sidebar");

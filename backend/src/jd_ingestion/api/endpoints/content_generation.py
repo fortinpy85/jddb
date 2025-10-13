@@ -167,6 +167,126 @@ async def enhance_content(
         )
 
 
+class SaveImprovedContentRequest(BaseModel):
+    """Request model for saving improved content."""
+
+    job_id: int = Field(..., description="The ID of the job to update.")
+    improved_content: str = Field(..., description="The new content of the job description.")
+
+
+@router.post("/save-improved-content")
+async def save_improved_content(
+    request: SaveImprovedContentRequest,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Save the improved content of a job description.
+    """
+    try:
+        service = AIEnhancementService(db)
+        await service.save_improved_content(
+            job_id=request.job_id,
+            improved_content=request.improved_content,
+        )
+
+        return {"message": "Content saved successfully"}
+
+    except Exception as e:
+        logger.error(f"Error saving improved content: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to save improved content: {str(e)}"
+        )
+
+
+class TranslateContentRequest(BaseModel):
+    """Request model for translating content."""
+
+    text: str = Field(..., description="The text to translate.")
+    target_language: str = Field(..., description="The language to translate the text to.")
+
+
+@router.post("/translate-content")
+async def translate_content(
+    request: TranslateContentRequest,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Translate text to the specified target language.
+    """
+    try:
+        service = AIEnhancementService(db)
+        translated_text = await service.translate_content(
+            text=request.text,
+            target_language=request.target_language,
+        )
+
+        return {"translated_text": translated_text}
+
+    except Exception as e:
+        logger.error(f"Error translating content: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to translate content: {str(e)}"
+        )
+
+
+class GenerateJobPostingRequest(BaseModel):
+    """Request model for generating a job posting."""
+
+    job_id: int = Field(..., description="The ID of the job to generate the posting from.")
+
+
+@router.post("/generate-job-posting")
+async def generate_job_posting(
+    request: GenerateJobPostingRequest,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Generate a job posting from a job description.
+    """
+    try:
+        service = AIEnhancementService(db)
+        job_posting = await service.generate_job_posting(
+            job_id=request.job_id,
+        )
+
+        return {"job_posting": job_posting}
+
+    except Exception as e:
+        logger.error(f"Error generating job posting: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate job posting: {str(e)}"
+        )
+
+
+class RunPredictiveAnalysisRequest(BaseModel):
+    """Request model for running predictive analysis."""
+
+    job_id: int = Field(..., description="The ID of the job to analyze.")
+
+
+@router.post("/run-predictive-analysis")
+async def run_predictive_analysis(
+    request: RunPredictiveAnalysisRequest,
+    db: AsyncSession = Depends(get_async_session),
+):
+    """
+    Run predictive analysis on a job description.
+    """
+    try:
+        service = AIEnhancementService(db)
+        analysis = await service.run_predictive_analysis(
+            job_id=request.job_id,
+        )
+
+        return analysis
+
+    except Exception as e:
+        logger.error(f"Error running predictive analysis: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to run predictive analysis: {str(e)}"
+        )
+
+
 @router.post("/inline-suggestions", response_model=InlineSuggestionsResponse)
 async def get_inline_suggestions(
     request: InlineSuggestionsRequest,

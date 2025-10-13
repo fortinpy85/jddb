@@ -254,3 +254,6 @@ AdminUser = Annotated[User, Depends(require_admin)]
 EditorUser = Annotated[User, Depends(require_editor)]
 TranslatorUser = Annotated[User, Depends(require_translator)]
 ReviewerUser = Annotated[User, Depends(require_reviewer)]
+
+# Alias for backwards compatibility with tests
+get_optional_current_user = get_current_user_optional

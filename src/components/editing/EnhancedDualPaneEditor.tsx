@@ -80,7 +80,6 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
   const [sourceLanguage, setSourceLanguage] = useState("en");
   const [targetLanguage, setTargetLanguage] = useState("fr");
   const [formality, setFormality] = useState("default");
-  const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
 
   const leftEditorRef = useRef<HTMLTextAreaElement>(null);
   const rightEditorRef = useRef<HTMLTextAreaElement>(null);
@@ -91,9 +90,10 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
     (isTyping) => {
       // Send typing status to other collaborators via WebSocket
       if (enableCollaboration && collaboration?.isConnected) {
-        // Future Enhancement: Send typing_start or typing_stop message
-        // This will enable real-time typing indicators for collaborative editing
-        // Requires WebSocket message protocol implementation
+        collaboration.sendMessage({
+          type: isTyping ? "typing_start" : "typing_stop",
+          userId,
+        });
       }
     },
     1000,
@@ -280,9 +280,7 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
                             ? "owner"
                             : "editor",
                         isOnline: true,
-                        isTyping: typingUsers.some(
-                          (tu) => tu.userId === userId,
-                        ),
+                        isTyping: collaboration.typingUsers.includes(userId),
                         lastActivity: new Date().toISOString(),
                       }),
                     )}
@@ -294,8 +292,8 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
                 )}
 
               {/* Typing Indicator */}
-              {typingUsers.length > 0 && (
-                <TypingIndicator typingUsers={typingUsers} maxVisible={2} />
+              {collaboration.typingUsers.length > 0 && (
+                <TypingIndicator typingUsers={collaboration.typingUsers.map(id => ({ userId: id, username: `User ${id}`}))} maxVisible={2} />
               )}
             </div>
           )}

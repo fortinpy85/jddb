@@ -27,7 +27,12 @@
     "language": "Langue",
     "qualityRange": "Plage de score de qualité",
     "dateRange": "Plage de dates",
-    "searchPlaceholder": "Rechercher des descriptions de poste..."
+    "searchPlaceholder": "Rechercher des descriptions de poste...",
+    "departmentPlaceholder": "Filtrer par ministère...",
+    "classificationLabel": "Filtre de classification",
+    "languageLabel": "Filtre de langue",
+    "allClassifications": "Toutes les classifications",
+    "allLanguages": "Toutes les langues"
   },
   "quality": {
     "excellent": "Excellent",
@@ -46,6 +51,7 @@
   },
   "actions": {
     "viewDetails": "Voir les détails",
+    "view": "Voir",
     "edit": "Modifier",
     "editJob": "Modifier le poste",
     "delete": "Supprimer le poste",
@@ -60,7 +66,15 @@
     "archive": "Archiver",
     "backToJobs": "Retour aux postes",
     "refresh": "Actualiser",
+    "loadData": "Charger les données",
+    "search": "Rechercher",
+    "loadMore": "Charger plus",
+    "clearSearch": "Effacer la recherche",
+    "browseAll": "Parcourir tout",
+    "uploadFiles": "Télécharger des fichiers",
+    "moreActions": "Plus d'actions",
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer le poste {{jobNumber}} ?",
+    "confirmDeleteDescription": "Cette action est irréversible. Cela supprimera définitiveement la description de poste et toutes les données associées.",
     "backToJobsAria": "Retourner à la liste des postes",
     "editJobAria": "Modifier le poste {{jobNumber}}",
     "approveJobAria": "Approuver le poste {{jobNumber}}",
@@ -99,10 +113,19 @@
     "contentUpdated": "Contenu mis à jour",
     "sectionUpdated": "La section « {{section}} » a été mise à jour",
     "deleteSuccess": "Poste supprimé",
-    "deleteSuccessDescription": "Le poste {{jobNumber}} a été supprimé avec succès"
+    "deleteSuccessDescription": "Le poste {{jobNumber}} a été supprimé avec succès",
+    "deleteFailed": "Échec de la suppression",
+    "deleteFailedDescription": "Échec de la suppression du poste : {{error}}",
+    "updateSuccess": "Poste mis à jour",
+    "updateSuccessDescription": "Le poste a été mis à jour avec succès",
+    "exportSuccess": "Exportation réussie",
+    "exportSuccessDescription": "Le poste {{jobNumber}} a été exporté avec succès",
+    "exportFailed": "Échec de l'exportation",
+    "exportFailedDescription": "Échec de l'exportation du poste : {{error}}"
   },
   "details": {
-    "additionalInformation": "Informations supplémentaires"
+    "additionalInformation": "Informations supplémentaires",
+    "processed": "Traité : {{date}}"
   },
   "status": {
     "draft": "Brouillon",
@@ -112,13 +135,16 @@
     "archived": "Archivé",
     "pending": "En attente",
     "completed": "Terminé",
-    "processing": "En traitement"
+    "processing": "En traitement",
+    "needsReview": "Nécessite une révision",
+    "failed": "Échoué"
   },
   "list": {
     "title": "Descriptions de poste",
     "noJobs": "Aucun poste trouvé",
     "loading": "Chargement des postes...",
-    "totalJobs": "{{count}} postes"
+    "totalJobs": "{{count}} postes",
+    "loadPrompt": "Cliquez sur le bouton ci-dessous pour charger les données des postes"
   },
   "search": {
     "placeholder": "Rechercher par titre, classification ou description...",
@@ -127,10 +153,18 @@
     "found": "trouvé(s)",
     "searching": "Recherche en cours",
     "noResults": "Aucun résultat trouvé",
+    "searchFailed": "La recherche a échoué",
+    "searchInSections": "Rechercher dans les sections",
+    "sortedByRelevance": "Trié par pertinence",
+    "matchingSections": "Sections correspondantes",
+    "description": "Rechercher des descriptions de poste par titre, classification ou contenu",
     "features": {
       "fullText": "Recherche en texte intégral dans toutes les descriptions de poste",
       "semantic": "Recherche sémantique alimentée par l'IA",
-      "filters": "Filtrage avancé par classification, ministère et plus encore"
+      "filters": "Filtrage avancé par classification, ministère et plus encore",
+      "filterBy": "Filtrer par classification, langue et ministère",
+      "searchSections": "Rechercher dans des sections spécifiques de descriptions de poste",
+      "smartSuggestions": "Suggestions de recherche et saisie automatique alimentées par l'IA"
     }
   }
 }

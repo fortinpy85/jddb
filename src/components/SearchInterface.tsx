@@ -10,6 +10,7 @@ import { ClassificationBadge } from "@/components/ui/classification-badge";
 import { FilterBar } from "@/components/ui/filter-bar";
 import type { SearchQuery, SearchResult, JobDescription } from "@/lib/types";
 import { apiClient } from "@/lib/api";
+import { logger } from "@/utils/logger";
 import {
   getClassificationLevel,
   getLanguageName,
@@ -103,7 +104,7 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
       const facetData = await apiClient.getSearchFacets();
       setFacets(facetData);
     } catch (err) {
-      console.error("Failed to load facets:", err);
+      logger.error("Failed to load facets:", err);
     }
   };
 
@@ -113,7 +114,7 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
       setSuggestions(suggestionData);
       setShowSuggestions(true);
     } catch (err) {
-      console.error("Failed to load suggestions:", err);
+      logger.error("Failed to load suggestions:", err);
     }
   };
 

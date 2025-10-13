@@ -37,6 +37,7 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
+import { logger } from "@/utils/logger";
 
 interface ContentGeneratorModalProps {
   open: boolean;
@@ -160,7 +161,7 @@ export function ContentGeneratorModal({
         setChanges(result.changes);
       }
     } catch (err: any) {
-      console.error("Content generation failed:", err);
+      logger.error("Content generation failed:", err);
       setError(err.message || "Failed to generate content");
     } finally {
       setLoading(false);
@@ -238,6 +239,8 @@ export function ContentGeneratorModal({
                     value={classification}
                     disabled
                     className="w-full px-3 py-2 border rounded-md bg-gray-50"
+                    placeholder="Classification"
+                    title="Classification"
                   />
                 </div>
                 <div className="space-y-2">

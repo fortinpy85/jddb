@@ -41,9 +41,8 @@ class TestListJobs:
                 title="Director of Policy",
                 classification="EX-01",
                 language="en",
-                department="Treasury Board",
+                job_number="JD-001",
                 raw_content="Director position for policy...",
-                processed_content="Director position for policy...",
                 created_at=datetime.now(),
             ),
             JobDescription(
@@ -51,9 +50,8 @@ class TestListJobs:
                 title="Directeur des Politiques",
                 classification="EX-01",
                 language="fr",
-                department="Conseil du Trésor",
+                job_number="JD-002",
                 raw_content="Poste de directeur pour les politiques...",
-                processed_content="Poste de directeur pour les politiques...",
                 created_at=datetime.now(),
             ),
         ]
@@ -308,9 +306,8 @@ class TestGetJob:
             title="Senior Policy Advisor",
             classification="EX-01",
             language="en",
-            department="Treasury Board",
+            job_number="JD-001",
             raw_content="Senior policy advisor position...",
-            processed_content="Senior policy advisor position...",
             created_at=datetime.now(),
         )
         # Add mock relationships
@@ -371,8 +368,7 @@ class TestGetJobSection:
             id=1,
             job_id=1,
             section_type="general_accountability",
-            content="This position is responsible for...",
-            created_at=datetime.now(),
+            section_content="This position is responsible for...",
         )
 
     @pytest.mark.asyncio
@@ -425,9 +421,8 @@ class TestDeleteJob:
             title="Job to Delete",
             classification="EX-01",
             language="en",
-            department="Test Department",
+            job_number="JD-DEL-001",
             raw_content="Job content...",
-            processed_content="Job content...",
             created_at=datetime.now(),
         )
 
@@ -487,9 +482,8 @@ class TestBulkExportJobs:
                 title="Director of Policy",
                 classification="EX-01",
                 language="en",
-                department="Treasury Board",
+                job_number="JD-EXP-001",
                 raw_content="Director position...",
-                processed_content="Director position...",
                 created_at=datetime.now(),
             ),
             JobDescription(
@@ -497,9 +491,8 @@ class TestBulkExportJobs:
                 title="Senior Analyst",
                 classification="AS-05",
                 language="en",
-                department="Finance",
+                job_number="JD-EXP-002",
                 raw_content="Senior analyst position...",
-                processed_content="Senior analyst position...",
                 created_at=datetime.now(),
             ),
         ]

@@ -22,6 +22,7 @@ import {
   useTranslationMemory,
   TranslationMatch,
 } from "@/hooks/useTranslationMemory";
+import { logger } from "@/utils/logger";
 
 interface TranslationMemoryPanelProps {
   sourceLanguage: string;
@@ -124,7 +125,7 @@ export const TranslationMemoryPanel: React.FC<TranslationMemoryPanelProps> = ({
       // Rate translation: 5 stars for approved, 1 star for rejected
       await rateTranslation(matchId, approved ? 5 : 1);
     } catch (err) {
-      console.error("Error rating translation:", err);
+      logger.error("Error rating translation:", err);
     }
   };
 

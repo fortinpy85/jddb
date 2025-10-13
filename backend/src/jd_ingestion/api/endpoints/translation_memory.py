@@ -246,6 +246,7 @@ async def search_similar_translations(
     source_language: str = Query(..., description="Source language code"),
     target_language: str = Query(..., description="Target language code"),
     project_id: Optional[int] = Query(None, description="Limit to specific project"),
+    domain: Optional[str] = Query(None, description="Domain filter (e.g., 'job_descriptions')"),
     similarity_threshold: float = Query(
         0.7, ge=0, le=1, description="Minimum similarity score"
     ),
@@ -259,6 +260,7 @@ async def search_similar_translations(
             source_language=source_language,
             target_language=target_language,
             project_id=project_id,
+            domain=domain,
             similarity_threshold=similarity_threshold,
             limit=limit,
             db=db,
@@ -272,6 +274,7 @@ async def search_similar_translations(
                 "target_language": target_language,
                 "similarity_threshold": similarity_threshold,
                 "project_id": project_id,
+                "domain": domain,
             },
             "results": results,
             "count": len(results),

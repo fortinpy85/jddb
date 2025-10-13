@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, waitFor, act } from "@testing-library/react";
 import {
   FadeTransition,
@@ -11,6 +11,14 @@ import {
   HoverTransition,
   ScrollReveal,
 } from "./transitions";
+
+// Mock IntersectionObserver
+const intersectionObserverMock = () => ({
+  observe: () => null,
+  unobserve: () => null,
+  disconnect: () => null,
+});
+window.IntersectionObserver = vi.fn().mockImplementation(intersectionObserverMock);
 
 describe("FadeTransition", () => {
   it("renders children when show is true", () => {
@@ -591,7 +599,7 @@ describe("HoverTransition", () => {
         <div>Main Content</div>
       </HoverTransition>,
     );
-    const childWrapper = container.querySelector(".transition-all");
+    const childWrapper = container.querySelector(".transition-all") as HTMLElement;
     expect(childWrapper?.style.transitionDuration).toBe("500ms");
   });
 

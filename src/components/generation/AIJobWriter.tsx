@@ -39,6 +39,7 @@ import {
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { logger } from "@/utils/logger";
 
 interface JobRequirements {
   jobTitle: string;
@@ -230,24 +231,30 @@ ${requirements.additionalInfo}
         section_type: "general_accountability",
         current_content: context,
         job_context: context,
+        classification: requirements.classification,
+        language: "en",
       });
-      sections.accountabilities = accountabilityResponse.content;
+      sections.accountabilities = accountabilityResponse.completed_content || accountabilityResponse.content;
 
       // Generate Organization Structure
       const orgStructureResponse = await apiClient.generateSectionCompletion({
         section_type: "organization_structure",
         current_content: `${requirements.reportsTo}\n${requirements.department}`,
         job_context: context,
+        classification: requirements.classification,
+        language: "en",
       });
-      sections.organizationStructure = orgStructureResponse.content;
+      sections.organizationStructure = orgStructureResponse.completed_content || orgStructureResponse.content;
 
       // Generate Nature and Scope
       const natureResponse = await apiClient.generateSectionCompletion({
         section_type: "nature_and_scope",
         current_content: requirements.additionalInfo,
         job_context: context,
+        classification: requirements.classification,
+        language: "en",
       });
-      sections.natureAndScope = natureResponse.content;
+      sections.natureAndScope = natureResponse.completed_content || natureResponse.content;
 
       // Generate Specific Accountabilities
       const specificAccountabilityContent =
@@ -256,8 +263,10 @@ ${requirements.additionalInfo}
         section_type: "specific_accountabilities",
         current_content: specificAccountabilityContent,
         job_context: context,
+        classification: requirements.classification,
+        language: "en",
       });
-      sections.specificAccountabilities = specificResponse.content;
+      sections.specificAccountabilities = specificResponse.completed_content || specificResponse.content;
 
       // Generate Knowledge and Skills
       const skillsContent =
@@ -268,8 +277,10 @@ ${requirements.additionalInfo}
         section_type: "knowledge_and_skills",
         current_content: skillsContent,
         job_context: context,
+        classification: requirements.classification,
+        language: "en",
       });
-      sections.knowledgeAndSkills = skillsResponse.content;
+      sections.knowledgeAndSkills = skillsResponse.completed_content || skillsResponse.content;
 
       // Generate summary
       sections.summary = `The ${requirements.jobTitle} (${requirements.classification}) is responsible for ${requirements.responsibilities[0]?.toLowerCase() || "key organizational objectives"}. This position reports to the ${requirements.reportsTo} and is located in ${requirements.location}.`;
@@ -295,7 +306,7 @@ ${requirements.additionalInfo}
         description: "Your AI-generated job description is ready for review.",
       });
     } catch (error) {
-      console.error("Generation failed:", error);
+      logger.error("Generation failed:", error);
       toast({
         title: "Generation Failed",
         description:
@@ -347,7 +358,7 @@ ${generatedContent.knowledgeAndSkills}
         description: "Your job description has been saved to the database.",
       });
     } catch (error) {
-      console.error("Save failed:", error);
+      logger.error("Save failed:", error);
       toast({
         title: "Save Failed",
         description:

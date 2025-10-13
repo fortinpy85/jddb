@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, Home, Bug } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { logger } from "@/utils/logger";
 
 interface ErrorInfo {
   componentStack: string;
@@ -66,7 +67,7 @@ export class ErrorBoundary extends Component<
     });
 
     // Log error details
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    logger.error("ErrorBoundary caught an error:", error, errorInfo);
 
     // Call custom error handler if provided
     if (onError) {
@@ -86,16 +87,10 @@ export class ErrorBoundary extends Component<
   }
 
   componentDidUpdate(prevProps: ErrorBoundaryProps): void {
-    const { resetOnPropsChange, resetKeys } = this.props;
+    const { resetKeys } = this.props;
     const { hasError } = this.state;
 
-    if (hasError && prevProps !== this.props) {
-      // Error just occurred
-      return;
-    }
-
-    if (hasError && resetOnPropsChange) {
-      // Check if any reset keys changed
+    if (hasError && resetKeys && prevProps.resetKeys !== resetKeys) {
       const hasResetKeyChanged = resetKeys?.some(
         (resetKey, idx) => prevProps.resetKeys?.[idx] !== resetKey,
       );
@@ -120,10 +115,7 @@ export class ErrorBoundary extends Component<
   }
 
   handleRetry(): void {
-    // Add a small delay to prevent immediate re-error
-    this.resetTimeoutId = window.setTimeout(() => {
-      this.resetErrorBoundary();
-    }, 250);
+    this.resetErrorBoundary();
   }
 
   handleReload(): void {
@@ -252,7 +244,7 @@ export class ErrorBoundary extends Component<
 // Hook-based error boundary for functional components
 export function useErrorHandler() {
   return React.useCallback((error: Error, errorInfo?: React.ErrorInfo) => {
-    console.error("Unhandled error:", error, errorInfo);
+    logger.error("Unhandled error:", error, errorInfo);
 
     // You can integrate with error reporting services here
     if (typeof window !== "undefined" && (window as any).__SENTRY__) {

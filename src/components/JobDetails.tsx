@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiClient } from "@/lib/api";
+import { logger } from "@/utils/logger";
 import {
   getClassificationLevel,
   getLanguageName,
@@ -58,7 +59,7 @@ export function JobDetails({ jobId, onBack }: JobDetailsProps) {
           duration: 3000,
         });
       } catch (err) {
-        console.error(err);
+        logger.error("Failed to load job details:", err);
         addToast({
           title: "Failed to load job details",
           description: "Unable to fetch job details. Please try again.",
@@ -105,7 +106,7 @@ export function JobDetails({ jobId, onBack }: JobDetailsProps) {
         });
       }
     } catch (err) {
-      console.error("Share failed:", err);
+      logger.error("Share failed:", err);
       addToast({
         title: "Share failed",
         description: "Unable to share job details. Please try again.",

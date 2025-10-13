@@ -191,7 +191,7 @@ class QualityService:
         return {
             "content_completeness_score": content_completeness,
             "sections_completeness_score": sections_completeness,
-            "job_metadata_completeness_score": job_metadata_completeness,
+            "metadata_completeness_score": job_metadata_completeness,
             "has_structured_fields": has_structured_fields,
             "has_all_sections": has_all_sections,
             "has_embeddings": has_embeddings,
@@ -553,7 +553,7 @@ class QualityService:
             "completeness": {
                 "content": float(metrics.content_completeness_score or 0),
                 "sections": float(metrics.sections_completeness_score or 0),
-                "job_metadata": float(metrics.job_metadata_completeness_score or 0),
+                "job_metadata": float(metrics.metadata_completeness_score or 0),
             },
             "quality_indicators": {
                 "structured_fields": metrics.has_structured_fields,
@@ -596,7 +596,7 @@ class QualityService:
             func.avg(DataQualityMetrics.sections_completeness_score).label(
                 "avg_sections_completeness"
             ),
-            func.avg(DataQualityMetrics.job_metadata_completeness_score).label(
+            func.avg(DataQualityMetrics.metadata_completeness_score).label(
                 "avg_job_metadata_completeness"
             ),
             func.sum(DataQualityMetrics.processing_errors_count).label(

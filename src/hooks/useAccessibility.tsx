@@ -5,6 +5,7 @@
  */
 
 import { useEffect } from "react";
+import { logger } from "@/utils/logger";
 
 export function useAccessibility(
   enabled = process.env.NODE_ENV === "development",
@@ -38,7 +39,7 @@ export function useAccessibility(
         });
       })
       .catch((error) => {
-        console.warn("Failed to initialize axe-core:", error);
+        logger.warn("Failed to initialize axe-core:", error);
       });
   }, [enabled]);
 }

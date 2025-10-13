@@ -32,6 +32,7 @@ import { PageTransition } from "@/components/ui/transitions";
 import { AlertBanner } from "@/components/ui/alert-banner";
 import { LanguageSync } from "@/components/wet/LanguageSync";
 import { SkipLinks } from "@/components/wet/SkipLinks";
+import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 
 // Lazy load route-level components for better performance
 const BulkUpload = lazy(() => import("@/components/BulkUpload"));
@@ -58,10 +59,8 @@ const UserPreferencesPage = lazy(() =>
     default: m.UserPreferencesPage,
   })),
 );
-const BilingualEditor = lazy(() =>
-  import("@/components/translation/BilingualEditor").then((m) => ({
-    default: m.BilingualEditor,
-  })),
+const BilingualEditorWrapper = lazy(() =>
+  import("@/components/translation/BilingualEditorWrapper")
 );
 const AIDemo = lazy(() => import("@/app/ai-demo/page"));
 const AIJobWriter = lazy(() =>
@@ -106,8 +105,15 @@ export default function HomePage() {
   );
   const [showAlertBanner, setShowAlertBanner] = useState(true);
   const [showCreateJobModal, setShowCreateJobModal] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { stats, selectedJob, fetchJobs, fetchStats, selectJob, error } =
     useStore();
+
+  const { confirmNavigation } = useUnsavedChanges({
+    hasUnsavedChanges,
+    message:
+      "You have unsaved changes. Are you sure you want to leave?",
+  });
 
   // Track view changes for transitions
   const handleViewChange = (newView: ViewType) => {
@@ -188,6 +194,9 @@ export default function HomePage() {
 
   // Handle navigation from AppHeader
   const handleHeaderNavigation = (view: AppView) => {
+    if (!confirmNavigation()) {
+      return;
+    }
     switch (view) {
       case "dashboard":
         selectJob(null); // Clear selection when navigating away from job details
@@ -344,24 +353,33 @@ export default function HomePage() {
           </Suspense>,
           "search",
         );
-      case "editing":
+      case "editing": {
+        const { mergedJob, setMergedJob } = useStore.getState();
+        if (mergedJob) {
+          setMergedJob(null);
+        }
         return wrapWithPanelId(
           <Suspense fallback={<LoadingState message="Loading editor..." />}>
             <BasicEditingView
               jobId={selectedJob?.id}
+              initialContent={mergedJob?.title}
               onBack={() =>
                 handleViewChange(selectedJob ? "job-details" : "home")
               }
               onAdvancedEdit={() => {
-                // Future Enhancement: Add lock warning modal
-                // This modal should warn users that switching to advanced mode
-                // will lock the document for concurrent editing
-                // For now, advanced mode is accessible through the advanced tab
+                if (confirmNavigation()) {
+                  // Future Enhancement: Add lock warning modal
+                  // This modal should warn users that switching to advanced mode
+                  // will lock the document for concurrent editing
+                  // For now, advanced mode is accessible through the advanced tab
+                }
               }}
+              onUnsavedChangesChange={setHasUnsavedChanges}
             />
           </Suspense>,
           "improve",
         );
+      }
       case "improvement":
         return wrapWithPanelId(
           <Suspense
@@ -377,7 +395,7 @@ export default function HomePage() {
               onBack={() =>
                 handleViewChange(selectedJob ? "job-details" : "home")
               }
-              onSave={(finalText) => {
+              onSave={(_finalText) => {
                 handleViewChange(selectedJob ? "job-details" : "home");
               }}
             />
@@ -390,7 +408,7 @@ export default function HomePage() {
             <Suspense
               fallback={<LoadingState message="Loading translator..." />}
             >
-              <BilingualEditor
+              <BilingualEditorWrapper
                 jobId={selectedJob.id}
                 sourceLanguage={selectedJob.language === "fr" ? "fr" : "en"}
                 targetLanguage={selectedJob.language === "fr" ? "en" : "fr"}
@@ -408,9 +426,9 @@ export default function HomePage() {
         );
       case "compare":
         return wrapWithPanelId(
-          <Suspense fallback={<LoadingState message="Loading comparison..." />}>
+            <Suspense fallback={<LoadingState message="Loading comparison..." />}>
             <JobComparison />
-          </Suspense>,
+            </Suspense>,
           "compare",
         );
       case "statistics":
@@ -485,7 +503,7 @@ export default function HomePage() {
             <Suspense
               fallback={<LoadingState message="Loading posting generator..." />}
             >
-              <JobPostingGenerator />
+              <JobPostingGenerator selectedJob={selectedJob} />
             </Suspense>
           </div>,
           "posting",
@@ -544,6 +562,8 @@ export default function HomePage() {
 
   return (
     <ThemeProvider defaultTheme="system" enableSystem>
+      {/* Screenreader-only h1 for accessibility and E2E tests */}
+      <h1 className="sr-only">Job Description Database (JDDB)</h1>
       <SkipLinks />
       <LanguageSync />
       <ErrorBoundaryWrapper

@@ -24,98 +24,110 @@ class TestDatabaseEngines:
     """Test database engine creation and configuration."""
 
     @patch("jd_ingestion.database.connection.settings")
-    def test_async_engine_creation(self, mock_settings):
+    @patch("jd_ingestion.database.connection.create_async_engine")
+    def test_async_engine_creation(self, mock_create_engine, mock_settings):
         """Test async engine is created with correct settings."""
         mock_settings.database_url = "postgresql+asyncpg://user:pass@localhost/test"
         mock_settings.debug = True
+        mock_engine = Mock()
+        mock_create_engine.return_value = mock_engine
 
-        with patch(
-            "jd_ingestion.database.connection.create_async_engine"
-        ) as mock_create_engine:
-            mock_engine = Mock()
-            mock_create_engine.return_value = mock_engine
+        # Import and call the function
+        from jd_ingestion.database.connection import get_async_engine
 
-            # Re-import to trigger engine creation with mocked settings
-            import importlib
-            from jd_ingestion.database import connection
+        # Reset global state
+        import jd_ingestion.database.connection as conn
+        conn._async_engine = None
 
-            importlib.reload(connection)
+        # Call get_async_engine to trigger creation
+        result = get_async_engine()
 
-            mock_create_engine.assert_called_once_with(
-                "postgresql+asyncpg://user:pass@localhost/test",
-                echo=True,
-                pool_pre_ping=True,
-            )
+        mock_create_engine.assert_called_once_with(
+            "postgresql+asyncpg://user:pass@localhost/test",
+            echo=True,
+            pool_pre_ping=True,
+        )
+        assert result == mock_engine
 
     @patch("jd_ingestion.database.connection.settings")
-    def test_sync_engine_creation(self, mock_settings):
+    @patch("jd_ingestion.database.connection.create_engine")
+    def test_sync_engine_creation(self, mock_create_engine, mock_settings):
         """Test sync engine is created with correct settings."""
         mock_settings.database_sync_url = "postgresql://user:pass@localhost/test"
         mock_settings.debug = False
+        mock_engine = Mock()
+        mock_create_engine.return_value = mock_engine
 
-        with patch(
-            "jd_ingestion.database.connection.create_engine"
-        ) as mock_create_engine:
-            mock_engine = Mock()
-            mock_create_engine.return_value = mock_engine
+        # Import and call the function
+        from jd_ingestion.database.connection import get_sync_engine
 
-            # Re-import to trigger engine creation with mocked settings
-            import importlib
-            from jd_ingestion.database import connection
+        # Reset global state
+        import jd_ingestion.database.connection as conn
+        conn._sync_engine = None
 
-            importlib.reload(connection)
+        # Call get_sync_engine to trigger creation
+        result = get_sync_engine()
 
-            mock_create_engine.assert_called_once_with(
-                "postgresql://user:pass@localhost/test",
-                echo=False,
-                pool_pre_ping=True,
-            )
+        mock_create_engine.assert_called_once_with(
+            "postgresql://user:pass@localhost/test",
+            echo=False,
+            pool_pre_ping=True,
+        )
+        assert result == mock_engine
 
 
 class TestSessionMakers:
     """Test session maker configuration."""
 
-    @patch("jd_ingestion.database.connection.async_engine")
-    def test_async_session_maker_creation(self, mock_engine):
+    @patch("jd_ingestion.database.connection.get_async_engine")
+    @patch("jd_ingestion.database.connection.async_sessionmaker")
+    def test_async_session_maker_creation(self, mock_sessionmaker, mock_get_engine):
         """Test async session maker is created with correct configuration."""
-        with patch(
-            "jd_ingestion.database.connection.async_sessionmaker"
-        ) as mock_sessionmaker:
-            mock_session_factory = Mock()
-            mock_sessionmaker.return_value = mock_session_factory
+        mock_engine = Mock()
+        mock_get_engine.return_value = mock_engine
+        mock_session_factory = Mock()
+        mock_sessionmaker.return_value = mock_session_factory
 
-            # Re-import to trigger session maker creation
-            import importlib
-            from jd_ingestion.database import connection
+        from jd_ingestion.database.connection import get_async_session_local
 
-            importlib.reload(connection)
+        # Reset global state
+        import jd_ingestion.database.connection as conn
+        conn._async_session_local = None
 
-            mock_sessionmaker.assert_called_once_with(
-                mock_engine,
-                class_=AsyncSession,
-                expire_on_commit=False,
-            )
+        # Call get_async_session_local to trigger creation
+        result = get_async_session_local()
 
-    @patch("jd_ingestion.database.connection.sync_engine")
-    def test_sync_session_maker_creation(self, mock_engine):
+        mock_sessionmaker.assert_called_once_with(
+            mock_engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
+        )
+        assert result == mock_session_factory
+
+    @patch("jd_ingestion.database.connection.get_sync_engine")
+    @patch("jd_ingestion.database.connection.sessionmaker")
+    def test_sync_session_maker_creation(self, mock_sessionmaker, mock_get_engine):
         """Test sync session maker is created with correct configuration."""
-        with patch(
-            "jd_ingestion.database.connection.sessionmaker"
-        ) as mock_sessionmaker:
-            mock_session_factory = Mock()
-            mock_sessionmaker.return_value = mock_session_factory
+        mock_engine = Mock()
+        mock_get_engine.return_value = mock_engine
+        mock_session_factory = Mock()
+        mock_sessionmaker.return_value = mock_session_factory
 
-            # Re-import to trigger session maker creation
-            import importlib
-            from jd_ingestion.database import connection
+        from jd_ingestion.database.connection import get_session_local
 
-            importlib.reload(connection)
+        # Reset global state
+        import jd_ingestion.database.connection as conn
+        conn._session_local = None
 
-            mock_sessionmaker.assert_called_once_with(
-                bind=mock_engine,
-                autocommit=False,
-                autoflush=False,
-            )
+        # Call get_session_local to trigger creation
+        result = get_session_local()
+
+        mock_sessionmaker.assert_called_once_with(
+            bind=mock_engine,
+            autocommit=False,
+            autoflush=False,
+        )
+        assert result == mock_session_factory
 
 
 class TestBaseModel:
@@ -182,10 +194,15 @@ class TestAsyncSessionDependency:
         mock_session = AsyncMock(spec=AsyncSession)
 
         with patch(
-            "jd_ingestion.database.connection.AsyncSessionLocal"
-        ) as mock_session_factory:
-            mock_session_factory.return_value.__aenter__.return_value = mock_session
-            mock_session_factory.return_value.__aexit__.return_value = None
+            "jd_ingestion.database.connection.get_async_session_local"
+        ) as mock_get_session_local:
+            # Create async context manager mock
+            mock_context = AsyncMock()
+            mock_context.__aenter__.return_value = mock_session
+            mock_context.__aexit__.return_value = None
+
+            mock_session_factory = Mock(return_value=mock_context)
+            mock_get_session_local.return_value = mock_session_factory
 
             # Create generator and get session
             session_generator = get_async_session()
@@ -194,30 +211,44 @@ class TestAsyncSessionDependency:
             # Verify session is returned
             assert session == mock_session
 
-            # Verify commit is called on successful completion
+            # Complete the generator normally
+            try:
+                await session_generator.__anext__()
+            except StopAsyncIteration:
+                pass
+
+            # Verify commit and close are called on successful completion
             mock_session.commit.assert_called_once()
+            mock_session.close.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_get_async_session_exception_rollback(self):
         """Test async session dependency rollback on exception."""
         mock_session = AsyncMock(spec=AsyncSession)
-        mock_session.commit.side_effect = Exception("Database error")
 
         with patch(
-            "jd_ingestion.database.connection.AsyncSessionLocal"
-        ) as mock_session_factory:
-            mock_session_factory.return_value.__aenter__.return_value = mock_session
-            mock_session_factory.return_value.__aexit__.return_value = None
+            "jd_ingestion.database.connection.get_async_session_local"
+        ) as mock_get_session_local:
+            # Create async context manager mock
+            mock_context = AsyncMock()
+            mock_context.__aenter__.return_value = mock_session
+            mock_context.__aexit__.return_value = None
+
+            mock_session_factory = Mock(return_value=mock_context)
+            mock_get_session_local.return_value = mock_session_factory
 
             session_generator = get_async_session()
+            _session = await session_generator.__anext__()
 
-            with pytest.raises(Exception, match="Database error"):
-                _session = await session_generator.__anext__()
-                # Simulate exception during session usage
+            # Simulate exception during session usage
+            try:
                 await session_generator.athrow(Exception("Database error"))
+            except Exception:
+                pass
 
-            # Verify rollback is called
+            # Verify rollback and close are called
             mock_session.rollback.assert_called_once()
+            mock_session.close.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_get_async_session_always_closes(self):
@@ -225,19 +256,21 @@ class TestAsyncSessionDependency:
         mock_session = AsyncMock(spec=AsyncSession)
 
         with patch(
-            "jd_ingestion.database.connection.AsyncSessionLocal"
-        ) as mock_session_factory:
-            mock_session_factory.return_value.__aenter__.return_value = mock_session
-            mock_session_factory.return_value.__aexit__.return_value = None
+            "jd_ingestion.database.connection.get_async_session_local"
+        ) as mock_get_session_local:
+            # Create async context manager mock
+            mock_context = AsyncMock()
+            mock_context.__aenter__.return_value = mock_session
+            mock_context.__aexit__.return_value = None
+
+            mock_session_factory = Mock(return_value=mock_context)
+            mock_get_session_local.return_value = mock_session_factory
 
             session_generator = get_async_session()
             _session = await session_generator.__anext__()
 
             # Manually close the generator to trigger finally block
-            try:
-                await session_generator.aclose()
-            except StopAsyncIteration:
-                pass
+            await session_generator.aclose()
 
             # Verify close is called
             mock_session.close.assert_called_once()
@@ -251,29 +284,52 @@ class TestSyncSessionDependency:
         mock_session = Mock(spec=Session)
 
         with patch(
-            "jd_ingestion.database.connection.SessionLocal"
-        ) as mock_session_factory:
+            "jd_ingestion.database.connection.get_session_local"
+        ) as mock_get_session_local:
+            mock_session_factory = Mock()
             mock_session_factory.return_value = mock_session
+            mock_get_session_local.return_value = mock_session_factory
 
-            result = get_sync_session()
+            # Create generator and get session
+            session_gen = get_sync_session()
+            result = next(session_gen)
 
             assert result == mock_session
-            mock_session_factory.assert_called_once()
+            mock_get_session_local.assert_called_once()
+
+            # Complete generator to trigger commit and close
+            try:
+                next(session_gen)
+            except StopIteration:
+                pass
+
+            mock_session.commit.assert_called_once()
+            mock_session.close.assert_called_once()
 
     def test_get_sync_session_closes_on_exception(self):
         """Test sync session is closed even when exception occurs."""
         mock_session = Mock(spec=Session)
-        mock_session_factory = Mock()
-        mock_session_factory.return_value = mock_session
 
         with patch(
-            "jd_ingestion.database.connection.SessionLocal", mock_session_factory
-        ):
-            # This should succeed and return session
-            result = get_sync_session()
+            "jd_ingestion.database.connection.get_session_local"
+        ) as mock_get_session_local:
+            mock_session_factory = Mock()
+            mock_session_factory.return_value = mock_session
+            mock_get_session_local.return_value = mock_session_factory
+
+            session_gen = get_sync_session()
+            result = next(session_gen)
 
             assert result == mock_session
-            # Note: The finally block executes after return, so close is called
+
+            # Simulate exception during usage
+            try:
+                session_gen.throw(Exception("Database error"))
+            except Exception:
+                pass
+
+            # Verify rollback and close are called
+            mock_session.rollback.assert_called_once()
             mock_session.close.assert_called_once()
 
     def test_get_db_dependency_success(self):
@@ -281,16 +337,18 @@ class TestSyncSessionDependency:
         mock_session = Mock(spec=Session)
 
         with patch(
-            "jd_ingestion.database.connection.SessionLocal"
-        ) as mock_session_factory:
+            "jd_ingestion.database.connection.get_session_local"
+        ) as mock_get_session_local:
+            mock_session_factory = Mock()
             mock_session_factory.return_value = mock_session
+            mock_get_session_local.return_value = mock_session_factory
 
             # Create generator and get session
             db_generator = get_db()
             db_session = next(db_generator)
 
             assert db_session == mock_session
-            mock_session_factory.assert_called_once()
+            mock_get_session_local.assert_called_once()
 
             # Complete the generator to trigger finally block
             try:
@@ -298,7 +356,8 @@ class TestSyncSessionDependency:
             except StopIteration:
                 pass
 
-            # Verify close is called in finally block
+            # Verify commit and close are called in finally block
+            mock_session.commit.assert_called_once()
             mock_session.close.assert_called_once()
 
     def test_get_db_dependency_closes_on_exception(self):
@@ -306,9 +365,11 @@ class TestSyncSessionDependency:
         mock_session = Mock(spec=Session)
 
         with patch(
-            "jd_ingestion.database.connection.SessionLocal"
-        ) as mock_session_factory:
+            "jd_ingestion.database.connection.get_session_local"
+        ) as mock_get_session_local:
+            mock_session_factory = Mock()
             mock_session_factory.return_value = mock_session
+            mock_get_session_local.return_value = mock_session_factory
 
             db_generator = get_db()
             db_session = next(db_generator)
@@ -321,7 +382,8 @@ class TestSyncSessionDependency:
             except Exception:
                 pass
 
-            # Verify close is called even on exception
+            # Verify rollback and close are called even on exception
+            mock_session.rollback.assert_called_once()
             mock_session.close.assert_called_once()
 
 

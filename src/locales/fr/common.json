@@ -31,7 +31,8 @@
     "sort": "Trier",
     "refresh": "Actualiser",
     "viewDetails": "Voir les détails",
-    "confirm": "Confirmer"
+    "confirm": "Confirmer",
+    "tryAgain": "Réessayer"
   },
   "status": {
     "loading": "Chargement...",
@@ -89,5 +90,15 @@
     "lastMonth": "Le mois dernier",
     "lastYear": "L'année dernière",
     "custom": "Plage personnalisée"
+  },
+  "loading": {
+    "loading": "Chargement...",
+    "initializing": "Initialisation..."
+  },
+  "errors": {
+    "unknown": "Une erreur inconnue s'est produite",
+    "network": "Erreur réseau",
+    "server": "Erreur serveur",
+    "notFound": "Non trouvé"
   }
 }

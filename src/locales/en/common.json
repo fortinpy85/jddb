@@ -31,7 +31,8 @@
     "sort": "Sort",
     "refresh": "Refresh",
     "viewDetails": "View Details",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "tryAgain": "Try Again"
   },
   "status": {
     "loading": "Loading...",
@@ -89,5 +90,15 @@
     "lastMonth": "Last month",
     "lastYear": "Last year",
     "custom": "Custom range"
+  },
+  "loading": {
+    "loading": "Loading...",
+    "initializing": "Initializing..."
+  },
+  "errors": {
+    "unknown": "An unknown error occurred",
+    "network": "Network error",
+    "server": "Server error",
+    "notFound": "Not found"
   }
 }

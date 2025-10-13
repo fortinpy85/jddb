@@ -1,0 +1,58 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\barre\AppData\Local\pypoetry\Cache\virtualenvs\jd-ingestion-engine-tBwTa5X8-py3.12\Scripts\python.exe
+cachedir: .pytest_cache
+benchmark: 5.1.0 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: C:\JDDB\backend
+configfile: pyproject.toml
+plugins: anyio-4.10.0, Faker-37.8.0, asyncio-1.2.0, benchmark-5.1.0, cov-7.0.0, mock-3.15.1, xdist-3.8.0, respx-0.22.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1360 items
+
+tests/compliance/test_privacy_compliance.py::TestPrivacyCompliance::test_pii_detection_in_job_descriptions PASSED [  0%]
+tests/compliance/test_privacy_compliance.py::TestPrivacyCompliance::test_pii_masking_functionality PASSED [  0%]
+tests/compliance/test_privacy_compliance.py::TestPrivacyCompliance::test_audit_logging_excludes_pii PASSED [  0%]
+tests/compliance/test_privacy_compliance.py::TestPrivacyCompliance::test_data_retention_compliance PASSED [  0%]
+tests/compliance/test_privacy_compliance.py::TestPrivacyCompliance::test_cross_border_data_restrictions PASSED [  0%]
+tests/compliance/test_privacy_compliance.py::TestPrivacyCompliance::test_consent_mechanisms PASSED [  0%]
+tests/compliance/test_privacy_compliance.py::TestPrivacyCompliance::test_data_subject_rights PASSED [  0%]
+tests/compliance/test_privacy_compliance.py::TestSecurityClassificationCompliance::test_security_clearance_validation PASSED [  0%]
+tests/compliance/test_privacy_compliance.py::TestSecurityClassificationCompliance::test_document_classification_labeling PASSED [  0%]
+tests/compliance/test_privacy_compliance.py::TestSecurityClassificationCompliance::test_access_control_by_clearance PASSED [  0%]
+tests/compliance/test_privacy_compliance.py::TestITSG33Compliance::test_encryption_requirements PASSED [  0%]
+tests/compliance/test_privacy_compliance.py::TestITSG33Compliance::test_authentication_controls PASSED [  0%]
+tests/compliance/test_privacy_compliance.py::TestITSG33Compliance::test_audit_logging_requirements PASSED [  0%]
+tests/compliance/test_security_compliance.py::TestAuthenticationSecurity::test_password_complexity_requirements PASSED [  1%]
+tests/compliance/test_security_compliance.py::TestAuthenticationSecurity::test_multi_factor_authentication PASSED [  1%]
+tests/compliance/test_security_compliance.py::TestAuthenticationSecurity::test_session_security PASSED [  1%]
+tests/compliance/test_security_compliance.py::TestAuthenticationSecurity::test_account_lockout_mechanism PASSED [  1%]
+tests/compliance/test_security_compliance.py::TestDataProtectionSecurity::test_data_encryption_at_rest PASSED [  1%]
+tests/compliance/test_security_compliance.py::TestDataProtectionSecurity::test_data_encryption_in_transit PASSED [  1%]
+tests/compliance/test_security_compliance.py::TestDataProtectionSecurity::test_key_management_security PASSED [  1%]
+tests/compliance/test_security_compliance.py::TestDataProtectionSecurity::test_pii_data_handling PASSED [  1%]
+tests/compliance/test_security_compliance.py::TestAuditLoggingSecurity::test_comprehensive_audit_logging PASSED [  1%]
+tests/compliance/test_security_compliance.py::TestAuditLoggingSecurity::test_audit_log_integrity PASSED [  1%]
+tests/compliance/test_security_compliance.py::TestAuditLoggingSecurity::test_audit_log_retention PASSED [  1%]
+tests/compliance/test_security_compliance.py::TestAuditLoggingSecurity::test_real_time_monitoring PASSED [  1%]
+tests/compliance/test_security_compliance.py::TestWebSocketSecurity::test_websocket_authentication PASSED [  1%]
+tests/compliance/test_security_compliance.py::TestWebSocketSecurity::test_websocket_rate_limiting PASSED [  1%]
+tests/compliance/test_security_compliance.py::TestWebSocketSecurity::test_websocket_message_validation PASSED [  2%]
+tests/integration/test_jobs_api.py::test_get_jobs_empty ERROR            [  2%]
+tests/integration/test_jobs_api.py::test_create_and_get_job ERROR        [  2%]
+tests/integration/test_jobs_api.py::test_get_job_by_id ERROR             [  2%]
+tests/integration/test_jobs_api.py::test_get_job_not_found ERROR         [  2%]
+tests/integration/test_jobs_api.py::test_get_jobs_with_pagination ERROR  [  2%]
+tests/integration/test_jobs_api.py::test_filter_jobs_by_classification ERROR [  2%]
+tests/integration/test_jobs_api.py::test_filter_jobs_by_language ERROR   [  2%]
+tests/integration/test_jobs_api.py::test_search_jobs_by_title ERROR      [  2%]
+tests/integration/test_jobs_api.py::test_get_job_with_sections ERROR     [  2%]
+tests/integration/test_jobs_api.py::test_get_job_with_metadata ERROR     [  2%]
+tests/integration/test_jobs_api.py::test_get_job_statistics ERROR        [  2%]
+tests/integration/test_jobs_api.py::test_invalid_pagination_parameters ERROR [  2%]
+tests/performance/test_api_performance.py::TestAPIPerformance::test_search_performance PASSED [  3%]
+tests/performance/test_api_performance.py::TestAPIPerformance::test_job_listing_performance PASSED [  3%]
+tests/performance/test_api_performance.py::TestAPIPerformance::test_job_statistics_performance FAILED [  3%]
+tests/performance/test_api_performance.py::TestAPIPerformance::test_translation_memory_search PASSED [  3%]
+tests/performance/test_api_performance.py::TestAPIPerformance::test_vector_similarity_search PASSED [  3%]
+tests/performance/test_api_performance.py::TestAPIPerformance::test_analytics_performance PASSED [  3%]
+tests/performance/test_api_performance.py::TestAPIPerformance::test_concurrent_search_requests PASSED [  3%]
+tests/performance/test_api_performance.py::TestAPIPerformance::test_memory_usage_under_load 

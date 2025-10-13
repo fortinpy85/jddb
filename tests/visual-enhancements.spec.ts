@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Visual Enhancements and Dark Mode", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to the application
-    await page.goto("http://localhost:3002");
+    await page.goto("/");
 
     // Wait for the page to load completely
     await page.waitForLoadState("networkidle");

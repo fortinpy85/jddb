@@ -8,7 +8,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,7 @@ import {
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import type { JobDescription } from "@/types/api";
+import { logger } from "@/utils/logger";
 
 interface PostingFormat {
   platform: "gcjobs" | "linkedin" | "indeed" | "generic";
@@ -58,9 +59,13 @@ interface GeneratedPosting {
   wordCount: number;
 }
 
-export function JobPostingGenerator() {
+export function JobPostingGenerator({ selectedJob: initialSelectedJob }: { selectedJob: JobDescription | null }) {
   const { toast } = useToast();
-  const [selectedJob, setSelectedJob] = useState<JobDescription | null>(null);
+  const [selectedJob, setSelectedJob] = useState<JobDescription | null>(initialSelectedJob);
+
+  useEffect(() => {
+    setSelectedJob(initialSelectedJob);
+  }, [initialSelectedJob]);
   const [loading, setLoading] = useState(false);
   const [format, setFormat] = useState<PostingFormat>({
     platform: "gcjobs",
@@ -95,15 +100,13 @@ Full Job Description:
 ${selectedJob.raw_content || selectedJob.sections?.map((s) => s.section_content).join("\n\n") || ""}
       `.trim();
 
-      // Generate concise posting using content enhancement
-      const enhanceResponse = await apiClient.enhanceContent({
-        text: context,
-        enhancement_types: ["clarity", "conciseness", "engagement"],
+      const { job_posting } = await apiClient.generateJobPosting({
+        job_id: selectedJob.id,
       });
 
       // Parse the enhanced content into structured posting
       const generated = parseEnhancedContent(
-        enhanceResponse.enhanced_text,
+        job_posting,
         selectedJob,
       );
 
@@ -113,7 +116,7 @@ ${selectedJob.raw_content || selectedJob.sections?.map((s) => s.section_content)
         description: `Created ${format.platform} posting with ${generated.wordCount} words.`,
       });
     } catch (error) {
-      console.error("Generation failed:", error);
+      logger.error("Generation failed:", error);
       toast({
         title: "Generation Failed",
         description:

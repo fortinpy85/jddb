@@ -80,6 +80,10 @@ function JobDetailView({
     isLoading: qualityLoading,
   } = useAISuggestions();
 
+  // WORKAROUND for Bun v1.2.23 bundler bug that breaks closures
+  // Store t as a const to prevent closure issues - use directly, no wrapper
+  const translate = t;
+
   // Load job details
   useEffect(() => {
     loadJobDetails();
@@ -570,6 +574,7 @@ function JobSectionCard({
   onContentUpdate,
   className,
 }: JobSectionCardProps) {
+  const { t } = useTranslation(["jobs", "common"]);
   const [showGenerator, setShowGenerator] = useState(false);
 
   const handleGenerate = (generatedContent: string) => {

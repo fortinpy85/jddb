@@ -10,8 +10,11 @@ class Settings(BaseSettings):
     environment: str = "development"  # development, staging, production
 
     # Database Configuration
-    database_url: str = "postgresql+asyncpg://username:password@localhost:5432/jd_ingestion"  # pragma: allowlist secret
-    database_sync_url: str = "postgresql://username:password@localhost:5432/jd_ingestion"  # pragma: allowlist secret
+    # SECURITY WARNING: These defaults are for LOCAL DEVELOPMENT ONLY
+    # In production, ALWAYS set DATABASE_URL and DATABASE_SYNC_URL environment variables
+    # Never commit actual credentials to version control
+    database_url: str = "postgresql+asyncpg://jd_user:jd_password@localhost:5432/jd_ingestion"
+    database_sync_url: str = "postgresql://jd_user:jd_password@localhost:5432/jd_ingestion"
     database_pool_size: int = 10
     database_max_overflow: int = 20
     database_pool_timeout: int = 30
@@ -40,8 +43,11 @@ class Settings(BaseSettings):
     secret_key: str = "default-secret-key-change-in-production"
 
     # Security Settings
+    # CORS: Comma-separated list of allowed origins
+    # DEVELOPMENT: localhost origins for local development
+    # PRODUCTION: Set to your actual frontend domains (https://app.example.com)
     cors_allowed_origins: str = (
-        "http://localhost:3000,http://localhost:3001,http://localhost:3002"
+        "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004"
     )
     cors_allow_credentials: bool = True
     allowed_hosts: str = "localhost,127.0.0.1"

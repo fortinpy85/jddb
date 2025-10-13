@@ -1,81 +1,66 @@
 /**
  * Test setup file for frontend unit tests
- *
- * NOTE: @testing-library/jest-dom is commented out due to incompatibility
- * with Bun's test runner. Custom matchers added below for compatibility.
+ * Configures Vitest with JSDOM and testing-library matchers
  */
-// import "@testing-library/jest-dom";  // Incompatible with Bun
-import { beforeEach, afterEach, expect } from "bun:test";
+import "@testing-library/jest-dom";
+import { afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
 
-// Add custom matchers for Bun compatibility with @testing-library/jest-dom
-if (expect && typeof expect.extend === "function") {
-  expect.extend({
-    toHaveTextContent(received: any, expected: string) {
-      const text = received?.textContent || "";
-      const pass = text.includes(expected);
-      return {
-        pass,
-        message: () =>
-          pass
-            ? `Expected element not to have text content "${expected}"`
-            : `Expected element to have text content "${expected}", but got "${text}"`,
-      };
+// Import translation files for testing
+import commonEn from "@/locales/en/common.json";
+import jobsEn from "@/locales/en/jobs.json";
+import errorsEn from "@/locales/en/errors.json";
+import navigationEn from "@/locales/en/navigation.json";
+import dashboardEn from "@/locales/en/dashboard.json";
+import uploadEn from "@/locales/en/upload.json";
+import formsEn from "@/locales/en/forms.json";
+
+import commonFr from "@/locales/fr/common.json";
+import jobsFr from "@/locales/fr/jobs.json";
+import errorsFr from "@/locales/fr/errors.json";
+import navigationFr from "@/locales/fr/navigation.json";
+import dashboardFr from "@/locales/fr/dashboard.json";
+import uploadFr from "@/locales/fr/upload.json";
+import formsFr from "@/locales/fr/forms.json";
+
+// Initialize i18next for test environment
+i18n.use(initReactI18next).init({
+  lng: "en",
+  fallbackLng: "en",
+  defaultNS: "common",
+  supportedLngs: ["en", "fr"],
+  resources: {
+    en: {
+      common: commonEn,
+      jobs: jobsEn,
+      errors: errorsEn,
+      navigation: navigationEn,
+      dashboard: dashboardEn,
+      upload: uploadEn,
+      forms: formsEn,
     },
-    toHaveAttribute(received: any, attr: string, value?: string) {
-      const hasAttr = received?.hasAttribute?.(attr);
-      if (value === undefined) {
-        return {
-          pass: hasAttr,
-          message: () =>
-            hasAttr
-              ? `Expected element not to have attribute "${attr}"`
-              : `Expected element to have attribute "${attr}"`,
-        };
-      }
-      const attrValue = received?.getAttribute?.(attr);
-      const pass = hasAttr && attrValue === value;
-      return {
-        pass,
-        message: () =>
-          pass
-            ? `Expected element not to have attribute "${attr}" with value "${value}"`
-            : `Expected element to have attribute "${attr}" with value "${value}", but got "${attrValue}"`,
-      };
+    fr: {
+      common: commonFr,
+      jobs: jobsFr,
+      errors: errorsFr,
+      navigation: navigationFr,
+      dashboard: dashboardFr,
+      upload: uploadFr,
+      forms: formsFr,
     },
-    toBeInTheDocument(received: any) {
-      const pass = received !== null && received !== undefined;
-      return {
-        pass,
-        message: () =>
-          pass
-            ? `Expected element not to be in the document`
-            : `Expected element to be in the document`,
-      };
-    },
-    toBeVisible(received: any) {
-      const pass = received !== null && received !== undefined;
-      return {
-        pass,
-        message: () =>
-          pass
-            ? `Expected element not to be visible`
-            : `Expected element to be visible`,
-      };
-    },
-    toHaveClass(received: any, ...classNames: string[]) {
-      const classList = received?.className?.split(" ") || [];
-      const pass = classNames.every((cls) => classList.includes(cls));
-      return {
-        pass,
-        message: () =>
-          pass
-            ? `Expected element not to have classes "${classNames.join(", ")}"`
-            : `Expected element to have classes "${classNames.join(", ")}", but got "${classList.join(" ")}"`,
-      };
-    },
-  });
-}
+  },
+  interpolation: {
+    escapeValue: false, // React already escapes
+  },
+  react: {
+    useSuspense: false, // Disable suspense in test environment
+  },
+});
+
+// @testing-library/jest-dom provides all necessary matchers for Vitest
+// No custom matchers needed - jest-dom works natively with Vitest
 
 // Mock environment variables for testing
 if (typeof global !== "undefined") {

@@ -6,7 +6,6 @@
 export {
   QualityDashboard,
   QualityScoreBadge,
-  QualityTrendChart,
 } from "./QualityDashboard";
 export { BiasDetector, CompactBiasBadge } from "./BiasDetector";
 export {

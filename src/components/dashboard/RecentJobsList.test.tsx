@@ -3,12 +3,12 @@
  */
 import React from "react";
 import { render, screen, fireEvent } from "../../test-utils";
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, vi } from "vitest";
 import { RecentJobsList } from "./RecentJobsList";
 import type { JobDescription } from "@/lib/types";
 
 // Mock the UI components
-mock.module("@/components/layout/JDDBLayout", () => ({
+vi.mock("@/components/layout/JDDBLayout", () => ({
   ContentSection: ({
     title,
     children,
@@ -30,7 +30,7 @@ mock.module("@/components/layout/JDDBLayout", () => ({
   ),
 }));
 
-mock.module("@/components/ui/design-system", () => ({
+vi.mock("@/components/ui/design-system", () => ({
   ActionButton: ({
     children,
     onClick,
@@ -56,7 +56,7 @@ mock.module("@/components/ui/design-system", () => ({
   ),
 }));
 
-mock.module("@/components/ui/empty-state", () => ({
+vi.mock("@/components/ui/empty-state", () => ({
   default: ({
     type,
     actions,
@@ -114,9 +114,9 @@ const mockJobs: JobDescription[] = [
 ];
 
 describe("RecentJobsList Component", () => {
-  const mockOnJobSelect = mock();
-  const mockOnNavigateToJobs = mock();
-  const mockOnNavigateToUpload = mock();
+  const mockOnJobSelect = vi.fn();
+  const mockOnNavigateToJobs = vi.fn();
+  const mockOnNavigateToUpload = vi.fn();
 
   beforeEach(() => {
     mockOnJobSelect.mockReset();
@@ -163,8 +163,8 @@ describe("RecentJobsList Component", () => {
 
     // Check processed dates (formatted as locale date strings)
     // The exact format depends on system locale, so we check for date presence more flexibly
-    expect(screen.getByText(/15.*01.*2024|1.*15.*2024/)).toBeInTheDocument();
-    expect(screen.getByText(/16.*01.*2024|1.*16.*2024/)).toBeInTheDocument();
+    expect(screen.getByText(/2024-01-15/)).toBeInTheDocument();
+    expect(screen.getByText(/2024-01-16/)).toBeInTheDocument();
   });
 
   test("handles job selection on click", () => {

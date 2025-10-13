@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { apiClient } from "@/lib/api";
+import { logger } from "@/utils/logger";
 import {
   Database,
   Activity,
@@ -96,7 +97,7 @@ function StatsDashboard() {
       setSkillsInventory(inventory);
       setLastUpdated(new Date());
     } catch (error) {
-      console.error("Failed to fetch statistics:", error);
+      logger.error("Failed to fetch statistics:", error);
     } finally {
       setLoading(false);
     }
@@ -109,7 +110,7 @@ function StatsDashboard() {
       const resilience = await apiClient.getResilienceStatus();
       setResilienceStats(resilience);
     } catch (error) {
-      console.error("Failed to reset circuit breakers:", error);
+      logger.error("Failed to reset circuit breakers:", error);
     }
   };
 
@@ -177,7 +178,7 @@ function StatsDashboard() {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-5 max-w-full">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="processing">Processing</TabsTrigger>
           <TabsTrigger value="skills">Skills Analytics</TabsTrigger>

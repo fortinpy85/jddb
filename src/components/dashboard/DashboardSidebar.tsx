@@ -7,7 +7,7 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -283,7 +283,7 @@ function SystemHealthCards({
       value: t("systemHealth.aiServices.active"),
       status: "good",
       icon: Cpu,
-      subtitle: t("systemHealth.aiServices.requests", { count: "1.2K" }),
+      subtitle: t("systemHealth.aiServices.requests", { value: "1.2K" }),
     },
     {
       label: t("systemHealth.network.title"),

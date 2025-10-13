@@ -296,7 +296,7 @@ export function JobSelector({
                 key={job.id}
                 job={job}
                 onClick={() => handleJobClick(job)}
-                isSelected={selectedJob !== null && job.id === selectedJob.id}
+                isSelected={false}
                 variant={variant}
                 size="compact"
               />

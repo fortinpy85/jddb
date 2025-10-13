@@ -1,4 +1,4 @@
-import { jest, describe, beforeEach, it, expect } from "@jest/globals";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
@@ -22,7 +22,7 @@ describe("EmptyState", () => {
   });
 
   it("renders custom title, description, and actions", () => {
-    const onActionClick = jest.fn();
+    const onActionClick = vi.fn(() => {});
     render(
       <EmptyState
         type="general"

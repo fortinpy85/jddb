@@ -8,6 +8,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useAISuggestions } from "./useAISuggestions";
 import { analyzeDiff } from "@/utils/diffAnalysis";
+import { logger } from "@/utils/logger";
 import type { TextChange, DiffResult } from "@/utils/diffAnalysis";
 import type { AISuggestion } from "./useAISuggestions";
 
@@ -182,7 +183,7 @@ export function useLiveImprovement({
           }
         }
       } catch (error) {
-        console.error("Live analysis failed:", error);
+        logger.error("Live analysis failed:", error);
       } finally {
         if (analysisId === analysisCounterRef.current) {
           setIsAnalyzing(false);
@@ -290,11 +291,11 @@ export function useLiveImprovement({
         // Auto-sync when threshold reached (10 events)
         if (existingData.length >= 10) {
           syncRLHFData().catch((error) => {
-            console.error(`Auto-sync failed:`, error);
+            logger.error("Auto-sync failed:", error);
           });
         }
       } catch (error) {
-        console.error("Failed to save RLHF event to localStorage:", error);
+        logger.error("Failed to save RLHF event to localStorage:", error);
       }
     },
     [],
@@ -390,7 +391,7 @@ export function exportAllRLHFData(): RLHFEvent[] {
   try {
     return JSON.parse(localStorage.getItem("rlhf_live_events") || "[]");
   } catch (error) {
-    console.error("Failed to export RLHF data:", error);
+    logger.error("Failed to export RLHF data:", error);
     return [];
   }
 }
@@ -402,7 +403,7 @@ export function clearAllRLHFData(): void {
   try {
     localStorage.removeItem("rlhf_live_events");
   } catch (error) {
-    console.error("Failed to clear RLHF data:", error);
+    logger.error("Failed to clear RLHF data:", error);
   }
 }
 
@@ -431,7 +432,7 @@ export async function syncRLHFData(): Promise<{
 
     return { success: true, synced: events.length };
   } catch (error) {
-    console.error("Failed to sync RLHF data:", error);
+    logger.error("Failed to sync RLHF data:", error);
     return {
       success: false,
       synced: 0,
@@ -448,7 +449,7 @@ export function getPendingRLHFCount(): number {
     const events = exportAllRLHFData();
     return events.length;
   } catch (error) {
-    console.error("Failed to get pending RLHF count:", error);
+    logger.error("Failed to get pending RLHF count:", error);
     return 0;
   }
 }

@@ -180,7 +180,7 @@ test.describe('Phase 2 Service Health Validation', () => {
     // Test CORS headers
     const response = await page.request.get('http://localhost:8000/status', {
       headers: {
-        'Origin': 'http://localhost:3002'
+        'Origin': 'http://127.0.0.1:3006'
       }
     });
 

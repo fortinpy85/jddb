@@ -37,6 +37,7 @@ import {
   BarChart3,
   BookOpen,
 } from "lucide-react";
+import { logger } from "@/utils/logger";
 import {
   BilingualEditor,
   BilingualDocument,
@@ -156,7 +157,7 @@ export const TranslationReviewWorkflow: React.FC<
         setQualityAssessment(data.assessment);
       }
     } catch (error) {
-      console.error("Error assessing quality:", error);
+      logger.error("Error assessing quality:", error);
     } finally {
       setLoadingQuality(false);
     }
@@ -189,7 +190,7 @@ export const TranslationReviewWorkflow: React.FC<
         );
       }
     } catch (error) {
-      console.error("Error checking consistency:", error);
+      logger.error("Error checking consistency:", error);
     }
   };
 
@@ -425,7 +426,7 @@ export const TranslationReviewWorkflow: React.FC<
               const updatedDocument = {
                 ...document,
                 segments: document.segments.map((s) =>
-                  s.id === segmentId ? { ...s, ...updates } : s,
+                  s.id === segmentId ? { ...s, ...(updates as Partial<BilingualSegment>) } : s,
                 ),
               };
               setDocument(updatedDocument);

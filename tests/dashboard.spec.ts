@@ -47,14 +47,14 @@ test.describe("Dashboard", () => {
     await page.waitForLoadState("networkidle");
 
     // Check all stats cards are present with values
-    await expect(page.locator("text=Total Jobs")).toBeVisible();
-    await expect(page.locator("text=150")).toBeVisible();
-    await expect(page.locator("text=Completed")).toBeVisible();
-    await expect(page.locator("text=120")).toBeVisible();
-    await expect(page.locator("text=Need Review")).toBeVisible();
-    await expect(page.locator("text=5")).toBeVisible();
-    await expect(page.locator("text=Processing")).toBeVisible();
-    await expect(page.locator("text=25")).toBeVisible();
+    await expect(page.locator("text=Total Jobs").first()).toBeVisible();
+    await expect(page.locator("text=150").first()).toBeVisible();
+    await expect(page.locator("text=Completed").first()).toBeVisible();
+    await expect(page.locator("text=120").first()).toBeVisible();
+    await expect(page.locator("text=Need Review").first()).toBeVisible();
+    await expect(page.locator("text=5").first()).toBeVisible();
+    await expect(page.locator("text=Processing").first()).toBeVisible();
+    await expect(page.locator("text=25").first()).toBeVisible();
   });
 
   test("should display charts and recent jobs", async ({ page }) => {

@@ -3,18 +3,18 @@
  */
 import React from "react";
 import { render, screen } from "../../test-utils";
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, vi } from "vitest";
 import { StatsOverview } from "./StatsOverview";
 import type { ProcessingStats } from "@/lib/types";
 
 // Mock the UI components to focus on component logic
-mock.module("@/components/ui/animated-counter", () => ({
+vi.mock("@/components/ui/animated-counter", () => ({
   AnimatedCounter: ({ end }: { end: number }) => (
     <span data-testid="animated-counter">{end}</span>
   ),
 }));
 
-mock.module("@/components/ui/design-system", () => {
+vi.mock("@/components/ui/design-system", () => {
   interface MockStatsCardProps {
     title: string;
     value: React.ReactNode;
@@ -39,7 +39,7 @@ mock.module("@/components/ui/design-system", () => {
   };
 });
 
-mock.module("@/components/ui/transitions", () => ({
+vi.mock("@/components/ui/transitions", () => ({
   StaggerAnimation: ({
     children,
     className,

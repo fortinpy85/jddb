@@ -37,6 +37,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { apiClient } from "@/lib/api";
+import { logger } from "@/utils/logger";
 
 interface UserPreferences {
   // Profile
@@ -106,7 +107,7 @@ export function UserPreferencesPage() {
         ...loadedPrefs,
       });
     } catch (err) {
-      console.error("Failed to load preferences:", err);
+      logger.error("Failed to load preferences:", err);
       setError("Failed to load preferences. Using defaults.");
       // Continue with default preferences on error
     } finally {
@@ -134,7 +135,7 @@ export function UserPreferencesPage() {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to save preferences";
       setError(errorMessage);
-      console.error("Save preferences error:", err);
+      logger.error("Save preferences error:", err);
     } finally {
       setSaving(false);
     }
@@ -155,7 +156,7 @@ export function UserPreferencesPage() {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to reset preferences";
       setError(errorMessage);
-      console.error("Reset preferences error:", err);
+      logger.error("Reset preferences error:", err);
     } finally {
       setSaving(false);
     }

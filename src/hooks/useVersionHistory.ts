@@ -70,6 +70,8 @@ export function useVersionHistory(
 
       setHistory((prev) => {
         // Remove any "future" versions if we're not at the end
+        // This is standard undo/redo behavior: when you undo and then make a new change,
+        // the "redo" branch is discarded
         const newHistory = prev.slice(0, currentIndex + 1);
 
         // Add new version
@@ -80,17 +82,17 @@ export function useVersionHistory(
 
         newHistory.push(newVersion);
 
-        // Limit history size
+        // Limit history size by keeping only the most recent entries
         if (newHistory.length > maxHistorySize) {
-          return newHistory.slice(-maxHistorySize);
+          const trimmed = newHistory.slice(-maxHistorySize);
+          // Update currentIndex to account for trimmed history
+          setCurrentIndex(trimmed.length - 1);
+          return trimmed;
         }
 
+        // Update currentIndex to point to the newly added version
+        setCurrentIndex(newHistory.length - 1);
         return newHistory;
-      });
-
-      setCurrentIndex((prev) => {
-        const newIndex = Math.min(prev + 1, maxHistorySize - 1);
-        return newIndex;
       });
     },
     [currentIndex, maxHistorySize],

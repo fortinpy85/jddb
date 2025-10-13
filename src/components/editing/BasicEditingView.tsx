@@ -35,9 +35,11 @@ import { LoadingState, ErrorState } from "@/components/ui/states";
 
 interface BasicEditingViewProps {
   jobId?: number;
+  initialContent?: string;
   onBack?: () => void;
   onAdvancedEdit?: () => void;
   className?: string;
+  onUnsavedChangesChange?: (hasUnsavedChanges: boolean) => void;
 }
 
 interface JobSection {
@@ -59,9 +61,11 @@ interface Collaborator {
 
 export function BasicEditingView({
   jobId,
+  initialContent,
   onBack,
   onAdvancedEdit,
   className,
+  onUnsavedChangesChange,
 }: BasicEditingViewProps) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -69,10 +73,26 @@ export function BasicEditingView({
   const [showPropertiesPanel, setShowPropertiesPanel] = useState(true);
   const [showAIPanel, setShowAIPanel] = useState(true);
   const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { addToast } = useToast();
 
+  useEffect(() => {
+    onUnsavedChangesChange?.(hasUnsavedChanges);
+  }, [hasUnsavedChanges, onUnsavedChangesChange]);
+
   // Mock data - in production, fetch from API and WebSocket
-  const [sections, setSections] = useState<JobSection[]>([
+  const [sections, setSections] = useState<JobSection[]>(() => {
+    if (initialContent) {
+      return [
+        {
+          id: "1",
+          type: "merged_content",
+          title: "Merged Content",
+          content: initialContent,
+        },
+      ];
+    }
+    return [
     {
       id: "1",
       type: "general_accountability",
@@ -109,7 +129,7 @@ export function BasicEditingView({
       lastModified: new Date(),
       modifiedBy: "Alice Johnson",
     },
-  ]);
+  ]});
 
   const [collaborators] = useState<Collaborator[]>([
     {
@@ -144,6 +164,7 @@ export function BasicEditingView({
         s.id === sectionId ? { ...s, content: newContent } : s,
       ),
     );
+    setHasUnsavedChanges(true);
   };
 
   // Handle save
@@ -157,6 +178,7 @@ export function BasicEditingView({
         description: "Your edits have been saved successfully",
         type: "success",
       });
+      setHasUnsavedChanges(false);
     } catch (error) {
       addToast({
         title: "Save Failed",

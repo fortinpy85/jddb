@@ -17,6 +17,7 @@ import {
   useVersionHistory,
   type UseVersionHistoryReturn,
 } from "./useVersionHistory";
+import { logger } from "@/utils/logger";
 
 export interface UseImprovementOptions {
   originalText: string;
@@ -368,7 +369,7 @@ function captureRLHFData(
     existingData.push(rlhfData);
     localStorage.setItem("rlhf_data", JSON.stringify(existingData));
   } catch (error) {
-    console.error("Failed to capture RLHF data:", error);
+    logger.error("Failed to capture RLHF data:", error);
   }
 }
 
@@ -379,7 +380,7 @@ export function exportRLHFData(): Array<any> {
   try {
     return JSON.parse(localStorage.getItem("rlhf_data") || "[]");
   } catch (error) {
-    console.error("Failed to export RLHF data:", error);
+    logger.error("Failed to export RLHF data:", error);
     return [];
   }
 }
@@ -391,6 +392,6 @@ export function clearRLHFData(): void {
   try {
     localStorage.removeItem("rlhf_data");
   } catch (error) {
-    console.error("Failed to clear RLHF data:", error);
+    logger.error("Failed to clear RLHF data:", error);
   }
 }
