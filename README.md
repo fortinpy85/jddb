@@ -47,7 +47,7 @@ Get up and running with JDDB in under 10 minutes!
     ```bash
     # Backend .env
     cat > backend/.env << EOF
-    DATABASE_URL=postgresql://postgres:password@localhost:5432/jddb
+    DATABASE_URL=postgresql://postgres:password@localhost:5432/jddb # pragma: allowlist secret
     OPENAI_API_KEY=your-key-here
     DATA_DIRECTORY=../data
     EOF

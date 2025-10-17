@@ -47,7 +47,7 @@ For detailed API documentation, please see the [API documentation](api/README.md
 
 For user stories, please see the [User Stories](user_stories.md) file.
 
-## 5. Development & Testing Workflow
+## 6. Development & Testing Workflow
 
 *   **Local Development Environment:**
     *   **Backend:** Run `make server` in the `backend` directory.
@@ -70,11 +70,11 @@ For user stories, please see the [User Stories](user_stories.md) file.
     *   `npm run lint`: Run ESLint.
     *   `npm run type-check`: Run TypeScript type checker.
 
-## 6. Contribution Guidelines
+## 7. Contribution Guidelines
 
 All contributions should follow the guidelines in [CONTRIBUTING.md](CONTRIBUTING.md). This includes branch strategy, commit conventions (Conventional Commits), and pull request processes.
 
-## 7. Troubleshooting
+## 8. Troubleshooting
 
 *   **Application Won't Load:**
     1.  Ensure `.env.local` exists with the correct API URL.
@@ -83,8 +83,4 @@ All contributions should follow the guidelines in [CONTRIBUTING.md](CONTRIBUTING
 *   **Backend API Errors:**
     1.  Verify the PostgreSQL database is running.
     2.  Check the `backend/.env` file for correct database credentials.
-    3.  Run `make db-init` if database tables do not exist.
-*   **Testing Issues:**
-    *   **Unit Tests:** Run `npm test`. Test files are in the `src/` directory.
-    *   **E2E Tests:** Run `npm run test:e2e`. Test files are in the `tests/` directory.
-    *   **Backend Tests:** Run `cd backend && make test`.
+    3.  Run `make db-init` if a database table does not exist.
