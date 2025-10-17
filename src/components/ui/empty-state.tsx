@@ -244,15 +244,17 @@ export function EmptyState(props: EmptyStateProps) {
                   Helpful Tips:
                 </h4>
                 <ul className="text-sm text-gray-600 space-y-1">
-                  {finalConfig.suggestions.map((suggestion: string, index: number) => (
-                    <li
-                      key={index}
-                      className="flex items-center justify-center"
-                    >
-                      <CheckCircle className="w-3 h-3 text-green-500 mr-2 flex-shrink-0" />
-                      {suggestion}
-                    </li>
-                  ))}
+                  {finalConfig.suggestions.map(
+                    (suggestion: string, index: number) => (
+                      <li
+                        key={index}
+                        className="flex items-center justify-center"
+                      >
+                        <CheckCircle className="w-3 h-3 text-green-500 mr-2 flex-shrink-0" />
+                        {suggestion}
+                      </li>
+                    ),
+                  )}
                 </ul>
               </div>
             )}

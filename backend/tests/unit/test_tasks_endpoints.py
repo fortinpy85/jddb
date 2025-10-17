@@ -630,9 +630,7 @@ class TestTaskEndpointsIntegration:
                             with open(tmp_file_path, "rb") as file:
                                 response = client.post(
                                     "/api/tasks/upload",
-                                    files={
-                                        "file": ("test.txt", file, "text/plain")
-                                    },
+                                    files={"file": ("test.txt", file, "text/plain")},
                                 )
                             assert response.status_code == 200
                         finally:

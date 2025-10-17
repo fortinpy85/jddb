@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 This script initializes the database, creating the database if it doesn't exist,
-creating the required extensions, creating the tables, and verifying the connection.
+creating the required extensions, and creating the tables.
 """
 
 import asyncio
@@ -13,8 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
-from jd_ingestion.database.connection import Base, sync_engine, async_engine
-from jd_ingestion.database.models import *  # noqa: F403
+from jd_ingestion.database.connection import Base, sync_engine
 from jd_ingestion.config import settings
 from jd_ingestion.utils.logging import configure_logging, get_logger
 
@@ -65,69 +64,17 @@ def create_extensions() -> None:
 
 def create_tables() -> None:
     """
-    Creates all database tables by running alembic migrations.
+    Creates all database tables.
     """
     try:
         logger.info("Dropping all tables...")
-        # Drop tables in reverse order of creation to avoid foreign key constraint violations
-        Base.metadata.drop_all(
-            bind=sync_engine,
-            tables=[
-                UserAnalytics.__table__,  # noqa: F405
-                UserSession.__table__,  # noqa: F405
-                UserPermission.__table__,  # noqa: F405
-                UserPreference.__table__,  # noqa: F405
-                User.__table__,  # noqa: F405
-            ],
-        )
-        logger.info("Running database migrations...")
-        from alembic.config import Config
-        from alembic import command
-
-        alembic_cfg = Config("alembic.ini")
-        command.upgrade(alembic_cfg, "head")
-        logger.info("Database migrations ran successfully.")
+        Base.metadata.drop_all(sync_engine)
+        logger.info("Creating all tables...")
+        Base.metadata.create_all(sync_engine)
+        logger.info("Database tables created successfully.")
     except Exception as e:
-        logger.error(f"Failed to run database migrations: {e}")
+        logger.error(f"Failed to create tables: {e}")
         raise
-
-
-async def verify_async_connection() -> None:
-    """
-    Verifies that the async database connection works.
-    """
-    try:
-        async with async_engine.connect() as conn:
-            version = (await conn.execute(text("SELECT version()"))).scalar()
-            logger.info(
-                f"Async database connection verified. PostgreSQL version: {version}"
-            )
-    except SQLAlchemyError as e:
-        logger.error(f"Async database connection failed: {e}")
-        raise
-
-
-def create_sample_data() -> None:
-    """
-    Creates sample data for testing (optional).
-    """
-    try:
-        from sqlalchemy.orm import Session
-
-        with Session(sync_engine) as session:
-            if (
-                session.execute(
-                    text("SELECT COUNT(*) FROM job_descriptions")
-                ).scalar_one()
-                > 0
-            ):
-                logger.info("Sample data already exists.")
-                return
-            logger.info(
-                "Sample data creation skipped - will be populated via ingestion."
-            )
-    except SQLAlchemyError as e:
-        logger.error(f"Failed to create sample data: {e}")
 
 
 async def main() -> None:
@@ -139,20 +86,13 @@ async def main() -> None:
         create_database_if_not_exists()
         create_extensions()
         create_tables()
-        await verify_async_connection()
-        create_sample_data()
         logger.info("Database initialization completed successfully!")
-        logger.info("Next steps:")
-        logger.info("1. Start the API server: python -m jd_ingestion.api.main")
-        logger.info("2. Use the ingestion endpoints to process job description files")
     except Exception as e:
         logger.critical(f"Database initialization failed: {e}")
         sys.exit(1)
     finally:
         if sync_engine:
             sync_engine.dispose()
-        if async_engine:
-            await async_engine.dispose()
 
 
 if __name__ == "__main__":

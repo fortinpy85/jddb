@@ -6,15 +6,17 @@
 
 "use client";
 
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, lazy, Suspense, useRef, useCallback } from "react";
 import { ThreeColumnLayout } from "@/components/layout/ThreeColumnLayout";
 import { ProfileHeader } from "@/components/layout/ProfileHeader";
-import { AIAssistantPanel } from "@/components/ai/AIAssistantPanel";
-import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { AppHeader, type AppView } from "@/components/layout/AppHeader";
-import { JobsTable } from "@/components/jobs/JobsTable";
-import { JobDetailView } from "@/components/jobs/JobDetailView";
-import { CreateJobModal } from "@/components/jobs/CreateJobModal";
+
+// Lazy load heavy layout components for better initial page load performance
+const AIAssistantPanel = lazy(() => import("@/components/ai/AIAssistantPanel").then(m => ({ default: m.AIAssistantPanel })));
+const DashboardSidebar = lazy(() => import("@/components/dashboard/DashboardSidebar").then(m => ({ default: m.DashboardSidebar })));
+const JobsTable = lazy(() => import("@/components/jobs/JobsTable").then(m => ({ default: m.JobsTable })));
+const JobDetailView = lazy(() => import("@/components/jobs/JobDetailView").then(m => ({ default: m.JobDetailView })));
+const CreateJobModal = lazy(() => import("@/components/jobs/CreateJobModal").then(m => ({ default: m.CreateJobModal })));
 import type { JobDescription } from "@/lib/types";
 import { apiClient } from "@/lib/api";
 import { useStore } from "@/lib/store";
@@ -37,6 +39,8 @@ import { useUnsavedChanges } from "@/hooks/useUnsavedChanges";
 // Lazy load route-level components for better performance
 const BulkUpload = lazy(() => import("@/components/BulkUpload"));
 const SearchInterface = lazy(() => import("@/components/SearchInterface"));
+// Import SearchInterfaceRef type for ref typing
+import type { SearchInterfaceRef } from "@/components/SearchInterface";
 const JobComparison = lazy(() => import("@/components/JobComparison"));
 const StatsDashboard = lazy(() => import("@/components/StatsDashboard"));
 const BasicEditingView = lazy(() =>
@@ -59,8 +63,8 @@ const UserPreferencesPage = lazy(() =>
     default: m.UserPreferencesPage,
   })),
 );
-const BilingualEditorWrapper = lazy(() =>
-  import("@/components/translation/BilingualEditorWrapper")
+const BilingualEditorWrapper = lazy(
+  () => import("@/components/translation/BilingualEditorWrapper"),
 );
 const AIDemo = lazy(() => import("@/app/ai-demo/page"));
 const AIJobWriter = lazy(() =>
@@ -106,20 +110,28 @@ export default function HomePage() {
   const [showAlertBanner, setShowAlertBanner] = useState(true);
   const [showCreateJobModal, setShowCreateJobModal] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [shouldFocusSearch, setShouldFocusSearch] = useState(false);
   const { stats, selectedJob, fetchJobs, fetchStats, selectJob, error } =
     useStore();
 
   const { confirmNavigation } = useUnsavedChanges({
     hasUnsavedChanges,
-    message:
-      "You have unsaved changes. Are you sure you want to leave?",
+    message: "You have unsaved changes. Are you sure you want to leave?",
   });
+
+  // Ref for SearchInterface to access focus method
+  const searchInterfaceRef = useRef<SearchInterfaceRef>(null);
 
   // Track view changes for transitions
   const handleViewChange = (newView: ViewType) => {
     setPreviousView(activeView);
     setActiveView(newView);
   };
+
+  // Memoized callback for search focus to prevent infinite re-renders
+  const handleSearchFocused = useCallback(() => {
+    setShouldFocusSearch(false);
+  }, []);
 
   // Keyboard shortcuts modal
   const {
@@ -137,17 +149,26 @@ export default function HomePage() {
     onNavigateToStats: () => handleViewChange("dashboard"),
     onFocusSearch: () => {
       handleViewChange("search");
+      // Set flag to focus search input when component mounts
+      setShouldFocusSearch(true);
     },
     onNewUpload: () => handleViewChange("upload"),
     onShowShortcuts: openShortcutsModal,
   });
 
-  // Initialize API client and load data
+  // Initialize API client and load data with deferred loading for better performance
   useEffect(() => {
     // Note: API key not required for current backend implementation
     // Backend uses environment-based configuration
-    fetchJobs(true);
-    fetchStats();
+
+    // Defer API calls to allow initial render to complete faster
+    // This improves perceived performance and initial page load time
+    const timer = setTimeout(() => {
+      fetchJobs(true);
+      fetchStats();
+    }, 0); // Use 0ms timeout to defer to next event loop tick
+
+    return () => clearTimeout(timer);
   }, [fetchJobs, fetchStats]);
 
   // Handle job selection
@@ -163,8 +184,12 @@ export default function HomePage() {
   };
 
   // Handle upload completion
-  const handleUploadComplete = () => {
-    fetchStats();
+  const handleUploadComplete = async () => {
+    // Refresh both stats and job list after upload
+    await Promise.all([
+      fetchStats(),
+      fetchJobs(true), // Force refresh to show newly uploaded jobs
+    ]);
     handleViewChange("home");
   };
 
@@ -285,7 +310,7 @@ export default function HomePage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-bold">Dashboard</h2>
+                <h1 className="text-3xl font-bold">Dashboard</h1>
                 <p className="text-muted-foreground mt-2">
                   Overview of your job description database
                 </p>
@@ -301,28 +326,32 @@ export default function HomePage() {
         );
       case "home":
         return wrapWithPanelId(
-          <JobsTable
-            onJobSelect={handleJobSelect}
-            onNavigateToUpload={() => handleViewChange("upload")}
-            onNavigateToSearch={() => handleViewChange("search")}
-            onCreateNew={() => {
-              setShowCreateJobModal(true);
-            }}
-          />,
+          <Suspense fallback={<LoadingState message="Loading jobs..." />}>
+            <JobsTable
+              onJobSelect={handleJobSelect}
+              onNavigateToUpload={() => handleViewChange("upload")}
+              onNavigateToSearch={() => handleViewChange("search")}
+              onCreateNew={() => {
+                setShowCreateJobModal(true);
+              }}
+            />
+          </Suspense>,
           "jobs",
         );
       case "job-details":
         return wrapWithPanelId(
           selectedJob ? (
-            <JobDetailView
-              jobId={selectedJob.id}
-              onBack={handleBackFromDetails}
-              onEdit={() => handleViewChange("improvement")}
-              onTranslate={() => {
-                handleViewChange("translate");
-              }}
-              onCompare={() => handleViewChange("compare")}
-            />
+            <Suspense fallback={<LoadingState message="Loading job details..." />}>
+              <JobDetailView
+                jobId={selectedJob.id}
+                onBack={handleBackFromDetails}
+                onEdit={() => handleViewChange("improvement")}
+                onTranslate={() => {
+                  handleViewChange("translate");
+                }}
+                onCompare={() => handleViewChange("compare")}
+              />
+            </Suspense>
           ) : (
             <ErrorState
               title="No job selected"
@@ -341,7 +370,7 @@ export default function HomePage() {
             <BulkUpload
               onUploadComplete={handleUploadComplete}
               maxFileSize={50}
-              acceptedFileTypes={[".txt", ".doc", ".docx", ".pdf"]}
+              acceptedFileTypes={[".txt", ".doc", ".docx", ".pdf", ".md"]}
             />
           </Suspense>,
           "upload",
@@ -349,7 +378,12 @@ export default function HomePage() {
       case "search":
         return wrapWithPanelId(
           <Suspense fallback={<LoadingState message="Loading search..." />}>
-            <SearchInterface onJobSelect={handleJobSelect} />
+            <SearchInterface
+              ref={searchInterfaceRef}
+              onJobSelect={handleJobSelect}
+              autoFocus={shouldFocusSearch}
+              onFocused={handleSearchFocused}
+            />
           </Suspense>,
           "search",
         );
@@ -426,9 +460,9 @@ export default function HomePage() {
         );
       case "compare":
         return wrapWithPanelId(
-            <Suspense fallback={<LoadingState message="Loading comparison..." />}>
+          <Suspense fallback={<LoadingState message="Loading comparison..." />}>
             <JobComparison />
-            </Suspense>,
+          </Suspense>,
           "compare",
         );
       case "statistics":
@@ -436,7 +470,7 @@ export default function HomePage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-bold">Statistics</h2>
+                <h1 className="text-3xl font-bold">Statistics</h1>
                 <p className="text-muted-foreground mt-2">
                   In-depth analysis of your job description data
                 </p>
@@ -473,9 +507,9 @@ export default function HomePage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-bold">
+                <h1 className="text-3xl font-bold">
                   AI Job Description Writer
-                </h2>
+                </h1>
                 <p className="text-muted-foreground mt-2">
                   Create comprehensive job descriptions with AI assistance
                 </p>
@@ -494,7 +528,7 @@ export default function HomePage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-bold">Job Posting Generator</h2>
+                <h1 className="text-3xl font-bold">Job Posting Generator</h1>
                 <p className="text-muted-foreground mt-2">
                   Transform job descriptions into optimized public postings
                 </p>
@@ -513,9 +547,9 @@ export default function HomePage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-3xl font-bold">
+                <h1 className="text-3xl font-bold">
                   Predictive Content Analytics
-                </h2>
+                </h1>
                 <p className="text-muted-foreground mt-2">
                   AI-powered predictions for application volume, time-to-fill,
                   and content effectiveness
@@ -539,11 +573,13 @@ export default function HomePage() {
         );
       default:
         return wrapWithPanelId(
-          <JobsTable
-            onJobSelect={handleJobSelect}
-            onNavigateToUpload={() => handleViewChange("upload")}
-            onNavigateToSearch={() => handleViewChange("search")}
-          />,
+          <Suspense fallback={<LoadingState message="Loading jobs..." />}>
+            <JobsTable
+              onJobSelect={handleJobSelect}
+              onNavigateToUpload={() => handleViewChange("upload")}
+              onNavigateToSearch={() => handleViewChange("search")}
+            />
+          </Suspense>,
           "jobs",
         );
     }
@@ -562,15 +598,12 @@ export default function HomePage() {
 
   return (
     <ThemeProvider defaultTheme="system" enableSystem>
-      {/* Screenreader-only h1 for accessibility and E2E tests */}
-      <h1 className="sr-only">Job Description Database (JDDB)</h1>
       <SkipLinks />
       <LanguageSync />
       <ErrorBoundaryWrapper
         showDetails={process.env.NODE_ENV === "development"}
       >
         <LoadingProvider initialContext="generic">
-          {" "}
           <ToastProvider>
             <ThreeColumnLayout
               header={renderHeader()}
@@ -614,17 +647,21 @@ export default function HomePage() {
                 ) : null
               }
               leftPanel={
-                <DashboardSidebar
-                  stats={stats}
-                  onNavigateToStatistics={() => handleViewChange("statistics")}
-                  onNavigateToSystemHealth={() =>
-                    handleViewChange("system-health")
-                  }
-                  collapsed={leftPanelCollapsed}
-                />
+                <Suspense fallback={<LoadingState message="Loading sidebar..." />}>
+                  <DashboardSidebar
+                    stats={stats}
+                    onNavigateToStatistics={() => handleViewChange("statistics")}
+                    onNavigateToSystemHealth={() =>
+                      handleViewChange("system-health")
+                    }
+                    collapsed={leftPanelCollapsed}
+                  />
+                </Suspense>
               }
               middlePanel={
-                <AIAssistantPanel suggestions={[]} overallScore={null} />
+                <Suspense fallback={<LoadingState message="Loading AI panel..." />}>
+                  <AIAssistantPanel suggestions={[]} overallScore={null} />
+                </Suspense>
               }
             >
               <PageTransition
@@ -654,20 +691,22 @@ export default function HomePage() {
             />
 
             {/* Create Job Modal */}
-            <CreateJobModal
-              isOpen={showCreateJobModal}
-              onClose={() => setShowCreateJobModal(false)}
-              onJobCreated={(jobId) => {
-                setShowCreateJobModal(false);
-                fetchJobs(true);
-                fetchStats();
-                // Optionally navigate to the new job
-                apiClient.getJob(jobId).then((job) => {
-                  selectJob(job);
-                  handleViewChange("job-details");
-                });
-              }}
-            />
+            <Suspense fallback={null}>
+              <CreateJobModal
+                isOpen={showCreateJobModal}
+                onClose={() => setShowCreateJobModal(false)}
+                onJobCreated={(jobId) => {
+                  setShowCreateJobModal(false);
+                  fetchJobs(true);
+                  fetchStats();
+                  // Optionally navigate to the new job
+                  apiClient.getJob(jobId).then((job) => {
+                    selectJob(job);
+                    handleViewChange("job-details");
+                  });
+                }}
+              />
+            </Suspense>
           </ToastProvider>
         </LoadingProvider>
       </ErrorBoundaryWrapper>

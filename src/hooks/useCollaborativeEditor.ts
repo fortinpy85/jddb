@@ -193,11 +193,14 @@ export function useCollaborativeEditor(
     },
   });
 
-  const sendMessage = useCallback((message: any) => {
-    if (isConnected) {
-      send(message);
-    }
-  }, [isConnected, send]);
+  const sendMessage = useCallback(
+    (message: any) => {
+      if (isConnected) {
+        send(message);
+      }
+    },
+    [isConnected, send],
+  );
 
   /**
    * Apply a local operation and broadcast to other participants

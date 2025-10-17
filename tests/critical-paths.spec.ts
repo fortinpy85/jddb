@@ -18,11 +18,11 @@ test.describe("Critical Path 1: Dashboard View and Navigation", () => {
     // Verify main heading (use first h1 to avoid strict mode violation)
     await expect(page.locator("h1").first()).toContainText(/Job Description Database|JDDB|Dashboard/);
 
-    // Verify navigation buttons exist (note: should be tabs with role="tab" for accessibility)
-    await expect(page.getByRole("button", { name: "Dashboard", exact: false })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Jobs", exact: false })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Upload", exact: false })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Search", exact: false })).toBeVisible();
+    // Verify navigation tabs exist with proper accessibility roles
+    await expect(page.getByRole("tab", { name: "Dashboard", exact: false })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Jobs", exact: false })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Upload", exact: false })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Search", exact: false })).toBeVisible();
 
     // Initial view is "home" (Jobs list), not dashboard
     // Just verify the page loaded successfully without errors
@@ -41,14 +41,11 @@ test.describe("Critical Path 1: Dashboard View and Navigation", () => {
     ];
 
     for (const item of navItems) {
-      const navButton = page.getByRole("button", { name: item.name, exact: false });
-      await expect(navButton).toBeVisible({ timeout: 5000 });
-      await navButton.click();
-      await page.waitForTimeout(500); // Allow view transition
-
-      // Verify navigation occurred (button should have active styling, but we can't easily test that)
-      // Just verify the click succeeded
-      await page.waitForLoadState("networkidle");
+      const navTab = page.getByRole("tab", { name: item.name, exact: false });
+      await expect(navTab).toBeVisible({ timeout: 5000 });
+      await navTab.click();
+      await page.waitForTimeout(500); // Allow view transition and React Suspense
+      // Don't wait for networkidle - React SPA may have pending requests
     }
   });
 
@@ -164,7 +161,7 @@ test.describe("Critical Path 2: Search to Job Detail Flow", () => {
 
     //  Navigate to page AFTER setting up routes
     await page.goto("/");
-    await page.getByRole("button", { name: "Search", exact: false }).click();
+    await page.getByRole("tab", { name: "Search", exact: false }).click();
 
     // Wait for lazy-loaded SearchInterface to render (Suspense fallback disappears)
     await page.waitForTimeout(1000); // Allow Suspense to resolve
@@ -247,7 +244,7 @@ test.describe("Critical Path 2: Search to Job Detail Flow", () => {
     });
 
     await page.goto("/");
-    await page.getByRole("button", { name: "Search", exact: false }).click();
+    await page.getByRole("tab", { name: "Search", exact: false }).click();
 
     // Wait for lazy-loaded SearchInterface
     await page.waitForTimeout(1000);
@@ -297,7 +294,7 @@ test.describe("Critical Path 2: Search to Job Detail Flow", () => {
     });
 
     await page.goto("/");
-    await page.getByRole("button", { name: "Search", exact: false }).click();
+    await page.getByRole("tab", { name: "Search", exact: false }).click();
 
     // Wait for lazy-loaded SearchInterface
     await page.waitForTimeout(1000);
@@ -343,14 +340,14 @@ test.describe("Critical Path 2: Search to Job Detail Flow", () => {
 test.describe("Critical Path 3: File Upload and Verification Flow", () => {
   test("should display upload interface with instructions", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "Upload", exact: false }).click();
+    await page.getByRole("tab", { name: "Upload", exact: false }).click();
 
     // Wait for lazy-loaded BulkUpload component
     await page.waitForTimeout(1000);
 
     // Verify upload area is present - check for the actual text
     await expect(
-      page.locator("text=Drag and drop files here")
+      page.locator("text=Drag & Drop Files Here")
         .or(page.locator("text=click to select"))
         .or(page.locator('[data-testid="upload-dropzone"]'))
     ).toBeVisible({ timeout: 5000 });
@@ -367,7 +364,7 @@ test.describe("Critical Path 3: File Upload and Verification Flow", () => {
 
   test("should show file size limits", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "Upload", exact: false }).click();
+    await page.getByRole("tab", { name: "Upload", exact: false }).click();
 
     // Check for file size information
     const sizeInfo = page.locator("text=file size").or(page.locator("text=50")).or(page.locator("text=MB"));
@@ -380,7 +377,7 @@ test.describe("Critical Path 3: File Upload and Verification Flow", () => {
 
   test("should display batch upload options", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "Upload", exact: false }).click();
+    await page.getByRole("tab", { name: "Upload", exact: false }).click();
 
     // Look for batch upload indicators
     const batchIndicators = page.locator("text=Batch")
@@ -394,7 +391,7 @@ test.describe("Critical Path 3: File Upload and Verification Flow", () => {
 
   test("should have accessible file input for upload", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "Upload", exact: false }).click();
+    await page.getByRole("tab", { name: "Upload", exact: false }).click();
 
     // Verify file input is in the DOM and can be interacted with
     const fileInput = page.locator('input[type="file"]');
@@ -409,7 +406,7 @@ test.describe("Critical Path 3: File Upload and Verification Flow", () => {
 
   test("should show upload status area", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "Upload", exact: false }).click();
+    await page.getByRole("tab", { name: "Upload", exact: false }).click();
 
     // Wait for lazy-loaded BulkUpload component
     await page.waitForTimeout(1000);
@@ -456,7 +453,7 @@ test.describe("Critical Path: Error Handling", () => {
     });
 
     await page.goto("/");
-    await page.getByRole("button", { name: "Search", exact: false }).click();
+    await page.getByRole("tab", { name: "Search", exact: false }).click();
 
     // Perform search
     const searchInput = page.locator('input[placeholder*="Search"], input[placeholder*="search"]').first();
@@ -470,7 +467,15 @@ test.describe("Critical Path: Error Handling", () => {
       .or(page.locator("text=try again"));
 
     // Error handling should prevent app crash - page should still be usable
-    await expect(page.locator("h1").first()).toBeVisible();
+    // Check for error message display (h3 "No Results Found" or error text)
+    await expect(
+      page.locator("text=HTTP 500")
+        .or(page.locator("heading").filter({ hasText: "No Results" }))
+        .or(page.locator("text=Server Error"))
+    ).toBeVisible();
+
+    // Verify search interface is still functional (not crashed)
+    await expect(page.getByRole("tab", { name: "Search" })).toBeVisible();
   });
 
   test("should handle missing backend gracefully on dashboard", async ({ page }) => {
@@ -479,7 +484,7 @@ test.describe("Critical Path: Error Handling", () => {
 
     // Page should still load even if stats API fails (use first h1)
     await expect(page.locator("h1").first()).toContainText(/Job Description Database|JDDB|Dashboard/);
-    await expect(page.getByRole("button", { name: "Dashboard", exact: false })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Dashboard", exact: false })).toBeVisible();
 
     // App should not crash
     await page.waitForTimeout(2000);

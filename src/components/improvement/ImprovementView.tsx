@@ -688,5 +688,3 @@ function SplitView({
     </div>
   );
 }
-
-

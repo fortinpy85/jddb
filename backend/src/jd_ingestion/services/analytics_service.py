@@ -837,9 +837,7 @@ class AnalyticsService:
         }
 
     # Backwards compatibility methods for tests
-    async def record_system_metrics(
-        self, db: AsyncSession, **kwargs
-    ) -> None:
+    async def record_system_metrics(self, db: AsyncSession, **kwargs) -> None:
         """Backwards compatibility wrapper for generate_system_metrics."""
         # This method is just for test compatibility - it doesn't need to do anything
         # The actual system metrics generation happens via generate_system_metrics
@@ -861,7 +859,10 @@ class AnalyticsService:
         """Get popular search terms from search analytics."""
         cutoff_date = datetime.now() - timedelta(days=days)
         result = await db.execute(
-            select(SearchAnalytics.query_text, func.count(SearchAnalytics.id).label("search_count"))
+            select(
+                SearchAnalytics.query_text,
+                func.count(SearchAnalytics.id).label("search_count"),
+            )
             .where(SearchAnalytics.created_at >= cutoff_date)
             .group_by(SearchAnalytics.query_text)
             .order_by(func.count(SearchAnalytics.id).desc())
@@ -871,7 +872,11 @@ class AnalyticsService:
 
     async def get_database_statistics(self, db: AsyncSession) -> dict:
         """Get database statistics."""
-        from jd_ingestion.database.models import JobDescription, ContentChunk, JobSection
+        from jd_ingestion.database.models import (
+            JobDescription,
+            ContentChunk,
+            JobSection,
+        )
 
         job_count_result = await db.execute(select(func.count(JobDescription.id)))
         chunk_count_result = await db.execute(select(func.count(ContentChunk.id)))

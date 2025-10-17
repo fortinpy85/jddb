@@ -1,0 +1,333 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - navigation "Skip links":
+    - link "Skip to main content":
+      - /url: "#main-content"
+    - link "Skip to navigation":
+      - /url: "#main-navigation"
+    - link "Skip to search":
+      - /url: "#search-interface"
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - button "Job Description Database AI-Powered Management System" [ref=e8]:
+          - img [ref=e10]
+          - generic [ref=e14]:
+            - generic [ref=e15]: Job Description Database
+            - paragraph [ref=e16]: AI-Powered Management System
+        - tablist "Main navigation" [ref=e17]:
+          - tab "Dashboard" [ref=e18]:
+            - img [ref=e19]
+            - generic [ref=e21]: Dashboard
+          - tab "Jobs" [active] [selected] [ref=e22]:
+            - img [ref=e23]
+            - generic [ref=e27]: Jobs
+          - tab "Upload" [ref=e28]:
+            - img [ref=e29]
+            - generic [ref=e32]: Upload
+          - tab "Improve" [disabled] [ref=e33]:
+            - img [ref=e34]
+            - generic [ref=e37]: Improve
+          - tab "AI Writer" [ref=e38]:
+            - img [ref=e39]
+            - generic [ref=e42]: AI Writer
+          - tab "Job Posting" [ref=e43]:
+            - img [ref=e44]
+            - generic [ref=e47]: Job Posting
+          - tab "Predictive Analytics" [ref=e48]:
+            - img [ref=e49]
+            - generic [ref=e51]: Predictive Analytics
+          - tab "Search" [ref=e52]:
+            - img [ref=e53]
+            - generic [ref=e56]: Search
+          - tab "Compare" [ref=e57]:
+            - img [ref=e58]
+            - generic [ref=e63]: Compare
+          - tab "Translate" [disabled] [ref=e64]:
+            - img [ref=e65]
+            - generic [ref=e69]: Translate
+          - tab "AI Demo" [ref=e70]:
+            - img [ref=e71]
+            - generic [ref=e73]: AI Demo
+          - tab "Statistics" [ref=e74]:
+            - img [ref=e75]
+            - generic [ref=e77]: Statistics
+        - generic [ref=e78]:
+          - button "Notifications" [ref=e79]:
+            - img [ref=e80]
+          - button "Switch to Français" [ref=e83]:
+            - generic [ref=e84]: Français
+          - button "Switch to light mode (System theme)" [ref=e85]:
+            - img [ref=e88]
+            - generic [ref=e90]: Switch to light mode (System theme)
+          - button "AU Hi, Admin" [ref=e91]:
+            - generic [ref=e92]: AU
+            - generic [ref=e93]:
+              - generic [ref=e94]: Hi,
+              - generic [ref=e95]: Admin
+    - region "Profile header":
+      - generic [ref=e97]:
+        - navigation "Breadcrumb" [ref=e98]:
+          - img [ref=e99]
+          - button "Navigate to Home" [ref=e102]: Home
+          - img [ref=e103]
+          - generic [ref=e105]: Home
+        - generic [ref=e106]:
+          - button "Job 1" [ref=e107]:
+            - generic [ref=e108]: Job 1
+            - img [ref=e109]
+          - button "Job 2" [ref=e112]:
+            - generic [ref=e113]: Job 2
+            - img [ref=e114]
+    - region "Alert banner" [ref=e117]:
+      - alert [ref=e118]:
+        - generic [ref=e120]:
+          - img [ref=e121]
+          - generic [ref=e123]:
+            - 'heading "Phase 5: Skills Intelligence Now Available" [level=3] [ref=e124]'
+            - paragraph [ref=e125]: Automated skills extraction powered by Lightcast API is now live! Upload job descriptions to see extracted skills, explore the Skills Analytics dashboard, and filter jobs by required skills.
+          - button "Dismiss alert" [ref=e126]:
+            - img [ref=e127]
+    - generic [ref=e130]:
+      - complementary "Dashboard sidebar" [ref=e131]:
+        - generic [ref=e132]:
+          - button "Statistics" [ref=e133]:
+            - img [ref=e134]
+          - button "System Health" [ref=e136]:
+            - img [ref=e137]
+      - complementary "AI assistant panel" [ref=e139]:
+        - button "Expand AI Panel" [ref=e141]:
+          - img [ref=e142]
+      - main "Main content" [ref=e146]:
+        - tabpanel "Jobs" [ref=e150]:
+          - generic [ref=e151]:
+            - generic [ref=e152]:
+              - generic [ref=e153]:
+                - heading "Job Descriptions" [level=2] [ref=e154]
+                - paragraph [ref=e155]: 7 of 7 jobs
+              - generic [ref=e156]:
+                - generic [ref=e157]:
+                  - button "Table View" [ref=e158]:
+                    - img [ref=e159]
+                  - button "Grid View" [ref=e160]:
+                    - img [ref=e161]
+                - button "Upload" [ref=e163]:
+                  - img [ref=e164]
+                  - text: Upload
+                - button "Create New" [ref=e167]:
+                  - img [ref=e168]
+                  - text: Create New
+                - button "Advanced Search" [ref=e169]:
+                  - img [ref=e170]
+                  - text: Advanced Search
+            - generic [ref=e175]:
+              - generic [ref=e177]:
+                - img [ref=e178]
+                - textbox "Search by job number, filename, or classification..." [ref=e181]
+              - generic [ref=e183]:
+                - combobox "Classification" [ref=e184]:
+                  - generic: All Classifications
+                  - img [ref=e185]
+                - combobox "Language" [ref=e187]:
+                  - generic: All Languages
+                  - img [ref=e188]
+                - combobox "Status" [ref=e190]:
+                  - generic: All Statuses
+                  - img [ref=e191]
+            - table [ref=e196]:
+              - rowgroup [ref=e197]:
+                - row "Job Number Job Title Classification Language Status Quality Created Actions" [ref=e198]:
+                  - cell [ref=e199]:
+                    - checkbox [ref=e200]
+                  - cell "Job Number" [ref=e201]:
+                    - button "Job Number" [ref=e202]:
+                      - text: Job Number
+                      - img [ref=e203]
+                  - cell "Job Title" [ref=e206]
+                  - cell "Classification" [ref=e207]:
+                    - button "Classification" [ref=e208]:
+                      - text: Classification
+                      - img [ref=e209]
+                  - cell "Language" [ref=e212]:
+                    - button "Language" [ref=e213]:
+                      - text: Language
+                      - img [ref=e214]
+                  - cell "Status" [ref=e217]
+                  - cell "Quality" [ref=e218]
+                  - cell "Created" [ref=e219]:
+                    - button "Created" [ref=e220]:
+                      - text: Created
+                      - img [ref=e221]
+                  - cell "Actions" [ref=e223]
+              - rowgroup [ref=e224]:
+                - 'button "View job JD12345: Director of Strategic Planning" [ref=e225] [cursor=pointer]':
+                  - cell "Select job JD12345" [ref=e226]:
+                    - checkbox "Select job JD12345" [ref=e227]
+                  - cell "JD12345" [ref=e228]:
+                    - generic [ref=e229]:
+                      - img [ref=e230]
+                      - generic [ref=e233]: JD12345
+                  - cell "Director of Strategic Planning" [ref=e234]
+                  - cell "EX-02" [ref=e235]:
+                    - generic [ref=e236]:
+                      - text: EX-02
+                      - img [ref=e237]
+                  - cell "English" [ref=e240]:
+                    - generic [ref=e241]:
+                      - img [ref=e242]
+                      - generic [ref=e246]: English
+                  - cell "N/A" [ref=e247]:
+                    - generic [ref=e248]: N/A
+                  - cell "75%" [ref=e249]:
+                    - generic [ref=e251]: 75%
+                  - cell "10/17/2025" [ref=e252]
+                  - cell "Actions for job JD12345" [ref=e253]:
+                    - button "Actions for job JD12345" [ref=e254]:
+                      - img [ref=e255]
+                - 'button "View job 104215: CDS-Director-Digital-Transformation-Office--104215.md" [ref=e259] [cursor=pointer]':
+                  - cell "Select job 104215" [ref=e260]:
+                    - checkbox "Select job 104215" [ref=e261]
+                  - cell "104215" [ref=e262]:
+                    - generic [ref=e263]:
+                      - img [ref=e264]
+                      - generic [ref=e267]: "104215"
+                  - cell "CDS-Director-Digital-Transformation-Office--104215.md" [ref=e268]
+                  - cell "EX-01" [ref=e269]:
+                    - generic [ref=e270]:
+                      - text: EX-01
+                      - img [ref=e271]
+                  - cell "English" [ref=e274]:
+                    - generic [ref=e275]:
+                      - img [ref=e276]
+                      - generic [ref=e280]: English
+                  - cell "N/A" [ref=e281]:
+                    - generic [ref=e282]: N/A
+                  - cell "0%" [ref=e283]:
+                    - generic [ref=e285]: 0%
+                  - cell "10/17/2025" [ref=e286]
+                  - cell "Actions for job 104215" [ref=e287]:
+                    - button "Actions for job 104215" [ref=e288]:
+                      - img [ref=e289]
+                - 'button "View job 104320: Director-Domestic-and-International-Policy-Development--104320.md" [ref=e293] [cursor=pointer]':
+                  - cell "Select job 104320" [ref=e294]:
+                    - checkbox "Select job 104320" [ref=e295]
+                  - cell "104320" [ref=e296]:
+                    - generic [ref=e297]:
+                      - img [ref=e298]
+                      - generic [ref=e301]: "104320"
+                  - cell "Director-Domestic-and-International-Policy-Development--104320.md" [ref=e302]
+                  - cell "EX-01" [ref=e303]:
+                    - generic [ref=e304]:
+                      - text: EX-01
+                      - img [ref=e305]
+                  - cell "English" [ref=e308]:
+                    - generic [ref=e309]:
+                      - img [ref=e310]
+                      - generic [ref=e314]: English
+                  - cell "N/A" [ref=e315]:
+                    - generic [ref=e316]: N/A
+                  - cell "0%" [ref=e317]:
+                    - generic [ref=e319]: 0%
+                  - cell "10/17/2025" [ref=e320]
+                  - cell "Actions for job 104320" [ref=e321]:
+                    - button "Actions for job 104320" [ref=e322]:
+                      - img [ref=e323]
+                - 'button "View job 103410: Director-EI-Clients-Older-Workers-and-Persons-with-Disabilities--103410.md" [ref=e327] [cursor=pointer]':
+                  - cell "Select job 103410" [ref=e328]:
+                    - checkbox "Select job 103410" [ref=e329]
+                  - cell "103410" [ref=e330]:
+                    - generic [ref=e331]:
+                      - img [ref=e332]
+                      - generic [ref=e335]: "103410"
+                  - cell "Director-EI-Clients-Older-Workers-and-Persons-with-Disabilities--103410.md" [ref=e336]
+                  - cell "EX-01" [ref=e337]:
+                    - generic [ref=e338]:
+                      - text: EX-01
+                      - img [ref=e339]
+                  - cell "English" [ref=e342]:
+                    - generic [ref=e343]:
+                      - img [ref=e344]
+                      - generic [ref=e348]: English
+                  - cell "N/A" [ref=e349]:
+                    - generic [ref=e350]: N/A
+                  - cell "0%" [ref=e351]:
+                    - generic [ref=e353]: 0%
+                  - cell "10/17/2025" [ref=e354]
+                  - cell "Actions for job 103410" [ref=e355]:
+                    - button "Actions for job 103410" [ref=e356]:
+                      - img [ref=e357]
+                - 'button "View job 103209: Director, Dispute Resolution Services" [ref=e361] [cursor=pointer]':
+                  - cell "Select job 103209" [ref=e362]:
+                    - checkbox "Select job 103209" [ref=e363]
+                  - cell "103209" [ref=e364]:
+                    - generic [ref=e365]:
+                      - img [ref=e366]
+                      - generic [ref=e369]: "103209"
+                  - cell "Director, Dispute Resolution Services" [ref=e370]
+                  - cell "EX-01" [ref=e371]:
+                    - generic [ref=e372]:
+                      - text: EX-01
+                      - img [ref=e373]
+                  - cell "English" [ref=e376]:
+                    - generic [ref=e377]:
+                      - img [ref=e378]
+                      - generic [ref=e382]: English
+                  - cell "N/A" [ref=e383]:
+                    - generic [ref=e384]: N/A
+                  - cell "0%" [ref=e385]:
+                    - generic [ref=e387]: 0%
+                  - cell "10/17/2025" [ref=e388]
+                  - cell "Actions for job 103209" [ref=e389]:
+                    - button "Actions for job 103209" [ref=e390]:
+                      - img [ref=e391]
+                - 'button "View job 123456: Senior Python Developer" [ref=e395] [cursor=pointer]':
+                  - cell "Select job 123456" [ref=e396]:
+                    - checkbox "Select job 123456" [ref=e397]
+                  - cell "123456" [ref=e398]:
+                    - generic [ref=e399]:
+                      - img [ref=e400]
+                      - generic [ref=e403]: "123456"
+                  - cell "Senior Python Developer" [ref=e404]
+                  - cell "IT-03" [ref=e405]:
+                    - generic [ref=e406]:
+                      - text: IT-03
+                      - img [ref=e407]
+                  - cell "English" [ref=e410]:
+                    - generic [ref=e411]:
+                      - img [ref=e412]
+                      - generic [ref=e416]: English
+                  - cell "N/A" [ref=e417]:
+                    - generic [ref=e418]: N/A
+                  - cell "0%" [ref=e419]:
+                    - generic [ref=e421]: 0%
+                  - cell "10/17/2025" [ref=e422]
+                  - cell "Actions for job 123456" [ref=e423]:
+                    - button "Actions for job 123456" [ref=e424]:
+                      - img [ref=e425]
+                - 'button "View job 789012: Data Analyst" [ref=e429] [cursor=pointer]':
+                  - cell "Select job 789012" [ref=e430]:
+                    - checkbox "Select job 789012" [ref=e431]
+                  - cell "789012" [ref=e432]:
+                    - generic [ref=e433]:
+                      - img [ref=e434]
+                      - generic [ref=e437]: "789012"
+                  - cell "Data Analyst" [ref=e438]
+                  - cell "EC-05" [ref=e439]:
+                    - generic [ref=e440]:
+                      - text: EC-05
+                      - img [ref=e441]
+                  - cell "English" [ref=e444]:
+                    - generic [ref=e445]:
+                      - img [ref=e446]
+                      - generic [ref=e450]: English
+                  - cell "N/A" [ref=e451]:
+                    - generic [ref=e452]: N/A
+                  - cell "0%" [ref=e453]:
+                    - generic [ref=e455]: 0%
+                  - cell "10/17/2025" [ref=e456]
+                  - cell "Actions for job 789012" [ref=e457]:
+                    - button "Actions for job 789012" [ref=e458]:
+                      - img [ref=e459]
+```

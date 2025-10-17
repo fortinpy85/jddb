@@ -100,7 +100,15 @@
       "Bash(npm run test:unit:*)",
       "Bash(npm run type-check:*)",
       "Bash(npm test:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(set PYTHONPATH=C:JDDBbackendsrc)",
+      "Bash(del test_tm_service.py)",
+      "mcp__playwright__browser_network_requests",
+      "Bash(PORT=3006 npm run dev:*)",
+      "Bash(npm run test:e2e:*)",
+      "Bash(set PORT=3006)",
+      "Bash(npm:*)",
+      "Bash(if exist playwright-report rmdir /s /q playwright-report)"
     ],
     "deny": [],
     "ask": []

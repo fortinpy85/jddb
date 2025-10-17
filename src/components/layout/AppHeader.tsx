@@ -38,11 +38,9 @@ import {
   User,
   LogOut,
   Bell,
-  Command,
   Sparkles,
   Wand2,
   Menu,
-  X,
   FileText,
   Megaphone,
 } from "lucide-react";
@@ -165,10 +163,10 @@ export function AppHeader({
   onNavigate,
   userName = "Admin User",
   notificationCount = 0,
-  jobCount,
   hasSelectedJob = false,
   className,
 }: AppHeaderProps) {
+  console.log("hasSelectedJob", hasSelectedJob);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useTranslation(["navigation", "common"]);
 
@@ -294,41 +292,49 @@ export function AppHeader({
                     : (description as string | undefined);
 
                   return (
-                    <Button
-                      key={item.id}
-                      id={`${item.id}-tab`}
-                      variant={isActive ? "secondary" : "ghost"}
-                      onClick={isDisabled ? undefined : () => handleNavigation(item.id)}
-                      disabled={isDisabled}
-                      role="tab"
-                      aria-selected={isActive}
-                      aria-controls={isDisabled ? undefined : `${item.id}-panel`}
-                      aria-disabled={isDisabled}
-                      tabIndex={isDisabled ? -1 : isActive ? 0 : -1}
-                      className={cn(
-                        "w-full justify-start gap-3 h-11",
-                        isActive &&
-                          "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
-                        isDisabled && "opacity-50 cursor-not-allowed",
-                      )}
-                      title={tooltipText}
-                      aria-label={label}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <div className="flex-1 text-left">
-                        <div className="font-medium">{label}</div>
-                        {description && (
-                          <div className="text-xs text-muted-foreground">
-                            {description}
-                          </div>
+                      <Button
+                        key={item.id}
+                        id={`${item.id}-tab`}
+                        role="tab"
+                        variant={isActive ? "secondary" : "ghost"}
+                        onClick={
+                          isDisabled
+                            ? undefined
+                            : () => handleNavigation(item.id)
+                        }
+                        disabled={isDisabled}
+                        aria-selected={isActive}
+                        aria-controls={
+                          isDisabled ? undefined : `${item.id}-panel`
+                        }
+                        aria-disabled={isDisabled}
+                        tabIndex={isDisabled ? -1 : isActive ? 0 : -1}
+                        data-testid={isActive ? "active-tab" : undefined}
+                        data-state={isActive ? "active" : "inactive"}
+                        className={cn(
+                          "w-full justify-start gap-3 h-11",
+                          isActive &&
+                            "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
+                          isDisabled && "opacity-50 cursor-not-allowed",
                         )}
-                      </div>
-                      {item.badge && item.badge > 0 && (
-                        <Badge variant="destructive" className="ml-auto">
-                          {item.badge > 9 ? "9+" : item.badge}
-                        </Badge>
-                      )}
-                    </Button>
+                        title={tooltipText}
+                        aria-label={label}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <div className="flex-1 text-left">
+                          <div className="font-medium">{label}</div>
+                          {description && (
+                            <div className="text-xs text-muted-foreground">
+                              {description}
+                            </div>
+                          )}
+                        </div>
+                        {item.badge && item.badge > 0 && (
+                          <Badge variant="destructive" className="ml-auto">
+                            {item.badge > 9 ? "9+" : item.badge}
+                          </Badge>
+                        )}
+                      </Button>
                   );
                 })}
               </nav>
@@ -364,65 +370,69 @@ export function AppHeader({
                 : (description as string | undefined);
 
               return (
-                <Button
-                  key={item.id}
-                  id={`${item.id}-tab`}
-                  variant="ghost"
-                  size="sm"
-                  onClick={isDisabled ? undefined : () => handleNavigation(item.id)}
-                  disabled={isDisabled}
-                  role="tab"
-                  aria-selected={isActive}
-                  aria-controls={isDisabled ? undefined : `${item.id}-panel`}
-                  aria-disabled={isDisabled}
-                  aria-label={label}
-                  tabIndex={isDisabled ? -1 : isActive ? 0 : -1}
-                  className={cn(
-                    // Base styles
-                    "relative px-3 py-2 h-auto",
-                    "flex flex-col items-center gap-1",
-                    "transition-all duration-200",
+                  <Button
+                    key={item.id}
+                    id={`${item.id}-tab`}
+                    role="tab"
+                    variant="ghost"
+                    size="sm"
+                    onClick={
+                      isDisabled ? undefined : () => handleNavigation(item.id)
+                    }
+                    disabled={isDisabled}
+                    aria-selected={isActive}
+                    aria-controls={isDisabled ? undefined : `${item.id}-panel`}
+                    aria-disabled={isDisabled}
+                    aria-label={label}
+                    tabIndex={isDisabled ? -1 : isActive ? 0 : -1}
+                    data-testid={isActive ? "active-tab" : undefined}
+                    data-state={isActive ? "active" : "inactive"}
+                    className={cn(
+                      // Base styles
+                      "relative px-3 py-2 h-auto",
+                      "flex flex-col items-center gap-1",
+                      "transition-all duration-200",
 
-                    // Hover state
-                    !isDisabled &&
-                      "hover:bg-slate-100/80 dark:hover:bg-slate-800/80",
-                    !isDisabled && "hover:shadow-button",
-
-                    // Active state
-                    isActive && [
-                      "bg-blue-50/80 dark:bg-blue-900/20",
-                      "text-blue-600 dark:text-blue-400",
-                      "shadow-inner",
-                    ],
-
-                    // Inactive state
-                    !isActive &&
+                      // Hover state
                       !isDisabled &&
-                      "text-slate-600 dark:text-slate-400",
+                        "hover:bg-slate-100/80 dark:hover:bg-slate-800/80",
+                      !isDisabled && "hover:shadow-button",
 
-                    // Disabled state
-                    isDisabled && "opacity-50 cursor-not-allowed",
-                  )}
-                  title={tooltipText}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="text-xs font-medium">{label}</span>
+                      // Active state
+                      isActive && [
+                        "bg-blue-50/80 dark:bg-blue-900/20",
+                        "text-blue-600 dark:text-blue-400",
+                        "shadow-inner",
+                      ],
 
-                  {/* Active indicator */}
-                  {isActive && (
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full" />
-                  )}
+                      // Inactive state
+                      !isActive &&
+                        !isDisabled &&
+                        "text-slate-600 dark:text-slate-400",
 
-                  {/* Badge for notifications */}
-                  {item.badge && item.badge > 0 && (
-                    <Badge
-                      variant="destructive"
-                      className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
-                    >
-                      {item.badge > 9 ? "9+" : item.badge}
-                    </Badge>
-                  )}
-                </Button>
+                      // Disabled state
+                      isDisabled && "opacity-50 cursor-not-allowed",
+                    )}
+                    title={tooltipText}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-xs font-medium">{label}</span>
+
+                    {/* Active indicator */}
+                    {isActive && (
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full" />
+                    )}
+
+                    {/* Badge for notifications */}
+                    {item.badge && item.badge > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
+                      >
+                        {item.badge > 9 ? "9+" : item.badge}
+                      </Badge>
+                    )}
+                  </Button>
               );
             })}
           </nav>

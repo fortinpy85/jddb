@@ -119,9 +119,9 @@ export const CollaborativeCursor: React.FC<CollaborativeCursorProps> = ({
             >
               {username}
             </div>
-            </div>
-          );
-        })}
+          </div>
+        );
+      })}
     </div>
   );
 };

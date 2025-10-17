@@ -6,7 +6,7 @@
     "subtitle": "ou cliquer pour parcourir",
     "uploading": "Téléversement en cours...",
     "processing": "Traitement des fichiers...",
-    "supportedFormats": "Formats pris en charge: .txt, .doc, .docx, .pdf",
+    "supportedFormats": "Formats pris en charge: .txt, .doc, .docx, .pdf, .md",
     "maxSize": "Taille maximale du fichier: {{size}} Mo",
     "dropHere": "Déposer les fichiers ici",
     "selectFiles": "Sélectionner des fichiers",

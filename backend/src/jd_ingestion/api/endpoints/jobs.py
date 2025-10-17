@@ -28,6 +28,7 @@ from ...auth.api_key import get_api_key
 from ...services.analytics_service import analytics_service
 from ...utils.error_handler import handle_errors, retry_on_failure
 from ...utils.logging import get_logger
+from ...utils.caching import cache_result
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -51,7 +52,9 @@ class JobUpdate(BaseModel):
     """Model for updating an existing job description"""
 
     title: Optional[str] = Field(None, description="Job title")
-    classification: Optional[str] = Field(None, description="Classification level (e.g., EX-01)")
+    classification: Optional[str] = Field(
+        None, description="Classification level (e.g., EX-01)"
+    )
     language: Optional[str] = Field(None, description="Language code (en/fr)")
     raw_content: Optional[str] = Field(None, description="Full job description content")
     department: Optional[str] = Field(None, description="Department name")
@@ -221,6 +224,7 @@ async def list_jobs(
 
 
 @router.get("/status")
+@cache_result(ttl=60, key_prefix="jobs_status")  # Cache for 60 seconds
 @handle_errors(
     operation_name="get_processing_status",
     context={"endpoint": "/jobs/status", "method": "GET"},
@@ -229,7 +233,7 @@ async def list_jobs(
 async def get_processing_status(
     db: AsyncSession = Depends(get_async_session), api_key: str = Security(get_api_key)
 ):
-    """Get current processing status of all jobs."""
+    """Get current processing status of all jobs. Cached for 60 seconds."""
     # Get total job count
     total_result = await db.execute(select(func.count()).select_from(JobDescription))
     total_jobs = total_result.scalar_one()
@@ -268,6 +272,7 @@ async def get_processing_status(
 
 
 @router.get("/stats")
+@cache_result(ttl=120, key_prefix="jobs_stats")  # Cache for 2 minutes
 @handle_errors(
     operation_name="get_job_stats", context={"endpoint": "/jobs/stats", "method": "GET"}
 )
@@ -275,7 +280,7 @@ async def get_processing_status(
 async def get_job_stats(
     db: AsyncSession = Depends(get_async_session), api_key: str = Security(get_api_key)
 ):
-    """Get basic job statistics."""
+    """Get basic job statistics. Cached for 2 minutes."""
     try:
         # Total jobs count
         total_jobs_result = await db.execute(select(func.count(JobDescription.id)))

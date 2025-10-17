@@ -502,9 +502,6 @@ async def complete_section(
         )
 
 
-
-
-
 @router.post("/inline-suggestions", response_model=InlineSuggestionsResponse)
 async def get_inline_suggestions(
     request: InlineSuggestionsRequest,

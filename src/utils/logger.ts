@@ -15,7 +15,7 @@
  * ```
  */
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+type LogLevel = "debug" | "info" | "warn" | "error";
 
 interface LogContext {
   [key: string]: any;
@@ -26,19 +26,19 @@ class Logger {
   private isDevelopment: boolean;
 
   constructor() {
-    this.isDevelopment = process.env.NODE_ENV !== 'production';
+    this.isDevelopment = process.env.NODE_ENV !== "production";
     // In production, only log warnings and errors
     // In development, log everything
-    this.level = this.isDevelopment ? 'debug' : 'warn';
+    this.level = this.isDevelopment ? "debug" : "warn";
   }
 
   /**
    * Log debug information (development only)
    */
   debug(message: string, context?: LogContext): void {
-    if (this.shouldLog('debug')) {
+    if (this.shouldLog("debug")) {
       const timestamp = new Date().toISOString();
-      console.log(`[${timestamp}] [DEBUG] ${message}`, context || '');
+      console.log(`[${timestamp}] [DEBUG] ${message}`, context || "");
     }
   }
 
@@ -46,9 +46,9 @@ class Logger {
    * Log informational messages
    */
   info(message: string, context?: LogContext): void {
-    if (this.shouldLog('info')) {
+    if (this.shouldLog("info")) {
       const timestamp = new Date().toISOString();
-      console.info(`[${timestamp}] [INFO] ${message}`, context || '');
+      console.info(`[${timestamp}] [INFO] ${message}`, context || "");
     }
   }
 
@@ -56,9 +56,9 @@ class Logger {
    * Log warning messages
    */
   warn(message: string, context?: LogContext): void {
-    if (this.shouldLog('warn')) {
+    if (this.shouldLog("warn")) {
       const timestamp = new Date().toISOString();
-      console.warn(`[${timestamp}] [WARN] ${message}`, context || '');
+      console.warn(`[${timestamp}] [WARN] ${message}`, context || "");
     }
   }
 
@@ -66,19 +66,20 @@ class Logger {
    * Log error messages
    */
   error(message: string, error?: Error | unknown, context?: LogContext): void {
-    if (this.shouldLog('error')) {
+    if (this.shouldLog("error")) {
       const timestamp = new Date().toISOString();
       if (error instanceof Error) {
+        console.error(`[${timestamp}] [ERROR] ${message}`, {
+          message: error.message,
+          stack: error.stack,
+          ...context,
+        });
+      } else {
         console.error(
           `[${timestamp}] [ERROR] ${message}`,
-          {
-            message: error.message,
-            stack: error.stack,
-            ...context,
-          }
+          error,
+          context || "",
         );
-      } else {
-        console.error(`[${timestamp}] [ERROR] ${message}`, error, context || '');
       }
     }
   }
@@ -101,7 +102,7 @@ class Logger {
    * Determine if a message should be logged based on current level
    */
   private shouldLog(level: LogLevel): boolean {
-    const levels: LogLevel[] = ['debug', 'info', 'warn', 'error'];
+    const levels: LogLevel[] = ["debug", "info", "warn", "error"];
     const currentLevelIndex = levels.indexOf(this.level);
     const messageLevelIndex = levels.indexOf(level);
     return messageLevelIndex >= currentLevelIndex;
@@ -121,7 +122,7 @@ class Logger {
 class ChildLogger {
   constructor(
     private parent: Logger,
-    private defaultContext: LogContext
+    private defaultContext: LogContext,
   ) {}
 
   debug(message: string, context?: LogContext): void {

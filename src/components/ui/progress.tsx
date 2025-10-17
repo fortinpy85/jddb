@@ -7,11 +7,20 @@ import { CheckCircle, AlertCircle, Clock, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Basic Progress Bar Component (Radix UI based)
+// WCAG 2.1 Level AA Compliance: All progressbar elements must have accessible names
 function Progress({
   className,
   value,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   ...props
 }: React.ComponentProps<typeof ProgressPrimitive.Root>) {
+  // Ensure accessibility: require either aria-label or aria-labelledby
+  const accessibilityProps = {
+    "aria-label": ariaLabel || (ariaLabelledBy ? undefined : "Progress"),
+    "aria-labelledby": ariaLabelledBy,
+  };
+
   return (
     <ProgressPrimitive.Root
       data-slot="progress"
@@ -19,6 +28,7 @@ function Progress({
         "bg-primary/20 relative h-2 w-full overflow-hidden rounded-full",
         className,
       )}
+      {...accessibilityProps}
       {...props}
     >
       <ProgressPrimitive.Indicator

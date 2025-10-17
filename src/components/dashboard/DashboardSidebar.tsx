@@ -167,7 +167,7 @@ function StatisticsCards({
     },
     {
       label: t("statistics.completed"),
-      value: stats?.processing_status.completed ?? 0,
+      value: stats?.processing_status?.completed ?? 0,
       icon: CheckCircle,
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-50 dark:bg-green-900/20",
@@ -175,7 +175,7 @@ function StatisticsCards({
     },
     {
       label: t("statistics.inProgress"),
-      value: stats?.processing_status.processing ?? 0,
+      value: stats?.processing_status?.partial ?? 0,
       icon: Clock,
       color: "text-yellow-600 dark:text-yellow-400",
       bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
@@ -183,7 +183,9 @@ function StatisticsCards({
     },
     {
       label: t("statistics.failed"),
-      value: stats?.processing_status.failed ?? 0,
+      value: (stats?.processing_status?.needs_embeddings ?? 0) +
+             (stats?.processing_status?.needs_sections ?? 0) +
+             (stats?.processing_status?.needs_metadata ?? 0),
       icon: AlertCircle,
       color: "text-red-600 dark:text-red-400",
       bgColor: "bg-red-50 dark:bg-red-900/20",

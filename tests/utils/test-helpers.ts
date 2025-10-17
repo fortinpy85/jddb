@@ -124,17 +124,31 @@ export const mockSearchResults = {
  */
 export const mockStatsData = {
   total_jobs: 150,
-  completed: 120,
-  processing: 25,
-  need_review: 5,
-  classification_distribution: {
+  by_classification: {
     "EX-01": 80,
     "EX-02": 50,
     "EX-03": 20,
   },
-  language_distribution: {
+  by_language: {
     EN: 100,
     FR: 50,
+  },
+  processing_status: {
+    completed: 120,
+    partial: 25,
+    needs_embeddings: 3,
+    needs_sections: 1,
+    needs_metadata: 1,
+  },
+  embedding_stats: {
+    total_chunks: 1500,
+    avg_chunks_per_job: 10,
+    embedding_coverage: 0.95,
+  },
+  quality_metrics: {
+    avg_content_length: 2500,
+    structured_fields_coverage: 0.92,
+    bilingual_coverage: 0.33,
   },
 };
 

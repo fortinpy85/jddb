@@ -8,23 +8,19 @@ test.describe("File Upload", () => {
   });
 
   test("should display upload interface", async ({ page }) => {
-    // Check for drag-and-drop area
+    // Check for drag-and-drop area using actual text from translation
     await expect(
-      page
-        .locator("text=Drag and drop")
-        .or(page.locator('[data-testid="upload-dropzone"]')),
-    ).toBeVisible();
-
-    // Check for file input or browse button
-    await expect(
-      page.locator('input[type="file"]').or(page.locator("text=Browse files")),
-    ).toBeVisible();
+      page.locator("text=Drag & Drop Files Here")
+    ).toBeVisible({ timeout: 15000 });
 
     // Check for upload instructions
     await expect(
-      page
-        .locator("text=Supported formats")
-        .or(page.locator("text=.txt, .doc, .docx, .pdf")),
+      page.locator("text=Supported formats")
+    ).toBeVisible();
+
+    // Check for maximum file size text
+    await expect(
+      page.locator("text=Maximum file size")
     ).toBeVisible();
   });
 
@@ -70,15 +66,17 @@ test.describe("File Upload", () => {
   });
 
   test("should show batch upload options", async ({ page }) => {
-    // Check for batch upload controls
+    // Check for batch upload button (Upload All button appears when files are selected)
+    // Since no files are selected initially, check if the upload area allows multiple files
+    const fileInput = page.locator('input[type="file"]');
+
+    // Verify file input accepts multiple files
+    const multipleAttr = await fileInput.getAttribute('multiple');
+    expect(multipleAttr).not.toBeNull(); // Should have multiple attribute
+
+    // Verify the drag & drop area is present (supports batch uploads)
     await expect(
-      page
-        .locator("text=Batch upload")
-        .or(
-          page
-            .locator("text=Multiple files")
-            .or(page.locator("text=Upload all")),
-        ),
+      page.locator("text=Drag & Drop Files Here")
     ).toBeVisible();
   });
 

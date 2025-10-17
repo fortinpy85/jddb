@@ -18,7 +18,9 @@ const intersectionObserverMock = () => ({
   unobserve: () => null,
   disconnect: () => null,
 });
-window.IntersectionObserver = vi.fn().mockImplementation(intersectionObserverMock);
+window.IntersectionObserver = vi
+  .fn()
+  .mockImplementation(intersectionObserverMock);
 
 describe("FadeTransition", () => {
   it("renders children when show is true", () => {
@@ -599,7 +601,9 @@ describe("HoverTransition", () => {
         <div>Main Content</div>
       </HoverTransition>,
     );
-    const childWrapper = container.querySelector(".transition-all") as HTMLElement;
+    const childWrapper = container.querySelector(
+      ".transition-all",
+    ) as HTMLElement;
     expect(childWrapper?.style.transitionDuration).toBe("500ms");
   });
 

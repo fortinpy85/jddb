@@ -35,7 +35,9 @@ describe("Skeleton Components", () => {
 
   describe("SkeletonCard", () => {
     it("renders with or without actions", () => {
-      const { rerender, container } = render(<SkeletonCard showActions={true} />);
+      const { rerender, container } = render(
+        <SkeletonCard showActions={true} />,
+      );
       expect(container.querySelectorAll(".h-8")).toHaveLength(2);
 
       rerender(<SkeletonCard showActions={false} />);
@@ -61,7 +63,9 @@ describe("Skeleton Components", () => {
     it("renders the correct number of skeleton job cards", () => {
       const { container } = render(<SkeletonList count={3} />);
       // Select the SkeletonJobCard components by their unique class combination
-      expect(container.querySelectorAll(".rounded-lg.border.bg-white.shadow-sm.p-4")).toHaveLength(3);
+      expect(
+        container.querySelectorAll(".rounded-lg.border.bg-white.shadow-sm.p-4"),
+      ).toHaveLength(3);
     });
   });
 
@@ -74,7 +78,9 @@ describe("Skeleton Components", () => {
 
   describe("SkeletonLoader", () => {
     it("renders the correct skeleton based on the type prop", () => {
-      const { rerender, container } = render(<SkeletonLoader type="job-list" />);
+      const { rerender, container } = render(
+        <SkeletonLoader type="job-list" />,
+      );
       expect(container.querySelector(".space-y-6")).toBeInTheDocument();
 
       rerender(<SkeletonLoader type="job-card" />);
@@ -85,7 +91,9 @@ describe("Skeleton Components", () => {
 
       rerender(<SkeletonLoader type="stats-dashboard" />);
       // Check for responsive grid classes (grid-cols-1 md:grid-cols-2 lg:grid-cols-4)
-      expect(container.querySelector("[class*='grid-cols']")).toBeInTheDocument();
+      expect(
+        container.querySelector("[class*='grid-cols']"),
+      ).toBeInTheDocument();
 
       rerender(<SkeletonLoader type="search-results" />);
       expect(container.querySelector(".space-y-4")).toBeInTheDocument();
@@ -95,7 +103,9 @@ describe("Skeleton Components", () => {
 
       rerender(<SkeletonLoader type="comparison" />);
       // Check for responsive grid classes (grid-cols-1 lg:grid-cols-2)
-      expect(container.querySelector("[class*='grid-cols']")).toBeInTheDocument();
+      expect(
+        container.querySelector("[class*='grid-cols']"),
+      ).toBeInTheDocument();
 
       rerender(<SkeletonLoader type="table-rows" />);
       // Table rows skeleton uses space-y-2, not divide-y

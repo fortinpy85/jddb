@@ -292,6 +292,7 @@ function StatsDashboard() {
                     value={
                       ingestionStats?.content_quality.section_coverage_rate || 0
                     }
+                    aria-label="Section coverage progress"
                   />
 
                   <div className="flex items-center justify-between">
@@ -310,6 +311,7 @@ function StatsDashboard() {
                       ingestionStats?.content_quality.metadata_coverage_rate ||
                       0
                     }
+                    aria-label="Metadata coverage progress"
                   />
 
                   <div className="flex items-center justify-between">
@@ -328,6 +330,7 @@ function StatsDashboard() {
                       ingestionStats?.content_quality.embedding_coverage_rate ||
                       0
                     }
+                    aria-label="Embedding coverage progress"
                   />
                 </div>
               </CardContent>
@@ -1070,6 +1073,7 @@ function StatsDashboard() {
                                 : 0
                             }
                             className="h-2"
+                            aria-label={`Failure rate for ${name.replace(/_/g, " ")}`}
                           />
                         </div>
                       )}

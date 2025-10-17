@@ -59,9 +59,15 @@ interface GeneratedPosting {
   wordCount: number;
 }
 
-export function JobPostingGenerator({ selectedJob: initialSelectedJob }: { selectedJob: JobDescription | null }) {
+export function JobPostingGenerator({
+  selectedJob: initialSelectedJob,
+}: {
+  selectedJob: JobDescription | null;
+}) {
   const { toast } = useToast();
-  const [selectedJob, setSelectedJob] = useState<JobDescription | null>(initialSelectedJob);
+  const [selectedJob, setSelectedJob] = useState<JobDescription | null>(
+    initialSelectedJob,
+  );
 
   useEffect(() => {
     setSelectedJob(initialSelectedJob);
@@ -105,10 +111,7 @@ ${selectedJob.raw_content || selectedJob.sections?.map((s) => s.section_content)
       });
 
       // Parse the enhanced content into structured posting
-      const generated = parseEnhancedContent(
-        job_posting,
-        selectedJob,
-      );
+      const generated = parseEnhancedContent(job_posting, selectedJob);
 
       setPosting(generated);
       toast({

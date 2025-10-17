@@ -19,6 +19,16 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import TypeDecorator
 from pgvector.sqlalchemy import Vector
 from datetime import datetime
+from passlib.context import CryptContext
+
+# Password hashing configuration
+# Configure bcrypt with compatibility for bcrypt 5.x
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__ident="2b",  # Use bcrypt $2b$ variant
+    bcrypt__min_rounds=12  # Set reasonable cost factor
+)
 
 
 # Type adapter that uses JSONB for PostgreSQL, JSON for other databases (like SQLite)
@@ -29,11 +39,12 @@ class JSONBType(TypeDecorator):
     Uses JSONB for PostgreSQL for better performance and indexing.
     Falls back to JSON for other databases like SQLite.
     """
+
     impl = JSON
     cache_ok = True
 
     def load_dialect_impl(self, dialect):
-        if dialect.name == 'postgresql':
+        if dialect.name == "postgresql":
             return dialect.type_descriptor(JSONB())
         else:
             return dialect.type_descriptor(JSON())
@@ -89,6 +100,22 @@ class User(Base):
 
     sessions = relationship("UserSession", back_populates="user")
     permissions = relationship("UserPermission", back_populates="user")
+
+    def set_password(self, password: str) -> None:
+        """Hash and set the password."""
+        # Bcrypt has a maximum password length of 72 bytes
+        # Truncate password to ensure it's within bcrypt limits
+        if len(password.encode('utf-8')) > 72:
+            password = password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
+        self.password_hash = pwd_context.hash(password)
+
+    def verify_password(self, password: str) -> bool:
+        """Verify a password against the hash."""
+        return bool(pwd_context.verify(password, self.password_hash))
+
+    def update_last_login(self) -> None:
+        """Update the last login timestamp."""
+        self.last_login = datetime.utcnow()
 
 
 class UserSession(Base):
@@ -178,12 +205,12 @@ class JobDescription(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, onupdate=datetime.utcnow, nullable=True)
 
-    # Relationships
-    sections = relationship("JobSection", back_populates="job")
-    chunks = relationship("ContentChunk", back_populates="job")
-    job_metadata = relationship("JobMetadata", back_populates="job", uselist=False)
+    # Relationships with CASCADE delete-orphan for proper ORM-level deletion handling
+    sections = relationship("JobSection", back_populates="job", cascade="all, delete-orphan")
+    chunks = relationship("ContentChunk", back_populates="job", cascade="all, delete-orphan")
+    job_metadata = relationship("JobMetadata", back_populates="job", uselist=False, cascade="all, delete-orphan")
     quality_metrics = relationship(
-        "DataQualityMetrics", back_populates="job", uselist=False
+        "DataQualityMetrics", back_populates="job", uselist=False, cascade="all, delete-orphan"
     )
     skills = relationship(
         "Skill",
@@ -197,7 +224,9 @@ class JobSection(Base):
     __tablename__ = "job_sections"
 
     id = Column(Integer, primary_key=True, index=True)
-    job_id = Column(Integer, ForeignKey("job_descriptions.id"), nullable=False)
+    job_id = Column(
+        Integer, ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False
+    )
     section_type = Column(String(50), nullable=True)
     section_content = Column(Text, nullable=True)
     section_order = Column(Integer, nullable=True)
@@ -211,7 +240,9 @@ class JobMetadata(Base):
     __tablename__ = "job_metadata"
 
     id = Column(Integer, primary_key=True, index=True)
-    job_id = Column(Integer, ForeignKey("job_descriptions.id"), nullable=False)
+    job_id = Column(
+        Integer, ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False
+    )
     reports_to = Column(String(500), nullable=True)
     department = Column(String(200), nullable=True)
     location = Column(String(200), nullable=True)
@@ -227,8 +258,12 @@ class ContentChunk(Base):
     __tablename__ = "content_chunks"
 
     id = Column(Integer, primary_key=True, index=True)
-    job_id = Column(Integer, ForeignKey("job_descriptions.id"), nullable=False)
-    section_id = Column(Integer, ForeignKey("job_sections.id"), nullable=True)
+    job_id = Column(
+        Integer, ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False
+    )
+    section_id = Column(
+        Integer, ForeignKey("job_sections.id", ondelete="CASCADE"), nullable=True
+    )
     chunk_text = Column(Text, nullable=True)
     chunk_index = Column(Integer, nullable=True)
     embedding = Column(Vector(1536), nullable=True)
@@ -272,7 +307,9 @@ class DataQualityMetrics(Base):
     __tablename__ = "data_quality_metrics"
 
     id = Column(Integer, primary_key=True, index=True)
-    job_id = Column(Integer, ForeignKey("job_descriptions.id"), nullable=False)
+    job_id = Column(
+        Integer, ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False
+    )
     content_completeness_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
     sections_completeness_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
     metadata_completeness_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
@@ -302,8 +339,8 @@ class JobComparison(Base):
     __tablename__ = "job_comparisons"
 
     id = Column(Integer, primary_key=True, index=True)
-    job1_id = Column(Integer, ForeignKey("job_descriptions.id"), nullable=False)
-    job2_id = Column(Integer, ForeignKey("job_descriptions.id"), nullable=False)
+    job1_id = Column(Integer, ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False)
+    job2_id = Column(Integer, ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False)
     comparison_type = Column(String(50), nullable=True)
     similarity_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
     differences = Column(JSONBType, nullable=True)
@@ -360,7 +397,9 @@ class JobSkill(Base):
     __tablename__ = "job_skills"
 
     id = Column(Integer, primary_key=True, index=True)
-    job_id = Column(Integer, ForeignKey("job_descriptions.id"), nullable=False)
+    job_id = Column(
+        Integer, ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False
+    )
     skill_name = Column(String(200), nullable=False)
     skill_category = Column(String(100), nullable=True)
     proficiency_level = Column(String(50), nullable=True)
@@ -482,3 +521,103 @@ class RLHFFeedback(Base):
     # Relationships
     user = relationship("User", foreign_keys=[user_id])
     job = relationship("JobDescription", foreign_keys=[job_id])
+
+
+# Translation Memory models for Phase 2 collaborative features
+class TranslationProject(Base):
+    """
+    Translation Project - Groups related translation memory entries.
+
+    Organizes translations by project for better management and context.
+    """
+
+    __tablename__ = "translation_projects"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(200), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    source_language = Column(String(10), nullable=False, index=True)
+    target_language = Column(String(10), nullable=False, index=True)
+    project_type = Column(String(50), default="job_descriptions", nullable=False)
+    status = Column(String(20), default="active", nullable=False, index=True)
+    created_by = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow, nullable=True)
+
+    # Relationships
+    translations = relationship(
+        "TranslationMemory", back_populates="project", cascade="all, delete-orphan"
+    )
+    creator = relationship("User", foreign_keys=[created_by])
+
+
+class TranslationMemory(Base):
+    """
+    Translation Memory - Stores source-target translation pairs with metadata.
+
+    Enables reuse of previously translated content with semantic similarity search.
+    """
+
+    __tablename__ = "translation_memory"
+
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("translation_projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    source_text = Column(Text, nullable=False)
+    target_text = Column(Text, nullable=False)
+    source_language = Column(String(10), nullable=False, index=True)
+    target_language = Column(String(10), nullable=False, index=True)
+    domain = Column(String(100), nullable=True, index=True)
+    subdomain = Column(String(100), nullable=True)
+    quality_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
+    confidence_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
+    usage_count = Column(Integer, default=0, nullable=False)
+    last_used = Column(DateTime, nullable=True)
+    translation_metadata = Column(JSONBType, nullable=True)
+    created_by = Column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow, nullable=True)
+
+    # Relationships
+    project = relationship("TranslationProject", back_populates="translations")
+    embeddings = relationship(
+        "TranslationEmbedding",
+        back_populates="translation",
+        cascade="all, delete-orphan",
+    )
+    creator = relationship("User", foreign_keys=[created_by])
+
+
+class TranslationEmbedding(Base):
+    """
+    Translation Embedding - Stores vector embeddings for semantic similarity search.
+
+    Uses pgvector for efficient similarity matching across translation memory.
+    """
+
+    __tablename__ = "translation_embeddings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    translation_id = Column(
+        Integer,
+        ForeignKey("translation_memory.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    embedding = Column(Vector(1536), nullable=False)
+    embedding_model = Column(
+        String(100), default="text-embedding-ada-002", nullable=False
+    )
+    text_hash = Column(String(64), nullable=True, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    translation = relationship("TranslationMemory", back_populates="embeddings")

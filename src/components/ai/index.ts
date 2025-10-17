@@ -3,10 +3,7 @@
  * Phase 3: Advanced AI Content Intelligence
  */
 
-export {
-  QualityDashboard,
-  QualityScoreBadge,
-} from "./QualityDashboard";
+export { QualityDashboard, QualityScoreBadge } from "./QualityDashboard";
 export { BiasDetector, CompactBiasBadge } from "./BiasDetector";
 export {
   AISuggestionsPanel,

@@ -58,10 +58,12 @@ export async function initializeAxe(
       });
 
       logger.info("[Accessibility] axe-core initialized successfully");
-      logger.info("[Accessibility] Automated WCAG 2.0 audits will run after each render");
+      logger.info(
+        "[Accessibility] Automated WCAG 2.0 audits will run after each render",
+      );
     } catch (error) {
       logger.warn("[Accessibility] Failed to initialize axe-core:", {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }

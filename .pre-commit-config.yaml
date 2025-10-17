@@ -90,7 +90,7 @@ repos:
     hooks:
       - id: frontend-build-check
         name: Check frontend builds successfully
-        entry: bash -c 'echo "🏗️  Checking frontend build..." && bun run build'
+        entry: bash -c 'echo "🏗️  Checking frontend build..." && npm run build'
         language: system
         pass_filenames: false
         files: '^(src/|package\.json|tsconfig\.json|\.env\.local).*$'

@@ -90,9 +90,7 @@ describe("ErrorBoundary", () => {
       </ErrorBoundary>,
     );
 
-    expect(
-      screen.queryByText("Oops! Something went wrong"),
-    ).toBeNull();
+    expect(screen.queryByText("Oops! Something went wrong")).toBeNull();
     expect(screen.getByText("Recovered Children")).toBeInTheDocument();
   });
 

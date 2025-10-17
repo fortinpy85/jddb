@@ -57,7 +57,7 @@ export function BulkUpload({
   onUploadComplete,
   onFilesChange,
   maxFileSize = 50,
-  acceptedFileTypes = [".txt", ".doc", ".docx", ".pdf"],
+  acceptedFileTypes = [".txt", ".doc", ".docx", ".pdf", ".md"],
 }: BulkUploadProps) {
   const { t } = useTranslation("upload");
   const [files, setFiles] = useState<FileUploadStatus[]>([]);
@@ -208,13 +208,14 @@ export function BulkUpload({
       let statusMessage = t("messages.uploadSuccess");
 
       if (
-        (result.processing_result.processed_content?.processing_errors?.length ?? 0) >
-        0
+        (result.processing_result.processed_content?.processing_errors
+          ?.length ?? 0) > 0
       ) {
         finalStatus = "needs_review";
         statusMessage = t("messages.uploadedNeedsReview", {
           count:
-            result.processing_result.processed_content?.processing_errors?.length ?? 0,
+            result.processing_result.processed_content?.processing_errors
+              ?.length ?? 0,
         });
       }
 
@@ -597,8 +598,8 @@ export function BulkUpload({
                           <div className="text-xs text-green-600 mt-1">
                             {t("messages.processedSuccessfully", {
                               jobNumber:
-                                fileStatus.result.processing_result?.file_metadata
-                                  ?.job_number,
+                                fileStatus.result.processing_result
+                                  ?.file_metadata?.job_number,
                             })}
                           </div>
                         )}

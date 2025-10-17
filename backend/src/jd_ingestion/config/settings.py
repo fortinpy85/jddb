@@ -13,8 +13,12 @@ class Settings(BaseSettings):
     # SECURITY WARNING: These defaults are for LOCAL DEVELOPMENT ONLY
     # In production, ALWAYS set DATABASE_URL and DATABASE_SYNC_URL environment variables
     # Never commit actual credentials to version control
-    database_url: str = "postgresql+asyncpg://jd_user:jd_password@localhost:5432/jd_ingestion"
-    database_sync_url: str = "postgresql://jd_user:jd_password@localhost:5432/jd_ingestion"
+    database_url: str = (
+        "postgresql+asyncpg://jd_user:jd_password@localhost:5432/jd_ingestion"
+    )
+    database_sync_url: str = (
+        "postgresql://jd_user:jd_password@localhost:5432/jd_ingestion"
+    )
     database_pool_size: int = 10
     database_max_overflow: int = 20
     database_pool_timeout: int = 30
@@ -40,21 +44,19 @@ class Settings(BaseSettings):
     # Application Settings
     debug: bool = False
     log_level: str = "INFO"
-    secret_key: str = "default-secret-key-change-in-production"
+    secret_key: str = ""
 
     # Security Settings
     # CORS: Comma-separated list of allowed origins
     # DEVELOPMENT: localhost origins for local development
     # PRODUCTION: Set to your actual frontend domains (https://app.example.com)
-    cors_allowed_origins: str = (
-        "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004"
-    )
+    cors_allowed_origins: str = "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004"
     cors_allow_credentials: bool = True
     allowed_hosts: str = "localhost,127.0.0.1"
 
     # File Processing
     max_file_size_mb: int = 50
-    supported_extensions: str = ".txt,.doc,.docx,.pdf"  # Comma-separated string
+    supported_extensions: str = ".txt,.doc,.docx,.pdf,.md"  # Comma-separated string
     data_dir: str = "./data"
 
     # Embedding Settings
@@ -72,7 +74,7 @@ class Settings(BaseSettings):
     API_KEY: str = ""
     api_host: str = "0.0.0.0"
     api_port: int = 8000
-    api_workers: int = 1
+    api_workers: int = 2  # Optimized for ≤100 concurrent users
 
     # Celery Configuration
     celery_broker_url: str = (
@@ -168,6 +170,50 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False
+
+    def model_post_init(self, __context) -> None:
+        """Validate security requirements for production environment."""
+        if self.is_production:
+            errors = []
+            # Validate database credentials
+            if (
+                not self.database_url
+                or "localhost" in self.database_url
+                or "jd_password" in self.database_url
+            ):
+                errors.append(
+                    "Production requires secure DATABASE_URL (not localhost defaults)"
+                )
+            if (
+                not self.database_sync_url
+                or "localhost" in self.database_sync_url
+                or "jd_password" in self.database_sync_url
+            ):
+                errors.append(
+                    "Production requires secure DATABASE_SYNC_URL (not localhost defaults)"
+                )
+            # Validate secret key
+            if (
+                not self.secret_key
+                or self.secret_key == "default-secret-key-change-in-production"
+            ):
+                errors.append(
+                    "Production requires custom SECRET_KEY environment variable"
+                )
+            # Validate CORS
+            if not self.cors_allowed_origins or any(
+                "localhost" in origin for origin in self.cors_allowed_origins_list
+            ):
+                errors.append(
+                    "Production CORS_ALLOWED_ORIGINS must not include localhost and must be set"
+                )
+            # Raise all validation errors
+            if errors:
+                error_msg = "\n".join(f"  - {err}" for err in errors)
+                raise RuntimeError(
+                    f"Production environment validation failed:\n{error_msg}\n\n"
+                    "Set required environment variables in .env or system environment."
+                )
 
 
 settings = Settings()

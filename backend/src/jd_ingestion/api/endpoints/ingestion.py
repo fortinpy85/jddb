@@ -131,12 +131,13 @@ async def process_single_file(
                 )
                 raw_content = f"PDF content extraction not yet implemented for: {file_path_obj.name}"
             else:
-                # Handle text files with detected encoding
+                # Handle text files (.txt, .md) with detected encoding
                 with open(file_path_obj, "r", encoding=file_metadata.encoding) as f:
                     raw_content = f.read()
                 logger.info(
                     "Successfully read text file",
                     file=str(file_path_obj),
+                    file_type=file_path_obj.suffix.lower(),
                     encoding=file_metadata.encoding,
                     content_length=len(raw_content),
                 )

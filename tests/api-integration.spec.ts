@@ -4,7 +4,8 @@ test.describe("API Integration", () => {
   test("should load dashboard stats from API", async ({ page }) => {
     // Intercept API calls to verify they're made correctly
     let statsApiCalled = false;
-    await page.route("**/api/stats", (route) => {
+    // The actual API endpoint is /jobs/status (see api.ts:695 getProcessingStatus)
+    await page.route("**/api/jobs/status", (route) => {
       statsApiCalled = true;
       route.continue();
     });
@@ -15,8 +16,8 @@ test.describe("API Integration", () => {
     // Verify stats API was called
     expect(statsApiCalled).toBe(true);
 
-    // Verify stats are displayed
-    await expect(page.locator("text=Total Jobs")).toBeVisible();
+    // Verify stats are displayed (use first() to avoid strict mode violation)
+    await expect(page.locator("text=Total Jobs").first()).toBeVisible();
   });
 
   test("should load jobs from API", async ({ page }) => {
@@ -36,7 +37,7 @@ test.describe("API Integration", () => {
 
   test("should handle API errors gracefully", async ({ page }) => {
     // Mock API failure
-    await page.route("**/api/stats", (route) => {
+    await page.route("**/api/jobs/status", (route) => {
       route.fulfill({
         status: 500,
         contentType: "application/json",
@@ -116,7 +117,8 @@ test.describe("API Integration", () => {
     await page.waitForLoadState("networkidle");
 
     // App should still render basic structure even with API failures
-    await expect(page.locator("h1")).toContainText("Job Description Database");
+    // Verify main navigation is accessible
+    await expect(page.getByRole("tab", { name: "Dashboard" })).toBeVisible();
   });
 
   test("should make API calls with proper headers", async ({ page }) => {
@@ -136,7 +138,7 @@ test.describe("API Integration", () => {
 
   test("should retry failed API requests", async ({ page }) => {
     let callCount = 0;
-    await page.route("**/api/stats", (route) => {
+    await page.route("**/api/jobs/status", (route) => {
       callCount++;
       if (callCount === 1) {
         // Fail first request
@@ -154,7 +156,8 @@ test.describe("API Integration", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    // If retry logic is implemented, should see multiple calls
-    expect(callCount).toBeGreaterThan(0);
+    // Retry logic exists in api.ts:262-393 with exponential backoff
+    // Should see multiple calls (initial + retries)
+    expect(callCount).toBeGreaterThan(1);
   });
 });

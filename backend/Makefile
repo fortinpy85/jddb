@@ -30,10 +30,13 @@ help:
 
 # Installation
 install:
-	pip install -r requirements.txt
+	poetry install --no-root
 
-dev: install
-	pip install pytest pytest-asyncio black flake8 mypy
+dev:
+	poetry install
+
+# Full setup for new development environment
+setup: dev db-init sample-data
 
 # Cleanup
 clean:

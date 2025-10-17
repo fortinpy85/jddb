@@ -26,6 +26,7 @@ from ..utils.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 class JobAnalysisService:
     """Service for advanced job analysis and comparison features."""
 
@@ -33,11 +34,16 @@ class JobAnalysisService:
         self.openai_client = openai.AsyncOpenAI(api_key=settings.openai_api_key)
 
     async def get_compensation_analysis(
-        self, db: AsyncSession, classification: Optional[str] = None, department: Optional[str] = None
+        self,
+        db: AsyncSession,
+        classification: Optional[str] = None,
+        department: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Comprehensive compensation analysis across positions."""
         # Query for jobs
-        query = select(JobDescription.salary_budget).where(JobDescription.salary_budget.isnot(None))
+        query = select(JobDescription.salary_budget).where(
+            JobDescription.salary_budget.isnot(None)
+        )
         if classification:
             query = query.where(JobDescription.classification == classification)
         if department:
@@ -72,13 +78,20 @@ class JobAnalysisService:
         }
 
     async def get_job_clusters(
-        self, db: AsyncSession, classification: Optional[str] = None, method: str = "similarity", n_clusters: int = 5
+        self,
+        db: AsyncSession,
+        classification: Optional[str] = None,
+        method: str = "similarity",
+        n_clusters: int = 5,
     ) -> Dict[str, Any]:
         """Discover job clusters based on similarity."""
         # Get job embeddings
-        query = select(JobDescription.id, JobDescription.title, JobDescription.classification, ContentChunk.embedding).join(
-            ContentChunk, JobDescription.id == ContentChunk.job_id
-        )
+        query = select(
+            JobDescription.id,
+            JobDescription.title,
+            JobDescription.classification,
+            ContentChunk.embedding,
+        ).join(ContentChunk, JobDescription.id == ContentChunk.job_id)
         if classification:
             query = query.where(JobDescription.classification == classification)
 
@@ -91,11 +104,18 @@ class JobAnalysisService:
         job_data = {}
         for job_id, title, classif, embedding in jobs:
             if job_id not in job_data:
-                job_data[job_id] = {"id": job_id, "title": title, "classification": classif, "embeddings": []}
+                job_data[job_id] = {
+                    "id": job_id,
+                    "title": title,
+                    "classification": classif,
+                    "embeddings": [],
+                }
             job_data[job_id]["embeddings"].append(embedding)
 
         job_ids = list(job_data.keys())
-        avg_embeddings = [np.mean(job_data[job_id]["embeddings"], axis=0) for job_id in job_ids]
+        avg_embeddings = [
+            np.mean(job_data[job_id]["embeddings"], axis=0) for job_id in job_ids
+        ]
 
         # Cluster embeddings
         kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(avg_embeddings)
@@ -118,7 +138,11 @@ class JobAnalysisService:
                     "cluster_name": f"Cluster {cluster_id}",
                     "job_count": len(jobs_in_cluster),
                     "sample_jobs": [
-                        {"id": job["id"], "title": job["title"], "classification": job["classification"]}
+                        {
+                            "id": job["id"],
+                            "title": job["title"],
+                            "classification": job["classification"],
+                        }
                         for job in jobs_in_cluster[:3]
                     ],
                 }
@@ -130,7 +154,6 @@ class JobAnalysisService:
             "classification_filter": classification,
             "clusters": output_clusters,
         }
-
 
     async def compare_jobs(
         self,
@@ -1025,7 +1048,6 @@ class JobAnalysisService:
 
         return recommendations
 
-
     async def get_similar_salary_range(
         self, db: AsyncSession, job_id: int, tolerance: float = 0.15
     ) -> Dict[str, Any]:
@@ -1059,7 +1081,9 @@ class JobAnalysisService:
 
         similar_jobs_data = []
         for job in similar_jobs:
-            similarity = await self._calculate_embedding_similarity(db, current_job.id, job.id)
+            similarity = await self._calculate_embedding_similarity(
+                db, current_job.id, job.id
+            )
             similar_jobs_data.append(
                 {
                     "id": job.id,
@@ -1082,7 +1106,9 @@ class JobAnalysisService:
     ) -> Dict[str, Any]:
         """Get benchmark data for a specific job classification."""
         # Query for jobs in the given classification
-        query = select(JobDescription).where(JobDescription.classification == classification)
+        query = select(JobDescription).where(
+            JobDescription.classification == classification
+        )
         if department:
             query = query.where(JobDescription.department == department)
 
@@ -1094,7 +1120,9 @@ class JobAnalysisService:
 
         # Get salary data from job_metadata
         job_ids = [job.id for job in jobs]
-        salary_query = select(JobDescription.salary_budget).where(JobDescription.id.in_(job_ids))
+        salary_query = select(JobDescription.salary_budget).where(
+            JobDescription.id.in_(job_ids)
+        )
         salary_result = await db.execute(salary_query)
         salaries = [s for s in salary_result.scalars().all() if s is not None]
 
@@ -1114,7 +1142,10 @@ class JobAnalysisService:
             "job_count": len(jobs),
             "avg_salary": round(np.mean(salaries), 2) if salaries else 0,
             "median_salary": round(np.median(salaries), 2) if salaries else 0,
-            "salary_range": {"min": min(salaries) if salaries else 0, "max": max(salaries) if salaries else 0},
+            "salary_range": {
+                "min": min(salaries) if salaries else 0,
+                "max": max(salaries) if salaries else 0,
+            },
             "common_skills": common_skills,
         }
 
@@ -1125,7 +1156,11 @@ class JobAnalysisService:
         }
 
     async def get_career_paths(
-        self, db: AsyncSession, job_id: int, target_classifications: Optional[List[str]] = None, limit: int = 10
+        self,
+        db: AsyncSession,
+        job_id: int,
+        target_classifications: Optional[List[str]] = None,
+        limit: int = 10,
     ) -> Dict[str, Any]:
         """Find potential career progression paths from a given job."""
         # Get the current job
@@ -1143,14 +1178,14 @@ class JobAnalysisService:
         # A more sophisticated approach would involve a predefined hierarchy of classifications
         # For now, we just look for higher numbers in the classification
         try:
-            current_level = int(current_job.classification.split('-')[-1])
+            current_level = int(current_job.classification.split("-")[-1])
         except (ValueError, IndexError):
             return {"from_job_id": job_id, "career_paths": []}
 
         next_level = current_level + 1
         next_level_classifications = [
             f"{current_job.classification.split('-')[0]}-{next_level:02d}",
-            f"{current_job.classification.split('-')[0]}-{next_level+1:02d}",
+            f"{current_job.classification.split('-')[0]}-{next_level + 1:02d}",
         ]
 
         if target_classifications:
@@ -1158,9 +1193,7 @@ class JobAnalysisService:
 
         paths_query = (
             select(JobDescription)
-            .where(
-                JobDescription.classification.in_(next_level_classifications)
-            )
+            .where(JobDescription.classification.in_(next_level_classifications))
             .limit(limit)
         )
 
@@ -1169,7 +1202,9 @@ class JobAnalysisService:
 
         career_paths = []
         for job in potential_jobs:
-            similarity = await self._calculate_embedding_similarity(db, current_job.id, job.id)
+            similarity = await self._calculate_embedding_similarity(
+                db, current_job.id, job.id
+            )
             career_paths.append(
                 {
                     "target_job": {
@@ -1191,6 +1226,7 @@ class JobAnalysisService:
             "target_classifications": target_classifications,
             "career_paths": career_paths,
         }
+
 
 # Global service instance
 job_analysis_service = JobAnalysisService()

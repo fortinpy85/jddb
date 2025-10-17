@@ -278,10 +278,12 @@ export function UIShowcase() {
             type="no-search-results"
             title="No Results"
             description="Try adjusting your search criteria"
-            actions={[{
-              label: "Clear Filters",
-              onClick: () => logger.debug("Clear filters", {}),
-            }]}
+            actions={[
+              {
+                label: "Clear Filters",
+                onClick: () => logger.debug("Clear filters", {}),
+              },
+            ]}
           />
         </Card>
 

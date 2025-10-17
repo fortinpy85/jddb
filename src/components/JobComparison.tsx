@@ -372,10 +372,9 @@ function JobComparison(_props: JobComparisonProps) {
                               <div className="flex items-center space-x-2">
                                 <div className="w-20 bg-gray-200 rounded-full h-2">
                                   <div
-                                    className="bg-blue-600 h-2 rounded-full"
-                                    style={{
-                                      width: `${section.similarity_score * 100}%`,
-                                    }}
+                                    className={`bg-blue-600 h-2 rounded-full`}
+                                    style={{}}
+                                    data-width={section.similarity_score * 100}
                                   />
                                 </div>
                                 <span className="text-sm font-semibold">
@@ -528,18 +527,15 @@ function JobComparison(_props: JobComparisonProps) {
                         <div className="w-20 bg-gray-200 rounded-full h-2">
                           <div
                             className="bg-blue-600 h-2 rounded-full"
-                            style={{
-                              width: `${comparisonResult.similarity_analysis.metadata_comparison.title_similarity * 100}%`,
-                            }}
+                            style={{}}
+                            data-width={comparisonResult.similarity_analysis.metadata_comparison.title_similarity * 100}
                           />
                         </div>
-                        <span className="text-sm font-semibold">
-                          {(
-                            comparisonResult.similarity_analysis
-                              .metadata_comparison.title_similarity * 100
-                          ).toFixed(0)}
-                          %
-                        </span>
+                        {(
+                          comparisonResult.similarity_analysis
+                            .metadata_comparison.title_similarity * 100
+                        ).toFixed(0)}
+                        %
                       </div>
                     </div>
                   </div>

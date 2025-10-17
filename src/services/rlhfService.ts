@@ -294,7 +294,9 @@ export const rlhfService = RLHFService.getInstance();
 // Auto-sync on page load (after delay)
 if (typeof window !== "undefined") {
   setTimeout(() => {
-    rlhfService.syncLocalStorageToBackend().catch((err) => logger.error("Auto-sync error:", err));
+    rlhfService
+      .syncLocalStorageToBackend()
+      .catch((err) => logger.error("Auto-sync error:", err));
   }, 5000); // Wait 5 seconds after page load
 }
 

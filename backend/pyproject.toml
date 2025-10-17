@@ -21,7 +21,7 @@ keywords = ["government", "job-descriptions", "ai", "semantic-search", "fastapi"
 dynamic = ["dependencies"]
 
 [tool.poetry]
-packages = [{include = "src/jd_ingestion"}]
+packages = [{include = "jd_ingestion", from = "src"}]
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.14" # sklearn requires Python >=3.10
@@ -55,6 +55,7 @@ pyjwt = {extras = ["cryptography"], version = "^2.10.1"}
 python-docx = "^1.2.0"
 textstat = "^0.7.10"
 scikit-learn = "^1.7.2"
+bcrypt = "<5.0.0"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.2" # Using the latest specified version
 pytest-asyncio = "^1.2.0"
@@ -91,6 +92,9 @@ disallow_untyped_defs = false
 ignore_missing_imports = true
 check_untyped_defs = false
 plugins = ["sqlalchemy.ext.mypy.plugin"]
+mypy_path = "src"
+explicit_package_bases = true
+namespace_packages = true
 
 [[tool.mypy.overrides]]
 module = "jd_ingestion.database.models"
@@ -116,9 +120,9 @@ addopts = [
     "--cov=src",
     "--cov-report=html",
     "--cov-report=term-missing",
-    # Coverage threshold temporarily reduced to 0 for testing
-    # Restore to 80 once all tests are passing
-    "--cov-fail-under=0",
+    # Coverage threshold set to 80% for production readiness
+    # Note: For ≤100 users, focus on critical paths
+    "--cov-fail-under=80",
     "--asyncio-mode=auto",
     # Parallel execution disabled for Windows compatibility
     # Uncomment on Linux/macOS if pytest-xdist works correctly:

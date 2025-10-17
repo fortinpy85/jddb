@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import { BiasDetector } from "@/components/ai/BiasDetector";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
+import { logger } from "@/utils/logger";
 
 export type TranslationStatus = "draft" | "review" | "approved";
 
@@ -176,7 +177,7 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
         throw new Error("Invalid response format from server");
       }
     } catch (err) {
-      console.error("Error fetching bilingual document:", err);
+      logger.error("Error fetching bilingual document:", err);
       setError(
         err instanceof Error
           ? err.message
@@ -570,7 +571,12 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
   }
 
   // Handle error state
-  if (error || !document || !document.segments || document.segments.length === 0) {
+  if (
+    error ||
+    !document ||
+    !document.segments ||
+    document.segments.length === 0
+  ) {
     return (
       <Card className={className}>
         <CardHeader>
@@ -588,7 +594,10 @@ export const BilingualEditor: React.FC<BilingualEditorProps> = ({
             <AlertCircle className="w-12 h-12 text-red-600" />
             <div className="text-center">
               <p className="text-sm font-medium text-red-600">
-                {error || (!document ? "Failed to load bilingual document" : "No segments available for this document.")}
+                {error ||
+                  (!document
+                    ? "Failed to load bilingual document"
+                    : "No segments available for this document.")}
               </p>
               <p className="text-xs text-muted-foreground mt-2">
                 Please try again or select a different job.

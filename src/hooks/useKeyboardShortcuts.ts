@@ -31,19 +31,24 @@ export function useKeyboardShortcuts(
     (event: KeyboardEvent) => {
       if (!enabled) return;
 
-      // Don't trigger shortcuts when user is typing in input fields
+      const pressedKey = event.key.toLowerCase();
+      const hasCtrl = event.ctrlKey || event.metaKey; // Support both Ctrl and Cmd
+      const hasShift = event.shiftKey;
+      const hasAlt = event.altKey;
+
+      // Check if user is typing in input fields
       const target = event.target as HTMLElement;
       const isInputElement =
         target.tagName === "INPUT" ||
         target.tagName === "TEXTAREA" ||
         target.isContentEditable;
 
-      if (isInputElement) return;
-
-      const pressedKey = event.key.toLowerCase();
-      const hasCtrl = event.ctrlKey || event.metaKey; // Support both Ctrl and Cmd
-      const hasShift = event.shiftKey;
-      const hasAlt = event.altKey;
+      // Only block shortcuts without modifiers when in input fields
+      // Allow Ctrl+Key, Shift+/, etc. to work even in inputs
+      const hasModifiers = hasCtrl || hasAlt || hasShift;
+      if (isInputElement && !hasModifiers) {
+        return; // Block unmodified keys in input fields
+      }
 
       for (const shortcut of shortcuts) {
         if (shortcut.key.toLowerCase() !== pressedKey) continue;
@@ -179,7 +184,7 @@ export function createJDDBShortcuts(handlers: {
 
     // Help shortcuts
     {
-      key: "?",
+      key: "/",
       modifiers: ["shift"],
       description: "Show keyboard shortcuts",
       action: handlers.onShowShortcuts || (() => {}),

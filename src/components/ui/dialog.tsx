@@ -41,6 +41,20 @@ interface DialogFooterProps {
 }
 
 export function Dialog({ open, onOpenChange, children }: DialogProps) {
+  // Handle Escape key to close modal
+  useEffect(() => {
+    if (!open) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onOpenChange(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [open, onOpenChange]);
+
   if (!open) return null;
 
   return (

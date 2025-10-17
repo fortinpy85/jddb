@@ -71,7 +71,7 @@ export function AnimatedCounter({
   };
 
   return (
-    <span className={className} data-testid="animated-counter">
+    <span className={`tabular-nums ${className}`} data-testid="animated-counter">
       {formatNumber(count)}
     </span>
   );

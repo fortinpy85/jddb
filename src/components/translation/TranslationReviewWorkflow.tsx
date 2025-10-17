@@ -426,7 +426,9 @@ export const TranslationReviewWorkflow: React.FC<
               const updatedDocument = {
                 ...document,
                 segments: document.segments.map((s) =>
-                  s.id === segmentId ? { ...s, ...(updates as Partial<BilingualSegment>) } : s,
+                  s.id === segmentId
+                    ? { ...s, ...(updates as Partial<BilingualSegment>) }
+                    : s,
                 ),
               };
               setDocument(updatedDocument);

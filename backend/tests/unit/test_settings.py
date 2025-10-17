@@ -427,6 +427,7 @@ class TestSettingsValidation:
 
         # Test Windows path - only check on Windows
         import sys
+
         if sys.platform == "win32":
             test_settings.data_dir = "C:\\app\\data"
             assert isinstance(test_settings.data_path, Path)

@@ -72,6 +72,7 @@ import {
 } from "@/components/ui/states";
 import { EmptyState } from "@/components/ui/empty-state";
 import { JobGridView } from "./JobGridView";
+import { EditJobModal } from "./EditJobModal";
 
 interface JobsTableProps {
   onJobSelect?: (job: JobDescription) => void;
@@ -116,6 +117,10 @@ function JobsTable({
   // Delete confirmation dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<JobDescription | null>(null);
+
+  // Edit modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [jobToEdit, setJobToEdit] = useState<JobDescription | null>(null);
 
   // Filtered and sorted jobs
   const filteredJobs = useMemo(() => {
@@ -271,8 +276,15 @@ function JobsTable({
       // Show delete confirmation dialog
       setJobToDelete(job);
       setDeleteDialogOpen(true);
+    } else if (action === "Edit") {
+      // Show edit modal
+      setJobToEdit(job);
+      setEditModalOpen(true);
+    } else if (action === "Duplicate") {
+      // Duplicate the job
+      handleDuplicateJob(job);
     } else {
-      // For other actions, just show toast (placeholder)
+      // For other actions, just show toast
       addToast({
         title: action,
         description: `${action} job ${job.job_number}`,
@@ -303,7 +315,8 @@ function JobsTable({
     } catch (error) {
       addToast({
         title: "Delete Failed",
-        description: error instanceof Error ? error.message : "Failed to delete job",
+        description:
+          error instanceof Error ? error.message : "Failed to delete job",
         type: "error",
       });
     }
@@ -312,6 +325,57 @@ function JobsTable({
   const handleCancelDelete = () => {
     setDeleteDialogOpen(false);
     setJobToDelete(null);
+  };
+
+  const handleJobUpdated = async (jobId: number) => {
+    addToast({
+      title: "Job Updated",
+      description: `Successfully updated job`,
+      type: "success",
+    });
+
+    // Refresh jobs list
+    await fetchJobs(true);
+  };
+
+  const handleDuplicateJob = async (job: JobDescription) => {
+    try {
+      // Fetch full job details
+      const fullJob = await apiClient.getJob(job.id, {
+        include_content: true,
+        include_metadata: true,
+        include_sections: false,
+      });
+
+      // Create duplicate with modified job number
+      const duplicateData = {
+        job_number: `${fullJob.job_number}-COPY-${Date.now()}`,
+        title: `${fullJob.title} (Copy)`,
+        classification: fullJob.classification || "",
+        language: fullJob.language || "en",
+        raw_content: fullJob.raw_content || "",
+        department: fullJob.metadata?.department,
+        reports_to: fullJob.metadata?.reports_to,
+      };
+
+      await apiClient.createJob(duplicateData);
+
+      addToast({
+        title: "Job Duplicated",
+        description: `Successfully created copy of ${job.job_number}`,
+        type: "success",
+      });
+
+      // Refresh jobs list
+      await fetchJobs(true);
+    } catch (error) {
+      addToast({
+        title: "Duplication Failed",
+        description:
+          error instanceof Error ? error.message : "Failed to duplicate job",
+        type: "error",
+      });
+    }
   };
 
   // Render sort icon
@@ -583,7 +647,7 @@ function JobsTable({
               }
             }}
           >
-            <SelectTrigger className="w-[250px] h-8 text-sm">
+            <SelectTrigger className="w-[250px] h-8 text-sm" aria-label="Add skill filter">
               <SelectValue placeholder="Add skill filter..." />
             </SelectTrigger>
             <SelectContent>
@@ -886,6 +950,17 @@ function JobsTable({
           </CardContent>
         </Card>
       )}
+
+      {/* Edit Modal */}
+      <EditJobModal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setJobToEdit(null);
+        }}
+        onJobUpdated={handleJobUpdated}
+        job={jobToEdit}
+      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

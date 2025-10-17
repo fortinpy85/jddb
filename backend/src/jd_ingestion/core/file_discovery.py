@@ -66,7 +66,7 @@ class FileDiscovery:
     }
 
     # Supported file extensions
-    SUPPORTED_EXTENSIONS = {".txt", ".doc", ".docx", ".pdf"}
+    SUPPORTED_EXTENSIONS = {".txt", ".doc", ".docx", ".pdf", ".md"}
 
     def __init__(self, data_directory: Path):
         """Initialize file discovery with data directory."""

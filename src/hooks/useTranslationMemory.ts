@@ -175,21 +175,43 @@ export function useTranslationMemory(
       setError(null);
 
       try {
-        // Note: Update endpoint not implemented in backend yet
-        // This is a placeholder for future implementation
-        logger.warn("Update translation endpoint not yet implemented");
+        const response = await fetch(
+          `${API_BASE_URL}/translation-memory/translations/${id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              target_text: targetText,
+            }),
+          },
+        );
 
-        // Update local match optimistically
+        if (!response.ok) {
+          throw new Error(
+            `Failed to update translation: ${response.statusText}`,
+          );
+        }
+
+        const data = await response.json();
+
+        // Update local match with server response
         setMatches((prev) =>
           prev.map((match) =>
-            match.id === id ? { ...match, target_text: targetText } : match,
+            match.id === id
+              ? { ...match, target_text: data.translation.target_text }
+              : match,
           ),
         );
+
+        logger.info(`Successfully updated translation ${id}`);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to update translation";
         setError(errorMessage);
         logger.error("Error updating translation:", err);
+        throw err; // Re-throw so caller can handle
       } finally {
         setIsLoading(false);
       }

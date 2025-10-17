@@ -39,6 +39,7 @@ from .endpoints import (
     translation_quality,
     websocket,
 )
+from .v1 import v1_router
 
 # Configure logging
 configure_logging()
@@ -120,9 +121,18 @@ app = FastAPI(
 # Development: Allow all origins for easier local development
 # Production: Restrict to specific trusted origins only
 if settings.is_development:
-    logger.warning("⚠️  CORS configured for DEVELOPMENT mode - allowing all origins")
-    cors_origins = ["*"]
-    cors_credentials = False  # Must be False when using wildcard
+    logger.warning(
+        "⚠️  CORS configured for DEVELOPMENT mode - allowing specific local origins"
+    )
+    cors_origins = [
+        "http://localhost:3000",  # Default React dev server
+        "http://localhost:5173",  # Default Vite dev server
+        "http://localhost:3001",  # Common alternative
+        "http://localhost:3006",  # Vite dev server port
+        "http://localhost:3007",  # Vite dev server port (auto-increment)
+        "http://localhost:3008",  # Vite dev server port (auto-increment)
+    ]
+    cors_credentials = True
 else:
     # PRODUCTION: Restrict to specific trusted origins
     # Set CORS_ALLOWED_ORIGINS environment variable with comma-separated list
@@ -135,18 +145,30 @@ else:
     cors_credentials = settings.cors_allow_credentials
 
     if not cors_origins or cors_origins == [""]:
-        logger.error("🚨 PRODUCTION mode requires CORS_ALLOWED_ORIGINS environment variable!")
+        logger.error(
+            "🚨 PRODUCTION mode requires CORS_ALLOWED_ORIGINS environment variable!"
+        )
         logger.error("   Set CORS_ALLOWED_ORIGINS=https://your-frontend-domain.com")
         raise RuntimeError("CORS origins not configured for production environment")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_origins,
-    allow_credentials=cors_credentials,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-)
+if settings.is_development:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=cors_credentials,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=cors_credentials,
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+        allow_headers=["Accept", "Content-Type", "X-API-Key", "X-Session-ID"],
+        expose_headers=["Content-Type", "X-API-Key", "X-Session-ID"],
+    )
 
 # Add analytics middleware
 app.add_middleware(AnalyticsMiddleware, track_all_requests=True)
@@ -185,6 +207,11 @@ app.include_router(
     translation_quality.router, prefix="/api", tags=["translation-quality"]
 )
 app.include_router(rlhf.router, prefix="/api", tags=["rlhf"])
+
+# Include v1 versioned API (for future-proofing)
+# Note: /api routes above are maintained for backward compatibility
+# New clients should use /api/v1 endpoints
+app.include_router(v1_router, prefix="/api")
 
 # Mount static files for serving the frontend
 import os  # noqa: E402

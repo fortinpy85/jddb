@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 
 interface SearchInterfaceProps {
   onJobSelect?: (job: JobDescription) => void;
+  autoFocus?: boolean;
+  onFocused?: () => void;
+}
+
+export interface SearchInterfaceRef {
+  focusSearchInput: () => void;
 }
 
 interface SearchFacets {
@@ -44,7 +50,8 @@ interface SearchSuggestions {
   suggestions: string[];
 }
 
-function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
+const SearchInterface = forwardRef<SearchInterfaceRef, SearchInterfaceProps>(
+  function SearchInterface({ onJobSelect, autoFocus, onFocused }, ref) {
   const { t } = useTranslation(["jobs", "common"]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFilters, setSearchFilters] = useState<{
@@ -72,10 +79,25 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
     null,
   );
 
+  // Expose focus method to parent via ref
+  useImperativeHandle(ref, () => ({
+    focusSearchInput: () => {
+      searchInputRef.current?.focus();
+    },
+  }));
+
   // Load facets on mount
   useEffect(() => {
     loadFacets();
   }, []);
+
+  // Handle auto-focus when navigating via keyboard shortcut
+  useEffect(() => {
+    if (autoFocus && searchInputRef.current) {
+      searchInputRef.current.focus();
+      onFocused?.();
+    }
+  }, [autoFocus, onFocused]);
 
   // Handle search input changes for suggestions
   useEffect(() => {
@@ -203,6 +225,7 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     ref={searchInputRef}
+                    type="search"
                     placeholder={t("jobs:search.placeholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -530,14 +553,18 @@ function SearchInterface({ onJobSelect }: SearchInterfaceProps) {
       )}
     </div>
   );
-}
+});
 
 // Wrap with error boundary for reliability
-const SearchInterfaceWithErrorBoundary = (props: SearchInterfaceProps) => (
-  <ErrorBoundaryWrapper>
-    <SearchInterface {...props} />
-  </ErrorBoundaryWrapper>
+const SearchInterfaceWithErrorBoundary = forwardRef<SearchInterfaceRef, SearchInterfaceProps>(
+  (props, ref) => (
+    <ErrorBoundaryWrapper>
+      <SearchInterface {...props} ref={ref} />
+    </ErrorBoundaryWrapper>
+  )
 );
 
+SearchInterfaceWithErrorBoundary.displayName = "SearchInterfaceWithErrorBoundary";
+
 export { SearchInterfaceWithErrorBoundary as SearchInterface };
-export default React.memo(SearchInterfaceWithErrorBoundary);
+export default SearchInterfaceWithErrorBoundary;

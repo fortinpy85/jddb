@@ -171,7 +171,9 @@ class SaveImprovedContentRequest(BaseModel):
     """Request model for saving improved content."""
 
     job_id: int = Field(..., description="The ID of the job to update.")
-    improved_content: str = Field(..., description="The new content of the job description.")
+    improved_content: str = Field(
+        ..., description="The new content of the job description."
+    )
 
 
 @router.post("/save-improved-content")
@@ -202,7 +204,9 @@ class TranslateContentRequest(BaseModel):
     """Request model for translating content."""
 
     text: str = Field(..., description="The text to translate.")
-    target_language: str = Field(..., description="The language to translate the text to.")
+    target_language: str = Field(
+        ..., description="The language to translate the text to."
+    )
 
 
 @router.post("/translate-content")
@@ -232,7 +236,9 @@ async def translate_content(
 class GenerateJobPostingRequest(BaseModel):
     """Request model for generating a job posting."""
 
-    job_id: int = Field(..., description="The ID of the job to generate the posting from.")
+    job_id: int = Field(
+        ..., description="The ID of the job to generate the posting from."
+    )
 
 
 @router.post("/generate-job-posting")

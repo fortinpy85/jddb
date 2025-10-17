@@ -61,16 +61,18 @@ const BilingualEditorWrapper: React.FC<BilingualEditorWrapperProps> = ({
           id: data.document.id || `doc-${jobId}`,
           job_id: jobId,
           title: data.document.title || `Job ${jobId}`,
-          segments: data.document.segments.map((seg: any, index: number) => ({
-            id: seg.id || `segment-${index}`,
-            english: seg.english || "",
-            french: seg.french || "",
-            status: seg.status || "draft",
-            lastModified: seg.lastModified
-              ? new Date(seg.lastModified)
-              : new Date(),
-            modifiedBy: seg.modifiedBy,
-          })) as BilingualSegment[],
+          segments: Array.isArray(data.document.segments)
+            ? data.document.segments.map((seg: any, index: number) => ({
+                id: seg.id || `segment-${index}`,
+                english: seg.english || "",
+                french: seg.french || "",
+                status: seg.status || "draft",
+                lastModified: seg.lastModified
+                  ? new Date(seg.lastModified)
+                  : new Date(),
+                modifiedBy: seg.modifiedBy,
+              }))
+            : [],
           metadata: {
             created: data.document.metadata?.created
               ? new Date(data.document.metadata.created)

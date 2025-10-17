@@ -13,12 +13,12 @@ This document provides essential context for AI models interacting with this pro
 ## 2. Core Technologies & Stack
 
 *   **Languages:** Python 3.9+, TypeScript
-*   **Frameworks & Runtimes:** FastAPI, React, Bun
+Frameworks & Runtimes: FastAPI, React, Vite
 *   **Databases:** PostgreSQL with the pgvector extension for semantic search.
 *   **Key Libraries/Dependencies:**
     *   **Backend:** SQLAlchemy, Alembic, OpenAI, Celery, Redis
     *   **Frontend:** Tailwind CSS, Radix UI, Zustand, Playwright
-*   **Package Manager(s):** Poetry for Python, Bun for JavaScript/TypeScript.
+*   **Package Manager(s):** Poetry for Python, npm for JavaScript/TypeScript.
 
 ## 3. Architectural Patterns
 
@@ -34,11 +34,9 @@ This document provides essential context for AI models interacting with this pro
     *   `backend/src/jd_ingestion/core/`: Core business logic.
     *   `backend/src/jd_ingestion/database/`: SQLAlchemy models and database connection.
     *   `backend/src/jd_ingestion/config/settings.py`: Pydantic settings for environment management.
-*   **Frontend Structure (React/TypeScript/Bun):**
+*   **Frontend Structure (React/TypeScript/Vite):**
     *   The frontend uses a custom Bun-based architecture, not a standard Next.js setup.
-    *   **Bun Server:** `src/index.tsx` is the custom server handling API routes and serving the Single Page Application (SPA).
-    *   **React Entry:** `src/frontend.tsx` is the root of the React application.
-    *   **Build Process:** `build.ts` is a custom build script using Bun's native bundler.
+
     *   **State Management:** Zustand (`src/lib/store.ts`) is used for global state.
     *   **API Client:** A singleton API client is located at `src/lib/api.ts`.
 
@@ -56,21 +54,21 @@ This document provides essential context for AI models interacting with this pro
 
 *   **Main Entrypoint(s):**
     *   **Backend:** `backend/src/jd_ingestion/api/main.py`
-    *   **Frontend:** `src/index.tsx` (Bun server), `src/frontend.tsx` (React app)
+    *   **Frontend:** `src/index.tsx` is the main entrypoint for the Vite application.
 *   **Configuration:**
     *   `.env` files for environment variables.
     *   `backend/pyproject.toml`: Backend dependencies and project settings.
     *   `package.json`: Frontend dependencies and scripts.
     *   `tsconfig.json`: TypeScript configuration.
     *   `backend/alembic.ini`: Database migration configuration.
-    *   `build.ts`: Custom Bun build script for the frontend.
+    *   `vite.config.ts`: Vite configuration.
 *   **CI/CD Pipeline:** CI/CD is configured in the `.github/workflows/` directory.
 
 ## 6. Development & Testing Workflow
 
 *   **Local Development Environment:**
     *   **Backend:** Run `make server` in the `backend` directory.
-    *   **Frontend:** Run `bun dev` in the root directory.
+    *   **Frontend:** Run `npm run dev` in the root directory.
     *   Batch scripts (`server.bat`, `frontend.bat`) are available for Windows users.
 *   **Backend Commands (via `make` in `/backend`):**
     *   `make setup`: Full environment setup.
@@ -80,14 +78,14 @@ This document provides essential context for AI models interacting with this pro
     *   `make format`: Format code.
     *   `make type-check`: Run type checking.
     *   `make db-init`: Initialize the database.
-*   **Frontend Commands (via `bun run` in root):**
-    *   `bun install`: Install dependencies.
-    *   `bun dev`: Start development server.
-    *   `bun run build`: Create a production build.
-    *   `bun test`: Run unit tests.
-    *   `bun run test:e2e`: Run end-to-end tests with Playwright.
-    *   `bun run lint`: Run ESLint.
-    *   `bun run type-check`: Run TypeScript type checker.
+*   **Frontend Commands (via `npm` in root):**
+    *   `npm install`: Install dependencies.
+    *   `npm run dev`: Start development server.
+    *   `npm run build`: Create a production build.
+    *   `npm test`: Run unit tests.
+    *   `npm run test:e2e`: Run end-to-end tests with Playwright.
+    *   `npm run lint`: Run ESLint.
+    *   `npm run type-check`: Run TypeScript type checker.
 
 ## 7. Specific Instructions for AI Collaboration
 
@@ -95,7 +93,7 @@ This document provides essential context for AI models interacting with this pro
 *   **Security:** Be mindful of security. Do not hardcode secrets or keys.
 *   **Dependencies:**
     *   Use `poetry` to manage Python dependencies in the `backend` directory.
-    *   Use `bun` to manage JavaScript/TypeScript dependencies in the root directory.
+    *   Use `npm` to manage JavaScript/TypeScript dependencies in the root directory.
 *   **Commit Messages:** Follow the Conventional Commits specification (e.g., `feat:`, `fix:`, `docs:`).
 
 ## 8. Troubleshooting
@@ -109,8 +107,8 @@ This document provides essential context for AI models interacting with this pro
     2.  Check the `backend/.env` file for correct database credentials.
     3.  Run `make db-init` if database tables do not exist.
 *   **Testing Issues:**
-    *   **Unit Tests:** Run `bun test`. Test files are in the `src/` directory.
-    *   **E2E Tests:** Run `bun run test:e2e`. Test files are in the `tests/` directory.
+    *   **Unit Tests:** Run `npm test`. Test files are in the `src/` directory.
+    *   **E2E Tests:** Run `npm run test:e2e`. Test files are in the `tests/` directory.
     *   **Backend Tests:** Run `cd backend && make test`.
 
 ## 9. Quick Reference: Package Manager Commands
@@ -121,7 +119,7 @@ This document provides essential context for AI models interacting with this pro
 *   `poetry add <package>`: Add a new dependency.
 *   `poetry run <command>`: Run a command in the virtual environment.
 
-### Bun (Frontend)
-*   `bun install`: Initial setup.
-*   `bun add <package>`: Add a new dependency.
-*   `bun run <script>`: Run a script from `package.json`.
+### NPM (Frontend)
+*   `npm install`: Initial setup.
+*   `npm install <package>`: Add a new dependency.
+*   `npm run <script>`: Run a script from `package.json`.

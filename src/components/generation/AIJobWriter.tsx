@@ -38,7 +38,6 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import { logger } from "@/utils/logger";
 
 interface JobRequirements {
@@ -234,7 +233,9 @@ ${requirements.additionalInfo}
         classification: requirements.classification,
         language: "en",
       });
-      sections.accountabilities = accountabilityResponse.completed_content || accountabilityResponse.content;
+      sections.accountabilities =
+        accountabilityResponse.completed_content ||
+        accountabilityResponse.content;
 
       // Generate Organization Structure
       const orgStructureResponse = await apiClient.generateSectionCompletion({
@@ -244,7 +245,8 @@ ${requirements.additionalInfo}
         classification: requirements.classification,
         language: "en",
       });
-      sections.organizationStructure = orgStructureResponse.completed_content || orgStructureResponse.content;
+      sections.organizationStructure =
+        orgStructureResponse.completed_content || orgStructureResponse.content;
 
       // Generate Nature and Scope
       const natureResponse = await apiClient.generateSectionCompletion({
@@ -254,7 +256,8 @@ ${requirements.additionalInfo}
         classification: requirements.classification,
         language: "en",
       });
-      sections.natureAndScope = natureResponse.completed_content || natureResponse.content;
+      sections.natureAndScope =
+        natureResponse.completed_content || natureResponse.content;
 
       // Generate Specific Accountabilities
       const specificAccountabilityContent =
@@ -266,7 +269,8 @@ ${requirements.additionalInfo}
         classification: requirements.classification,
         language: "en",
       });
-      sections.specificAccountabilities = specificResponse.completed_content || specificResponse.content;
+      sections.specificAccountabilities =
+        specificResponse.completed_content || specificResponse.content;
 
       // Generate Knowledge and Skills
       const skillsContent =
@@ -280,13 +284,34 @@ ${requirements.additionalInfo}
         classification: requirements.classification,
         language: "en",
       });
-      sections.knowledgeAndSkills = skillsResponse.completed_content || skillsResponse.content;
+      sections.knowledgeAndSkills =
+        skillsResponse.completed_content || skillsResponse.content;
 
       // Generate summary
       sections.summary = `The ${requirements.jobTitle} (${requirements.classification}) is responsible for ${requirements.responsibilities[0]?.toLowerCase() || "key organizational objectives"}. This position reports to the ${requirements.reportsTo} and is located in ${requirements.location}.`;
 
-      // Calculate quality score (placeholder - would integrate with quality scoring API)
-      const qualityScore = 85;
+      // Calculate real quality score using API
+      let qualityScore = 75; // Fallback default
+      try {
+        const qualityResponse = await apiClient.calculateQualityScore({
+          sections: {
+            general_accountability: sections.accountabilities,
+            organization_structure: sections.organizationStructure,
+            nature_and_scope: sections.natureAndScope,
+            specific_accountabilities: sections.specificAccountabilities,
+            knowledge_and_skills: sections.knowledgeAndSkills,
+          },
+          raw_content: context,
+        });
+
+        if (qualityResponse && qualityResponse.overall_score !== undefined) {
+          qualityScore = Math.round(qualityResponse.overall_score);
+          logger.info(`Quality score calculated: ${qualityScore}`, qualityResponse);
+        }
+      } catch (error) {
+        logger.warn("Quality scoring API failed, using fallback value:", error);
+        // Continue with fallback value
+      }
 
       setGeneratedContent({
         ...sections,
@@ -586,7 +611,10 @@ ${generatedContent.knowledgeAndSkills}
                 {requirements.skills.map((skill, index) => (
                   <Badge key={index} variant="secondary" className="gap-1">
                     {skill}
-                    <button onClick={() => handleRemoveSkill(index)}>
+                    <button
+                      onClick={() => handleRemoveSkill(index)}
+                      title="Remove skill"
+                    >
                       <X className="w-3 h-3" />
                     </button>
                   </Badge>
@@ -617,9 +645,12 @@ ${generatedContent.knowledgeAndSkills}
                     className="flex items-start gap-2 p-2 bg-muted rounded"
                   >
                     <span className="flex-1 text-sm">{qual}</span>
-                    <button onClick={() => handleRemoveQualification(index)}>
+                    <Button
+                      onClick={() => handleRemoveQualification(index)}
+                      title="Remove qualification"
+                    >
                       <X className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -663,9 +694,9 @@ ${generatedContent.knowledgeAndSkills}
                       {index + 1}.
                     </span>
                     <span className="flex-1 text-sm">{resp}</span>
-                    <button onClick={() => handleRemoveResponsibility(index)}>
+                    <Button onClick={() => handleRemoveResponsibility(index)}>
                       <X className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>

@@ -152,7 +152,7 @@ export function PredictiveAnalytics() {
     setIsLoading(true);
     try {
       const result = await apiClient.runPredictiveAnalysis({
-        job_id: input.jobId!,  // Non-null assertion since we check !input.jobId above
+        job_id: input.jobId!, // Non-null assertion since we check !input.jobId above
       });
 
       setPrediction(result.analysis);

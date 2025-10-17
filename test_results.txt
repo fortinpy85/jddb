@@ -55,4 +55,4 @@ tests/performance/test_api_performance.py::TestAPIPerformance::test_translation_
 tests/performance/test_api_performance.py::TestAPIPerformance::test_vector_similarity_search PASSED [  3%]
 tests/performance/test_api_performance.py::TestAPIPerformance::test_analytics_performance PASSED [  3%]
 tests/performance/test_api_performance.py::TestAPIPerformance::test_concurrent_search_requests PASSED [  3%]
-tests/performance/test_api_performance.py::TestAPIPerformance::test_memory_usage_under_load 
+tests/performance/test_api_performance.py::TestAPIPerformance::test_memory_usage_under_load

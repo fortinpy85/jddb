@@ -6,7 +6,7 @@
     "subtitle": "or click to browse",
     "uploading": "Uploading...",
     "processing": "Processing files...",
-    "supportedFormats": "Supported formats: .txt, .doc, .docx, .pdf",
+    "supportedFormats": "Supported formats: .txt, .doc, .docx, .pdf, .md",
     "maxSize": "Maximum file size: {{size}} MB",
     "dropHere": "Drop files here",
     "selectFiles": "Select Files",

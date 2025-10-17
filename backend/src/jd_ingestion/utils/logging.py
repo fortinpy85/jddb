@@ -281,3 +281,10 @@ def setup_health_check_logging() -> Any:
         health_logger.info("component_health", **health_data)
 
     return log_component_health
+
+
+def redact_secret(value: str, show_last: int = 4) -> str:
+    """Redact all but the last N characters of a secret value."""
+    if not value or len(value) <= show_last:
+        return "***"
+    return f"***{value[-show_last:]}"

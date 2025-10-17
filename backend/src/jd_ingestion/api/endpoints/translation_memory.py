@@ -10,10 +10,12 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
 from pydantic import BaseModel, Field
 
-from ...database.connection import get_db
+from ...database.connection import get_async_session
+from ...database.models import TranslationProject
 from ...services.translation_memory_service import TranslationMemoryService
 
 logger = logging.getLogger(__name__)
@@ -65,12 +67,25 @@ class UpdateUsageRequest(BaseModel):
     user_feedback: Optional[Dict[str, Any]] = Field(None, description="User feedback")
 
 
+class UpdateTranslationRequest(BaseModel):
+    target_text: str = Field(..., description="Updated target translation text")
+    quality_score: Optional[float] = Field(
+        None, description="Updated quality score (0-1)", ge=0, le=1
+    )
+    confidence_score: Optional[float] = Field(
+        None, description="Updated confidence score (0-1)", ge=0, le=1
+    )
+    feedback: Optional[str] = Field(None, description="User feedback about the update")
+
+
 # Initialize service
 tm_service = TranslationMemoryService()
 
 
 @router.post("/projects", response_model=Dict[str, Any])
-async def create_project(request: CreateProjectRequest, db: Session = Depends(get_db)):
+async def create_project(
+    request: CreateProjectRequest, db: AsyncSession = Depends(get_async_session)
+):
     """Create a new translation project."""
     try:
         project = await tm_service.create_project(
@@ -108,21 +123,49 @@ async def create_project(request: CreateProjectRequest, db: Session = Depends(ge
 async def list_projects(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(20, ge=1, le=100, description="Number of records to return"),
-    db: Session = Depends(get_db),
+    status: Optional[str] = Query(None, description="Filter by status"),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """List translation projects with pagination."""
     try:
-        # TranslationProject model not yet implemented
-        # from ...database.models import TranslationProject
-        # query = db.query(TranslationProject)
+        # Count total projects
+        count_query = select(func.count(TranslationProject.id))
+        if status:
+            count_query = count_query.where(TranslationProject.status == status)
 
-        # Return empty result for now
+        count_result = await db.execute(count_query)
+        total = count_result.scalar_one()
+
+        # Get projects with pagination
+        query = select(TranslationProject).order_by(
+            TranslationProject.created_at.desc()
+        )
+        if status:
+            query = query.where(TranslationProject.status == status)
+        query = query.offset(skip).limit(limit)
+
+        result = await db.execute(query)
+        projects = result.scalars().all()
+
         return {
             "success": True,
-            "total": 0,
+            "total": total,
             "skip": skip,
             "limit": limit,
-            "projects": [],
+            "projects": [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "description": p.description,
+                    "source_language": p.source_language,
+                    "target_language": p.target_language,
+                    "project_type": p.project_type,
+                    "status": p.status,
+                    "created_at": p.created_at.isoformat() if p.created_at else None,
+                    "updated_at": p.updated_at.isoformat() if p.updated_at else None,
+                }
+                for p in projects
+            ],
         }
 
     except Exception as e:
@@ -136,7 +179,7 @@ async def list_projects(
 async def add_translation(
     request: AddTranslationRequest,
     project_id: int = Path(..., description="Project ID"),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Add a new translation to the memory."""
     try:
@@ -189,7 +232,7 @@ async def add_translation(
 
 @router.post("/suggestions", response_model=Dict[str, Any])
 async def get_translation_suggestions(
-    request: TranslationSuggestionRequest, db: Session = Depends(get_db)
+    request: TranslationSuggestionRequest, db: AsyncSession = Depends(get_async_session)
 ):
     """Get translation suggestions based on similarity search."""
     try:
@@ -246,12 +289,14 @@ async def search_similar_translations(
     source_language: str = Query(..., description="Source language code"),
     target_language: str = Query(..., description="Target language code"),
     project_id: Optional[int] = Query(None, description="Limit to specific project"),
-    domain: Optional[str] = Query(None, description="Domain filter (e.g., 'job_descriptions')"),
+    domain: Optional[str] = Query(
+        None, description="Domain filter (e.g., 'job_descriptions')"
+    ),
     similarity_threshold: float = Query(
         0.7, ge=0, le=1, description="Minimum similarity score"
     ),
     limit: int = Query(10, ge=1, le=50, description="Maximum number of results"),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Search for similar translations using vector similarity."""
     try:
@@ -287,11 +332,86 @@ async def search_similar_translations(
         )
 
 
+@router.put("/translations/{tm_id}", response_model=Dict[str, Any])
+async def update_translation(
+    request: UpdateTranslationRequest,
+    tm_id: int = Path(..., description="Translation memory ID"),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Update a translation memory entry."""
+    try:
+        # Get the translation to update
+        from sqlalchemy import select
+        from ...database.models import TranslationMemory
+
+        query = select(TranslationMemory).where(TranslationMemory.id == tm_id)
+        result = await db.execute(query)
+        translation = result.scalar_one_or_none()
+
+        if not translation:
+            raise HTTPException(
+                status_code=404, detail=f"Translation {tm_id} not found"
+            )
+
+        # Update target text
+        translation.target_text = request.target_text
+        translation.updated_at = datetime.utcnow()
+
+        # Update quality and confidence scores if provided
+        if request.quality_score is not None:
+            translation.quality_score = request.quality_score
+        if request.confidence_score is not None:
+            translation.confidence_score = request.confidence_score
+
+        # Add feedback to metadata if provided
+        if request.feedback:
+            if translation.translation_metadata is None:
+                translation.translation_metadata = {}
+            if "updates" not in translation.translation_metadata:
+                translation.translation_metadata["updates"] = []
+            translation.translation_metadata["updates"].append(
+                {
+                    "feedback": request.feedback,
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            )
+
+        await db.commit()
+        await db.refresh(translation)
+
+        logger.info(f"Updated translation memory entry ID: {tm_id}")
+
+        return {
+            "success": True,
+            "message": "Translation updated successfully",
+            "translation": {
+                "id": translation.id,
+                "source_text": translation.source_text,
+                "target_text": translation.target_text,
+                "quality_score": float(translation.quality_score)
+                if translation.quality_score
+                else None,
+                "confidence_score": float(translation.confidence_score)
+                if translation.confidence_score
+                else None,
+                "updated_at": translation.updated_at.isoformat(),
+            },
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating translation: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to update translation: {str(e)}"
+        )
+
+
 @router.put("/translations/{tm_id}/usage", response_model=Dict[str, Any])
 async def update_translation_usage(
     request: UpdateUsageRequest,
     tm_id: int = Path(..., description="Translation memory ID"),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Update usage statistics for a translation memory entry."""
     try:
@@ -325,11 +445,12 @@ async def update_translation_usage(
 
 @router.get("/projects/{project_id}/statistics", response_model=Dict[str, Any])
 async def get_project_statistics(
-    project_id: int = Path(..., description="Project ID"), db: Session = Depends(get_db)
+    project_id: int = Path(..., description="Project ID"),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Get statistics for a translation project."""
     try:
-        stats = tm_service.get_project_statistics(project_id=project_id, db=db)
+        stats = await tm_service.get_project_statistics(project_id=project_id, db=db)
 
         return {"success": True, "statistics": stats}
 

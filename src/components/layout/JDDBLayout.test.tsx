@@ -41,7 +41,11 @@ describe("JDDBLayout", () => {
   });
 
   it("renders the header with title and subtitle", () => {
-    render(<JDDBLayout title="Test Title" subtitle="Test Subtitle"><div /></JDDBLayout>);
+    render(
+      <JDDBLayout title="Test Title" subtitle="Test Subtitle">
+        <div />
+      </JDDBLayout>,
+    );
 
     expect(screen.getByText("Test Title")).toBeInTheDocument();
     expect(screen.getByText("Test Subtitle")).toBeInTheDocument();
@@ -49,7 +53,11 @@ describe("JDDBLayout", () => {
 
   it("shows the back button and handles onBack event", () => {
     const onBack = vi.fn();
-    render(<JDDBLayout showBackButton onBack={onBack}><div /></JDDBLayout>);
+    render(
+      <JDDBLayout showBackButton onBack={onBack}>
+        <div />
+      </JDDBLayout>,
+    );
 
     const backButton = screen.getByRole("button", { name: /back/i });
     expect(backButton).toBeInTheDocument();
@@ -59,7 +67,11 @@ describe("JDDBLayout", () => {
 
   it("renders the navigation tabs and handles tab change", () => {
     const onTabChange = vi.fn();
-    render(<JDDBLayout activeTab="dashboard" onTabChange={onTabChange}><div /></JDDBLayout>);
+    render(
+      <JDDBLayout activeTab="dashboard" onTabChange={onTabChange}>
+        <div />
+      </JDDBLayout>,
+    );
 
     const dashboardTab = screen.getByTestId("active-tab");
     expect(dashboardTab).toHaveTextContent("Dashboard");
@@ -70,7 +82,11 @@ describe("JDDBLayout", () => {
   });
 
   it("toggles the sidebar when the menu/close button is clicked", async () => {
-    render(<JDDBLayout><div /></JDDBLayout>);
+    render(
+      <JDDBLayout>
+        <div />
+      </JDDBLayout>,
+    );
 
     const toggleButton = screen.getByTestId("sidebar-toggle");
     const sidebar = screen.getByTestId("sidebar");

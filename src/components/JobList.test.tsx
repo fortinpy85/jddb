@@ -197,9 +197,7 @@ describe("JobList Component", () => {
     // When component first renders with no jobs, it shows initialization UI
     // Check for the initialization UI elements instead using i18n keys
     expect(screen.getByText(/jobs:list.title/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/jobs:list.loadPrompt/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/jobs:list.loadPrompt/i)).toBeInTheDocument();
     expect(screen.getByText(/jobs:actions.loadData/i)).toBeInTheDocument();
   });
 
@@ -244,7 +242,9 @@ describe("JobList Component", () => {
   test("filters by classification", async () => {
     render(<JobList />);
 
-    const classificationSelect = screen.getByLabelText(/jobs:filters.classificationLabel/i);
+    const classificationSelect = screen.getByLabelText(
+      /jobs:filters.classificationLabel/i,
+    );
     fireEvent.change(classificationSelect, { target: { value: "EX-01" } });
 
     expect(mockSetFilters).toHaveBeenCalledWith(
@@ -421,10 +421,20 @@ describe("JobList Component", () => {
     render(<JobList />);
 
     // Check that status labels are present using i18n keys
-    expect(screen.queryAllByText(/jobs:status.completed/i).length).toBeGreaterThan(0);
-    expect(screen.queryAllByText(/jobs:status.processing/i).length).toBeGreaterThan(0);
-    expect(screen.queryAllByText(/jobs:status.pending/i).length).toBeGreaterThan(0);
-    expect(screen.queryAllByText(/jobs:status.needsReview/i).length).toBeGreaterThan(0);
-    expect(screen.queryAllByText(/jobs:status.failed/i).length).toBeGreaterThan(0);
+    expect(
+      screen.queryAllByText(/jobs:status.completed/i).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.queryAllByText(/jobs:status.processing/i).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.queryAllByText(/jobs:status.pending/i).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.queryAllByText(/jobs:status.needsReview/i).length,
+    ).toBeGreaterThan(0);
+    expect(screen.queryAllByText(/jobs:status.failed/i).length).toBeGreaterThan(
+      0,
+    );
   });
 });

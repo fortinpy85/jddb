@@ -7,16 +7,45 @@
 
 import { test, expect } from "@playwright/test";
 
+// Helper function to navigate to Jobs tab
+async function navigateToJobsTab(page: any) {
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  // Navigate to Jobs tab (app starts on Dashboard by default)
+  const jobsTab = page.locator('button[role="tab"]').filter({ hasText: /Jobs/i });
+  await jobsTab.click();
+  await page.waitForTimeout(500);
+}
+
 test.describe("Create New Job Workflow", () => {
   test.beforeEach(async ({ page }) => {
     // Mock API calls to avoid backend dependency
+    // Return at least one job so the table (with Create New button) renders instead of empty state
     await page.route("**/api/jobs?**", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          jobs: [],
-          total: 0,
+          jobs: [
+            {
+              id: 1,
+              job_number: "EX-01-TEST-123",
+              title: "Test Director Position",
+              classification: "EX-01",
+              language: "en",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              quality_score: 0.85,
+            },
+          ],
+          total: 1,
+          pagination: {
+            skip: 0,
+            limit: 20,
+            total: 1,
+            has_more: false,
+          },
         }),
       });
     });
@@ -26,11 +55,11 @@ test.describe("Create New Job Workflow", () => {
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          total_jobs: 0,
-          by_classification: {},
-          by_language: {},
-          by_status: {},
-          recent_uploads: 0,
+          total_jobs: 1,
+          by_classification: { "EX-01": 1 },
+          by_language: { EN: 1 },
+          by_status: { active: 1 },
+          recent_uploads: 1,
         }),
       });
     });
@@ -49,8 +78,7 @@ test.describe("Create New Job Workflow", () => {
       consoleErrors.push(`Page error: ${err.message}`);
     });
 
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await navigateToJobsTab(page);
 
     // Look for "Create New" button - use a more flexible selector
     const createButton = page.locator("button").filter({ hasText: "Create New" });
@@ -74,8 +102,7 @@ test.describe("Create New Job Workflow", () => {
   });
 
   test("should show all required form fields", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await navigateToJobsTab(page);
 
     // Open modal
     const createButton = page.locator("button").filter({ hasText: "Create New" });
@@ -101,8 +128,7 @@ test.describe("Create New Job Workflow", () => {
   });
 
   test("should show validation error for missing required fields", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await navigateToJobsTab(page);
 
     // Open modal
     const createButton = page.locator("button").filter({ hasText: "Create New" });
@@ -192,8 +218,7 @@ test.describe("Create New Job Workflow", () => {
       });
     });
 
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await navigateToJobsTab(page);
 
     // Open modal
     const createButton = page.locator("button").filter({ hasText: "Create New" });
@@ -256,8 +281,7 @@ test.describe("Create New Job Workflow", () => {
       }
     });
 
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await navigateToJobsTab(page);
 
     // Open modal
     const createButton = page.locator("button").filter({ hasText: "Create New" });
@@ -291,8 +315,7 @@ test.describe("Create New Job Workflow", () => {
   });
 
   test("should cancel creation and close modal", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await navigateToJobsTab(page);
 
     // Open modal
     const createButton = page.locator("button").filter({ hasText: "Create New" });
@@ -362,8 +385,7 @@ test.describe("Create New Job Workflow", () => {
       });
     });
 
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await navigateToJobsTab(page);
 
     // Open modal
     const createButton = page.locator("button").filter({ hasText: "Create New" });
@@ -433,8 +455,7 @@ test.describe("Create New Job Workflow", () => {
       });
     });
 
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await navigateToJobsTab(page);
 
     // Create first job
     await page.getByRole("button", { name: "Create New" }).click();
@@ -493,8 +514,7 @@ test.describe("Create Job Workflow - Accessibility", () => {
   });
 
   test("create job modal should be keyboard accessible", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await navigateToJobsTab(page);
 
     // Open modal
     const createButton = page.locator("button").filter({ hasText: "Create New" });
@@ -518,8 +538,7 @@ test.describe("Create Job Workflow - Accessibility", () => {
   });
 
   test("create job modal should trap focus", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await navigateToJobsTab(page);
 
     // Open modal
     const createButton = page.locator("button").filter({ hasText: "Create New" });
@@ -546,8 +565,7 @@ test.describe("Create Job Workflow - Accessibility", () => {
   });
 
   test("create job form should have proper labels", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await navigateToJobsTab(page);
 
     // Open modal
     const createButton = page.locator("button").filter({ hasText: "Create New" });

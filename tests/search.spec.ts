@@ -2,34 +2,59 @@ import { test, expect } from "@playwright/test";
 
 test.describe("Advanced Search Functionality", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("tab", { name: "Search" }).click();
+    // Mock search API facets endpoint to prevent error boundary
+    await page.route("**/api/search/facets", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          classifications: [
+            { value: "EX-01", count: 80 },
+            { value: "EX-02", count: 50 },
+          ],
+          languages: [
+            { value: "EN", count: 100 },
+            { value: "FR", count: 50 },
+          ],
+          section_types: [],
+        }),
+      });
+    });
 
-    // Wait for search interface to load
-    await page.waitForSelector('input[placeholder*="search"]', {
+    await page.goto("/");
+    // Wait for React SPA to load instead of networkidle
+    await page.waitForTimeout(1500);
+
+    await page.getByRole("tab", { name: "Search" }).click();
+    await page.waitForTimeout(1000); // Allow SearchInterface to mount and load facets
+
+    // Wait for search interface to load - use flexible selector for placeholder
+    await page.waitForSelector('input[type="search"], input[placeholder*="Search"]', {
       state: "visible",
+      timeout: 10000,
     });
   });
 
   test("should display complete search interface", async ({ page }) => {
-    // Check main search input
-    const searchInput = page.locator('input[placeholder*="search"]');
+    // Check main search input using exact placeholder
+    const searchInput = page.locator('input[placeholder="Search by title, classification, or description..."]');
     await expect(searchInput).toBeVisible();
 
     // Check for search button
     await expect(page.getByRole("button", { name: /search/i })).toBeVisible();
 
-    // Check for filter sections
+    // Check for filter sections - use first() to avoid strict mode violations
     await expect(
       page
         .locator("text=Classification")
-        .or(page.locator("text=Classifications")),
+        .or(page.locator("text=Classifications"))
+        .first(),
     ).toBeVisible();
     await expect(
-      page.locator("text=Language").or(page.locator("text=Languages")),
+      page.locator("text=Language").or(page.locator("text=Languages")).first(),
     ).toBeVisible();
     await expect(
-      page.locator("text=Department").or(page.locator("text=Departments")),
+      page.locator("text=Department").or(page.locator("text=Departments")).first(),
     ).toBeVisible();
 
     // Check for section types if present
@@ -40,7 +65,7 @@ test.describe("Advanced Search Functionality", () => {
   });
 
   test("should perform basic full-text search", async ({ page }) => {
-    const searchInput = page.locator('input[placeholder*="search"]');
+    const searchInput = page.locator('input[placeholder="Search by title, classification, or description..."]');
 
     // Enter search term
     await searchInput.fill("manager");
@@ -54,7 +79,7 @@ test.describe("Advanced Search Functionality", () => {
     }
 
     // Wait for search to complete
-    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000); // Wait for UI update instead of networkidle
     await page.waitForTimeout(1000); // Additional wait for results to render
 
     // Verify search results container exists
@@ -76,7 +101,7 @@ test.describe("Advanced Search Functionality", () => {
   });
 
   test("should show search suggestions", async ({ page }) => {
-    const searchInput = page.locator('input[placeholder*="search"]');
+    const searchInput = page.locator('input[placeholder="Search by title, classification, or description..."]');
 
     // Type partial search term to trigger suggestions
     await searchInput.fill("dir");
@@ -97,10 +122,11 @@ test.describe("Advanced Search Functionality", () => {
   });
 
   test("should apply classification filters", async ({ page }) => {
-    // Look for classification filter controls
+    // Look for classification filter controls - use first() to avoid strict mode violations
     const classificationSection = page
       .locator("text=Classification")
-      .or(page.locator("text=Classifications"));
+      .or(page.locator("text=Classifications"))
+      .first();
     await expect(classificationSection).toBeVisible();
 
     // Try to find and interact with classification filter controls
@@ -123,18 +149,19 @@ test.describe("Advanced Search Functionality", () => {
       }
 
       // Perform search after applying filter
-      const searchInput = page.locator('input[placeholder*="search"]');
+      const searchInput = page.locator('input[placeholder="Search by title, classification, or description..."]');
       await searchInput.fill("director");
       await searchInput.press("Enter");
 
-      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(1000); // Wait for UI update instead of networkidle
     }
   });
 
   test("should apply language filters", async ({ page }) => {
     const languageSection = page
       .locator("text=Language")
-      .or(page.locator("text=Languages"));
+      .or(page.locator("text=Languages"))
+      .first();
     await expect(languageSection).toBeVisible();
 
     // Try to find language filter controls
@@ -176,11 +203,11 @@ test.describe("Advanced Search Functionality", () => {
       }
 
       // Perform a conceptual search that would benefit from semantic matching
-      const searchInput = page.locator('input[placeholder*="search"]');
+      const searchInput = page.locator('input[placeholder="Search by title, classification, or description..."]');
       await searchInput.fill("leadership responsibilities team management");
       await searchInput.press("Enter");
 
-      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(1000); // Wait for UI update instead of networkidle
 
       // Verify that semantic search indicator is shown if available
       const semanticIndicator = page
@@ -191,15 +218,15 @@ test.describe("Advanced Search Functionality", () => {
       }
     } else {
       // If no semantic toggle found, just perform a regular search
-      const searchInput = page.locator('input[placeholder*="search"]');
+      const searchInput = page.locator('input[placeholder="Search by title, classification, or description..."]');
       await searchInput.fill("leadership");
       await searchInput.press("Enter");
-      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(1000); // Wait for UI update instead of networkidle
     }
   });
 
   test("should perform advanced multi-filter search", async ({ page }) => {
-    const searchInput = page.locator('input[placeholder*="search"]');
+    const searchInput = page.locator('input[placeholder="Search by title, classification, or description..."]');
 
     // Enter complex search term
     await searchInput.fill("director management");
@@ -234,7 +261,7 @@ test.describe("Advanced Search Functionality", () => {
 
     // Perform search
     await searchInput.press("Enter");
-    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000); // Wait for UI update instead of networkidle
 
     // Verify that filters are applied (look for filter indicators or badges)
     const appliedFilters = page
@@ -246,12 +273,12 @@ test.describe("Advanced Search Functionality", () => {
   });
 
   test("should display search result details", async ({ page }) => {
-    const searchInput = page.locator('input[placeholder*="search"]');
+    const searchInput = page.locator('input[placeholder="Search by title, classification, or description..."]');
 
     // Perform search
     await searchInput.fill("director");
     await searchInput.press("Enter");
-    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000); // Wait for UI update instead of networkidle
 
     // Wait for results to load
     await page.waitForTimeout(2000);
@@ -288,12 +315,12 @@ test.describe("Advanced Search Functionality", () => {
   });
 
   test("should handle search result pagination", async ({ page }) => {
-    const searchInput = page.locator('input[placeholder*="search"]');
+    const searchInput = page.locator('input[placeholder="Search by title, classification, or description..."]');
 
     // Perform a broad search likely to return many results
     await searchInput.fill("director");
     await searchInput.press("Enter");
-    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000); // Wait for UI update instead of networkidle
     await page.waitForTimeout(2000);
 
     // Look for pagination controls
@@ -311,16 +338,16 @@ test.describe("Advanced Search Functionality", () => {
       // Pagination exists, test it
       if ((await nextButton.count()) > 0) {
         await nextButton.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForTimeout(1000); // Wait for UI update instead of networkidle
       } else if ((await pageNumbers.count()) > 1) {
         await pageNumbers.nth(1).click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForTimeout(1000); // Wait for UI update instead of networkidle
       }
     }
   });
 
   test("should clear search filters", async ({ page }) => {
-    const searchInput = page.locator('input[placeholder*="search"]');
+    const searchInput = page.locator('input[placeholder="Search by title, classification, or description..."]');
 
     // Apply some filters first
     await searchInput.fill("manager");
@@ -333,7 +360,7 @@ test.describe("Advanced Search Functionality", () => {
 
     // Perform search
     await searchInput.press("Enter");
-    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000); // Wait for UI update instead of networkidle
 
     // Look for clear/reset button
     const clearButton = page
@@ -352,37 +379,54 @@ test.describe("Advanced Search Functionality", () => {
   });
 
   test("should handle empty search results gracefully", async ({ page }) => {
-    const searchInput = page.locator('input[placeholder*="search"]');
+    // Mock search API to return empty results
+    await page.route("**/api/search/**", async (route) => {
+      const url = route.request().url();
+      if (url.includes('/facets')) {
+        // Already mocked in beforeEach
+        return;
+      }
+      // Return empty search results
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ results: [], total_results: 0 }),
+      });
+    });
+
+    const searchInput = page.locator('input[placeholder="Search by title, classification, or description..."]');
 
     // Search for something that likely won't exist
     await searchInput.fill("xyzzyzxyzwontexist123nonexistentterm");
     await searchInput.press("Enter");
-    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000); // Wait for UI update instead of networkidle
     await page.waitForTimeout(1000);
 
-    // Check for no results message
+    // Check for empty state - SearchInterface uses EmptyState component with type="no-search-results"
+    // EmptyState component shows text like "No Results Found" or similar
     await expect(
       page
-        .locator("text=No results found")
-        .or(page.locator("text=No jobs found"))
-        .or(page.locator("text=0 results"))
-        .or(page.locator('[data-testid="no-results"]')),
+        .locator("text=No Results")
+        .or(page.locator("text=No results"))
+        .or(page.locator("text=No Jobs"))
+        .or(page.locator('[data-testid="empty-state"]')),
     ).toBeVisible({ timeout: 10000 });
   });
 
   test("should export search results", async ({ page }) => {
-    const searchInput = page.locator('input[placeholder*="search"]');
+    const searchInput = page.locator('input[placeholder="Search by title, classification, or description..."]');
 
     // Perform search first
     await searchInput.fill("director");
     await searchInput.press("Enter");
-    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000); // Wait for UI update instead of networkidle
     await page.waitForTimeout(2000);
 
-    // Look for export button
+    // Look for export button - use first() to avoid strict mode violations (multiple export buttons in results)
     const exportButton = page
       .locator("button")
-      .filter({ hasText: /export|download/i });
+      .filter({ hasText: /export|download/i })
+      .first();
 
     if ((await exportButton.count()) > 0) {
       // Set up download promise before clicking
@@ -427,7 +471,7 @@ test.describe("Advanced Search Functionality", () => {
       });
     });
 
-    const searchInput = page.locator('input[placeholder*="search"]');
+    const searchInput = page.locator('input[placeholder="Search by title, classification, or description..."]');
     await searchInput.fill("test search");
     await searchInput.press("Enter");
 

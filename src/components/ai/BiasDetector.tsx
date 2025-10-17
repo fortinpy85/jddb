@@ -31,7 +31,7 @@ interface BiasDetectorProps {
   onReplace?: (original: string, replacement: string) => void;
   onIgnore?: (issue: BiasIssue) => void;
   enabled?: boolean;
-  compact?: boolean;  // Compact mode for inline display
+  compact?: boolean; // Compact mode for inline display
   className?: string;
 }
 

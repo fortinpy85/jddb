@@ -230,7 +230,9 @@ class FileValidationException(ValidationException):
 class FileProcessingException(JDDBBaseException):
     """Exceptions related to file processing operations."""
 
-    def __init__(self, file_path: str, message: str = "File processing failed", **kwargs):
+    def __init__(
+        self, file_path: str, message: str = "File processing failed", **kwargs
+    ):
         context = kwargs.get("context", {})
         context["file_path"] = file_path
         kwargs["context"] = context

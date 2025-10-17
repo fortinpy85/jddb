@@ -64,7 +64,9 @@ class TestJobAnalysisEndpoints:
     @patch("jd_ingestion.api.endpoints.analysis.job_analysis_service")
     def test_compare_jobs_not_found(self, mock_service, client):
         """Test job comparison with non-existent job."""
-        mock_service.compare_jobs = AsyncMock(side_effect=ValueError("One or both jobs not found"))
+        mock_service.compare_jobs = AsyncMock(
+            side_effect=ValueError("One or both jobs not found")
+        )
 
         comparison_data = {"job_a_id": 999, "job_b_id": 1000}
 

@@ -79,9 +79,7 @@ export function EditJobModal({
         })
         .catch((err) => {
           setError(
-            err instanceof Error
-              ? err.message
-              : "Failed to load job details"
+            err instanceof Error ? err.message : "Failed to load job details",
           );
         })
         .finally(() => {
@@ -114,7 +112,8 @@ export function EditJobModal({
       const updates: Record<string, string> = {};
 
       if (formData.title) updates.title = formData.title;
-      if (formData.classification) updates.classification = formData.classification;
+      if (formData.classification)
+        updates.classification = formData.classification;
       if (formData.language) updates.language = formData.language;
       if (formData.department) updates.department = formData.department;
       if (formData.reports_to) updates.reports_to = formData.reports_to;
@@ -126,7 +125,7 @@ export function EditJobModal({
       onClose();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to update job description"
+        err instanceof Error ? err.message : "Failed to update job description",
       );
     } finally {
       setLoading(false);
@@ -197,7 +196,9 @@ export function EditJobModal({
                 <Label htmlFor="language">Language</Label>
                 <Select
                   value={formData.language}
-                  onValueChange={(value) => handleInputChange("language", value)}
+                  onValueChange={(value) =>
+                    handleInputChange("language", value)
+                  }
                 >
                   <SelectTrigger id="language">
                     <SelectValue />
@@ -268,10 +269,7 @@ export function EditJobModal({
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={loading || loadingJobData}
-            >
+            <Button type="submit" disabled={loading || loadingJobData}>
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

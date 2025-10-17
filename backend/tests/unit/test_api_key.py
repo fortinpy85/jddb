@@ -16,7 +16,9 @@ class TestGetApiKey:
     def test_valid_api_key(self, mock_settings):
         """Test API key validation with correct key."""
         mock_settings.API_KEY = "valid_api_key_123"
-        mock_settings.is_development = False  # Ensure production mode for authentication tests
+        mock_settings.is_development = (
+            False  # Ensure production mode for authentication tests
+        )
 
         result = get_api_key("valid_api_key_123")
 

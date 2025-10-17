@@ -293,7 +293,13 @@ export const EnhancedDualPaneEditor: React.FC<EnhancedDualPaneEditorProps> = ({
 
               {/* Typing Indicator */}
               {collaboration.typingUsers.length > 0 && (
-                <TypingIndicator typingUsers={collaboration.typingUsers.map(id => ({ userId: id, username: `User ${id}`}))} maxVisible={2} />
+                <TypingIndicator
+                  typingUsers={collaboration.typingUsers.map((id) => ({
+                    userId: id,
+                    username: `User ${id}`,
+                  }))}
+                  maxVisible={2}
+                />
               )}
             </div>
           )}

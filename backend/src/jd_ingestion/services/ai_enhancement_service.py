@@ -459,7 +459,7 @@ Return ONLY valid JSON, no other text."""
         Text to analyze:
         \"\"\"{text}\"\"\"
 
-        Context: {context or 'Not provided'}
+        Context: {context or "Not provided"}
 
         Suggestion types: {types}
 
@@ -510,7 +510,11 @@ Return ONLY valid JSON, no other text."""
     def _check_treasury_board_compliance(self, text: str) -> List[Dict[str, Any]]:
         """Check Treasury Board directive compliance."""
         issues = []
-        required_keywords = ["Official Languages", "Employment Equity", "Access to Information"]
+        required_keywords = [
+            "Official Languages",
+            "Employment Equity",
+            "Access to Information",
+        ]
 
         for keyword in required_keywords:
             if keyword.lower() not in text.lower():
@@ -1355,7 +1359,9 @@ Return ONLY valid JSON, no other text."""
         """
         try:
             # Prepare prompt for AI enhancement
-            sections_text = "\n\n".join([f"## {name}\n{content}" for name, content in sections.items()])
+            sections_text = "\n\n".join(
+                [f"## {name}\n{content}" for name, content in sections.items()]
+            )
 
             prompt = f"""You are an expert in writing professional government job descriptions.
 
@@ -1378,11 +1384,14 @@ Keep the section names exactly the same."""
             response = await self.client.chat.completions.create(
                 model="gpt-4",
                 messages=[
-                    {"role": "system", "content": "You are an expert in writing professional government job descriptions."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system",
+                        "content": "You are an expert in writing professional government job descriptions.",
+                    },
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.3,  # Lower temperature for more consistent, professional output
-                max_tokens=2000
+                max_tokens=2000,
             )
 
             enhanced_text = response.choices[0].message.content.strip()
@@ -1392,11 +1401,13 @@ Keep the section names exactly the same."""
             current_section = None
             current_content = []
 
-            for line in enhanced_text.split('\n'):
-                if line.startswith('## '):
+            for line in enhanced_text.split("\n"):
+                if line.startswith("## "):
                     # Save previous section
                     if current_section and current_content:
-                        enhanced_sections[current_section] = '\n'.join(current_content).strip()
+                        enhanced_sections[current_section] = "\n".join(
+                            current_content
+                        ).strip()
                     # Start new section
                     current_section = line[3:].strip()
                     current_content = []
@@ -1405,7 +1416,7 @@ Keep the section names exactly the same."""
 
             # Save last section
             if current_section and current_content:
-                enhanced_sections[current_section] = '\n'.join(current_content).strip()
+                enhanced_sections[current_section] = "\n".join(current_content).strip()
 
             # Fallback to original sections if parsing failed
             if not enhanced_sections:
@@ -1420,7 +1431,9 @@ Keep the section names exactly the same."""
                 else:
                     result[section_name] = sections[section_name]
 
-            logger.info(f"Successfully enhanced {len(result)} template sections with AI")
+            logger.info(
+                f"Successfully enhanced {len(result)} template sections with AI"
+            )
             return result
 
         except Exception as e:
@@ -1885,7 +1898,14 @@ Keep the section names exactly the same."""
                     "details": {
                         "compliant": compliance.get("compliant", False),
                         "issues": compliance.get("issues", []),
-                        "frameworks_checked": compliance.get("frameworks", ["official_languages", "employment_equity", "accessibility"]),
+                        "frameworks_checked": compliance.get(
+                            "frameworks",
+                            [
+                                "official_languages",
+                                "employment_equity",
+                                "accessibility",
+                            ],
+                        ),
                         "issue_count": len(compliance.get("issues", [])),
                     },
                 },
@@ -2197,13 +2217,16 @@ Translated Text:
             response = await self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": f"You are a professional translator fluent in English and {target_language}."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system",
+                        "content": f"You are a professional translator fluent in English and {target_language}.",
+                    },
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.3,
                 max_tokens=2048,
             )
-            
+
             translated_text = response.choices[0].message.content.strip()
             logger.info(f"Successfully translated text to {target_language}")
             return translated_text
@@ -2243,13 +2266,16 @@ Job Posting:
             response = await self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are an expert in writing compelling job postings."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system",
+                        "content": "You are an expert in writing compelling job postings.",
+                    },
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.7,
                 max_tokens=1024,
             )
-            
+
             job_posting = response.choices[0].message.content.strip()
             logger.info(f"Successfully generated job posting for job {job_id}")
             return job_posting
@@ -2289,13 +2315,16 @@ Predictive Analysis:
             response = await self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "You are an expert in HR analytics and predictive modeling."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system",
+                        "content": "You are an expert in HR analytics and predictive modeling.",
+                    },
+                    {"role": "user", "content": prompt},
                 ],
                 temperature=0.7,
                 max_tokens=1024,
             )
-            
+
             analysis = response.choices[0].message.content.strip()
             logger.info(f"Successfully ran predictive analysis for job {job_id}")
             return {"analysis": analysis}

@@ -59,12 +59,14 @@ export function SkipLinks() {
           onClick={(e) => handleSkipClick(e, link.target)}
           className={cn(
             // Position off-screen by default
-            "absolute left-[-9999px] top-4 z-[9999]",
+            "absolute left-[-9999px] top-4 z-[10000]",
             "px-4 py-2 text-sm font-medium",
             "bg-blue-600 text-white rounded-md shadow-lg",
             "transition-all duration-200",
-            // Show on focus (keyboard navigation)
-            "focus:left-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+            // Disable pointer events when off-screen to prevent interference
+            "pointer-events-none",
+            // Show on focus (keyboard navigation) - ensure above header (h-16 = 64px)
+            "focus:left-4 focus:top-20 focus:pointer-events-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
             // Hover state (when visible)
             "hover:bg-blue-700",
           )}

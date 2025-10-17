@@ -11,14 +11,14 @@ export interface JobDescription {
   created_at?: string;
   updated_at?: string;
   processed_date?: string;
-  file_path: string;  // Required for backend compatibility
-  file_hash: string;  // Required for backend compatibility
+  file_path: string; // Required for backend compatibility
+  file_hash: string; // Required for backend compatibility
   content?: string;
-  raw_content?: string;  // Raw unprocessed content for JobPostingGenerator
+  raw_content?: string; // Raw unprocessed content for JobPostingGenerator
   sections?: any[];
   job_metadata?: any;
-  relevance_score?: number;  // For search results
-  quality_score?: number;  // For job listings
+  relevance_score?: number; // For search results
+  quality_score?: number; // For job listings
 }
 
 export interface JobListResponse {

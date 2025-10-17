@@ -1,0 +1,105 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - navigation "Skip links":
+    - link "Skip to main content":
+      - /url: "#main-content"
+    - link "Skip to navigation":
+      - /url: "#main-navigation"
+    - link "Skip to search":
+      - /url: "#search-interface"
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e6]:
+        - button "Job Description Database AI-Powered Management System" [ref=e8]:
+          - img [ref=e10]
+          - generic [ref=e14]:
+            - generic [ref=e15]: Job Description Database
+            - paragraph [ref=e16]: AI-Powered Management System
+        - tablist "Main navigation" [ref=e17]:
+          - tab "Dashboard" [ref=e18]:
+            - img [ref=e19]
+            - generic [ref=e21]: Dashboard
+          - tab "Jobs" [active] [selected] [ref=e22]:
+            - img [ref=e23]
+            - generic [ref=e27]: Jobs
+          - tab "Upload" [ref=e28]:
+            - img [ref=e29]
+            - generic [ref=e32]: Upload
+          - tab "Improve" [disabled] [ref=e33]:
+            - img [ref=e34]
+            - generic [ref=e37]: Improve
+          - tab "AI Writer" [ref=e38]:
+            - img [ref=e39]
+            - generic [ref=e42]: AI Writer
+          - tab "Job Posting" [ref=e43]:
+            - img [ref=e44]
+            - generic [ref=e47]: Job Posting
+          - tab "Predictive Analytics" [ref=e48]:
+            - img [ref=e49]
+            - generic [ref=e51]: Predictive Analytics
+          - tab "Search" [ref=e52]:
+            - img [ref=e53]
+            - generic [ref=e56]: Search
+          - tab "Compare" [ref=e57]:
+            - img [ref=e58]
+            - generic [ref=e63]: Compare
+          - tab "Translate" [disabled] [ref=e64]:
+            - img [ref=e65]
+            - generic [ref=e69]: Translate
+          - tab "AI Demo" [ref=e70]:
+            - img [ref=e71]
+            - generic [ref=e73]: AI Demo
+          - tab "Statistics" [ref=e74]:
+            - img [ref=e75]
+            - generic [ref=e77]: Statistics
+        - generic [ref=e78]:
+          - button "Notifications" [ref=e79]:
+            - img [ref=e80]
+          - button "Switch to Français" [ref=e83]:
+            - generic [ref=e84]: Français
+          - button "Switch to light mode (System theme)" [ref=e85]:
+            - img [ref=e88]
+            - generic [ref=e90]: Switch to light mode (System theme)
+          - button "AU Hi, Admin" [ref=e91]:
+            - generic [ref=e92]: AU
+            - generic [ref=e93]:
+              - generic [ref=e94]: Hi,
+              - generic [ref=e95]: Admin
+    - region "Profile header":
+      - generic [ref=e97]:
+        - navigation "Breadcrumb" [ref=e98]:
+          - img [ref=e99]
+          - button "Navigate to Home" [ref=e102]: Home
+          - img [ref=e103]
+          - generic [ref=e105]: Home
+        - generic [ref=e106]:
+          - button "Job 1" [ref=e107]:
+            - generic [ref=e108]: Job 1
+            - img [ref=e109]
+          - button "Job 2" [ref=e112]:
+            - generic [ref=e113]: Job 2
+            - img [ref=e114]
+    - region "Alert banner" [ref=e117]:
+      - alert [ref=e118]:
+        - generic [ref=e120]:
+          - img [ref=e121]
+          - generic [ref=e123]:
+            - 'heading "Phase 5: Skills Intelligence Now Available" [level=3] [ref=e124]'
+            - paragraph [ref=e125]: Automated skills extraction powered by Lightcast API is now live! Upload job descriptions to see extracted skills, explore the Skills Analytics dashboard, and filter jobs by required skills.
+          - button "Dismiss alert" [ref=e126]:
+            - img [ref=e127]
+    - generic [ref=e130]:
+      - complementary "Dashboard sidebar" [ref=e131]:
+        - generic [ref=e132]:
+          - button "Statistics" [ref=e133]:
+            - img [ref=e134]
+          - button "System Health" [ref=e136]:
+            - img [ref=e137]
+      - complementary "AI assistant panel" [ref=e139]:
+        - button "Expand AI Panel" [ref=e141]:
+          - img [ref=e142]
+      - main "Main content" [ref=e146]:
+        - tabpanel "Jobs" [ref=e150]
+```

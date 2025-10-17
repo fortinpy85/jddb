@@ -20,7 +20,9 @@ def get_api_key(api_key_header: Optional[str] = Security(API_KEY_HEADER)) -> str
     In development mode, authentication is bypassed.
     In production mode, requires valid X-API-Key header.
     """
-    logger.info(f"get_api_key called. is_development: {settings.is_development}, api_key_header: {api_key_header}")
+    logger.info(
+        f"get_api_key called. is_development: {settings.is_development}, api_key_header_present: {api_key_header is not None}"
+    )
 
     # In development, bypass authentication
     if settings.is_development:

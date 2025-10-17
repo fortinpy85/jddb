@@ -93,43 +93,44 @@ export function BasicEditingView({
       ];
     }
     return [
-    {
-      id: "1",
-      type: "general_accountability",
-      title: "General Accountability",
-      content:
-        "The Director of Business Analysis is accountable for leading the business analysis function across the organization, ensuring alignment with strategic objectives and delivering value through data-driven insights.",
-      lastModified: new Date(),
-      modifiedBy: "Alice Johnson",
-    },
-    {
-      id: "2",
-      type: "organization_structure",
-      title: "Organization Structure",
-      content:
-        "Reports to: Chief Operating Officer\nDirect Reports: 5 Senior Business Analysts, 3 Business Analysts\nDotted Line Reports: Project Managers in all departments",
-      lastModified: new Date(),
-      modifiedBy: "Bob Smith",
-    },
-    {
-      id: "3",
-      type: "nature_scope",
-      title: "Nature and Scope",
-      content:
-        "This position requires strategic thinking, analytical expertise, and leadership capabilities to drive business intelligence initiatives. The role involves collaborating with executive leadership, managing a team of analysts, and implementing data-driven solutions.",
-      lastModified: new Date(),
-      modifiedBy: "Alice Johnson",
-    },
-    {
-      id: "4",
-      type: "specific_accountabilities",
-      title: "Specific Accountabilities",
-      content:
-        "• Lead and mentor a team of business analysts\n• Develop and implement business analysis strategies\n• Conduct complex data analysis and provide insights\n• Collaborate with stakeholders across the organization\n• Ensure quality and accuracy of analytical outputs",
-      lastModified: new Date(),
-      modifiedBy: "Alice Johnson",
-    },
-  ]});
+      {
+        id: "1",
+        type: "general_accountability",
+        title: "General Accountability",
+        content:
+          "The Director of Business Analysis is accountable for leading the business analysis function across the organization, ensuring alignment with strategic objectives and delivering value through data-driven insights.",
+        lastModified: new Date(),
+        modifiedBy: "Alice Johnson",
+      },
+      {
+        id: "2",
+        type: "organization_structure",
+        title: "Organization Structure",
+        content:
+          "Reports to: Chief Operating Officer\nDirect Reports: 5 Senior Business Analysts, 3 Business Analysts\nDotted Line Reports: Project Managers in all departments",
+        lastModified: new Date(),
+        modifiedBy: "Bob Smith",
+      },
+      {
+        id: "3",
+        type: "nature_scope",
+        title: "Nature and Scope",
+        content:
+          "This position requires strategic thinking, analytical expertise, and leadership capabilities to drive business intelligence initiatives. The role involves collaborating with executive leadership, managing a team of analysts, and implementing data-driven solutions.",
+        lastModified: new Date(),
+        modifiedBy: "Alice Johnson",
+      },
+      {
+        id: "4",
+        type: "specific_accountabilities",
+        title: "Specific Accountabilities",
+        content:
+          "• Lead and mentor a team of business analysts\n• Develop and implement business analysis strategies\n• Conduct complex data analysis and provide insights\n• Collaborate with stakeholders across the organization\n• Ensure quality and accuracy of analytical outputs",
+        lastModified: new Date(),
+        modifiedBy: "Alice Johnson",
+      },
+    ];
+  });
 
   const [collaborators] = useState<Collaborator[]>([
     {
