@@ -21,6 +21,11 @@ keywords = ["government", "job-descriptions", "ai", "semantic-search", "fastapi"
 dynamic = ["dependencies"]
 
 [tool.poetry]
+name = "jd-ingestion-engine"
+version = "0.1.0"
+description = "Government Job Description Ingestion Engine for AI Applications"
+authors = ["Pierre-Yves Fortin <pierreyves.fortin@hrsdc-rhdcc.gc.ca>"]
+readme = "README.md"
 packages = [{include = "jd_ingestion", from = "src"}]
 
 [tool.poetry.dependencies]
