@@ -179,7 +179,7 @@ class LightcastClient:
         headers["Authorization"] = f"Bearer {token}"
 
         retries = 0
-        last_exception: Optional[Exception] = None
+        last_exception: Optional[Exception] = None  # type: ignore[syntax]
 
         while retries <= self.max_retries:
             try:

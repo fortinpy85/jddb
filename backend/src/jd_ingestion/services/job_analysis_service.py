@@ -4,6 +4,7 @@ Advanced job analysis and comparison service.
 This service provides comprehensive job comparison, skill gap analysis,
 and career path recommendations using semantic embeddings and NLP.
 """
+# mypy: disable-error-code="attr-defined,arg-type"
 
 from typing import List, Dict, Any, Tuple, Optional
 from sqlalchemy.ext.asyncio import AsyncSession

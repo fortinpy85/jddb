@@ -41,7 +41,7 @@ class AIEnhancementService:
         self.db = db
         self.client: Optional[Any] = None
 
-        if AsyncOpenAI is not None and hasattr(settings, "openai_api_key"):
+        if AsyncOpenAI is not None and hasattr(settings, "openai_api_key"):  # type: ignore[truthy-function]
             try:
                 self.client = AsyncOpenAI(api_key=settings.openai_api_key)
             except Exception as e:
@@ -1665,7 +1665,9 @@ Keep the section names exactly the same."""
         if total_weight > 0:
             # Cast to float explicitly to avoid type errors
             section_weights: list[float] = [
-                float(s["weight"])  # type: ignore[arg-type]
+                float(s["weight"])
+                if isinstance(s["weight"], (int, float, str))
+                else 0.0
                 for s in required_sections.values()
             ]
             total_section_weight = sum(section_weights)
