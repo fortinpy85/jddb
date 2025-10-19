@@ -96,9 +96,10 @@ async def list_jobs(
             detail="Both 'page' and 'size' parameters must be provided together",
         )
 
-    # Build base query - load quality_metrics relationship
+    # Build base query - load quality_metrics and skills relationships
     base_query = select(JobDescription).options(
-        selectinload(JobDescription.quality_metrics)
+        selectinload(JobDescription.quality_metrics),
+        selectinload(JobDescription.skills),
     )
 
     # Apply filters
@@ -198,27 +199,57 @@ async def list_jobs(
             "has_more": skip + limit < total_count,
         }
 
+    # Get skills with confidence scores for all jobs
+    jobs_data = []
+    for job in jobs:
+        job_data = {
+            "id": job.id,
+            "job_number": job.job_number,
+            "title": job.title,
+            "classification": job.classification,
+            "language": job.language,
+            "processed_date": (
+                job.processed_date.isoformat() if job.processed_date else None
+            ),
+            "file_path": job.file_path,
+            "quality_score": (
+                float(job.quality_metrics.content_completeness_score)
+                if job.quality_metrics
+                and job.quality_metrics.content_completeness_score
+                else 0.0
+            ),
+            "created_at": job.created_at.isoformat() if job.created_at else None,
+        }
+
+        # Add skills with confidence scores
+        if job.skills:
+            # Get confidence scores from association table
+            skills_query = select(
+                job_description_skills.c.skill_id,
+                job_description_skills.c.confidence,
+            ).where(job_description_skills.c.job_id == job.id)
+
+            skills_result = await db.execute(skills_query)
+            skill_confidence_map = {row[0]: row[1] for row in skills_result.fetchall()}
+
+            job_data["skills"] = [
+                {
+                    "id": skill.id,
+                    "lightcast_id": skill.lightcast_id,
+                    "name": skill.name,
+                    "skill_type": skill.skill_type,
+                    "category": skill.category,
+                    "confidence": skill_confidence_map.get(skill.id, 0.0),
+                }
+                for skill in job.skills
+            ]
+        else:
+            job_data["skills"] = []
+
+        jobs_data.append(job_data)
+
     return {
-        "jobs": [
-            {
-                "id": job.id,
-                "job_number": job.job_number,
-                "title": job.title,
-                "classification": job.classification,
-                "language": job.language,
-                "processed_date": (
-                    job.processed_date.isoformat() if job.processed_date else None
-                ),
-                "file_path": job.file_path,
-                "quality_score": (
-                    float(job.quality_metrics.content_completeness_score)
-                    if job.quality_metrics
-                    and job.quality_metrics.content_completeness_score
-                    else 0.0
-                ),
-            }
-            for job in jobs
-        ],
+        "jobs": jobs_data,
         "pagination": pagination_info,
     }
 
@@ -569,7 +600,7 @@ async def create_job(
             language=job_data.language,
             file_path=f"manual/{job_data.job_number}.txt",
             processed_date=datetime.utcnow(),
-            full_text_content=job_data.content or "",
+            raw_content=job_data.content or "",
         )
 
         db.add(new_job)
@@ -803,6 +834,89 @@ async def update_job(
         raise HTTPException(status_code=500, detail="Failed to update job description")
 
 
+@router.patch("/{job_id}/sections/{section_id}")
+async def update_job_section(
+    job_id: int,
+    section_id: int,
+    section_update: Dict[str, str],
+    db: AsyncSession = Depends(get_async_session),
+    api_key: str = Security(get_api_key),
+):
+    """Update a specific section of a job description."""
+    try:
+        # Verify job exists
+        job_query = select(JobDescription).where(JobDescription.id == job_id)
+        job_result = await db.execute(job_query)
+        job = job_result.scalar_one_or_none()
+
+        if not job:
+            raise HTTPException(status_code=404, detail="Job description not found")
+
+        # Get and update the section
+        section_query = select(JobSection).where(
+            JobSection.id == section_id, JobSection.job_id == job_id
+        )
+        section_result = await db.execute(section_query)
+        section = section_result.scalar_one_or_none()
+
+        if not section:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Section {section_id} not found for job {job_id}",
+            )
+
+        # Update section content
+        if "section_content" in section_update:
+            section.section_content = section_update["section_content"]
+
+        # Update job timestamp
+        job.updated_at = datetime.utcnow()
+
+        await db.commit()
+        await db.refresh(section)
+
+        logger.info(
+            "Job section updated",
+            job_id=job_id,
+            section_id=section_id,
+            section_type=section.section_type,
+        )
+
+        return {
+            "status": "success",
+            "message": f"Section {section.section_type} updated successfully",
+            "section": {
+                "id": section.id,
+                "section_type": section.section_type,
+                "section_content": section.section_content,
+                "section_order": section.section_order,
+            },
+        }
+
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(
+            "Database error updating job section",
+            job_id=job_id,
+            section_id=section_id,
+            error=str(e),
+        )
+        await db.rollback()
+        raise HTTPException(
+            status_code=500, detail="Database error updating job section"
+        )
+    except Exception as e:
+        logger.error(
+            "Unexpected error updating job section",
+            job_id=job_id,
+            section_id=section_id,
+            error=str(e),
+        )
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to update job section")
+
+
 @router.post("/export/bulk")
 async def bulk_export_jobs(
     export_request: Dict[str, Any],
@@ -1014,6 +1128,8 @@ async def bulk_export_jobs(
             headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions as-is (e.g., 404 for no jobs found)
     except SQLAlchemyError as e:
         logger.error("Database error during bulk export", error=str(e))
         raise HTTPException(status_code=500, detail="Database error during export")

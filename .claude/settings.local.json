@@ -108,7 +108,11 @@
       "Bash(npm run test:e2e:*)",
       "Bash(set PORT=3006)",
       "Bash(npm:*)",
-      "Bash(if exist playwright-report rmdir /s /q playwright-report)"
+      "Bash(if exist playwright-report rmdir /s /q playwright-report)",
+      "SlashCommand(/sc:implement:*)",
+      "SlashCommand(/sc:test:*)",
+      "Bash(if not exist \"src\\components\\jobs\\__tests__\" mkdir \"src\\components\\jobs\\__tests__\")",
+      "Bash(git log -1 --format=\"%H %s\")"
     ],
     "deny": [],
     "ask": []

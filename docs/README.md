@@ -35,7 +35,7 @@ This document provides a comprehensive overview of the JDDB project, its archite
     *   `backend/src/jd_ingestion/database/`: SQLAlchemy models and database connection.
     *   `backend/src/jd_ingestion/config/settings.py`: Pydantic settings for environment management.
 *   **Frontend Structure (React/TypeScript/Vite):**
-    *   The frontend uses a custom Bun-based architecture, not a standard Next.js setup.
+    *   The frontend uses Vite as the build tool with npm for package management.
     *   **State Management:** Zustand (`src/lib/store.ts`) is used for global state.
     *   **API Client:** A singleton API client is located at `src/lib/api.ts`.
 

@@ -155,7 +155,9 @@ async def create_skills_test_data() -> None:
             existing_count = result.scalar_one()
 
             if existing_count > 0:
-                logger.info(f"Skills test data already exists ({existing_count} jobs found).")
+                logger.info(
+                    f"Skills test data already exists ({existing_count} jobs found)."
+                )
                 logger.info("To recreate, delete jobs 123456 and 789012 first.")
                 return
 

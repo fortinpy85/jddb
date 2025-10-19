@@ -27,7 +27,7 @@ pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto",
     bcrypt__ident="2b",  # Use bcrypt $2b$ variant
-    bcrypt__min_rounds=12  # Set reasonable cost factor
+    bcrypt__min_rounds=12,  # Set reasonable cost factor
 )
 
 
@@ -105,8 +105,8 @@ class User(Base):
         """Hash and set the password."""
         # Bcrypt has a maximum password length of 72 bytes
         # Truncate password to ensure it's within bcrypt limits
-        if len(password.encode('utf-8')) > 72:
-            password = password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
+        if len(password.encode("utf-8")) > 72:
+            password = password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
         self.password_hash = pwd_context.hash(password)
 
     def verify_password(self, password: str) -> bool:
@@ -206,11 +206,20 @@ class JobDescription(Base):
     updated_at = Column(DateTime, onupdate=datetime.utcnow, nullable=True)
 
     # Relationships with CASCADE delete-orphan for proper ORM-level deletion handling
-    sections = relationship("JobSection", back_populates="job", cascade="all, delete-orphan")
-    chunks = relationship("ContentChunk", back_populates="job", cascade="all, delete-orphan")
-    job_metadata = relationship("JobMetadata", back_populates="job", uselist=False, cascade="all, delete-orphan")
+    sections = relationship(
+        "JobSection", back_populates="job", cascade="all, delete-orphan"
+    )
+    chunks = relationship(
+        "ContentChunk", back_populates="job", cascade="all, delete-orphan"
+    )
+    job_metadata = relationship(
+        "JobMetadata", back_populates="job", uselist=False, cascade="all, delete-orphan"
+    )
     quality_metrics = relationship(
-        "DataQualityMetrics", back_populates="job", uselist=False, cascade="all, delete-orphan"
+        "DataQualityMetrics",
+        back_populates="job",
+        uselist=False,
+        cascade="all, delete-orphan",
     )
     skills = relationship(
         "Skill",
@@ -247,7 +256,7 @@ class JobMetadata(Base):
     department = Column(String(200), nullable=True)
     location = Column(String(200), nullable=True)
     fte_count = Column(Integer, nullable=True)
-    salary_budget = Column(DECIMAL, nullable=True)
+    salary_budget = Column(Float, nullable=True)  # Use Float for SQLite compatibility
     effective_date = Column(Date, nullable=True)
 
     # Relationships
@@ -339,8 +348,12 @@ class JobComparison(Base):
     __tablename__ = "job_comparisons"
 
     id = Column(Integer, primary_key=True, index=True)
-    job1_id = Column(Integer, ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False)
-    job2_id = Column(Integer, ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False)
+    job1_id = Column(
+        Integer, ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False
+    )
+    job2_id = Column(
+        Integer, ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False
+    )
     comparison_type = Column(String(50), nullable=True)
     similarity_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
     differences = Column(JSONBType, nullable=True)

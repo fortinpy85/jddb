@@ -189,6 +189,7 @@ def test_client(test_session):
 @pytest.fixture
 async def async_client(async_session):
     """Create async test client."""
+    from httpx import ASGITransport
 
     # Create a wrapper that returns the session directly
     async def override_get_async_session():
@@ -196,7 +197,9 @@ async def async_client(async_session):
 
     app.dependency_overrides[get_async_session] = override_get_async_session
 
-    client = AsyncClient(app=app, base_url="http://test")
+    # Modern httpx API requires ASGITransport
+    transport = ASGITransport(app=app)
+    client = AsyncClient(transport=transport, base_url="http://test")
     await client.__aenter__()
 
     yield client
