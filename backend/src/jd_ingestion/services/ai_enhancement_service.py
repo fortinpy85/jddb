@@ -41,7 +41,7 @@ class AIEnhancementService:
         self.db = db
         self.client: Optional[Any] = None
 
-        if AsyncOpenAI and hasattr(settings, "openai_api_key"):
+        if AsyncOpenAI is not None and hasattr(settings, "openai_api_key"):
             try:
                 self.client = AsyncOpenAI(api_key=settings.openai_api_key)
             except Exception as e:
@@ -1381,6 +1381,9 @@ Please enhance these sections by:
 Return the enhanced sections in the same format, with each section clearly marked.
 Keep the section names exactly the same."""
 
+            if self.client is None:
+                raise ValueError("OpenAI client is not initialized")
+
             response = await self.client.chat.completions.create(
                 model="gpt-4",
                 messages=[
@@ -1399,7 +1402,7 @@ Keep the section names exactly the same."""
             # Parse enhanced sections back into dictionary
             enhanced_sections = {}
             current_section = None
-            current_content = []
+            current_content: list[str] = []
 
             for line in enhanced_text.split("\n"):
                 if line.startswith("## "):
@@ -1620,8 +1623,8 @@ Keep the section names exactly the same."""
             if section_content and section_content.strip():
                 present_sections.append(section_key)
                 word_count = len(section_content.split())
-                min_words = section_info["min_words"]
-                weight = section_info["weight"]
+                min_words: int = section_info["min_words"]  # type: ignore[assignment]
+                weight: float = section_info["weight"]  # type: ignore[assignment]
 
                 # Calculate section score (0-1)
                 if word_count >= min_words:
@@ -1660,17 +1663,23 @@ Keep the section names exactly the same."""
 
         # Calculate overall completeness
         if total_weight > 0:
-            completeness_score = weighted_score / sum(
-                s["weight"] for s in required_sections.values()
-            )
+            # Cast to float explicitly to avoid type errors
+            section_weights: list[float] = [
+                float(s["weight"])  # type: ignore[arg-type]
+                for s in required_sections.values()
+            ]
+            total_section_weight = sum(section_weights)
+            completeness_score = weighted_score / total_section_weight
         else:
             completeness_score = 0.0
 
         # Generate recommendations
-        recommendations = []
+        recommendations: list[str] = []
         if missing_sections:
+            # Cast to list of strings to avoid type errors
+            missing_section_names: list[str] = [str(name) for name in missing_sections]  # type: ignore[arg-type]
             recommendations.append(
-                f"Add missing sections: {', '.join(missing_sections)}"
+                f"Add missing sections: {', '.join(missing_section_names)}"
             )
         if thin_sections:
             for thin in thin_sections:

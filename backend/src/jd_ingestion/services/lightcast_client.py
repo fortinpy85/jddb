@@ -36,6 +36,8 @@ class LightcastAuthToken(BaseModel):
 
     def is_expired(self) -> bool:
         """Check if the token is expired."""
+        if self.expires_at is None:
+            return True
         return datetime.utcnow() >= self.expires_at
 
 
@@ -147,6 +149,7 @@ class LightcastClient:
         if self._token is None or self._token.is_expired():
             await self._authenticate()
 
+        assert self._token is not None, "Authentication failed to set token"
         return self._token.access_token
 
     async def _make_request(
@@ -176,7 +179,7 @@ class LightcastClient:
         headers["Authorization"] = f"Bearer {token}"
 
         retries = 0
-        last_exception = None
+        last_exception: Optional[Exception] = None
 
         while retries <= self.max_retries:
             try:
@@ -215,7 +218,9 @@ class LightcastClient:
                     break
 
         logger.error(f"Max retries exceeded. Last error: {last_exception}")
-        raise last_exception
+        if last_exception is not None:
+            raise last_exception
+        raise httpx.HTTPError("Request failed with no recorded exception")
 
     async def extract_skills(
         self,

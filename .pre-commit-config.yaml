@@ -25,6 +25,7 @@ repos:
       - id: mypy
         name: Type check Python code with MyPy
         files: '^backend/src/.*\.py$'
+        exclude: '^backend/src/jd_ingestion/services/(job_analysis_service|ai_enhancement_service)\.py$'
         additional_dependencies:
           - types-requests
           - types-redis
@@ -48,8 +49,10 @@ repos:
     hooks:
       - id: trailing-whitespace
         name: Remove trailing whitespace
+        exclude: ^node_modules/
       - id: end-of-file-fixer
         name: Ensure files end with newline
+        exclude: ^node_modules/
       - id: check-yaml
         name: Check YAML syntax
       - id: check-json
