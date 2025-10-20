@@ -1,2 +1,124 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+*.log
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+bun.lockb
+
+# Build outputs
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Testing
+test-results/
+playwright-report/
+.playwright/
+.vitest/
+coverage/
+htmlcov/
+
+# Logs and temporary files
+logs/
+*.log
+*.tmp
+*.temp
+errors/
+debug/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+!.env.example
+
+# Caches
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.vite/
+.mypy_cache/
+.ruff_cache/
+.benchmarks/
+
+# Archives and samples (not tracked in repo)
+archive/
+sample/
+backup/
+deprecated/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Project specific
+backend/logs/
+backend/alembic/__pycache__/
+backend/src/__pycache__/
+backend/tests/__pycache__/
+backend/.pytest_cache/
+backend/htmlcov/
 nul
 backend/nul
