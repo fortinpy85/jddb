@@ -116,8 +116,8 @@ export const createStore = (api: JDDBApiClient = apiClient) =>
     fetchStats: async () => {
       logger.debug("fetchStats started");
       try {
-        logger.debug("Calling api.getProcessingStatus");
-        const response = await api.getProcessingStatus();
+        logger.debug("Calling api.getIngestionStats");
+        const response = await api.getIngestionStats();
         logger.debug("fetchStats response received", { stats: response });
         set({ stats: response });
         logger.debug("fetchStats state updated");

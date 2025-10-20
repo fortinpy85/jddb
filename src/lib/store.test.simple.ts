@@ -13,13 +13,32 @@ describe("useStore - simple state management tests", () => {
         by_classification: {},
         by_language: {},
         processing_status: {
-          pending: 0,
-          processing: 0,
           completed: 0,
-          failed: 0,
-          needs_review: 0,
+          partial: 0,
+          needs_embeddings: 0,
+          needs_sections: 0,
+          needs_metadata: 0,
         },
-        last_updated: "",
+        embedding_stats: {
+          total_chunks: 0,
+          embedded_chunks: 0,
+          embedding_completion_rate: 0,
+          jobs_with_embeddings: 0,
+        },
+        content_quality: {
+          jobs_with_sections: 0,
+          jobs_with_metadata: 0,
+          jobs_with_embeddings: 0,
+          section_coverage_rate: 0,
+          metadata_coverage_rate: 0,
+          embedding_coverage_rate: 0,
+        },
+        section_distribution: {},
+        recent_activity: {
+          jobs_last_7_days: 0,
+          daily_average: 0,
+        },
+        last_updated: null,
       },
       loading: false,
       error: null,
@@ -50,11 +69,11 @@ describe("useStore - simple state management tests", () => {
       expect(state.stats.total_jobs).toBe(0);
       expect(state.stats.by_classification).toEqual({});
       expect(state.stats.by_language).toEqual({});
-      expect(state.stats.processing_status.pending).toBe(0);
-      expect(state.stats.processing_status.processing).toBe(0);
       expect(state.stats.processing_status.completed).toBe(0);
-      expect(state.stats.processing_status.failed).toBe(0);
-      expect(state.stats.processing_status.needs_review).toBe(0);
+      expect(state.stats.processing_status.partial).toBe(0);
+      expect(state.stats.processing_status.needs_embeddings).toBe(0);
+      expect(state.stats.processing_status.needs_sections).toBe(0);
+      expect(state.stats.processing_status.needs_metadata).toBe(0);
     });
   });
 
@@ -267,11 +286,30 @@ describe("useStore - simple state management tests", () => {
             fr: 50,
           },
           processing_status: {
-            pending: 5,
-            processing: 10,
             completed: 130,
-            failed: 3,
-            needs_review: 2,
+            partial: 10,
+            needs_embeddings: 5,
+            needs_sections: 3,
+            needs_metadata: 2,
+          },
+          embedding_stats: {
+            total_chunks: 0,
+            embedded_chunks: 0,
+            embedding_completion_rate: 0,
+            jobs_with_embeddings: 0,
+          },
+          content_quality: {
+            jobs_with_sections: 0,
+            jobs_with_metadata: 0,
+            jobs_with_embeddings: 0,
+            section_coverage_rate: 0,
+            metadata_coverage_rate: 0,
+            embedding_coverage_rate: 0,
+          },
+          section_distribution: {},
+          recent_activity: {
+            jobs_last_7_days: 0,
+            daily_average: 0,
           },
           last_updated: "2024-01-01T00:00:00Z",
         },

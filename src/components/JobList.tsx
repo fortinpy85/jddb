@@ -336,7 +336,7 @@ ${Object.entries(fullJob.metadata)
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {stats.processing_status.processing}
+                {stats.processing_status.partial}
               </div>
               <div className="text-sm text-gray-600">
                 {t("jobs:status.processing")}
@@ -344,7 +344,7 @@ ${Object.entries(fullJob.metadata)
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-yellow-600">
-                {stats.processing_status.pending}
+                {stats.processing_status.needs_embeddings}
               </div>
               <div className="text-sm text-gray-600">
                 {t("jobs:status.pending")}
@@ -352,7 +352,7 @@ ${Object.entries(fullJob.metadata)
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
-                {stats.processing_status.needs_review}
+                {stats.processing_status.needs_sections}
               </div>
               <div className="text-sm text-gray-600">
                 {t("jobs:status.needsReview")}
@@ -360,7 +360,7 @@ ${Object.entries(fullJob.metadata)
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-red-600">
-                {stats.processing_status.failed}
+                {stats.processing_status.needs_metadata}
               </div>
               <div className="text-sm text-gray-600">
                 {t("jobs:status.failed")}
