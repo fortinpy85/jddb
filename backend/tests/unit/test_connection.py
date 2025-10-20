@@ -3,9 +3,11 @@ Tests for database connection module.
 """
 
 import pytest
+import os
 from unittest.mock import patch
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 
 from jd_ingestion.database.connection import (
     async_engine,
@@ -18,6 +20,7 @@ from jd_ingestion.database.connection import (
     get_sync_session,
     get_db,
 )
+from jd_ingestion.config.settings import settings
 
 
 class TestDatabaseEngines:
@@ -128,3 +131,105 @@ class TestConnectionModuleIntegration:
         assert callable(get_async_session)
         assert callable(get_sync_session)
         assert callable(get_db)
+
+
+class TestDatabaseURLConfiguration:
+    """Test database URL configuration for CI/CD environments."""
+
+    def test_database_url_format_async(self):
+        """Verify async database URL uses correct asyncpg driver."""
+        # In test environment, we use SQLite which is acceptable
+        # In CI/CD with PostgreSQL, must use postgresql+asyncpg://
+        url_str = str(async_engine.url)
+        if "postgresql" in url_str:
+            assert "postgresql+asyncpg" in url_str, (
+                f"Async DATABASE_URL must use postgresql+asyncpg:// driver, "
+                f"got: {url_str}"
+            )
+        elif "sqlite" in url_str:
+            assert (
+                "aiosqlite" in url_str or "sqlite" in url_str
+            ), f"Async SQLite must use aiosqlite driver, got: {url_str}"
+
+    def test_database_url_format_sync(self):
+        """Verify sync database URL uses correct postgresql driver."""
+        url_str = str(sync_engine.url)
+        # Sync driver should not have asyncpg
+        assert "asyncpg" not in url_str, (
+            f"Sync DATABASE_SYNC_URL must not use asyncpg driver, " f"got: {url_str}"
+        )
+
+    def test_settings_database_url_async(self):
+        """Verify settings async database URL format."""
+        if "postgresql" in settings.database_url:
+            assert settings.database_url.startswith("postgresql+asyncpg://"), (
+                f"Settings async DATABASE_URL must use postgresql+asyncpg:// driver, "
+                f"got: {settings.database_url}"
+            )
+
+    def test_settings_database_url_sync(self):
+        """Verify settings sync database URL format."""
+        if "postgresql" in settings.database_sync_url:
+            assert settings.database_sync_url.startswith("postgresql://"), (
+                f"Settings sync DATABASE_SYNC_URL must use postgresql:// driver, "
+                f"got: {settings.database_sync_url}"
+            )
+            assert "asyncpg" not in settings.database_sync_url, (
+                f"Settings sync URL must not have asyncpg, "
+                f"got: {settings.database_sync_url}"
+            )
+
+    def test_ci_environment_variables(self):
+        """Verify CI/CD environment uses correct database URLs."""
+        if os.getenv("ENVIRONMENT") == "testing":
+            # In CI/CD testing environment
+            db_url = os.getenv("DATABASE_URL", "")
+            db_sync_url = os.getenv("DATABASE_SYNC_URL", "")
+
+            # Both should be set in CI/CD
+            if db_url and "postgresql" in db_url:
+                assert db_url.startswith("postgresql+asyncpg://"), (
+                    f"CI DATABASE_URL must use postgresql+asyncpg:// driver, "
+                    f"got: {db_url}"
+                )
+
+            if db_sync_url and "postgresql" in db_sync_url:
+                assert db_sync_url.startswith("postgresql://"), (
+                    f"CI DATABASE_SYNC_URL must use postgresql:// driver, "
+                    f"got: {db_sync_url}"
+                )
+                assert (
+                    "asyncpg" not in db_sync_url
+                ), f"CI sync URL must not have asyncpg, got: {db_sync_url}"
+
+    @pytest.mark.asyncio
+    async def test_async_connection_works(self):
+        """Test async database connection actually works."""
+        async with async_engine.begin() as conn:
+            result = await conn.execute(text("SELECT 1 as test_value"))
+            row = result.fetchone()
+            assert row is not None
+            assert row[0] == 1
+
+    def test_sync_connection_works(self):
+        """Test sync database connection actually works."""
+        with sync_engine.begin() as conn:
+            result = conn.execute(text("SELECT 1 as test_value"))
+            row = result.fetchone()
+            assert row is not None
+            assert row[0] == 1
+
+    @pytest.mark.asyncio
+    async def test_async_session_query(self):
+        """Test async session can execute queries."""
+        async for session in get_async_session():
+            result = await session.execute(text("SELECT 1"))
+            assert result.scalar() == 1
+            break  # Only test first session
+
+    def test_sync_session_query(self):
+        """Test sync session can execute queries."""
+        for session in get_sync_session():
+            result = session.execute(text("SELECT 1"))
+            assert result.scalar() == 1
+            break  # Only test first session

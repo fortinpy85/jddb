@@ -275,7 +275,8 @@ jobs:
       - name: Set up test environment
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
+          DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
+          DATABASE_SYNC_URL: postgresql://testuser:testpassword@localhost:5432/testdb
           REDIS_URL: redis://localhost:6379/0
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DATA_DIRECTORY: /tmp/test_data
@@ -297,7 +298,8 @@ jobs:
       - name: Run tests with coverage
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
+          DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
+          DATABASE_SYNC_URL: postgresql://testuser:testpassword@localhost:5432/testdb
           REDIS_URL: redis://localhost:6379/0
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DATA_DIRECTORY: /tmp/test_data
@@ -441,7 +443,8 @@ jobs:
       - name: Set up test database
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
+          DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
+          DATABASE_SYNC_URL: postgresql://testuser:testpassword@localhost:5432/testdb
           REDIS_URL: redis://localhost:6379/0
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DATA_DIRECTORY: /tmp/test_data
@@ -453,7 +456,8 @@ jobs:
       - name: Start backend server
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
+          DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
+          DATABASE_SYNC_URL: postgresql://testuser:testpassword@localhost:5432/testdb
           REDIS_URL: redis://localhost:6379/0
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DATA_DIRECTORY: /tmp/test_data
@@ -473,7 +477,8 @@ jobs:
       - name: Run integration tests
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
+          DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
+          DATABASE_SYNC_URL: postgresql://testuser:testpassword@localhost:5432/testdb
           REDIS_URL: redis://localhost:6379/0
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DATA_DIRECTORY: /tmp/test_data
@@ -553,7 +558,8 @@ jobs:
       - name: Set up test database with performance data
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
+          DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
+          DATABASE_SYNC_URL: postgresql://testuser:testpassword@localhost:5432/testdb
           REDIS_URL: redis://localhost:6379/0
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DATA_DIRECTORY: /tmp/perf_data
@@ -567,7 +573,8 @@ jobs:
       - name: Start backend server for performance testing
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
+          DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
+          DATABASE_SYNC_URL: postgresql://testuser:testpassword@localhost:5432/testdb
           REDIS_URL: redis://localhost:6379/0
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DATA_DIRECTORY: /tmp/perf_data
@@ -579,7 +586,8 @@ jobs:
       - name: Run backend performance tests
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
+          DATABASE_URL: postgresql+asyncpg://testuser:testpassword@localhost:5432/testdb
+          DATABASE_SYNC_URL: postgresql://testuser:testpassword@localhost:5432/testdb
           REDIS_URL: redis://localhost:6379/0
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DATA_DIRECTORY: /tmp/perf_data
