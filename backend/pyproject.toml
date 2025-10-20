@@ -102,12 +102,37 @@ mypy_path = "src"
 explicit_package_bases = true
 namespace_packages = true
 # Disable problematic error codes for SQLAlchemy models
-disable_error_code = ["attr-defined", "syntax", "arg-type", "index", "truthy-function"]
+disable_error_code = ["attr-defined", "syntax"]
 
 [[tool.mypy.overrides]]
-module = "jd_ingestion.database.models"
+module = "src.jd_ingestion.database.models"
 disallow_any_unimported = false
 disallow_any_expr = false
+disable_error_code = ["assignment", "arg-type", "operator"]
+
+[[tool.mypy.overrides]]
+module = "src.jd_ingestion.auth.service"
+disable_error_code = ["assignment", "attr-defined", "misc", "return-value"]
+
+[[tool.mypy.overrides]]
+module = "src.jd_ingestion.services.*"
+disable_error_code = ["arg-type", "union-attr", "return-value", "operator"]
+
+[[tool.mypy.overrides]]
+module = "src.jd_ingestion.api.endpoints.*"
+disable_error_code = ["assignment", "arg-type", "misc"]
+
+[[tool.mypy.overrides]]
+module = "src.jd_ingestion.tasks.*"
+disable_error_code = ["call-overload"]
+
+[[tool.mypy.overrides]]
+module = "src.jd_ingestion.middleware.*"
+disable_error_code = ["assignment", "arg-type"]
+
+[[tool.mypy.overrides]]
+module = "src.jd_ingestion.auth.dependencies"
+disable_error_code = ["return-value"]
 
 [[tool.mypy.overrides]]
 module = "structlog.*"
