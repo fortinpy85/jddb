@@ -71,39 +71,50 @@ export function JobCard({
   return (
     <Card
       className={cn(
-        "group relative overflow-hidden transition-all duration-200",
+        "group relative overflow-hidden transition-all duration-300",
         "hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-700",
-        "cursor-pointer",
+        "hover:-translate-y-1 cursor-pointer",
+        "focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2",
         className,
       )}
       onClick={handleCardClick}
+      role="article"
+      aria-label={`Job: ${job.title || `Job ${job.id}`}`}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          handleCardClick();
+        }
+      }}
     >
       {/* Quality Score Badge (if available) */}
       {job.quality_score !== undefined && (
-        <div className="absolute top-3 right-3 z-10">
+        <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
           <Badge
             variant={job.quality_score >= 80 ? "default" : "secondary"}
             className={cn(
-              "text-xs font-semibold",
+              "text-xs font-semibold shadow-sm",
               job.quality_score >= 80 && "bg-green-500 hover:bg-green-600",
               job.quality_score >= 60 &&
                 job.quality_score < 80 &&
                 "bg-yellow-500 hover:bg-yellow-600",
               job.quality_score < 60 && "bg-red-500 hover:bg-red-600",
             )}
+            aria-label={`Quality score: ${job.quality_score} percent`}
           >
             {job.quality_score}%
           </Badge>
         </div>
       )}
 
-      <CardHeader className="space-y-3 pb-4">
+      <CardHeader className="space-y-2 sm:space-y-3 pb-3 sm:pb-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg font-bold leading-tight truncate">
+            <CardTitle className="text-base sm:text-lg font-bold leading-tight line-clamp-2">
               {job.title || `Job ${job.id}`}
             </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1 truncate">
               {job.job_number || "No job number"}
             </p>
           </div>
@@ -161,34 +172,34 @@ export function JobCard({
           )}
         </div>
 
-        {/* Metadata Row */}
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        {/* Metadata Row - Enhanced mobile layout */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-muted-foreground">
           {job.classification && (
-            <div className="flex items-center gap-1">
-              <Briefcase className="h-3 w-3" />
-              <span className="font-medium">{job.classification}</span>
+            <div className="flex items-center gap-1" title="Classification">
+              <Briefcase className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+              <span className="font-medium truncate">{job.classification}</span>
             </div>
           )}
           {job.metadata?.location && (
-            <div className="flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
-              <span>{job.metadata.location}</span>
+            <div className="flex items-center gap-1" title="Location">
+              <MapPin className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+              <span className="truncate">{job.metadata.location}</span>
             </div>
           )}
           {job.language && (
-            <div className="flex items-center gap-1">
-              <Languages className="h-3 w-3" />
+            <div className="flex items-center gap-1" title="Language">
+              <Languages className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
               <span className="uppercase">{job.language}</span>
             </div>
           )}
-          <div className="flex items-center gap-1 ml-auto">
-            <Calendar className="h-3 w-3" />
-            <span>{formattedDate}</span>
+          <div className="flex items-center gap-1 ml-auto" title="Created date">
+            <Calendar className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+            <span className="whitespace-nowrap">{formattedDate}</span>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 sm:space-y-4">
         {/* Department/Reports To */}
         {(job.metadata?.department || job.metadata?.reports_to) && (
           <div className="text-sm space-y-1">
@@ -207,30 +218,34 @@ export function JobCard({
           </div>
         )}
 
-        {/* Skills Section */}
+        {/* Skills Section - Improved mobile display */}
         {skillCount > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-muted-foreground">
                 Key Skills
               </span>
-              <Badge variant="outline" className="text-xs">
+              <Badge
+                variant="outline"
+                className="text-xs"
+                aria-label={`${skillCount} total skills`}
+              >
                 {skillCount} total
               </Badge>
             </div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1 sm:gap-1.5">
               {topSkills.map((skill) => (
                 <Badge
                   key={skill.id}
                   variant="secondary"
-                  className="text-xs"
+                  className="text-xs whitespace-nowrap"
                   title={`${skill.name} (${Math.round(skill.confidence * 100)}% confidence)`}
                 >
                   {skill.name}
                 </Badge>
               ))}
               {skillCount > 3 && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs whitespace-nowrap">
                   +{skillCount - 3} more
                 </Badge>
               )}
@@ -246,19 +261,23 @@ export function JobCard({
           </div>
         )}
 
-        {/* Action Button */}
+        {/* Action Button - Enhanced mobile styling */}
         <Button
           variant="outline"
           size="sm"
-          className="w-full mt-2 group-hover:bg-blue-50 group-hover:text-blue-700 dark:group-hover:bg-blue-900/20 dark:group-hover:text-blue-400 transition-colors"
+          className="w-full mt-2 group-hover:bg-blue-50 group-hover:text-blue-700 dark:group-hover:bg-blue-900/20 dark:group-hover:text-blue-400 transition-colors touch-target"
           onClick={(e) => {
             e.stopPropagation();
             if (onView) onView(job);
             else if (onSelect) onSelect(job);
           }}
+          aria-label={`View details for ${job.title || `Job ${job.id}`}`}
         >
-          View Details
-          <ExternalLink className="ml-2 h-3 w-3" />
+          <span className="text-xs sm:text-sm">View Details</span>
+          <ExternalLink
+            className="ml-2 h-3 w-3 flex-shrink-0"
+            aria-hidden="true"
+          />
         </Button>
       </CardContent>
     </Card>

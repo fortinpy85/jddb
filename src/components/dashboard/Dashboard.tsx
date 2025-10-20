@@ -25,28 +25,38 @@ export function Dashboard({
   const handleNavigateToCompare = () => onNavigateToTab("compare");
 
   return (
-    <div className="space-y-8">
-      {/* Stats Overview */}
-      <StatsOverview stats={stats} />
+    <div className="space-y-6 md:space-y-8">
+      {/* Stats Overview - Enhanced spacing for mobile */}
+      <section aria-label="Statistics Overview">
+        <StatsOverview stats={stats} />
+      </section>
 
-      {/* Charts Row */}
-      {stats && <ChartsSection stats={stats} />}
+      {/* Charts Row - Conditional rendering with proper spacing */}
+      {stats && (
+        <section aria-label="Performance Charts">
+          <ChartsSection stats={stats} />
+        </section>
+      )}
 
-      {/* Recent Jobs */}
-      <RecentJobsList
-        jobs={recentJobs}
-        onJobSelect={onJobSelect}
-        onNavigateToJobs={handleNavigateToJobs}
-        onNavigateToUpload={handleNavigateToUpload}
-      />
+      {/* Recent Jobs - Improved spacing and semantics */}
+      <section aria-label="Recent Jobs">
+        <RecentJobsList
+          jobs={recentJobs}
+          onJobSelect={onJobSelect}
+          onNavigateToJobs={handleNavigateToJobs}
+          onNavigateToUpload={handleNavigateToUpload}
+        />
+      </section>
 
-      {/* Quick Actions */}
-      <QuickActionsGrid
-        onNavigateToUpload={handleNavigateToUpload}
-        onNavigateToJobs={handleNavigateToJobs}
-        onNavigateToSearch={handleNavigateToSearch}
-        onNavigateToCompare={handleNavigateToCompare}
-      />
+      {/* Quick Actions - Enhanced mobile layout */}
+      <section aria-label="Quick Actions">
+        <QuickActionsGrid
+          onNavigateToUpload={handleNavigateToUpload}
+          onNavigateToJobs={handleNavigateToJobs}
+          onNavigateToSearch={handleNavigateToSearch}
+          onNavigateToCompare={handleNavigateToCompare}
+        />
+      </section>
     </div>
   );
 }

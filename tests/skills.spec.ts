@@ -21,14 +21,17 @@ test.describe("Skills Features", () => {
       await page.waitForTimeout(1500);
 
       // Check for skills section header
-      await expect(page.getByRole("heading", { name: "Extracted Skills" })).toBeVisible();
+      const skillsHeading = page.getByRole("heading", { name: "Extracted Skills" });
+      await expect(skillsHeading).toBeVisible();
 
       // Check skills are displayed (real seeded data: Python 95%, Project Management 87%)
-      await expect(page.getByText("Python")).toBeVisible();
-      await expect(page.getByText("95%")).toBeVisible();
+      // Skills are in the parent container after the heading
+      const skillsContainer = page.locator("div").filter({ hasText: /^Extracted Skills/ });
+      await expect(skillsContainer.getByText("Python")).toBeVisible();
+      await expect(skillsContainer.getByText("95%")).toBeVisible();
 
-      await expect(page.getByText("Project Management")).toBeVisible();
-      await expect(page.getByText("87%")).toBeVisible();
+      await expect(skillsContainer.getByText("Project Management")).toBeVisible();
+      await expect(skillsContainer.getByText("87%")).toBeVisible();
 
       // Check statistics are shown
       await expect(page.getByText("Total Skills:")).toBeVisible();

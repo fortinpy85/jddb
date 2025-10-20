@@ -40,15 +40,15 @@ const AlertDialogContent = React.forwardRef<
       style={{
         ...style,
         // Force proper centering to override Radix UI's positioning
-        position: 'fixed',
-        left: '50%',
-        top: '50%',
-        transform: 'translate(-50%, -50%)',
-        maxHeight: '85vh',
-        overflowY: 'auto',
+        position: "fixed",
+        left: "50%",
+        top: "50%",
+        transform: "translate(-50%, -50%)",
+        maxHeight: "85vh",
+        overflowY: "auto",
         // Ensure opaque background
         opacity: 1,
-        backgroundColor: 'var(--background)',
+        backgroundColor: "var(--background)",
       }}
       {...props}
     />

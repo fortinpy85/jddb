@@ -306,7 +306,10 @@ ${requirements.additionalInfo}
 
         if (qualityResponse && qualityResponse.overall_score !== undefined) {
           qualityScore = Math.round(qualityResponse.overall_score);
-          logger.info(`Quality score calculated: ${qualityScore}`, qualityResponse);
+          logger.info(
+            `Quality score calculated: ${qualityScore}`,
+            qualityResponse,
+          );
         }
       } catch (error) {
         logger.warn("Quality scoring API failed, using fallback value:", error);

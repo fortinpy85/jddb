@@ -10,7 +10,12 @@
 
 import { logger } from "@/utils/logger";
 
-export type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'reconnecting' | 'error';
+export type ConnectionState =
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "error";
 
 export interface WebSocketMessage {
   type: string;
@@ -36,7 +41,7 @@ export class CollaborativeWebSocketClient {
   private ws: WebSocket | null = null;
   private config: Required<WebSocketConfig>;
   private handlers: WebSocketEventHandlers = {};
-  private state: ConnectionState = 'disconnected';
+  private state: ConnectionState = "disconnected";
   private reconnectAttempts = 0;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
@@ -63,13 +68,17 @@ export class CollaborativeWebSocketClient {
    * Connect to the WebSocket server
    */
   connect(): void {
-    if (this.ws && (this.ws.readyState === WebSocket.CONNECTING || this.ws.readyState === WebSocket.OPEN)) {
-      logger.warn('WebSocket is already connecting or connected');
+    if (
+      this.ws &&
+      (this.ws.readyState === WebSocket.CONNECTING ||
+        this.ws.readyState === WebSocket.OPEN)
+    ) {
+      logger.warn("WebSocket is already connecting or connected");
       return;
     }
 
     this.isManualClose = false;
-    this.setState('connecting');
+    this.setState("connecting");
 
     try {
       this.ws = new WebSocket(this.config.url);
@@ -79,8 +88,8 @@ export class CollaborativeWebSocketClient {
       this.ws.onerror = this.handleError.bind(this);
       this.ws.onmessage = this.handleMessage.bind(this);
     } catch (error) {
-      logger.error('Failed to create WebSocket connection:', error);
-      this.setState('error');
+      logger.error("Failed to create WebSocket connection:", error);
+      this.setState("error");
       this.scheduleReconnect();
     }
   }
@@ -94,11 +103,11 @@ export class CollaborativeWebSocketClient {
     this.clearHeartbeat();
 
     if (this.ws) {
-      this.ws.close(1000, 'Client disconnect');
+      this.ws.close(1000, "Client disconnect");
       this.ws = null;
     }
 
-    this.setState('disconnected');
+    this.setState("disconnected");
   }
 
   /**
@@ -106,11 +115,15 @@ export class CollaborativeWebSocketClient {
    * Messages are queued if connection is not ready
    */
   send(message: WebSocketMessage): void {
-    if (this.state === 'connected' && this.ws && this.ws.readyState === WebSocket.OPEN) {
+    if (
+      this.state === "connected" &&
+      this.ws &&
+      this.ws.readyState === WebSocket.OPEN
+    ) {
       try {
         this.ws.send(JSON.stringify(message));
       } catch (error) {
-        logger.error('Failed to send message:', error);
+        logger.error("Failed to send message:", error);
         this.messageQueue.push(message);
       }
     } else {
@@ -130,13 +143,13 @@ export class CollaborativeWebSocketClient {
    * Check if client is connected
    */
   isConnected(): boolean {
-    return this.state === 'connected' && this.ws?.readyState === WebSocket.OPEN;
+    return this.state === "connected" && this.ws?.readyState === WebSocket.OPEN;
   }
 
   private handleOpen(): void {
-    logger.info('WebSocket connected');
+    logger.info("WebSocket connected");
     this.reconnectAttempts = 0;
-    this.setState('connected');
+    this.setState("connected");
     this.startHeartbeat();
 
     // Process queued messages
@@ -148,7 +161,7 @@ export class CollaborativeWebSocketClient {
   }
 
   private handleClose(event: CloseEvent): void {
-    logger.info('WebSocket closed', { code: event.code, reason: event.reason });
+    logger.info("WebSocket closed", { code: event.code, reason: event.reason });
     this.clearHeartbeat();
 
     if (this.handlers.onClose) {
@@ -156,16 +169,16 @@ export class CollaborativeWebSocketClient {
     }
 
     if (!this.isManualClose) {
-      this.setState('reconnecting');
+      this.setState("reconnecting");
       this.scheduleReconnect();
     } else {
-      this.setState('disconnected');
+      this.setState("disconnected");
     }
   }
 
   private handleError(error: Event): void {
-    logger.error('WebSocket error:', error);
-    this.setState('error');
+    logger.error("WebSocket error:", error);
+    this.setState("error");
 
     if (this.handlers.onError) {
       this.handlers.onError(error);
@@ -181,12 +194,12 @@ export class CollaborativeWebSocketClient {
       }
 
       // Handle pong messages for heartbeat
-      if (message.type === 'pong') {
+      if (message.type === "pong") {
         // Heartbeat acknowledged
         return;
       }
     } catch (error) {
-      logger.error('Failed to parse WebSocket message:', error);
+      logger.error("Failed to parse WebSocket message:", error);
     }
   }
 
@@ -202,21 +215,26 @@ export class CollaborativeWebSocketClient {
 
   private scheduleReconnect(): void {
     if (this.reconnectAttempts >= this.config.maxReconnectAttempts) {
-      logger.error('Max reconnect attempts reached');
-      this.setState('error');
+      logger.error("Max reconnect attempts reached");
+      this.setState("error");
       return;
     }
 
     this.clearReconnectTimeout();
 
     // Exponential backoff: 3s, 6s, 12s, 24s, etc.
-    const delay = this.config.reconnectInterval * Math.pow(2, this.reconnectAttempts);
+    const delay =
+      this.config.reconnectInterval * Math.pow(2, this.reconnectAttempts);
     this.reconnectAttempts++;
 
-    logger.info(`Scheduling reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
+    logger.info(
+      `Scheduling reconnect attempt ${this.reconnectAttempts} in ${delay}ms`,
+    );
 
     this.reconnectTimeout = setTimeout(() => {
-      logger.info(`Attempting reconnect (${this.reconnectAttempts}/${this.config.maxReconnectAttempts})`);
+      logger.info(
+        `Attempting reconnect (${this.reconnectAttempts}/${this.config.maxReconnectAttempts})`,
+      );
       this.connect();
     }, delay);
   }
@@ -233,7 +251,7 @@ export class CollaborativeWebSocketClient {
 
     this.heartbeatInterval = setInterval(() => {
       if (this.isConnected()) {
-        this.send({ type: 'ping' });
+        this.send({ type: "ping" });
       }
     }, this.config.heartbeatInterval);
   }

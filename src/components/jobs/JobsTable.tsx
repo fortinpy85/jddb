@@ -72,7 +72,7 @@ import {
 } from "@/components/ui/states";
 import { EmptyState } from "@/components/ui/empty-state";
 import { JobGridView } from "./JobGridView";
-import { EditJobModal } from "./EditJobModal";
+import { TombstoneEditor } from "./TombstoneEditor";
 
 interface JobsTableProps {
   onJobSelect?: (job: JobDescription) => void;
@@ -647,7 +647,10 @@ function JobsTable({
               }
             }}
           >
-            <SelectTrigger className="w-[250px] h-8 text-sm" aria-label="Add skill filter">
+            <SelectTrigger
+              className="w-[250px] h-8 text-sm"
+              aria-label="Add skill filter"
+            >
               <SelectValue placeholder="Add skill filter..." />
             </SelectTrigger>
             <SelectContent>
@@ -951,8 +954,8 @@ function JobsTable({
         </Card>
       )}
 
-      {/* Edit Modal */}
-      <EditJobModal
+      {/* Tombstone Editor Modal */}
+      <TombstoneEditor
         isOpen={editModalOpen}
         onClose={() => {
           setEditModalOpen(false);

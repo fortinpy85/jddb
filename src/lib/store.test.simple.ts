@@ -173,7 +173,9 @@ describe("useStore - simple state management tests", () => {
       const { setFilters } = useStore.getState();
 
       setFilters({ classification: "EX-01", language: "en" });
-      expect(Object.keys(useStore.getState().filters).length).toBeGreaterThan(0);
+      expect(Object.keys(useStore.getState().filters).length).toBeGreaterThan(
+        0,
+      );
 
       setFilters({});
 

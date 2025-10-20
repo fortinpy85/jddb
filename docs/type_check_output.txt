@@ -1,0 +1,55 @@
+
+> jddb@0.1.0 type-check
+> tsc --noEmit
+
+src/components/dashboard/DashboardSidebar.tsx(286,19): error TS2345: Argument of type '["systemHealth.aiServices.requests", { count: string; }]' is not assignable to parameter of type '[key: "systemHealth.aiServices.requests" | "systemHealth.aiServices.requests"[], options?: (TOptionsBase & $Dictionary) | undefined] | [key: string | string[], options: TOptionsBase & ... 1 more ... & { ...; }] | [key: ...]'.
+  Type '["systemHealth.aiServices.requests", { count: string; }]' is not assignable to type '[key: string | string[], defaultValue: string, options?: (TOptionsBase & $Dictionary) | undefined]'.
+    Type at position 1 in source is not compatible with type at position 1 in target.
+      Type '{ count: string; }' is not assignable to type 'string'.
+src/components/JobDetails.tsx(62,22): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+src/components/JobList.tsx(270,5): error TS2554: Expected 1-2 arguments, but got 8.
+src/components/layout/AppHeader.tsx(284,25): error TS2345: Argument of type '[string]' is not assignable to parameter of type '[key: string | string[], options: TOptionsBase & $Dictionary & { defaultValue: never; }] | [key: string | string[], defaultValue: never, options?: (TOptionsBase & $Dictionary) | undefined] | [key: ...]'.
+  Type '[string]' is not assignable to type '[key: TemplateStringsArray | "main.search" | "main.jobs" | "main.dashboard" | "main.upload" | "main.translate" | "main.compare" | "main.statistics" | "main.improve" | ... 142 more ... | (TemplateStringsArray | ... 149 more ... | "navigation:tooltips.notificationsDesc")[], options?: (TOptionsBase & $Dictionary) | und...'.
+    Type at position 0 in source is not compatible with type at position 0 in target.
+      Type 'string' is not assignable to type 'TemplateStringsArray | "main.search" | "main.jobs" | "main.dashboard" | "main.upload" | "main.translate" | "main.compare" | "main.statistics" | "main.improve" | ... 142 more ... | (TemplateStringsArray | ... 149 more ... | "navigation:tooltips.notificationsDesc")[]'.
+src/components/layout/AppHeader.tsx(289,25): error TS2345: Argument of type '[string]' is not assignable to parameter of type '[key: string | string[], options: TOptionsBase & $Dictionary & { defaultValue: never; }] | [key: string | string[], defaultValue: never, options?: (TOptionsBase & $Dictionary) | undefined] | [key: ...]'.
+  Type '[string]' is not assignable to type '[key: TemplateStringsArray | "main.search" | "main.jobs" | "main.dashboard" | "main.upload" | "main.translate" | "main.compare" | "main.statistics" | "main.improve" | ... 142 more ... | (TemplateStringsArray | ... 149 more ... | "navigation:tooltips.notificationsDesc")[], options?: (TOptionsBase & $Dictionary) | und...'.
+    Type at position 0 in source is not compatible with type at position 0 in target.
+      Type 'string' is not assignable to type 'TemplateStringsArray | "main.search" | "main.jobs" | "main.dashboard" | "main.upload" | "main.translate" | "main.compare" | "main.statistics" | "main.improve" | ... 142 more ... | (TemplateStringsArray | ... 149 more ... | "navigation:tooltips.notificationsDesc")[]'.
+src/components/layout/AppHeader.tsx(314,23): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
+src/components/layout/AppHeader.tsx(319,54): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+src/components/layout/AppHeader.tsx(320,25): error TS2322: Type 'unknown' is not assignable to type 'string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<...> | null | undefined'.
+src/components/layout/AppHeader.tsx(322,29): error TS2322: Type '{}' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+src/components/layout/AppHeader.tsx(356,21): error TS2345: Argument of type '[string]' is not assignable to parameter of type '[key: string | string[], options: TOptionsBase & $Dictionary & { defaultValue: never; }] | [key: string | string[], defaultValue: never, options?: (TOptionsBase & $Dictionary) | undefined] | [key: ...]'.
+  Type '[string]' is not assignable to type '[key: TemplateStringsArray | "main.search" | "main.jobs" | "main.dashboard" | "main.upload" | "main.translate" | "main.compare" | "main.statistics" | "main.improve" | ... 142 more ... | (TemplateStringsArray | ... 149 more ... | "navigation:tooltips.notificationsDesc")[], options?: (TOptionsBase & $Dictionary) | und...'.
+    Type at position 0 in source is not compatible with type at position 0 in target.
+      Type 'string' is not assignable to type 'TemplateStringsArray | "main.search" | "main.jobs" | "main.dashboard" | "main.upload" | "main.translate" | "main.compare" | "main.statistics" | "main.improve" | ... 142 more ... | (TemplateStringsArray | ... 149 more ... | "navigation:tooltips.notificationsDesc")[]'.
+src/components/layout/AppHeader.tsx(359,21): error TS2345: Argument of type '[string]' is not assignable to parameter of type '[key: string | string[], options: TOptionsBase & $Dictionary & { defaultValue: never; }] | [key: string | string[], defaultValue: never, options?: (TOptionsBase & $Dictionary) | undefined] | [key: ...]'.
+  Type '[string]' is not assignable to type '[key: TemplateStringsArray | "main.search" | "main.jobs" | "main.dashboard" | "main.upload" | "main.translate" | "main.compare" | "main.statistics" | "main.improve" | ... 142 more ... | (TemplateStringsArray | ... 149 more ... | "navigation:tooltips.notificationsDesc")[], options?: (TOptionsBase & $Dictionary) | und...'.
+    Type at position 0 in source is not compatible with type at position 0 in target.
+      Type 'string' is not assignable to type 'TemplateStringsArray | "main.search" | "main.jobs" | "main.dashboard" | "main.upload" | "main.translate" | "main.compare" | "main.statistics" | "main.improve" | ... 142 more ... | (TemplateStringsArray | ... 149 more ... | "navigation:tooltips.notificationsDesc")[]'.
+src/components/layout/AppHeader.tsx(406,19): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
+src/components/layout/AppHeader.tsx(409,57): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+src/components/layout/JDDBLayout.test.tsx(17,22): error TS2352: Conversion of type 'UseBoundStore<StoreApi<AppState>>' to type 'Mock<Procedure>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ (): AppState; <U>(selector: (state: AppState) => U): U; <U>(selector: (state: AppState) => U, equalityFn: (a: U, b: U) => boolean): U; } & StoreApi<...>' is missing the following properties from type 'Mock<Procedure>': getMockName, mockName, mock, mockClear, and 14 more.
+src/components/translation/TranslationReviewWorkflow.tsx(429,48): error TS2698: Spread types may only be created from object types.
+src/components/ui/empty-state.tsx(247,49): error TS7006: Parameter 'suggestion' implicitly has an 'any' type.
+src/components/ui/empty-state.tsx(247,61): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/components/ui/job-selector.tsx(299,76): error TS2339: Property 'id' does not exist on type 'never'.
+src/components/ui/sheet.tsx(66,9): error TS18046: 'children.props' is of type 'unknown'.
+src/components/ui/showcase.tsx(278,13): error TS2322: Type '{ icon: string; title: string; description: string; action: { label: string; onClick: () => void; }; }' is not assignable to type 'IntrinsicAttributes & EmptyStateProps'.
+  Property 'icon' does not exist on type 'IntrinsicAttributes & EmptyStateProps'.
+src/components/ui/transitions.test.tsx(603,26): error TS2339: Property 'style' does not exist on type 'Element'.
+src/components/wet/SkipLinks.tsx(72,14): error TS2345: Argument of type '[string]' is not assignable to parameter of type '[key: string | string[], options: TOptionsBase & $Dictionary & { defaultValue: string; }] | [key: string | string[], defaultValue: string, options?: (TOptionsBase & $Dictionary) | undefined] | [key: ...]'.
+  Type '[string]' is not assignable to type '[key: "appName" | "appNameShort" | TemplateStringsArray | "status.error" | "status.processing" | "status.success" | "status.info" | "status.loading" | ... 75 more ... | ("appName" | ... 81 more ... | "validation.mustBePositive")[], options?: (TOptionsBase & $Dictionary) | undefined]'.
+    Type at position 0 in source is not compatible with type at position 0 in target.
+      Type 'string' is not assignable to type '"appName" | "appNameShort" | TemplateStringsArray | "status.error" | "status.processing" | "status.success" | "status.info" | "status.loading" | "status.warning" | ... 74 more ... | ("appName" | ... 81 more ... | "validation.mustBePositive")[]'.
+src/lib/api.test.ts(8,78): error TS2322: Type '{ headers: any; ok: boolean; redirected?: boolean | undefined; status: number; statusText: string; type?: ResponseType | undefined; url?: string | undefined; clone?: (() => Response) | undefined; ... 7 more ...; text: () => Promise<string>; }' is not assignable to type 'Response'.
+  Types of property 'redirected' are incompatible.
+    Type 'boolean | undefined' is not assignable to type 'boolean'.
+      Type 'undefined' is not assignable to type 'boolean'.
+src/lib/api.test.ts(695,57): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+src/lib/api.test.ts(883,9): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type '{ sections: Record<string, string>; raw_content?: string | undefined; }'.
+src/lib/api.test.ts(970,61): error TS2345: Argument of type '{ query: string; }' is not assignable to parameter of type 'string'.
+src/lib/api.test.ts(985,56): error TS2345: Argument of type '{ job_id: number; limit: number; }' is not assignable to parameter of type 'number'.
+src/lib/store.test.ts(273,28): error TS2339: Property 'relevance_score' does not exist on type 'JobDescription'.

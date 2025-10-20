@@ -51,6 +51,8 @@ import { ContentGeneratorModal } from "@/components/ai/ContentGeneratorModal";
 import { useAISuggestions } from "@/hooks/useAISuggestions";
 import { WorkflowStepper } from "@/components/ui/workflow-stepper";
 import { SkillTagsSection } from "@/components/skills/SkillTags";
+import { SectionEditor } from "@/components/jobs/SectionEditor";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface JobDetailViewProps {
   jobId: number;
@@ -73,6 +75,10 @@ function JobDetailView({
   const [job, setJob] = useState<JobDescription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingSections, setEditingSections] = useState<Set<number>>(
+    new Set(),
+  );
+  const [showRawContent, setShowRawContent] = useState(false);
   const { addToast } = useToast();
   const {
     qualityScore,
@@ -93,7 +99,12 @@ function JobDetailView({
     setLoading(true);
     setError(null);
     try {
-      const jobData = await apiClient.getJob(jobId);
+      const jobData = await apiClient.getJob(jobId, {
+        include_content: true,
+        include_sections: true,
+        include_metadata: true,
+        include_skills: true,
+      });
       setJob(jobData);
 
       // Calculate quality score if sections are available
@@ -152,6 +163,53 @@ function JobDetailView({
       }),
       type: "info",
     });
+  };
+
+  const handleSectionEdit = (sectionId: number, isEditing: boolean) => {
+    setEditingSections((prev) => {
+      const newSet = new Set(prev);
+      if (isEditing) {
+        newSet.add(sectionId);
+      } else {
+        newSet.delete(sectionId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSectionSave = async (sectionId: number, content: string) => {
+    if (!job) return;
+
+    try {
+      await apiClient.updateJobSection(jobId, sectionId, content);
+
+      // Update local state
+      setJob((prev) => {
+        if (!prev || !prev.sections) return prev;
+        return {
+          ...prev,
+          sections: prev.sections.map((s) =>
+            s.id === sectionId ? { ...s, section_content: content } : s,
+          ),
+        };
+      });
+
+      addToast({
+        title: t("jobs:messages.sectionSaved"),
+        description: t("jobs:messages.sectionSavedDescription"),
+        type: "success",
+      });
+    } catch (error) {
+      addToast({
+        title: t("jobs:messages.saveFailed"),
+        description:
+          error instanceof Error
+            ? error.message
+            : t("jobs:messages.saveFailed"),
+        type: "error",
+      });
+      throw error;
+    }
   };
 
   // Loading state
@@ -420,39 +478,65 @@ function JobDetailView({
         </Card>
       )}
 
-      {/* Job Sections */}
-      <div className="grid grid-cols-1 gap-6">
-        {job.sections && job.sections.length > 0 ? (
-          job.sections.map((section, index) => (
-            <JobSectionCard
-              key={index}
-              title={section.section_type}
-              content={section.section_content}
-              jobNumber={job.job_number}
-              classification={job.classification}
-              onContentUpdate={(newContent) => {
-                // Update section content
-                setJob((prev) => {
-                  if (!prev || !prev.sections) return prev;
-                  return {
-                    ...prev,
-                    sections: prev.sections.map((s, i) =>
-                      i === index ? { ...s, section_content: newContent } : s,
-                    ),
-                  };
-                });
-                addToast({
-                  title: t("jobs:messages.contentUpdated"),
-                  description: t("jobs:messages.sectionUpdated", {
-                    section: section.section_type,
-                  }),
-                  type: "success",
-                });
-              }}
-            />
-          ))
-        ) : (
-          <EmptyState type="no-sections" />
+      {/* Job Sections with Raw Content Sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Main Content - Sections */}
+        <div
+          className={cn(
+            "space-y-6 transition-all",
+            showRawContent ? "lg:col-span-8" : "lg:col-span-12",
+          )}
+        >
+          {/* Toggle Raw Content Button */}
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowRawContent(!showRawContent)}
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              {showRawContent
+                ? t("jobs:actions.hideRawContent")
+                : t("jobs:actions.showRawContent")}
+            </Button>
+          </div>
+
+          {job.sections && job.sections.length > 0 ? (
+            job.sections.map((section) => (
+              <SectionEditor
+                key={section.id}
+                sectionId={section.id}
+                sectionType={section.section_type}
+                initialContent={section.section_content}
+                onSave={handleSectionSave}
+                isEditing={editingSections.has(section.id)}
+                onEditToggle={(isEditing) =>
+                  handleSectionEdit(section.id, isEditing)
+                }
+              />
+            ))
+          ) : (
+            <EmptyState type="no-sections" />
+          )}
+        </div>
+
+        {/* Raw Content Sidebar */}
+        {showRawContent && (
+          <Card className="lg:col-span-4 lg:sticky lg:top-24 lg:self-start max-h-[calc(100vh-7rem)]">
+            <CardHeader>
+              <CardTitle className="text-sm flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                {t("jobs:labels.rawContent")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[calc(100vh-12rem)] px-4">
+                <pre className="text-xs whitespace-pre-wrap font-mono text-slate-700 dark:text-slate-300">
+                  {job.raw_content || t("jobs:messages.noRawContent")}
+                </pre>
+              </ScrollArea>
+            </CardContent>
+          </Card>
         )}
       </div>
 

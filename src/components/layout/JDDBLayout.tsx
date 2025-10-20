@@ -143,40 +143,48 @@ export function JDDBLayout({
         onTabChange={onTabChange}
       />
 
-      {/* Main Content Area */}
-      <main className="pt-28">
-        <div className="flex">
-          {/* Left Sidebar (minimal) */}
+      {/* Main Content Area - Enhanced spacing and layout */}
+      <main className="pt-28 min-h-screen">
+        <div className="flex min-h-[calc(100vh-7rem)]">
+          {/* Left Sidebar (minimal) - Improved mobile behavior */}
           <aside
             data-testid="sidebar"
             className={cn(
-              "transition-all duration-300 flex-shrink-0 bg-slate-50/50 dark:bg-slate-900/50 border-r border-slate-200/50 dark:border-slate-700/50",
+              "transition-all duration-300 flex-shrink-0",
+              "bg-slate-50/50 dark:bg-slate-900/50",
+              "border-r border-slate-200/50 dark:border-slate-700/50",
+              "hidden sm:block",
               sidebarCollapsed ? "w-12" : "w-16 sm:w-20 lg:w-24",
             )}
+            aria-label="Sidebar navigation"
           >
-            <div className="p-2">
+            <div className="sticky top-28 p-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="w-full p-2"
+                className="w-full p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
                 data-testid="sidebar-toggle"
+                aria-label={
+                  sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+                }
+                aria-expanded={!sidebarCollapsed}
               >
                 {sidebarCollapsed ? (
-                  <Menu className="w-4 h-4" />
+                  <Menu className="w-4 h-4" aria-hidden="true" />
                 ) : (
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4" aria-hidden="true" />
                 )}
               </Button>
             </div>
           </aside>
 
-          {/* Content Container */}
-          <div className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
+          {/* Content Container - Improved responsive padding */}
+          <div className="flex-1 px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8">
             {loading ? (
               <LoadingScreen />
             ) : (
-              <div className={cn("max-w-7xl mx-auto", contentClassName)}>
+              <div className={cn("max-w-7xl mx-auto w-full", contentClassName)}>
                 {children}
               </div>
             )}
@@ -206,31 +214,42 @@ function JDDBHeader({
   // Get stats from store directly instead of props
   const { stats } = useStore();
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-white/20 dark:border-slate-700/20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-        <div className="flex items-center justify-between h-full">
+    <header
+      className="fixed top-0 left-0 right-0 z-50 h-16 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-white/20 dark:border-slate-700/20"
+      role="banner"
+      aria-label="Site header"
+    >
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 h-full">
+        <div className="flex items-center justify-between h-full gap-2 sm:gap-4">
           {/* Left Side - Logo and Navigation */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
             {showBackButton && onBack && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onBack}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 sm:gap-2 flex-shrink-0"
+                aria-label="Go back"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-4 h-4" aria-hidden="true" />
                 <span className="hidden sm:inline">Back</span>
               </Button>
             )}
 
-            {/* JDDB Logo and Title */}
-            <div className="flex items-center group">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
-                <Database className="relative w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mr-2 sm:mr-3 group-hover:scale-110 transition-transform duration-300" />
+            {/* JDDB Logo and Title - Improved mobile layout */}
+            <div className="flex items-center group min-w-0 flex-1">
+              <div className="relative flex-shrink-0">
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg blur opacity-20 group-hover:opacity-30 transition-opacity duration-300"
+                  aria-hidden="true"
+                ></div>
+                <Database
+                  className="relative w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-blue-600 mr-2 sm:mr-3 group-hover:scale-110 transition-transform duration-300"
+                  aria-hidden="true"
+                />
               </div>
-              <div className="min-w-0">
-                <h2 className="text-sm sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-slate-100 dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300 truncate">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xs sm:text-sm md:text-lg lg:text-xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-slate-100 dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent group-hover:from-blue-600 group-hover:to-indigo-600 transition-all duration-300 truncate">
                   {title || (
                     <>
                       <span className="hidden sm:inline">
@@ -239,7 +258,7 @@ function JDDBHeader({
                       <span className="sm:hidden">JDDB</span>
                     </>
                   )}
-                </h2>
+                </h1>
                 {subtitle && (
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium truncate">
                     {subtitle}
@@ -249,21 +268,23 @@ function JDDBHeader({
             </div>
           </div>
 
-          {/* Right Side - Stats and Controls */}
-          <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
+          {/* Right Side - Stats and Controls - Improved mobile layout */}
+          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 flex-shrink-0">
             {/* Theme Toggle */}
             <ThemeToggle size="sm" className="flex-shrink-0" />
 
-            {/* Stats Display */}
+            {/* Stats Display - Enhanced responsive behavior */}
             {stats && (
-              <div className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100/50 dark:bg-slate-800/50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 truncate">
+              <div
+                className="hidden xs:flex text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100/50 dark:bg-slate-800/50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50"
+                aria-label={`${stats.total_jobs} total jobs, last updated ${stats.last_updated ? new Date(stats.last_updated).toLocaleDateString() : "never"}`}
+              >
                 <span className="font-semibold text-blue-600 dark:text-blue-400">
                   {stats.total_jobs}
                 </span>
-                <span className="hidden xs:inline"> jobs</span>
-                <span className="hidden sm:inline"> • Updated:</span>
+                <span className="hidden sm:inline ml-1">jobs</span>
+                <span className="hidden md:inline mx-1">•</span>
                 <span className="hidden md:inline text-slate-500 dark:text-slate-400">
-                  {" "}
                   {stats.last_updated
                     ? new Date(stats.last_updated).toLocaleDateString()
                     : "Never"}
@@ -271,18 +292,25 @@ function JDDBHeader({
               </div>
             )}
 
-            {/* Action Buttons */}
-            <div className="flex items-center space-x-1">
-              <Button variant="ghost" size="sm" className="p-2" title="Help">
-                <HelpCircle className="w-4 h-4" />
+            {/* Action Buttons - Touch-friendly sizing */}
+            <div className="flex items-center space-x-0.5 sm:space-x-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-1.5 sm:p-2 touch-target"
+                title="Help"
+                aria-label="Help"
+              >
+                <HelpCircle className="w-4 h-4" aria-hidden="true" />
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                className="p-2"
+                className="p-1.5 sm:p-2 touch-target"
                 title="Settings"
+                aria-label="Settings"
               >
-                <Settings className="w-4 h-4" />
+                <Settings className="w-4 h-4" aria-hidden="true" />
               </Button>
             </div>
           </div>
@@ -303,10 +331,14 @@ interface JDDBNavigationProps {
 
 function JDDBNavigation({ tabs, activeTab, onTabChange }: JDDBNavigationProps) {
   return (
-    <nav className="fixed top-16 left-0 right-0 z-40 h-12 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900/20 border-b border-slate-200/50 dark:border-slate-700/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+    <nav
+      className="fixed top-16 left-0 right-0 z-40 h-12 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900/20 border-b border-slate-200/50 dark:border-slate-700/50"
+      role="navigation"
+      aria-label="Main navigation"
+    >
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 h-full">
         <div className="flex items-center h-full overflow-x-auto scrollbar-hide">
-          <div className="flex items-center space-x-1 min-w-max">
+          <div className="flex items-center space-x-0.5 sm:space-x-1 min-w-max">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -316,14 +348,19 @@ function JDDBNavigation({ tabs, activeTab, onTabChange }: JDDBNavigationProps) {
                   activeTab === tab.id ? "active-tab" : `tab-${tab.id}`
                 }
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed",
+                  "flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed touch-target",
                   activeTab === tab.id
                     ? "bg-white/80 dark:bg-slate-800/80 text-blue-600 dark:text-blue-400 shadow-md border border-blue-200/50 dark:border-blue-400/50"
                     : "text-slate-600 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200",
                 )}
                 title={tab.description}
+                aria-label={tab.label}
+                aria-current={activeTab === tab.id ? "page" : undefined}
               >
-                <tab.icon className="w-4 h-4 flex-shrink-0" />
+                <tab.icon
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0"
+                  aria-hidden="true"
+                />
                 <span className="hidden sm:inline">{tab.label}</span>
                 <span className="sm:hidden">{tab.shortLabel || tab.label}</span>
               </button>

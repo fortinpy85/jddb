@@ -183,9 +183,10 @@ function StatisticsCards({
     },
     {
       label: t("statistics.failed"),
-      value: (stats?.processing_status?.needs_embeddings ?? 0) +
-             (stats?.processing_status?.needs_sections ?? 0) +
-             (stats?.processing_status?.needs_metadata ?? 0),
+      value:
+        (stats?.processing_status?.needs_embeddings ?? 0) +
+        (stats?.processing_status?.needs_sections ?? 0) +
+        (stats?.processing_status?.needs_metadata ?? 0),
       icon: AlertCircle,
       color: "text-red-600 dark:text-red-400",
       bgColor: "bg-red-50 dark:bg-red-900/20",

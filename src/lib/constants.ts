@@ -13,7 +13,7 @@ export const TAB_ORDER = [
   "statistics",
 ] as const;
 
-export type TabType = typeof TAB_ORDER[number];
+export type TabType = (typeof TAB_ORDER)[number];
 
 // Tab display names
 export const TAB_NAMES: Record<TabType, string> = {

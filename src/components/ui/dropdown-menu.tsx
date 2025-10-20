@@ -71,7 +71,7 @@ const DropdownMenuContent = React.forwardRef<
         ...style,
         // Ensure opaque background
         opacity: 1,
-        backgroundColor: 'var(--popover)',
+        backgroundColor: "var(--popover)",
       }}
       {...props}
     />

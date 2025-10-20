@@ -6,17 +6,42 @@
 
 "use client";
 
-import React, { useState, useEffect, lazy, Suspense, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  lazy,
+  Suspense,
+  useRef,
+  useCallback,
+} from "react";
 import { ThreeColumnLayout } from "@/components/layout/ThreeColumnLayout";
 import { ProfileHeader } from "@/components/layout/ProfileHeader";
 import { AppHeader, type AppView } from "@/components/layout/AppHeader";
 
 // Lazy load heavy layout components for better initial page load performance
-const AIAssistantPanel = lazy(() => import("@/components/ai/AIAssistantPanel").then(m => ({ default: m.AIAssistantPanel })));
-const DashboardSidebar = lazy(() => import("@/components/dashboard/DashboardSidebar").then(m => ({ default: m.DashboardSidebar })));
-const JobsTable = lazy(() => import("@/components/jobs/JobsTable").then(m => ({ default: m.JobsTable })));
-const JobDetailView = lazy(() => import("@/components/jobs/JobDetailView").then(m => ({ default: m.JobDetailView })));
-const CreateJobModal = lazy(() => import("@/components/jobs/CreateJobModal").then(m => ({ default: m.CreateJobModal })));
+const AIAssistantPanel = lazy(() =>
+  import("@/components/ai/AIAssistantPanel").then((m) => ({
+    default: m.AIAssistantPanel,
+  })),
+);
+const DashboardSidebar = lazy(() =>
+  import("@/components/dashboard/DashboardSidebar").then((m) => ({
+    default: m.DashboardSidebar,
+  })),
+);
+const JobsTable = lazy(() =>
+  import("@/components/jobs/JobsTable").then((m) => ({ default: m.JobsTable })),
+);
+const JobDetailView = lazy(() =>
+  import("@/components/jobs/JobDetailView").then((m) => ({
+    default: m.JobDetailView,
+  })),
+);
+const CreateJobModal = lazy(() =>
+  import("@/components/jobs/CreateJobModal").then((m) => ({
+    default: m.CreateJobModal,
+  })),
+);
 import type { JobDescription } from "@/lib/types";
 import { apiClient } from "@/lib/api";
 import { useStore } from "@/lib/store";
@@ -341,7 +366,9 @@ export default function HomePage() {
       case "job-details":
         return wrapWithPanelId(
           selectedJob ? (
-            <Suspense fallback={<LoadingState message="Loading job details..." />}>
+            <Suspense
+              fallback={<LoadingState message="Loading job details..." />}
+            >
               <JobDetailView
                 jobId={selectedJob.id}
                 onBack={handleBackFromDetails}
@@ -647,10 +674,14 @@ export default function HomePage() {
                 ) : null
               }
               leftPanel={
-                <Suspense fallback={<LoadingState message="Loading sidebar..." />}>
+                <Suspense
+                  fallback={<LoadingState message="Loading sidebar..." />}
+                >
                   <DashboardSidebar
                     stats={stats}
-                    onNavigateToStatistics={() => handleViewChange("statistics")}
+                    onNavigateToStatistics={() =>
+                      handleViewChange("statistics")
+                    }
                     onNavigateToSystemHealth={() =>
                       handleViewChange("system-health")
                     }
@@ -659,7 +690,9 @@ export default function HomePage() {
                 </Suspense>
               }
               middlePanel={
-                <Suspense fallback={<LoadingState message="Loading AI panel..." />}>
+                <Suspense
+                  fallback={<LoadingState message="Loading AI panel..." />}
+                >
                   <AIAssistantPanel suggestions={[]} overallScore={null} />
                 </Suspense>
               }

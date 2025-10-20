@@ -22,14 +22,17 @@ export function QuickActionsGrid({
       icon={TrendingUp}
       variant="highlighted"
     >
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <ActionButton
           variant="primary"
           onClick={onNavigateToUpload}
           icon={Upload}
-          className="flex flex-col sm:flex-row items-center justify-center h-16 sm:h-20 px-4"
+          className="flex flex-col items-center justify-center h-20 sm:h-24 px-3 sm:px-4 touch-target"
+          aria-label="Upload new job description files"
         >
-          <span className="text-sm text-center">Upload Files</span>
+          <span className="text-sm sm:text-base text-center font-medium mt-2">
+            Upload Files
+          </span>
         </ActionButton>
 
         <ActionButton
@@ -37,9 +40,12 @@ export function QuickActionsGrid({
           color="emerald"
           onClick={onNavigateToJobs}
           icon={FileText}
-          className="flex flex-col sm:flex-row items-center justify-center h-16 sm:h-20 px-4"
+          className="flex flex-col items-center justify-center h-20 sm:h-24 px-3 sm:px-4 touch-target"
+          aria-label="Browse all job descriptions"
         >
-          <span className="text-sm text-center">Browse Jobs</span>
+          <span className="text-sm sm:text-base text-center font-medium mt-2">
+            Browse Jobs
+          </span>
         </ActionButton>
 
         <ActionButton
@@ -47,9 +53,12 @@ export function QuickActionsGrid({
           color="blue"
           onClick={onNavigateToSearch}
           icon={Search}
-          className="flex flex-col sm:flex-row items-center justify-center h-16 sm:h-20 px-4"
+          className="flex flex-col items-center justify-center h-20 sm:h-24 px-3 sm:px-4 touch-target"
+          aria-label="Search and filter job descriptions"
         >
-          <span className="text-sm text-center">Search Jobs</span>
+          <span className="text-sm sm:text-base text-center font-medium mt-2">
+            Search Jobs
+          </span>
         </ActionButton>
 
         <ActionButton
@@ -57,9 +66,12 @@ export function QuickActionsGrid({
           color="amber"
           onClick={onNavigateToCompare}
           icon={GitCompare}
-          className="flex flex-col sm:flex-row items-center justify-center h-16 sm:h-20 px-4"
+          className="flex flex-col items-center justify-center h-20 sm:h-24 px-3 sm:px-4 touch-target"
+          aria-label="Compare multiple job descriptions"
         >
-          <span className="text-sm text-center">Compare Jobs</span>
+          <span className="text-sm sm:text-base text-center font-medium mt-2">
+            Compare Jobs
+          </span>
         </ActionButton>
       </div>
     </ContentSection>

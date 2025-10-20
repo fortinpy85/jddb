@@ -37,8 +37,12 @@ function getApiBaseUrl(): string {
   // Try to get from environment variables
   let apiUrl: string | undefined;
 
-  if (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_URL) {
-    apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  // Check for Node.js environment
+  if (
+    typeof process !== "undefined" &&
+    (process as any).env?.NEXT_PUBLIC_API_URL
+  ) {
+    apiUrl = (process as any).env.NEXT_PUBLIC_API_URL;
   } else if (
     typeof window !== "undefined" &&
     (window as any).__API_BASE_URL__
@@ -52,8 +56,8 @@ function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
     const currentOrigin = window.location.origin;
     // If we're on port 3003 (unified server), use relative URLs
-    if (currentOrigin.includes(':3003')) {
-      logger.debug('Detected unified server, using relative API URLs');
+    if (currentOrigin.includes(":3003")) {
+      logger.debug("Detected unified server, using relative API URLs");
       return "/api";
     }
   }
@@ -159,7 +163,9 @@ export class JDDBApiClient {
   // Test connection to API
   public async testConnection(): Promise<boolean> {
     try {
-      await this.healthCheck();
+      // For connection testing, we want to know if the API is healthy right now,
+      // not if it eventually succeeds after retries. So we disable retries.
+      await this.request("/health", { method: "GET", retries: 0 });
       return true;
     } catch (error) {
       return false;
@@ -178,7 +184,7 @@ export class JDDBApiClient {
     const apiKeyPresent = !!this.apiKey;
     const isProduction =
       (typeof process !== "undefined" &&
-        process.env?.NODE_ENV === "production") ||
+        (process as any).env?.NODE_ENV === "production") ||
       (typeof window !== "undefined" &&
         window.location.hostname !== "localhost");
     const hasValidConfig =
@@ -187,7 +193,7 @@ export class JDDBApiClient {
       apiUrl !== "/api";
     const environment =
       typeof process !== "undefined"
-        ? process.env?.NODE_ENV || "development"
+        ? (process as any).env?.NODE_ENV || "development"
         : "browser";
     return {
       hasValidConfig,
@@ -255,7 +261,9 @@ export class JDDBApiClient {
     const url = `${this.baseUrl}${endpoint}`;
     let lastError: Error | ApiError;
 
-    logger.debug(`🌐 API Request starting: ${fetchOptions.method || 'GET'} ${url}`);
+    logger.debug(
+      `🌐 API Request starting: ${fetchOptions.method || "GET"} ${url}`,
+    );
     logger.debug(`📋 Request options:`, { timeout, retries, retryDelay });
     logger.debug(`🔑 API Key present:`, { hasApiKey: !!this.apiKey });
 
@@ -264,7 +272,9 @@ export class JDDBApiClient {
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        logger.debug(`⏰ Request timeout triggered after ${timeout}ms for ${url}`);
+        logger.debug(
+          `⏰ Request timeout triggered after ${timeout}ms for ${url}`,
+        );
         controller.abort();
       }, timeout);
 
@@ -284,10 +294,12 @@ export class JDDBApiClient {
 
         logger.debug(`📤 About to call fetch() with:`, {
           url,
-          method: fetchOptions.method || 'GET',
+          method: fetchOptions.method || "GET",
           headers,
           hasBody: !!fetchOptions.body,
-          bodyType: fetchOptions.body ? fetchOptions.body.constructor.name : 'none'
+          bodyType: fetchOptions.body
+            ? fetchOptions.body.constructor.name
+            : "none",
         });
 
         const response = await fetch(url, {
@@ -304,7 +316,7 @@ export class JDDBApiClient {
           status: response.status,
           statusText: response.statusText,
           ok: response.ok,
-          headers: Object.fromEntries(response.headers.entries())
+          headers: Object.fromEntries(response.headers.entries()),
         });
 
         clearTimeout(timeoutId);
@@ -316,7 +328,10 @@ export class JDDBApiClient {
             logger.debug(`❌ Error response data:`, errorData);
           } catch (jsonError) {
             logger.debug(`❌ Failed to parse error response JSON:`, {
-              error: jsonError instanceof Error ? jsonError.message : String(jsonError)
+              error:
+                jsonError instanceof Error
+                  ? jsonError.message
+                  : String(jsonError),
             });
             // JSON parsing failed, use empty object
           }
@@ -337,30 +352,37 @@ export class JDDBApiClient {
             status: error.status,
             isRetryable,
             attempt,
-            maxRetries: retries
+            maxRetries: retries,
           });
 
           // Don't retry for client errors (4xx) except 429
           if (!isRetryable || attempt === retries) {
-            logger.debug(`❌ Throwing error - no more retries or not retryable`);
+            logger.debug(
+              `❌ Throwing error - no more retries or not retryable`,
+            );
             throw error;
           }
 
           lastError = error;
-          logger.debug(`🔄 Will retry after ${retryDelay * Math.pow(2, attempt)}ms`);
+          logger.debug(
+            `🔄 Will retry after ${retryDelay * Math.pow(2, attempt)}ms`,
+          );
           await this.sleep(retryDelay * Math.pow(2, attempt)); // Exponential backoff
           continue;
         }
 
         logger.debug(`✅ Successful response, parsing JSON...`);
         const result = await response.json();
-        logger.debug(`✅ API Request completed successfully for ${url}`, result);
+        logger.debug(
+          `✅ API Request completed successfully for ${url}`,
+          result,
+        );
         return result;
       } catch (error: any) {
         logger.debug(`❌ Fetch error caught:`, {
           name: error.name,
           message: error.message,
-          stack: error.stack?.split('\n').slice(0, 3).join('\n')
+          stack: error.stack?.split("\n").slice(0, 3).join("\n"),
         });
 
         clearTimeout(timeoutId);
@@ -373,17 +395,25 @@ export class JDDBApiClient {
         }
 
         const isRetryable = ApiError.isRetryableError(processedError);
-        logger.debug(`🔄 Error is retryable:`, { isRetryable, attempt, maxRetries: retries });
+        logger.debug(`🔄 Error is retryable:`, {
+          isRetryable,
+          attempt,
+          maxRetries: retries,
+        });
 
         if (!isRetryable || attempt === retries) {
-          logger.debug(`❌ Throwing final error - no more retries or not retryable`);
+          logger.debug(
+            `❌ Throwing final error - no more retries or not retryable`,
+          );
           throw processedError instanceof ApiError
             ? processedError
             : new ApiError(processedError.message, 0, {}, isRetryable);
         }
 
         lastError = processedError;
-        logger.debug(`🔄 Will retry after ${retryDelay * Math.pow(2, attempt)}ms due to error`);
+        logger.debug(
+          `🔄 Will retry after ${retryDelay * Math.pow(2, attempt)}ms due to error`,
+        );
         await this.sleep(retryDelay * Math.pow(2, attempt)); // Exponential backoff
       }
     }
@@ -418,7 +448,10 @@ export class JDDBApiClient {
   }
 
   // User Preferences
-  async getAllPreferences(): Promise<{ preferences: Record<string, any>; session_id: string }> {
+  async getAllPreferences(): Promise<{
+    preferences: Record<string, any>;
+    session_id: string;
+  }> {
     return this.request("/preferences", {
       method: "GET",
       headers: {
@@ -427,7 +460,10 @@ export class JDDBApiClient {
     });
   }
 
-  async updatePreference(key: string, value: any): Promise<{ message: string; key: string; value: any }> {
+  async updatePreference(
+    key: string,
+    value: any,
+  ): Promise<{ message: string; key: string; value: any }> {
     return this.request(`/preferences/${key}`, {
       method: "PUT",
       headers: {
@@ -442,7 +478,7 @@ export class JDDBApiClient {
     message: string;
     updated: number;
     created: number;
-    total: number
+    total: number;
   }> {
     return this.request("/preferences/bulk", {
       method: "POST",
@@ -454,7 +490,9 @@ export class JDDBApiClient {
     });
   }
 
-  async getPreference(key: string): Promise<{ key: string; value: any; updated_at?: string }> {
+  async getPreference(
+    key: string,
+  ): Promise<{ key: string; value: any; updated_at?: string }> {
     return this.request(`/preferences/${key}`, {
       method: "GET",
       headers: {
@@ -515,7 +553,8 @@ export class JDDBApiClient {
     if (classification) params.append("classification", classification);
     if (language) params.append("language", language);
     if (department) params.append("department", department);
-    if (skill_ids && skill_ids.length > 0) params.append("skill_ids", skill_ids.join(","));
+    if (skill_ids && skill_ids.length > 0)
+      params.append("skill_ids", skill_ids.join(","));
 
     return this.request(`/jobs?${params}`, { method: "GET" });
   }
@@ -533,7 +572,8 @@ export class JDDBApiClient {
     if (options.include_content) params.append("include_content", "true");
     if (options.include_sections) params.append("include_sections", "true");
     if (options.include_metadata) params.append("include_metadata", "true");
-    if (options.include_skills !== false) params.append("include_skills", "true"); // Default to true
+    if (options.include_skills !== false)
+      params.append("include_skills", "true"); // Default to true
 
     const query = params.toString() ? `?${params}` : "";
     return this.request(`/jobs/${jobId}${query}`, { method: "GET" });
@@ -594,7 +634,7 @@ export class JDDBApiClient {
       raw_content?: string;
       department?: string;
       reports_to?: string;
-    }
+    },
   ): Promise<{
     status: string;
     message: string;
@@ -605,6 +645,27 @@ export class JDDBApiClient {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
+    });
+  }
+
+  async updateJobSection(
+    jobId: number,
+    sectionId: number,
+    sectionContent: string,
+  ): Promise<{
+    status: string;
+    message: string;
+    section: {
+      id: number;
+      section_type: string;
+      section_content: string;
+      section_order: number;
+    };
+  }> {
+    return this.request(`/jobs/${jobId}/sections/${sectionId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section_content: sectionContent }),
     });
   }
 
@@ -778,13 +839,25 @@ export class JDDBApiClient {
     });
   }
 
-  async mergeJobs(jobId1: number, jobId2: number, strategy: string): Promise<JobDescription> {
+  async mergeJobs(
+    jobId1: number,
+    jobId2: number,
+    strategy: string,
+  ): Promise<JobDescription> {
     // Simulate API call
-    logger.debug(`Merging jobs ${jobId1} and ${jobId2} with strategy: ${strategy}`);
-    const job1 = await this.getJob(jobId1, { include_content: true, include_sections: true });
-    const job2 = await this.getJob(jobId2, { include_content: true, include_sections: true });
+    logger.debug(
+      `Merging jobs ${jobId1} and ${jobId2} with strategy: ${strategy}`,
+    );
+    const job1 = await this.getJob(jobId1, {
+      include_content: true,
+      include_sections: true,
+    });
+    const job2 = await this.getJob(jobId2, {
+      include_content: true,
+      include_sections: true,
+    });
 
-    const mergedContent = `Merged content from job ${job1.job_number} and ${job2.job_number}.\n\n${job1.sections ? Object.values(job1.sections).join('\n') : ''}\n\n${job2.sections ? Object.values(job2.sections).join('\n') : ''}`;
+    const mergedContent = `Merged content from job ${job1.job_number} and ${job2.job_number}.\n\n${job1.sections ? Object.values(job1.sections).join("\n") : ""}\n\n${job2.sections ? Object.values(job2.sections).join("\n") : ""}`;
 
     const newJob: JobDescription = {
       id: Math.floor(Math.random() * 10000),
@@ -917,9 +990,7 @@ export class JDDBApiClient {
     });
   }
 
-  async runPredictiveAnalysis(params: {
-    job_id: number;
-  }): Promise<any> {
+  async runPredictiveAnalysis(params: { job_id: number }): Promise<any> {
     return this.request("/ai/content/run-predictive-analysis", {
       method: "POST",
       body: JSON.stringify(params),
@@ -965,10 +1036,16 @@ export class JDDBApiClient {
    * @param language - Template language (en or fr)
    * @returns Template with sections
    */
-  async getTemplate(classification: string, language: string = "en"): Promise<any> {
-    return this.request(`/ai/templates/${classification}?language=${language}`, {
-      method: "GET",
-    });
+  async getTemplate(
+    classification: string,
+    language: string = "en",
+  ): Promise<any> {
+    return this.request(
+      `/ai/templates/${classification}?language=${language}`,
+      {
+        method: "GET",
+      },
+    );
   }
 
   /**
@@ -999,14 +1076,21 @@ export class JDDBApiClient {
     classification?: string;
     language?: string;
     context?: Record<string, any>;
-  }): Promise<{ completed_content: string; content: string; confidence: number; message: string }> {
+  }): Promise<{
+    completed_content: string;
+    content: string;
+    confidence: number;
+    message: string;
+  }> {
     // Map frontend parameters to backend expected format
     const backendRequest = {
       section_type: params.section_type,
       partial_content: params.current_content || "",
       classification: params.classification || "EX-01",
       language: params.language || "en",
-      context: params.context || (params.job_context ? { job_context: params.job_context } : {}),
+      context:
+        params.context ||
+        (params.job_context ? { job_context: params.job_context } : {}),
     };
 
     return this.request("/ai/content/complete-section", {
@@ -1020,14 +1104,16 @@ export class JDDBApiClient {
    * @param options - Query parameters (skip, limit, filters)
    * @returns Job list response
    */
-  async getJobs(options: {
-    skip?: number;
-    limit?: number;
-    classification?: string;
-    language?: string;
-    department?: string;
-    skill_ids?: number[];
-  } = {}): Promise<JobListResponse> {
+  async getJobs(
+    options: {
+      skip?: number;
+      limit?: number;
+      classification?: string;
+      language?: string;
+      department?: string;
+      skill_ids?: number[];
+    } = {},
+  ): Promise<JobListResponse> {
     return this.listJobs(options);
   }
 
@@ -1036,24 +1122,26 @@ export class JDDBApiClient {
    * @param events - Array of RLHF events to sync
    * @returns Synced feedback records
    */
-  async syncRLHFEvents(events: Array<{
-    timestamp: string;
-    eventType: 'accept' | 'reject' | 'modify' | 'generate';
-    suggestionId?: string;
-    suggestionType?: string;
-    originalText: string;
-    suggestedText?: string;
-    finalText?: string;
-    userAction: string;
-    confidence?: number;
-    metadata?: Record<string, any>;
-  }>): Promise<any> {
+  async syncRLHFEvents(
+    events: Array<{
+      timestamp: string;
+      eventType: "accept" | "reject" | "modify" | "generate";
+      suggestionId?: string;
+      suggestionType?: string;
+      originalText: string;
+      suggestedText?: string;
+      finalText?: string;
+      userAction: string;
+      confidence?: number;
+      metadata?: Record<string, any>;
+    }>,
+  ): Promise<any> {
     if (events.length === 0) {
-      return { synced: 0, message: 'No events to sync' };
+      return { synced: 0, message: "No events to sync" };
     }
 
     // Transform frontend events to backend format
-    const feedbackItems = events.map(event => ({
+    const feedbackItems = events.map((event) => ({
       event_type: event.eventType,
       original_text: event.originalText,
       suggested_text: event.suggestedText,
@@ -1079,31 +1167,38 @@ export class JDDBApiClient {
   /**
    * Get skills inventory with filtering and pagination
    */
-  async getSkillsInventory(options: {
-    search?: string;
-    skill_type?: string;
-    min_job_count?: number;
-    limit?: number;
-    offset?: number;
-  } = {}): Promise<import("./types").SkillsInventoryResponse> {
+  async getSkillsInventory(
+    options: {
+      search?: string;
+      skill_type?: string;
+      min_job_count?: number;
+      limit?: number;
+      offset?: number;
+    } = {},
+  ): Promise<import("./types").SkillsInventoryResponse> {
     const params = new URLSearchParams();
     if (options.search) params.append("search", options.search);
     if (options.skill_type) params.append("skill_type", options.skill_type);
-    if (options.min_job_count) params.append("min_job_count", String(options.min_job_count));
+    if (options.min_job_count)
+      params.append("min_job_count", String(options.min_job_count));
     if (options.limit) params.append("limit", String(options.limit));
     if (options.offset) params.append("offset", String(options.offset));
 
     const query = params.toString() ? `?${params}` : "";
-    return this.request(`/analytics/skills/inventory${query}`, { method: "GET" });
+    return this.request(`/analytics/skills/inventory${query}`, {
+      method: "GET",
+    });
   }
 
   /**
    * Get top N most frequently requested skills
    */
-  async getTopSkills(options: {
-    limit?: number;
-    skill_type?: string;
-  } = {}): Promise<import("./types").TopSkillsResponse> {
+  async getTopSkills(
+    options: {
+      limit?: number;
+      skill_type?: string;
+    } = {},
+  ): Promise<import("./types").TopSkillsResponse> {
     const params = new URLSearchParams();
     if (options.limit) params.append("limit", String(options.limit));
     if (options.skill_type) params.append("skill_type", options.skill_type);
@@ -1129,11 +1224,14 @@ export class JDDBApiClient {
 
 // Helper to set API key from environment
 export function setApiKeyFromEnv(client: JDDBApiClient) {
-  let apiKey = '';
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_KEY) {
+  let apiKey = "";
+  if (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_KEY) {
     apiKey = import.meta.env.VITE_API_KEY;
-  } else if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_KEY) {
-    apiKey = process.env.NEXT_PUBLIC_API_KEY;
+  } else if (
+    typeof process !== "undefined" &&
+    (process as any).env?.NEXT_PUBLIC_API_KEY
+  ) {
+    apiKey = (process as any).env.NEXT_PUBLIC_API_KEY;
   }
   if (apiKey) {
     client.setApiKey(apiKey);

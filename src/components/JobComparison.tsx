@@ -528,7 +528,10 @@ function JobComparison(_props: JobComparisonProps) {
                           <div
                             className="bg-blue-600 h-2 rounded-full"
                             style={{}}
-                            data-width={comparisonResult.similarity_analysis.metadata_comparison.title_similarity * 100}
+                            data-width={
+                              comparisonResult.similarity_analysis
+                                .metadata_comparison.title_similarity * 100
+                            }
                           />
                         </div>
                         {(
