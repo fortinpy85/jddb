@@ -1,0 +1,21 @@
+# GitLeaks Ignore File
+# Documentation and test files with example/placeholder credentials
+
+# Secrets baseline file (contains hashed known false positives)
+.secrets.baseline:*
+
+# API documentation with example credentials
+docs/api/README.md:*
+docs/api/jobs-api.md:*
+docs/api/*.md:*
+
+# Test files with mock/example credentials
+tests/**/*:*
+**/test_*.py:*
+**/*.test.ts:*
+**/*.test.tsx:*
+**/*.spec.ts:*
+
+# Example configuration files
+*.example:*
+*.sample:*

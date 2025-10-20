@@ -92,7 +92,13 @@
   "placeholders": {
     "title": "Entrez le titre du poste",
     "classification": "Sélectionnez la classification",
-    "sectionContent": "Entrez le contenu de la section"
+    "sectionContent": "Entrez le contenu de la section",
+    "department": "Entrez le ministère",
+    "reportsTo": "Entrez le titre du superviseur"
+  },
+  "languages": {
+    "english": "Anglais",
+    "french": "Français"
   },
   "view": {
     "table": "Vue tableau",
@@ -112,6 +118,7 @@
     "loadingDetails": "Chargement des détails du poste...",
     "loadingJob": "Chargement du poste...",
     "loadFailed": "Échec du chargement des détails du poste",
+    "saveFailed": "Échec de l'enregistrement",
     "jobNotFound": "Poste non trouvé",
     "jobNotFoundDescription": "La description de poste que vous recherchez est introuvable",
     "jobApproved": "Poste approuvé",

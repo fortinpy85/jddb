@@ -92,7 +92,13 @@
   "placeholders": {
     "title": "Enter job title",
     "classification": "Select classification",
-    "sectionContent": "Enter section content"
+    "sectionContent": "Enter section content",
+    "department": "Enter department",
+    "reportsTo": "Enter supervisor title"
+  },
+  "languages": {
+    "english": "English",
+    "french": "French"
   },
   "view": {
     "table": "Table View",
@@ -112,6 +118,7 @@
     "loadingDetails": "Loading job details...",
     "loadingJob": "Loading job...",
     "loadFailed": "Failed to load job details",
+    "saveFailed": "Save Failed",
     "jobNotFound": "Job Not Found",
     "jobNotFoundDescription": "The job description you're looking for could not be found",
     "jobApproved": "Job Approved",

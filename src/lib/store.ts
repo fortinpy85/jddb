@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { JobDescription, ProcessingStats } from "./types";
+import type { JobDescription, ProcessingStats, IngestionStats } from "./types";
 import { apiClient } from "@/lib/api";
 import type { JDDBApiClient } from "@/lib/api";
 import { logger } from "@/utils/logger";
@@ -8,7 +8,7 @@ interface AppState {
   jobs: JobDescription[];
   selectedJob: JobDescription | null;
   mergedJob: JobDescription | null;
-  stats: ProcessingStats;
+  stats: IngestionStats;
   loading: boolean;
   error: string | null;
   pagination: {
@@ -43,13 +43,32 @@ export const createStore = (api: JDDBApiClient = apiClient) =>
       by_classification: {},
       by_language: {},
       processing_status: {
-        pending: 0,
-        processing: 0,
         completed: 0,
-        failed: 0,
-        needs_review: 0,
+        partial: 0,
+        needs_embeddings: 0,
+        needs_sections: 0,
+        needs_metadata: 0,
       },
-      last_updated: "",
+      embedding_stats: {
+        total_chunks: 0,
+        embedded_chunks: 0,
+        embedding_completion_rate: 0,
+        jobs_with_embeddings: 0,
+      },
+      content_quality: {
+        jobs_with_sections: 0,
+        jobs_with_metadata: 0,
+        jobs_with_embeddings: 0,
+        section_coverage_rate: 0,
+        metadata_coverage_rate: 0,
+        embedding_coverage_rate: 0,
+      },
+      section_distribution: {},
+      recent_activity: {
+        jobs_last_7_days: 0,
+        daily_average: 0,
+      },
+      last_updated: null,
     },
     loading: false,
     error: null,
