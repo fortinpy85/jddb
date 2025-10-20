@@ -1,0 +1,37 @@
+# GitLeaks Configuration
+# Customized to exclude test files and documentation with example credentials
+
+[extend]
+# Use default gitleaks rules
+useDefault = true
+
+[allowlist]
+description = "Allowlist for test files, documentation, and baseline files"
+
+# Paths to exclude from scanning
+paths = [
+    # Test files with mock credentials
+    '''tests/.*''',
+    '''.*test_.*\.py$''',
+    '''.*\.test\.ts$''',
+    '''.*\.test\.tsx$''',
+    '''.*\.spec\.ts$''',
+    '''backend/tests/.*''',
+
+    # Documentation with example credentials
+    '''docs/api/.*\.md$''',
+
+    # Baseline and example files
+    '''\.secrets\.baseline$''',
+    '''\.secrets\.new$''',
+    '''.*\.example$''',
+    '''.*\.sample$''',
+]
+
+# Specific regexes to ignore
+regexes = [
+    # Test API keys with known safe patterns
+    '''test-key-[a-zA-Z0-9]+''',
+    '''mock-api-key''',
+    '''test_[a-zA-Z0-9_]+''',
+]
