@@ -92,12 +92,8 @@ def upgrade() -> None:
     op.drop_index(op.f("idx_job_comparisons_job_b"), table_name="job_comparisons")
     op.drop_index(op.f("idx_job_comparisons_type"), table_name="job_comparisons")
     # Drop created_at columns if they exist (they may not exist in fresh databases)
-    op.execute(sa.text(
-        "ALTER TABLE job_metadata DROP COLUMN IF EXISTS created_at"
-    ))
-    op.execute(sa.text(
-        "ALTER TABLE job_sections DROP COLUMN IF EXISTS created_at"
-    ))
+    op.execute(sa.text("ALTER TABLE job_metadata DROP COLUMN IF EXISTS created_at"))
+    op.execute(sa.text("ALTER TABLE job_sections DROP COLUMN IF EXISTS created_at"))
     op.alter_column("job_skills", "job_id", existing_type=sa.INTEGER(), nullable=True)
     op.alter_column(
         "job_skills",

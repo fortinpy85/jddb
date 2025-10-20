@@ -161,12 +161,12 @@ class TestAPIPerformance:
 
         # Performance assertions
         assert successful_requests == num_concurrent, "All requests should succeed"
-        assert (
-            avg_response_time < 2.0
-        ), f"Average response time too high: {avg_response_time:.3f}s"
-        assert (
-            max_response_time < 5.0
-        ), f"Maximum response time too high: {max_response_time:.3f}s"
+        assert avg_response_time < 2.0, (
+            f"Average response time too high: {avg_response_time:.3f}s"
+        )
+        assert max_response_time < 5.0, (
+            f"Maximum response time too high: {max_response_time:.3f}s"
+        )
 
     def test_memory_usage_under_load(self):
         """Test memory usage under sustained load."""
@@ -200,9 +200,9 @@ class TestAPIPerformance:
         print(f"  Memory increase: {memory_increase:.1f}MB")
 
         # Memory usage assertions
-        assert (
-            memory_increase < 100
-        ), f"Memory increase too high: {memory_increase:.1f}MB"
+        assert memory_increase < 100, (
+            f"Memory increase too high: {memory_increase:.1f}MB"
+        )
 
     def test_database_connection_pool_performance(self):
         """Test database connection pool performance."""
@@ -224,6 +224,6 @@ class TestAPIPerformance:
         print(f"  Requests per second: {20 / total_time:.2f}")
 
         # Performance assertions
-        assert (
-            avg_time_per_request < 0.5
-        ), f"Database operations too slow: {avg_time_per_request:.3f}s"
+        assert avg_time_per_request < 0.5, (
+            f"Database operations too slow: {avg_time_per_request:.3f}s"
+        )
