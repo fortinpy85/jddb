@@ -209,13 +209,33 @@ def upgrade() -> None:
     op.drop_column("job_comparisons", "metadata_comparison")
     op.drop_column("job_comparisons", "updated_at")
     op.drop_column("job_comparisons", "skills_analysis")
-    op.alter_column(
-        "job_descriptions",
-        "created_at",
-        existing_type=postgresql.TIMESTAMP(),
-        nullable=False,
-        existing_server_default=sa.text("CURRENT_TIMESTAMP"),
-    )
+    # Add created_at column if it doesn't exist (handles fresh databases)
+    from sqlalchemy import inspect
+
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    columns = [col["name"] for col in inspector.get_columns("job_descriptions")]
+
+    if "created_at" not in columns:
+        # Column doesn't exist, add it
+        op.add_column(
+            "job_descriptions",
+            sa.Column(
+                "created_at",
+                postgresql.TIMESTAMP(),
+                nullable=False,
+                server_default=sa.text("CURRENT_TIMESTAMP"),
+            ),
+        )
+    else:
+        # Column exists, just alter it
+        op.alter_column(
+            "job_descriptions",
+            "created_at",
+            existing_type=postgresql.TIMESTAMP(),
+            nullable=False,
+            existing_server_default=sa.text("CURRENT_TIMESTAMP"),
+        )
     op.drop_constraint(
         op.f("job_descriptions_job_number_key"), "job_descriptions", type_="unique"
     )
