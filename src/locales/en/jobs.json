@@ -54,6 +54,7 @@
     "view": "View",
     "edit": "Edit",
     "editJob": "Edit Job",
+    "editTombstone": "Edit Job Information",
     "delete": "Delete Job",
     "export": "Export",
     "translate": "Translate",
@@ -73,6 +74,8 @@
     "browseAll": "Browse All",
     "uploadFiles": "Upload Files",
     "moreActions": "More Actions",
+    "hideRawContent": "Hide Raw Content",
+    "showRawContent": "Show Raw Content",
     "confirmDelete": "Are you sure you want to delete job {{jobNumber}}?",
     "confirmDeleteDescription": "This action cannot be undone. This will permanently delete the job description and all associated data.",
     "backToJobsAria": "Go back to jobs list",
@@ -82,6 +85,14 @@
     "compareJobAria": "Compare job {{jobNumber}}",
     "exportJobAria": "Export job {{jobNumber}}",
     "editSectionAria": "Edit {{section}} section"
+  },
+  "labels": {
+    "rawContent": "Raw Content"
+  },
+  "placeholders": {
+    "title": "Enter job title",
+    "classification": "Select classification",
+    "sectionContent": "Enter section content"
   },
   "view": {
     "table": "Table View",
@@ -99,6 +110,7 @@
   },
   "messages": {
     "loadingDetails": "Loading job details...",
+    "loadingJob": "Loading job...",
     "loadFailed": "Failed to load job details",
     "jobNotFound": "Job Not Found",
     "jobNotFoundDescription": "The job description you're looking for could not be found",
@@ -112,16 +124,24 @@
     "jobArchivedDescription": "Job {{jobNumber}} has been archived successfully",
     "contentUpdated": "Content Updated",
     "sectionUpdated": "Section \"{{section}}\" has been updated",
+    "sectionSaved": "Section Saved",
+    "sectionSavedDescription": "The section has been saved successfully",
     "deleteSuccess": "Job Deleted",
     "deleteSuccessDescription": "Job {{jobNumber}} has been deleted successfully",
     "deleteFailed": "Delete Failed",
     "deleteFailedDescription": "Failed to delete job: {{error}}",
     "updateSuccess": "Job Updated",
     "updateSuccessDescription": "Job has been updated successfully",
+    "updateFailed": "Update Failed",
+    "updateFailedDescription": "Failed to update job",
     "exportSuccess": "Export Successful",
     "exportSuccessDescription": "Job {{jobNumber}} has been exported successfully",
     "exportFailed": "Export Failed",
-    "exportFailedDescription": "Failed to export job: {{error}}"
+    "exportFailedDescription": "Failed to export job: {{error}}",
+    "noRawContent": "No raw content available",
+    "noContent": "No content available",
+    "titleClassificationRequired": "Title and classification are required",
+    "editingTombstone": "Editing Job Information"
   },
   "details": {
     "additionalInformation": "Additional Information",

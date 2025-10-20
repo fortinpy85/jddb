@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { ProcessingStats } from "@/lib/types";
+import type { ProcessingStats, IngestionStats } from "@/lib/types";
 import {
   FileText,
   CheckCircle,
@@ -34,7 +34,7 @@ import { CardSkeleton } from "@/components/ui/states";
 import { useTranslation } from "react-i18next";
 
 interface DashboardSidebarProps {
-  stats: ProcessingStats | null;
+  stats: IngestionStats | null;
   onNavigateToStatistics?: () => void;
   onNavigateToSystemHealth?: () => void;
   collapsed?: boolean;
@@ -141,7 +141,7 @@ export function DashboardSidebar({
  * Shows job counts by category with click-to-drill-down
  */
 interface StatisticsCardsProps {
-  stats: ProcessingStats | null;
+  stats: IngestionStats | null;
   onNavigateToStatistics?: () => void;
 }
 

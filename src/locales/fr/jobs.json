@@ -54,6 +54,7 @@
     "view": "Voir",
     "edit": "Modifier",
     "editJob": "Modifier le poste",
+    "editTombstone": "Modifier les informations du poste",
     "delete": "Supprimer le poste",
     "export": "Exporter",
     "translate": "Traduire",
@@ -73,6 +74,8 @@
     "browseAll": "Parcourir tout",
     "uploadFiles": "Télécharger des fichiers",
     "moreActions": "Plus d'actions",
+    "hideRawContent": "Masquer le contenu brut",
+    "showRawContent": "Afficher le contenu brut",
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer le poste {{jobNumber}} ?",
     "confirmDeleteDescription": "Cette action est irréversible. Cela supprimera définitiveement la description de poste et toutes les données associées.",
     "backToJobsAria": "Retourner à la liste des postes",
@@ -82,6 +85,14 @@
     "compareJobAria": "Comparer le poste {{jobNumber}}",
     "exportJobAria": "Exporter le poste {{jobNumber}}",
     "editSectionAria": "Modifier la section {{section}}"
+  },
+  "labels": {
+    "rawContent": "Contenu brut"
+  },
+  "placeholders": {
+    "title": "Entrez le titre du poste",
+    "classification": "Sélectionnez la classification",
+    "sectionContent": "Entrez le contenu de la section"
   },
   "view": {
     "table": "Vue tableau",
@@ -99,6 +110,7 @@
   },
   "messages": {
     "loadingDetails": "Chargement des détails du poste...",
+    "loadingJob": "Chargement du poste...",
     "loadFailed": "Échec du chargement des détails du poste",
     "jobNotFound": "Poste non trouvé",
     "jobNotFoundDescription": "La description de poste que vous recherchez est introuvable",
@@ -112,16 +124,24 @@
     "jobArchivedDescription": "Le poste {{jobNumber}} a été archivé avec succès",
     "contentUpdated": "Contenu mis à jour",
     "sectionUpdated": "La section « {{section}} » a été mise à jour",
+    "sectionSaved": "Section enregistrée",
+    "sectionSavedDescription": "La section a été enregistrée avec succès",
     "deleteSuccess": "Poste supprimé",
     "deleteSuccessDescription": "Le poste {{jobNumber}} a été supprimé avec succès",
     "deleteFailed": "Échec de la suppression",
     "deleteFailedDescription": "Échec de la suppression du poste : {{error}}",
     "updateSuccess": "Poste mis à jour",
     "updateSuccessDescription": "Le poste a été mis à jour avec succès",
+    "updateFailed": "Échec de la mise à jour",
+    "updateFailedDescription": "Échec de la mise à jour du poste",
     "exportSuccess": "Exportation réussie",
     "exportSuccessDescription": "Le poste {{jobNumber}} a été exporté avec succès",
     "exportFailed": "Échec de l'exportation",
-    "exportFailedDescription": "Échec de l'exportation du poste : {{error}}"
+    "exportFailedDescription": "Échec de l'exportation du poste : {{error}}",
+    "noRawContent": "Aucun contenu brut disponible",
+    "noContent": "Aucun contenu disponible",
+    "titleClassificationRequired": "Le titre et la classification sont obligatoires",
+    "editingTombstone": "Modification des informations du poste"
   },
   "details": {
     "additionalInformation": "Informations supplémentaires",
