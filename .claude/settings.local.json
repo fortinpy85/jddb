@@ -128,7 +128,8 @@
       "Bash(git rev-list --all)",
       "Bash(xargs git grep -l \"sk-\")",
       "Bash(git rm --cached backend/.env .env.local)",
-      "Bash(git filter-branch --force --index-filter \"git rm --cached --ignore-unmatch backend/.env .env.local backend/.env.production backend/.env.staging .env .env.production .env.staging\" --prune-empty --tag-name-filter cat -- --all)"
+      "Bash(git filter-branch --force --index-filter \"git rm --cached --ignore-unmatch backend/.env .env.local backend/.env.production backend/.env.staging .env .env.production .env.staging\" --prune-empty --tag-name-filter cat -- --all)",
+      "Bash(FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --force --index-filter \"git rm --cached --ignore-unmatch backend/.env .env.local backend/.env.production backend/.env.staging .env .env.production .env.staging\" --prune-empty --tag-name-filter cat -- --all)"
     ],
     "deny": [],
     "ask": []
