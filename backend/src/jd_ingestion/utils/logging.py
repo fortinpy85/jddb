@@ -29,8 +29,9 @@ def configure_logging() -> None:
         console_handler.setFormatter(logging.Formatter("%(message)s"))
         handlers.append(console_handler)
     else:
-        # File handlers for production/staging
+        # File handlers for production/staging/testing
         log_dir = Path("/app/logs") if settings.is_production else Path("./logs")
+        log_dir.mkdir(exist_ok=True, parents=True)  # Ensure directory exists
 
         # Main application log
         main_handler = logging.handlers.RotatingFileHandler(
