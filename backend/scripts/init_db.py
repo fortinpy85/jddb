@@ -36,6 +36,8 @@ def create_database_if_not_exists() -> None:
                 text("SELECT 1 FROM pg_database WHERE datname = :db_name"),
                 {"db_name": db_name},
             ).fetchone():
+                # nosec B608 - Safe: db_name from settings.database_sync_url, not user input
+                # CREATE DATABASE requires identifier, cannot use parameters
                 conn.execute(text(f'CREATE DATABASE "{db_name}"'))
                 logger.info(f"Database '{db_name}' created.")
             else:

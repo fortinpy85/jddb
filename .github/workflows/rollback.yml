@@ -62,10 +62,12 @@ jobs:
 
       - name: Health check
         id: check
+        env:
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'production' }}
+          EVENT_NAME: ${{ github.event_name }}
+          ROLLBACK_REASON: ${{ github.event.inputs.reason }}
         run: |
           # Perform health checks on deployed application
-          ENVIRONMENT="${{ github.event.inputs.environment || 'production' }}"
-
           if [ "$ENVIRONMENT" == "production" ]; then
             API_URL="https://api.jddb.gc.ca"
             APP_URL="https://jddb.gc.ca"
@@ -98,9 +100,9 @@ jobs:
           fi
 
           # Override if manual rollback requested
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          if [ "$EVENT_NAME" == "workflow_dispatch" ]; then
             NEEDS_ROLLBACK="true"
-            echo "Manual rollback requested: ${{ github.event.inputs.reason }}"
+            echo "Manual rollback requested: ${ROLLBACK_REASON}"
           fi
 
           echo "needs_rollback=${NEEDS_ROLLBACK}" >> $GITHUB_OUTPUT
@@ -126,11 +128,14 @@ jobs:
 
       - name: Determine rollback version
         id: rollback_version
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.rollback_version }}
+          PREVIOUS_VERSION: ${{ needs.health-check.outputs.previous_version }}
         run: |
-          if [ -n "${{ github.event.inputs.rollback_version }}" ]; then
-            ROLLBACK_VERSION="${{ github.event.inputs.rollback_version }}"
+          if [ -n "$INPUT_VERSION" ]; then
+            ROLLBACK_VERSION="$INPUT_VERSION"
           else
-            ROLLBACK_VERSION="${{ needs.health-check.outputs.previous_version }}"
+            ROLLBACK_VERSION="$PREVIOUS_VERSION"
           fi
 
           echo "Rolling back to version: ${ROLLBACK_VERSION}"
@@ -166,9 +171,12 @@ jobs:
           docker tag ${FRONTEND_IMAGE}:${ROLLBACK_TAG} ${FRONTEND_IMAGE}:rollback
 
       - name: Deploy rollback version
+        env:
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'production' }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
-          ENVIRONMENT="${{ github.event.inputs.environment || 'production' }}"
-
           # Deploy using your deployment method
           # Example with Docker Compose:
           cat > docker-compose.rollback.yml <<EOF
@@ -177,9 +185,9 @@ jobs:
             backend:
               image: ${BACKEND_IMAGE}:rollback
               environment:
-                - DATABASE_URL=\${{ secrets.DATABASE_URL }}
-                - REDIS_URL=\${{ secrets.REDIS_URL }}
-                - SECRET_KEY=\${{ secrets.SECRET_KEY }}
+                - DATABASE_URL=${DATABASE_URL}
+                - REDIS_URL=${REDIS_URL}
+                - SECRET_KEY=${SECRET_KEY}
               ports:
                 - "8000:8000"
               restart: unless-stopped
@@ -199,10 +207,10 @@ jobs:
           echo "Rollback deployment initiated for ${ENVIRONMENT}"
 
       - name: Run database migrations (if needed)
+        env:
+          ROLLBACK_VERSION: ${{ steps.rollback_version.outputs.version }}
         run: |
           # Check if database migrations need to be rolled back
-          ROLLBACK_VERSION="${{ steps.rollback_version.outputs.version }}"
-
           # Get migration version for rollback tag
           git checkout ${ROLLBACK_VERSION}
 
@@ -214,11 +222,11 @@ jobs:
           echo "Database migrations handled for rollback"
 
       - name: Verify rollback
+        env:
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'production' }}
         run: |
           # Wait for services to be ready
           sleep 30
-
-          ENVIRONMENT="${{ github.event.inputs.environment || 'production' }}"
 
           if [ "$ENVIRONMENT" == "production" ]; then
             API_URL="https://api.jddb.gc.ca"
@@ -269,6 +277,11 @@ jobs:
 
     steps:
       - name: Create incident report
+        env:
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'production' }}
+          ROLLBACK_VERSION: ${{ needs.health-check.outputs.previous_version }}
+          ACTOR: ${{ github.actor }}
+          REASON: ${{ github.event.inputs.reason || 'Automated rollback due to health check failure' }}
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           INCIDENT_ID="INC-$(date +%Y%m%d%H%M%S)"
@@ -278,10 +291,10 @@ jobs:
 
           ## Summary
           - **Date/Time**: ${TIMESTAMP}
-          - **Environment**: ${{ github.event.inputs.environment || 'production' }}
-          - **Rollback Version**: ${{ needs.health-check.outputs.previous_version }}
-          - **Triggered By**: ${{ github.actor }}
-          - **Reason**: ${{ github.event.inputs.reason || 'Automated rollback due to health check failure' }}
+          - **Environment**: ${ENVIRONMENT}
+          - **Rollback Version**: ${ROLLBACK_VERSION}
+          - **Triggered By**: ${ACTOR}
+          - **Reason**: ${REASON}
 
           ## Timeline
           - Deployment completed
@@ -310,16 +323,30 @@ jobs:
 
       - name: Create GitHub issue
         uses: actions/github-script@v7
+        env:
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'production' }}
+          ROLLBACK_VERSION: ${{ needs.health-check.outputs.previous_version }}
+          REASON: ${{ github.event.inputs.reason || 'Automated rollback due to health check failure' }}
+          ACTOR: ${{ github.actor }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
         with:
           script: |
-            const issueTitle = `🔄 Rollback Incident - ${{ github.event.inputs.environment || 'production' }} - ${new Date().toISOString().split('T')[0]}`;
+            const environment = process.env.ENVIRONMENT;
+            const rollbackVersion = process.env.ROLLBACK_VERSION;
+            const reason = process.env.REASON;
+            const actor = process.env.ACTOR;
+            const repository = process.env.REPOSITORY;
+            const runId = process.env.RUN_ID;
+
+            const issueTitle = `🔄 Rollback Incident - ${environment} - ${new Date().toISOString().split('T')[0]}`;
             const issueBody = `
             ## Rollback Executed
 
-            **Environment**: ${{ github.event.inputs.environment || 'production' }}
-            **Rolled back to**: ${{ needs.health-check.outputs.previous_version }}
-            **Reason**: ${{ github.event.inputs.reason || 'Automated rollback due to health check failure' }}
-            **Triggered by**: @${{ github.actor }}
+            **Environment**: ${environment}
+            **Rolled back to**: ${rollbackVersion}
+            **Reason**: ${reason}
+            **Triggered by**: @${actor}
 
             ### Next Steps
             - [ ] Review deployment logs
@@ -329,7 +356,7 @@ jobs:
             - [ ] Plan re-deployment
 
             ### Related Links
-            - [Failed Workflow Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            - [Failed Workflow Run](https://github.com/${repository}/actions/runs/${runId})
             - [Deployment Logs](#)
 
             cc: @fortinpy85

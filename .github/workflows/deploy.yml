@@ -312,23 +312,34 @@ jobs:
           webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Create deployment summary
+        env:
+          DEPLOY_STATUS: ${{ needs.deploy-production.result == 'success' && '✅ Success' || '❌ Failed' }}
+          VERSION: ${{ github.ref }}
+          ENVIRONMENT: ${{ github.event.inputs.environment || 'production' }}
+          ACTOR: ${{ github.actor }}
+          FRONTEND_STATUS: ${{ needs.deploy-production.outputs.frontend_status || 'N/A' }}
+          API_STATUS: ${{ needs.deploy-production.outputs.api_status || 'N/A' }}
+          DB_STATUS: ${{ needs.deploy-production.outputs.db_status || 'N/A' }}
+          WS_STATUS: ${{ needs.deploy-production.outputs.ws_status || 'N/A' }}
+          REDIS_STATUS: ${{ needs.deploy-production.outputs.redis_status || 'N/A' }}
+          FINAL_MESSAGE: ${{ needs.deploy-production.result != 'success' && '### ⚠️ Automatic rollback has been triggered' || '### ✅ Deployment completed successfully' }}
         run: |
           cat >> $GITHUB_STEP_SUMMARY <<EOF
           # Deployment Summary
 
-          ## Status: ${{ needs.deploy-production.result == 'success' && '✅ Success' || '❌ Failed' }}
+          ## Status: ${DEPLOY_STATUS}
 
-          - **Version**: ${{ github.ref }}
-          - **Environment**: ${{ github.event.inputs.environment || 'production' }}
-          - **Deployed by**: @${{ github.actor }}
+          - **Version**: ${VERSION}
+          - **Environment**: ${ENVIRONMENT}
+          - **Deployed by**: @${ACTOR}
           - **Timestamp**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
           ### Health Check Results
-          - Frontend: ${{ needs.deploy-production.outputs.frontend_status || 'N/A' }}
-          - API: ${{ needs.deploy-production.outputs.api_status || 'N/A' }}
-          - Database: ${{ needs.deploy-production.outputs.db_status || 'N/A' }}
-          - WebSocket: ${{ needs.deploy-production.outputs.ws_status || 'N/A' }}
-          - Redis: ${{ needs.deploy-production.outputs.redis_status || 'N/A' }}
+          - Frontend: ${FRONTEND_STATUS}
+          - API: ${API_STATUS}
+          - Database: ${DB_STATUS}
+          - WebSocket: ${WS_STATUS}
+          - Redis: ${REDIS_STATUS}
 
-          ${{ needs.deploy-production.result != 'success' && '### ⚠️ Automatic rollback has been triggered' || '### ✅ Deployment completed successfully' }}
+          ${FINAL_MESSAGE}
           EOF

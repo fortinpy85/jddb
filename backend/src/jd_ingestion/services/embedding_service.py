@@ -352,12 +352,13 @@ class EmbeddingService:
                     search_query += " AND jd.language = :language"
                     named_params["language"] = language_filter
 
-                search_query += f"""
+                search_query += """
                 GROUP BY jd.id, jd.job_number, jd.title, jd.classification, jd.language
-                HAVING MAX(1 - (cc.embedding <=> :query_embedding)) > {similarity_threshold}
+                HAVING MAX(1 - (cc.embedding <=> :query_embedding)) > :similarity_threshold
                 ORDER BY max_similarity_score DESC
                 LIMIT :limit
                 """
+                named_params["similarity_threshold"] = similarity_threshold
 
                 result = await db.execute(text(search_query), named_params)
                 rows = result.fetchall()

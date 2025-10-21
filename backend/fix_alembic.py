@@ -23,6 +23,7 @@ def fix_alembic_version():
 
         # Update to head
         head_version = "9063ab14ed70"  # pragma: allowlist secret
+        # nosec B608 - Safe: head_version is a hardcoded constant, not user input
         conn.execute(text(f"UPDATE alembic_version SET version_num = '{head_version}'"))
         conn.commit()
         print(f"Updated alembic version to: {head_version} (head)")
