@@ -27,7 +27,8 @@ class SecurityThresholdChecker:
             "max_medium_severity": 5,
             "max_critical_vulnerabilities": 0,
             "max_total_findings": 20,
-            "required_tools": ["trivy", "bandit", "phase2_audit"]
+            "required_tools": ["trivy", "bandit", "phase2_audit"],
+            "enforce_compliance": True  # Allow disabling compliance checks
         }
         self.violations = []
 
@@ -201,6 +202,11 @@ class SecurityThresholdChecker:
 
     def check_compliance_status(self, summary: Dict[str, Any]) -> bool:
         """Check compliance with security standards."""
+        # Allow disabling compliance checks via custom thresholds
+        if not self.thresholds.get("enforce_compliance", True):
+            logger.info("⚠️  Compliance checks disabled by custom thresholds")
+            return True
+
         compliance = summary.get("compliance", {})
         failed_standards = []
 
