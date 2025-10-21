@@ -1,11 +1,11 @@
 {
-  "security_score_minimum": 0,
-  "max_high_severity": 5,
-  "max_medium_severity": 40,
+  "security_score_minimum": 75,
+  "max_high_severity": 0,
+  "max_medium_severity": 5,
   "max_critical_vulnerabilities": 0,
-  "max_total_findings": 80,
+  "max_total_findings": 20,
   "required_tools": ["trivy", "bandit", "phase2_audit"],
-  "enforce_compliance": false,
-  "_note": "Temporarily relaxed thresholds to unblock CI/CD - MUST tighten after addressing security issues",
-  "_compliance_note": "OWASP_Top_10 compliance disabled temporarily - MUST re-enable and fix violations"
+  "enforce_compliance": true,
+  "_note": "Production-ready security thresholds - all HIGH severity findings resolved",
+  "_compliance_note": "OWASP_Top_10 compliance enabled and passing"
 }

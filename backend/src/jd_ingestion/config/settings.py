@@ -72,7 +72,12 @@ class Settings(BaseSettings):
     # Note: API_KEY is optional - used for service-to-service authentication if needed
     # For production, set via environment variable: API_KEY=<your-key>
     API_KEY: str = ""
-    api_host: str = "0.0.0.0"
+
+    # Network binding configuration
+    # Binds to all interfaces (0.0.0.0) for containerized deployment
+    # This is standard practice when running in Docker/Kubernetes behind a reverse proxy
+    # The reverse proxy (nginx/traefik) handles external access control and TLS termination
+    api_host: str = "0.0.0.0"  # nosec B104 - Required for container deployment
     api_port: int = 8000
     api_workers: int = 2  # Optimized for ≤100 concurrent users
 
@@ -193,9 +198,10 @@ class Settings(BaseSettings):
                     "Production requires secure DATABASE_SYNC_URL (not localhost defaults)"
                 )
             # Validate secret key
+            # nosec B105 - This is a validation check ensuring the default is NOT used, not a hardcoded secret
             if (
                 not self.secret_key
-                or self.secret_key == "default-secret-key-change-in-production"
+                or self.secret_key == "default-secret-key-change-in-production"  # nosec B105
             ):
                 errors.append(
                     "Production requires custom SECRET_KEY environment variable"

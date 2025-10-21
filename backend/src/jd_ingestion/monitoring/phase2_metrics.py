@@ -317,23 +317,25 @@ class MetricsCollector:
                 db_size_mb = db_size_bytes / (1024 * 1024) if db_size_bytes else 0
 
                 # Get table statistics for Phase 2 tables
-                phase2_tables = [
+                # Define allowed tables explicitly for security validation
+                ALLOWED_TABLES = {
                     "users",
                     "user_sessions",
                     "editing_sessions",
                     "document_changes",
                     "translation_memory",
                     "user_analytics",
-                ]
+                }
 
-                for table in phase2_tables:
+                for table in ALLOWED_TABLES:
                     try:
-                        result = await db.execute(text(f"SELECT count(*) FROM {table}"))
+                        # Table name is validated against allowed set - not user input
+                        result = await db.execute(text(f"SELECT count(*) FROM {table}"))  # nosec B608
                         row_count = result.scalar()
                         self.record_metric(f"table_rows_{table}", row_count, "count")
-                    except Exception:
-                        # Table might not exist yet
-                        pass
+                    except Exception as e:
+                        # Table might not exist yet - log for visibility
+                        logger.debug(f"Table {table} not accessible: {e}")
 
                 self.record_metric("database_connections", active_connections, "count")
                 self.record_metric("database_size_mb", db_size_mb, "megabytes")

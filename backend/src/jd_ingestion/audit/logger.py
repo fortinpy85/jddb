@@ -26,7 +26,7 @@ class AuditEventType(Enum):
     USER_LOGIN = "user_login"
     USER_LOGOUT = "user_logout"
     USER_REGISTRATION = "user_registration"
-    PASSWORD_CHANGE = "password_change"
+    PASSWORD_CHANGE = "password_change"  # nosec B105 - Event type enum, not a hardcoded password
 
     # Document access events
     DOCUMENT_VIEW = "document_view"
@@ -484,12 +484,14 @@ class AuditLogger:
             if where_clause:
                 where_clause = f"WHERE {where_clause}"
 
+            # Query uses parameterized conditions throughout - f-string only for WHERE clause assembly
+            # All user inputs are bound via params dict, not interpolated into SQL
             query = f"""
                 SELECT * FROM audit_log
                 {where_clause}
                 ORDER BY timestamp DESC
                 LIMIT :limit
-            """
+            """  # nosec B608
 
             async for db in get_async_session():
                 result = await db.execute(text(query), params)

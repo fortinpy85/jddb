@@ -186,7 +186,7 @@ async def login_user(
 
     return TokenResponse(
         access_token=access_token,
-        token_type="bearer",
+        token_type="bearer",  # nosec B106 - OAuth 2.0 standard token type, not a password
         expires_in=1800,  # 30 minutes
         user=UserResponse.from_user(user),
     )

@@ -8,6 +8,9 @@ from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from typing import AsyncIterator, Iterator
 
 from ..config import settings
+from ..utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 __all__ = [
     "async_engine",
@@ -54,9 +57,9 @@ def configure_mappers() -> None:
         from sqlalchemy.orm import configure_mappers
 
         configure_mappers()
-    except Exception:
+    except Exception as e:
         # If configure_mappers fails, it's likely already configured
-        pass
+        logger.debug(f"Mapper configuration skipped (likely already configured): {e}")
 
 
 async def get_async_session() -> AsyncIterator[AsyncSession]:

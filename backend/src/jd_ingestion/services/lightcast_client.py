@@ -149,7 +149,8 @@ class LightcastClient:
         if self._token is None or self._token.is_expired():
             await self._authenticate()
 
-        assert self._token is not None, "Authentication failed to set token"
+        if self._token is None:
+            raise RuntimeError("Authentication failed to set token")
         return self._token.access_token
 
     async def _make_request(
