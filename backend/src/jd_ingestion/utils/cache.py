@@ -56,7 +56,7 @@ class CacheService:
         else:
             key_data = json.dumps(data, sort_keys=True)
 
-        hash_key = hashlib.md5(key_data.encode()).hexdigest()
+        hash_key = hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
         return f"{prefix}:{hash_key}"
 
     async def get(self, key: str) -> Optional[Any]:

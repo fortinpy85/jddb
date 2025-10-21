@@ -240,7 +240,9 @@ async def process_single_file(
                     file_hash_short = (
                         file_metadata.file_hash[:6].upper()
                         if file_metadata.file_hash
-                        else hashlib.md5(file_path_obj.name.encode())
+                        else hashlib.md5(
+                            file_path_obj.name.encode(), usedforsecurity=False
+                        )
                         .hexdigest()[:6]
                         .upper()
                     )

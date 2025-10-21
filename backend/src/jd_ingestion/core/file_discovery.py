@@ -193,7 +193,11 @@ class FileDiscovery:
                 # Generate a temporary job number based on file hash (first 6 chars)
                 import hashlib
 
-                file_hash = hashlib.md5(filename.encode()).hexdigest()[:6].upper()
+                file_hash = (
+                    hashlib.md5(filename.encode(), usedforsecurity=False)
+                    .hexdigest()[:6]
+                    .upper()
+                )
                 metadata.job_number = file_hash
                 metadata.validation_errors.append(
                     f"Generated job number from filename hash: {file_hash}"

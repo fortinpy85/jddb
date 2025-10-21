@@ -20,7 +20,7 @@ _cache_enabled = True
 def _generate_cache_key(prefix: str, *args, **kwargs) -> str:
     """Generate deterministic cache key from function arguments."""
     key_data = f"{prefix}:{str(args)}:{str(sorted(kwargs.items()))}"
-    return hashlib.md5(key_data.encode()).hexdigest()
+    return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
 
 
 def cache_result(
