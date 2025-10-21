@@ -16,6 +16,12 @@ services:
       - app-data:/app/data
       - app-logs:/app/logs
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /run
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
@@ -45,6 +51,12 @@ services:
       - app-data:/app/data
       - app-logs:/app/logs
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /run
     healthcheck:
       test:
         [
@@ -81,6 +93,12 @@ services:
       - app-data:/app/data
       - app-logs:/app/logs
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /run
 
   flower:
     build:
@@ -95,6 +113,12 @@ services:
     depends_on:
       - redis
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /run
 
   postgres:
     image: pgvector/pgvector:pg15
@@ -108,6 +132,8 @@ services:
     ports:
       - "5432:5432"
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U jd_user -d jd_ingestion_prod"]
       interval: 30s
@@ -122,6 +148,8 @@ services:
     volumes:
       - redis-data:/data
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -139,6 +167,13 @@ services:
     depends_on:
       - app
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/run
 
 volumes:
   postgres-data:
