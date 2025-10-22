@@ -190,12 +190,11 @@ jobs:
 
       - name: Check security thresholds
         run: |
-          # TODO: Restore strict thresholds after addressing security violations
-          # Current violations: 4 high, 37 medium severity findings
+          # Strict security thresholds restored - must address all violations
           python scripts/check_security_thresholds.py \
             --security-summary security-summary.json \
             --custom-thresholds .github/security-thresholds-temp.json \
-            --fail-on-high
+            --fail-on-medium
 
   # Backend testing and validation
   backend-test:

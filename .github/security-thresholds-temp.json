@@ -1,12 +1,11 @@
 {
-  "security_score_minimum": 0,
+  "security_score_minimum": 75.0,
   "max_high_severity": 0,
-  "max_medium_severity": 40,
+  "max_medium_severity": 5,
   "max_critical_vulnerabilities": 0,
-  "max_total_findings": 70,
+  "max_total_findings": 20,
   "required_tools": ["trivy", "bandit", "phase2_audit"],
-  "enforce_compliance": false,
-  "_note": "Interim thresholds during comprehensive security remediation (Phase 1-Bandit: COMPLETE, Phase 2-5: IN PROGRESS)",
-  "_compliance_note": "Bandit and Trivy clean - Working through Semgrep, Phase2 Audit, and dependency findings per COMPREHENSIVE_SECURITY_PLAN.md",
-  "_security_score_note": "Score disabled during remediation - will restore after Phase 2-5 complete"
+  "enforce_compliance": true,
+  "_note": "Strict security thresholds restored - must address all violations",
+  "_status": "STRICT MODE: All security findings must be addressed before merge"
 }
