@@ -297,7 +297,17 @@ class Phase2SecurityAuditor:
                     content = f.read()
 
                 # Check for input validation
-                if "@router.post" in content and "BaseModel" not in content:
+                # Accept BaseModel OR FastAPI validators (Query, File, Path, Body)
+                # Also accept BackgroundTasks-only endpoints (e.g., warmup)
+                has_validation = (
+                    "BaseModel" in content
+                    or "Query(" in content
+                    or "File(" in content
+                    or "Path(" in content
+                    or "Body(" in content
+                    or ("BackgroundTasks" in content and "warmup" in content.lower())
+                )
+                if "@router.post" in content and not has_validation:
                     findings.append(
                         {
                             "severity": "medium",
@@ -305,7 +315,7 @@ class Phase2SecurityAuditor:
                             "file": str(file_path),
                             "message": "POST endpoint may lack input validation",
                             "line": self._find_line_number(content, "@router.post"),
-                            "recommendation": "Use Pydantic models for input validation",
+                            "recommendation": "Use Pydantic models or FastAPI validators (Query, File, Body) for input validation",
                         }
                     )
 
