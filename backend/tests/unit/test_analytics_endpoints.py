@@ -734,3 +734,58 @@ class TestSkillsAnalyticsEndpoints:
         """Test skills inventory with invalid offset."""
         response = client.get("/api/analytics/skills/inventory?offset=-1")
         assert response.status_code == 422
+
+
+class TestAnalyticsErrorHandling:
+    """Test error handling across analytics endpoints."""
+
+    @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
+    def test_dashboard_service_error(self, mock_service, client):
+        """Test dashboard endpoint with service error."""
+        mock_service.get_analytics_dashboard = AsyncMock(
+            side_effect=Exception("Dashboard service failed")
+        )
+
+        response = client.get("/api/analytics/dashboard")
+        assert response.status_code == 500
+        assert "Failed to generate analytics dashboard" in response.json()["detail"]
+
+    @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
+    def test_search_patterns_service_error(self, mock_service, client):
+        """Test search patterns endpoint with service error."""
+        mock_service.get_usage_statistics = AsyncMock(
+            side_effect=Exception("Search patterns failed")
+        )
+
+        response = client.get("/api/analytics/search-patterns")
+        assert response.status_code == 500
+
+    @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
+    def test_search_performance_service_error(self, mock_service, client):
+        """Test search performance endpoint with service error."""
+        mock_service.get_search_performance_stats = AsyncMock(
+            side_effect=Exception("Performance stats failed")
+        )
+
+        response = client.get("/api/analytics/search/performance")
+        assert response.status_code == 500
+
+    @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
+    def test_search_trends_service_error(self, mock_service, client):
+        """Test search trends endpoint with service error."""
+        mock_service.get_query_trends = AsyncMock(
+            side_effect=Exception("Trends service failed")
+        )
+
+        response = client.get("/api/analytics/search/trends")
+        assert response.status_code == 500
+
+    @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
+    def test_slow_queries_service_error(self, mock_service, client):
+        """Test slow queries endpoint with service error."""
+        mock_service.get_slow_queries = AsyncMock(
+            side_effect=Exception("Slow queries failed")
+        )
+
+        response = client.get("/api/analytics/search/slow-queries")
+        assert response.status_code == 500
