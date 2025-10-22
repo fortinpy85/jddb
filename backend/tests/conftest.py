@@ -21,6 +21,7 @@ from pathlib import Path
 from jd_ingestion.api.main import app
 from jd_ingestion.database.connection import get_async_session, get_db
 from jd_ingestion.database.models import Base
+from jd_ingestion.auth.api_key import get_api_key
 
 
 @pytest.fixture(scope="session")
@@ -164,8 +165,13 @@ def test_client(test_session):
     def override_get_db():
         yield session
 
+    def override_get_api_key():
+        """Override API key validation for tests."""
+        return "test-api-key"
+
     app.dependency_overrides[get_async_session] = override_get_async_session
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_api_key] = override_get_api_key
 
     # Override configure_mappers to prevent loading JSONB models
     from jd_ingestion.database import connection
@@ -195,7 +201,12 @@ async def async_client(async_session):
     async def override_get_async_session():
         return async_session
 
+    def override_get_api_key():
+        """Override API key validation for tests."""
+        return "test-api-key"
+
     app.dependency_overrides[get_async_session] = override_get_async_session
+    app.dependency_overrides[get_api_key] = override_get_api_key
 
     # Modern httpx API requires ASGITransport
     transport = ASGITransport(app=app)
