@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ...database.connection import get_async_session
 from ...services.analytics_service import analytics_service
@@ -24,7 +24,7 @@ router = APIRouter(tags=["analytics"])
 class ActivityTrackingRequest(BaseModel):
     """Request model for tracking activity."""
 
-    action_type: str
+    action_type: str = Field(..., min_length=1)
     endpoint: str
     http_method: str = "GET"
     resource_id: Optional[str] = None
@@ -237,6 +237,8 @@ async def generate_system_metrics(
 
         return {"status": "success", "metrics": metrics_summary}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error("Failed to generate system metrics", error=str(e))
         raise HTTPException(
@@ -715,10 +717,17 @@ async def get_slow_queries(
         raise HTTPException(status_code=500, detail="Failed to retrieve slow queries")
 
 
+class SearchFeedbackRequest(BaseModel):
+    """Request model for search feedback."""
+
+    clicked_results: List[int] = Field(default_factory=list)
+    satisfaction_rating: Optional[int] = Field(None, ge=1, le=5)
+
+
 @router.post("/search/feedback/{search_id}")
 async def record_search_feedback(
     search_id: str,
-    clicked_results: List[int],
+    clicked_results: List[int] = Query(default=[]),
     satisfaction_rating: Optional[int] = Query(
         None, ge=1, le=5, description="User satisfaction rating (1-5)"
     ),
