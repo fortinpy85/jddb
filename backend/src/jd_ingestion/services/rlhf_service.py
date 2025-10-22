@@ -220,15 +220,17 @@ class RLHFService:
         """
         cutoff_date = datetime.utcnow() - timedelta(days=days)
 
+        from sqlalchemy import case
+
         results = (
             db.query(
                 RLHFFeedback.suggestion_type,
                 func.count(RLHFFeedback.id).label("total"),
                 func.sum(
-                    func.case((RLHFFeedback.user_action == "accepted", 1), else_=0)
+                    case((RLHFFeedback.user_action == "accepted", 1), else_=0)
                 ).label("accepted"),
                 func.sum(
-                    func.case((RLHFFeedback.user_action == "rejected", 1), else_=0)
+                    case((RLHFFeedback.user_action == "rejected", 1), else_=0)
                 ).label("rejected"),
                 func.avg(RLHFFeedback.confidence).label("avg_confidence"),
             )
