@@ -40,7 +40,7 @@ class Phase2SecurityAuditor:
 
         for file_path in websocket_files:
             try:
-                with open(file_path, "r") as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
 
                 # Check for authentication in WebSocket connections
@@ -97,7 +97,7 @@ class Phase2SecurityAuditor:
 
         for file_path in tm_files:
             try:
-                with open(file_path, "r") as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
 
                 # Check for SQL injection protection
@@ -156,7 +156,7 @@ class Phase2SecurityAuditor:
 
         for file_path in auth_files:
             try:
-                with open(file_path, "r") as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
 
                 # Check for weak password hashing
@@ -213,7 +213,7 @@ class Phase2SecurityAuditor:
 
         for file_path in model_files:
             try:
-                with open(file_path, "r") as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
 
                 # Check for PII fields without encryption
@@ -262,26 +262,39 @@ class Phase2SecurityAuditor:
         logger.info("Auditing API security...")
         findings = []
 
+        # Check for CORS configuration in main.py (centralized)
+        cors_configured = False
+        main_files = list(Path("src").glob("**/api/main.py"))
+        for main_file in main_files:
+            try:
+                with open(main_file, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    if "CORSMiddleware" in content and "add_middleware" in content:
+                        cors_configured = True
+                        logger.info("✓ CORS properly configured in main.py")
+                        break
+            except Exception as e:
+                logger.warning(f"Error reading {main_file}: {e}")
+
+        if not cors_configured:
+            findings.append(
+                {
+                    "severity": "high",
+                    "type": "cors_configuration",
+                    "file": "src/jd_ingestion/api/main.py",
+                    "message": "Application lacks CORS middleware configuration",
+                    "line": 1,
+                    "recommendation": "Add CORSMiddleware to main.py with proper origin restrictions",
+                }
+            )
+
         # Check API endpoints
         api_files = list(Path("src").glob("**/endpoints/*.py"))
 
         for file_path in api_files:
             try:
-                with open(file_path, "r") as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
-
-                # Check for CORS configuration
-                if "router" in content and "cors" not in content.lower():
-                    findings.append(
-                        {
-                            "severity": "medium",
-                            "type": "cors_configuration",
-                            "file": str(file_path),
-                            "message": "API endpoint may lack CORS configuration",
-                            "line": 1,
-                            "recommendation": "Configure CORS properly for production",
-                        }
-                    )
 
                 # Check for input validation
                 if "@router.post" in content and "BaseModel" not in content:
@@ -326,7 +339,7 @@ class Phase2SecurityAuditor:
 
         for file_path in config_files:
             try:
-                with open(file_path, "r") as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     content = f.read()
 
                 # Check for hardcoded secrets
