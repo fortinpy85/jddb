@@ -606,3 +606,131 @@ class TestAnalyticsEndpointsEdgeCases:
             },  # Exceeds max of 5
         )
         assert response.status_code == 422
+
+
+class TestSkillsAnalyticsEndpoints:
+    """Test skills analytics endpoints."""
+
+    def test_get_skills_inventory_success(self, client):
+        """Test successful skills inventory retrieval."""
+        response = client.get("/api/analytics/skills/inventory")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert "total" in data
+        assert "limit" in data
+        assert "offset" in data
+        assert "skills" in data
+        assert isinstance(data["skills"], list)
+
+    def test_get_skills_inventory_with_search(self, client):
+        """Test skills inventory with search filter."""
+        response = client.get("/api/analytics/skills/inventory?search=python")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert "skills" in data
+
+    def test_get_skills_inventory_with_skill_type(self, client):
+        """Test skills inventory with skill type filter."""
+        response = client.get("/api/analytics/skills/inventory?skill_type=technical")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert "skills" in data
+
+    def test_get_skills_inventory_with_min_job_count(self, client):
+        """Test skills inventory with minimum job count filter."""
+        response = client.get("/api/analytics/skills/inventory?min_job_count=5")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert "skills" in data
+
+    def test_get_skills_inventory_with_pagination(self, client):
+        """Test skills inventory with pagination parameters."""
+        response = client.get("/api/analytics/skills/inventory?limit=50&offset=10")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert data["limit"] == 50
+        assert data["offset"] == 10
+
+    def test_get_skills_inventory_with_all_filters(self, client):
+        """Test skills inventory with all filters combined."""
+        response = client.get(
+            "/api/analytics/skills/inventory?search=data&skill_type=technical&min_job_count=3&limit=20"
+        )
+        assert response.status_code == 200
+
+        data = response.json()
+        assert "skills" in data
+        assert data["limit"] == 20
+
+    def test_get_top_skills_success(self, client):
+        """Test successful top skills retrieval."""
+        response = client.get("/api/analytics/skills/top")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert "top_skills" in data
+        assert isinstance(data["top_skills"], list)
+
+    def test_get_top_skills_with_limit(self, client):
+        """Test top skills with custom limit."""
+        response = client.get("/api/analytics/skills/top?limit=20")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert "top_skills" in data
+
+    def test_get_top_skills_with_type_filter(self, client):
+        """Test top skills filtered by skill type."""
+        response = client.get("/api/analytics/skills/top?skill_type=soft")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert "top_skills" in data
+
+    def test_get_top_skills_limit_validation(self, client):
+        """Test top skills limit validation."""
+        # Test exceeding max limit
+        response = client.get("/api/analytics/skills/top?limit=200")
+        assert response.status_code == 422
+
+    def test_get_skill_types_success(self, client):
+        """Test successful skill types distribution retrieval."""
+        response = client.get("/api/analytics/skills/types")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert "skill_types" in data
+        assert isinstance(data["skill_types"], list)
+
+    def test_get_skills_statistics_success(self, client):
+        """Test successful skills statistics retrieval."""
+        response = client.get("/api/analytics/skills/stats")
+        assert response.status_code == 200
+
+        data = response.json()
+        # Check for expected statistics fields
+        assert (
+            "total_unique_skills" in data
+            or "total_skills" in data
+            or "statistics" in data
+        )
+
+    def test_skills_inventory_invalid_min_job_count(self, client):
+        """Test skills inventory with invalid min_job_count."""
+        response = client.get("/api/analytics/skills/inventory?min_job_count=0")
+        assert response.status_code == 422
+
+    def test_skills_inventory_invalid_limit(self, client):
+        """Test skills inventory with invalid limit."""
+        response = client.get("/api/analytics/skills/inventory?limit=2000")
+        assert response.status_code == 422
+
+    def test_skills_inventory_invalid_offset(self, client):
+        """Test skills inventory with invalid offset."""
+        response = client.get("/api/analytics/skills/inventory?offset=-1")
+        assert response.status_code == 422
