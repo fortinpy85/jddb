@@ -222,10 +222,13 @@ class TestDatabaseURLConfiguration:
     @pytest.mark.asyncio
     async def test_async_session_query(self):
         """Test async session can execute queries."""
-        async for session in get_async_session():
+        async_session_gen = get_async_session()
+        session = await async_session_gen.__anext__()
+        try:
             result = await session.execute(text("SELECT 1"))
             assert result.scalar() == 1
-            break  # Only test first session
+        finally:
+            await session.close()
 
     def test_sync_session_query(self):
         """Test sync session can execute queries."""
