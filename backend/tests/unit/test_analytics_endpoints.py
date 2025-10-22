@@ -248,6 +248,32 @@ class TestAnalyticsSpecificEndpoints:
         assert len(data["search_patterns"]["popular_searches"]) == 2
 
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
+    def test_get_search_patterns_with_limit(self, mock_service, client):
+        """Test search patterns limiting when results exceed limit."""
+        # Create 25 popular searches
+        popular_searches = [
+            {"query": f"query_{i}", "count": 100 - i} for i in range(25)
+        ]
+        mock_stats = {
+            "search_patterns": {
+                "popular_searches": popular_searches,
+                "total_searches": 5000,
+            }
+        }
+        mock_service.get_usage_statistics = AsyncMock(return_value=mock_stats)
+
+        # Request with limit of 10
+        response = client.get("/api/analytics/search-patterns?period=month&limit=10")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert data["status"] == "success"
+        # Should be limited to 10 results
+        assert len(data["search_patterns"]["popular_searches"]) == 10
+        # Should be the first 10 (highest counts)
+        assert data["search_patterns"]["popular_searches"][0]["query"] == "query_0"
+
+    @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
     def test_get_performance_metrics_success(self, mock_service, client):
         """Test successful performance metrics retrieval."""
         mock_stats = {
@@ -319,6 +345,75 @@ class TestAnalyticsSpecificEndpoints:
         assert data["status"] == "success"
         assert data["metric"] == "requests"
         assert len(data["trends"]) == 7
+
+    @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
+    def test_get_trends_sessions_metric(self, mock_service, client):
+        """Test trends endpoint with sessions metric."""
+        mock_daily_stats = {
+            "usage": {"total_requests": 100, "unique_sessions": 50},
+            "search_patterns": {"total_searches": 200},
+            "ai_usage": {"total_cost_usd": 1.5},
+        }
+        mock_service.get_usage_statistics = AsyncMock(return_value=mock_daily_stats)
+
+        response = client.get("/api/analytics/trends?metric=sessions&days=3")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert data["metric"] == "sessions"
+        assert len(data["trends"]) == 3
+
+    @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
+    def test_get_trends_searches_metric(self, mock_service, client):
+        """Test trends endpoint with searches metric."""
+        mock_daily_stats = {
+            "usage": {"total_requests": 100, "unique_sessions": 50},
+            "search_patterns": {"total_searches": 200},
+            "ai_usage": {"total_cost_usd": 1.5},
+        }
+        mock_service.get_usage_statistics = AsyncMock(return_value=mock_daily_stats)
+
+        response = client.get("/api/analytics/trends?metric=searches&days=3")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert data["metric"] == "searches"
+        assert len(data["trends"]) == 3
+
+    @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
+    def test_get_trends_ai_cost_metric(self, mock_service, client):
+        """Test trends endpoint with ai_cost metric."""
+        mock_daily_stats = {
+            "usage": {"total_requests": 100, "unique_sessions": 50},
+            "search_patterns": {"total_searches": 200},
+            "ai_usage": {"total_cost_usd": 1.5},
+        }
+        mock_service.get_usage_statistics = AsyncMock(return_value=mock_daily_stats)
+
+        response = client.get("/api/analytics/trends?metric=ai_cost&days=3")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert data["metric"] == "ai_cost"
+        assert len(data["trends"]) == 3
+
+    @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
+    def test_get_trends_unknown_metric(self, mock_service, client):
+        """Test trends endpoint with unknown metric defaults to 0."""
+        mock_daily_stats = {
+            "usage": {"total_requests": 100, "unique_sessions": 50},
+            "search_patterns": {"total_searches": 200},
+            "ai_usage": {"total_cost_usd": 1.5},
+        }
+        mock_service.get_usage_statistics = AsyncMock(return_value=mock_daily_stats)
+
+        response = client.get("/api/analytics/trends?metric=unknown&days=3")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert data["metric"] == "unknown"
+        # Values should be 0 for unknown metric
+        assert all(trend["value"] == 0 for trend in data["trends"])
 
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
     def test_export_analytics_data_json(self, mock_service, client):
@@ -474,6 +569,18 @@ class TestSearchAnalyticsEndpoints:
         data = response.json()
         assert len(data["daily_volume"]) == 1
         assert data["daily_volume"][0]["count"] == 100
+
+    @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
+    def test_get_search_trends_empty(self, mock_service, client):
+        """Test search trends with no data."""
+        mock_service.get_query_trends = AsyncMock(return_value=None)
+
+        response = client.get("/api/analytics/search/trends?days=14")
+        assert response.status_code == 200
+
+        data = response.json()
+        assert "No trend data found" in data["message"]
+        assert data["period_days"] == 14
 
     @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
     def test_get_slow_queries_success(self, mock_service, client):
