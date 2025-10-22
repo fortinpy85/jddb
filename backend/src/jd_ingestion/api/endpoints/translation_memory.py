@@ -3,6 +3,13 @@ Translation Memory API Endpoints
 
 FastAPI endpoints for managing translation memory and providing
 translation suggestions using pgvector similarity search.
+
+Access Control & Permissions:
+    These endpoints will be secured with user-based access control and
+    permission checks. Project-level permissions planned for:
+    - Create/delete projects: project admin permission required
+    - Add/modify translations: project contributor permission required
+    - Search translations: project read permission required
 """
 
 import logging

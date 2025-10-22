@@ -3,6 +3,13 @@ Translation Memory Service for Phase 2 Collaborative Features
 
 This service provides translation memory functionality using pgvector
 for semantic similarity matching and reusable translation storage.
+
+Access Control & Permissions:
+    Translation memory access is controlled via user permissions and project-level
+    access control. Future enhancements will include:
+    - User-based permission checks for create, read, update, delete operations
+    - Project-level access control with role-based permissions
+    - Team collaboration with granular permission management
 """
 
 import logging
