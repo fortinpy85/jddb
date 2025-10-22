@@ -1,0 +1,310 @@
+{
+  "timestamp": "2025-10-21T10:40:09.540660",
+  "total_findings": 36,
+  "high_severity_count": 0,
+  "medium_severity_count": 34,
+  "low_severity_count": 2,
+  "findings": [
+    {
+      "severity": "medium",
+      "type": "access_control",
+      "file": "src/jd_ingestion/services/translation_memory_service.py",
+      "message": "Translation memory may lack access control",
+      "line": 1,
+      "recommendation": "Implement user-based access control for translation projects"
+    },
+    {
+      "severity": "medium",
+      "type": "access_control",
+      "file": "src/jd_ingestion/api/endpoints/translation_memory.py",
+      "message": "Translation memory may lack access control",
+      "line": 1,
+      "recommendation": "Implement user-based access control for translation projects"
+    },
+    {
+      "severity": "medium",
+      "type": "session_security",
+      "file": "src/jd_ingestion/api/endpoints/auth.py",
+      "message": "Session configuration may lack security flags",
+      "line": 5,
+      "recommendation": "Set secure, httpOnly, and sameSite flags for sessions"
+    },
+    {
+      "severity": "medium",
+      "type": "pii_protection",
+      "file": "src/jd_ingestion/database/models.py",
+      "message": "PII field may lack encryption: email = Column",
+      "line": 88,
+      "recommendation": "Consider encrypting PII fields at rest"
+    },
+    {
+      "severity": "medium",
+      "type": "pii_protection",
+      "file": "src/jd_ingestion/database/models.py",
+      "message": "PII field may lack encryption: address = Column",
+      "line": 127,
+      "recommendation": "Consider encrypting PII fields at rest"
+    },
+    {
+      "severity": "medium",
+      "type": "pii_protection",
+      "file": "src/jd_ingestion/database/models.py",
+      "message": "PII field may lack encryption: address = Column",
+      "line": 293,
+      "recommendation": "Consider encrypting PII fields at rest"
+    },
+    {
+      "severity": "medium",
+      "type": "pii_protection",
+      "file": "src/jd_ingestion/database/models.py",
+      "message": "PII field may lack encryption: address = Column",
+      "line": 435,
+      "recommendation": "Consider encrypting PII fields at rest"
+    },
+    {
+      "severity": "low",
+      "type": "audit_logging",
+      "file": "src/jd_ingestion/database/models.py",
+      "message": "Database models may lack audit logging",
+      "line": 1,
+      "recommendation": "Implement audit logging for data changes"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/bilingual_documents.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/websocket.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/translation_memory.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/auth.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/saved_searches.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/analysis.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/analytics.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/preferences.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/ai_suggestions.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/rate_limits.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "input_validation",
+      "file": "src/jd_ingestion/api/endpoints/rate_limits.py",
+      "message": "POST endpoint may lack input validation",
+      "line": 102,
+      "recommendation": "Use Pydantic models for input validation"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/content_generation.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/tasks.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "input_validation",
+      "file": "src/jd_ingestion/api/endpoints/tasks.py",
+      "message": "POST endpoint may lack input validation",
+      "line": 25,
+      "recommendation": "Use Pydantic models for input validation"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/ingestion.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "input_validation",
+      "file": "src/jd_ingestion/api/endpoints/ingestion.py",
+      "message": "POST endpoint may lack input validation",
+      "line": 27,
+      "recommendation": "Use Pydantic models for input validation"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/templates.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/translation_quality.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/rlhf.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "low",
+      "type": "error_handling",
+      "file": "src/jd_ingestion/api/endpoints/rlhf.py",
+      "message": "Exception handling may leak sensitive information",
+      "line": 8,
+      "recommendation": "Log errors securely without exposing sensitive data"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/search.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/phase2_monitoring.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "input_validation",
+      "file": "src/jd_ingestion/api/endpoints/phase2_monitoring.py",
+      "message": "POST endpoint may lack input validation",
+      "line": 380,
+      "recommendation": "Use Pydantic models for input validation"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/health.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "input_validation",
+      "file": "src/jd_ingestion/api/endpoints/health.py",
+      "message": "POST endpoint may lack input validation",
+      "line": 118,
+      "recommendation": "Use Pydantic models for input validation"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/quality.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/performance.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    },
+    {
+      "severity": "medium",
+      "type": "cors_configuration",
+      "file": "src/jd_ingestion/api/endpoints/jobs.py",
+      "message": "API endpoint may lack CORS configuration",
+      "line": 1,
+      "recommendation": "Configure CORS properly for production"
+    }
+  ],
+  "summary_by_type": {
+    "access_control": 2,
+    "session_security": 1,
+    "pii_protection": 4,
+    "audit_logging": 1,
+    "cors_configuration": 22,
+    "input_validation": 5,
+    "error_handling": 1
+  },
+  "recommendations": [
+    "Implement comprehensive input validation using Pydantic models",
+    "Review and strengthen access control mechanisms"
+  ]
+}
