@@ -122,3 +122,19 @@ backend/.pytest_cache/
 backend/htmlcov/
 nul
 backend/nul
+
+# Security scan results (artifacts, not source code)
+*-report.json
+*-audit*.json
+security-scan-*.json
+security-summary.json
+*-results.sarif
+ci-security-results/
+npm-audit-results.json
+bandit-report.json
+safety-report.json
+semgrep-results.json
+trivy-results.sarif
+
+# Claude Code local settings
+.claude/settings.local.json
