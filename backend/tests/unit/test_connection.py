@@ -99,8 +99,12 @@ class TestAsyncSessionDependency:
     @pytest.mark.asyncio
     async def test_get_async_session_success_flow(self):
         """Test successful async session dependency flow."""
-        async for session in get_async_session():
+        async_session_gen = get_async_session()
+        session = await async_session_gen.__anext__()
+        try:
             assert isinstance(session, AsyncSession)
+        finally:
+            await session.close()
 
 
 class TestSyncSessionDependency:
@@ -147,17 +151,17 @@ class TestDatabaseURLConfiguration:
                 f"got: {url_str}"
             )
         elif "sqlite" in url_str:
-            assert "aiosqlite" in url_str or "sqlite" in url_str, (
-                f"Async SQLite must use aiosqlite driver, got: {url_str}"
-            )
+            assert (
+                "aiosqlite" in url_str or "sqlite" in url_str
+            ), f"Async SQLite must use aiosqlite driver, got: {url_str}"
 
     def test_database_url_format_sync(self):
         """Verify sync database URL uses correct postgresql driver."""
         url_str = str(sync_engine.url)
         # Sync driver should not have asyncpg
-        assert "asyncpg" not in url_str, (
-            f"Sync DATABASE_SYNC_URL must not use asyncpg driver, got: {url_str}"
-        )
+        assert (
+            "asyncpg" not in url_str
+        ), f"Sync DATABASE_SYNC_URL must not use asyncpg driver, got: {url_str}"
 
     def test_settings_database_url_async(self):
         """Verify settings async database URL format."""
@@ -198,9 +202,9 @@ class TestDatabaseURLConfiguration:
                     f"CI DATABASE_SYNC_URL must use postgresql:// driver, "
                     f"got: {db_sync_url}"
                 )
-                assert "asyncpg" not in db_sync_url, (
-                    f"CI sync URL must not have asyncpg, got: {db_sync_url}"
-                )
+                assert (
+                    "asyncpg" not in db_sync_url
+                ), f"CI sync URL must not have asyncpg, got: {db_sync_url}"
 
     @pytest.mark.asyncio
     async def test_async_connection_works(self):
