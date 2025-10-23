@@ -1,392 +1,408 @@
+"""Tests for Analytics Service"""
+
 import pytest
-import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import AsyncMock, Mock
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
-from jd_ingestion.services.analytics_service import AnalyticsService
+from jd_ingestion.services.analytics_service import AnalyticsService, analytics_service
 from jd_ingestion.database.models import (
     UsageAnalytics,
-    SystemMetrics,
     AIUsageTracking,
+    SystemMetrics,
 )
 
 
-class TestAnalyticsService:
-    """Test suite for the AnalyticsService class."""
+@pytest.fixture
+def service():
+    """Create analytics service instance"""
+    return AnalyticsService()
 
-    @pytest.fixture
-    def analytics_service(self):
-        """Create an analytics service instance for testing."""
-        return AnalyticsService()
 
-    @pytest.fixture
-    def mock_db_session(self):
-        """Mock database session."""
-        session = AsyncMock(spec=AsyncSession)
-        session.add = Mock()
-        session.commit = AsyncMock()
-        session.flush = AsyncMock()
-        session.execute = AsyncMock()
-        session.scalar = AsyncMock()
-        return session
+class TestTrackActivity:
+    @pytest.mark.asyncio
+    async def test_track_activity_basic(self, service, async_session: AsyncSession):
+        """Test basic activity tracking"""
+        await service.track_activity(
+            db=async_session,
+            action_type="search",
+            endpoint="/api/search",
+            http_method="POST",
+            session_id="test-session",
+        )
 
-    @pytest.fixture
-    def sample_usage_data(self):
-        """Sample usage analytics data."""
-        return {
-            "action_type": "search",
-            "endpoint": "/api/search",
-            "http_method": "POST",
-            "session_id": str(uuid.uuid4()),
-            "user_id": "test_user",
-            "ip_address": "192.168.1.100",
-            "user_agent": "Mozilla/5.0 Test Browser",
-            "resource_id": "job_123",
-            "response_time_ms": 150,
-            "status_code": 200,
-            "search_query": "software engineer",
-            "search_filters": {"location": "Ottawa"},
-            "results_count": 25,
-        }
-
-    def test_analytics_service_initialization(self, analytics_service):
-        """Test analytics service initializes correctly."""
-        assert analytics_service is not None
-        assert hasattr(analytics_service, "session_cache")
-        assert isinstance(analytics_service.session_cache, dict)
+        result = await async_session.execute(
+            select(UsageAnalytics).where(UsageAnalytics.session_id == "test-session")
+        )
+        record = result.scalar_one_or_none()
+        assert record is not None
+        assert record.action_type == "search"
+        assert record.endpoint == "/api/search"
+        assert record.http_method == "POST"
 
     @pytest.mark.asyncio
-    async def test_track_activity_basic(
-        self, analytics_service, mock_db_session, sample_usage_data
+    async def test_track_activity_with_search_data(
+        self, service, async_session: AsyncSession
     ):
-        """Test basic activity tracking."""
-        await analytics_service.track_activity(db=mock_db_session, **sample_usage_data)
+        """Test activity tracking with search metadata"""
+        await service.track_activity(
+            db=async_session,
+            action_type="search",
+            endpoint="/api/search",
+            session_id="search-test",
+            search_query="data engineer",
+            search_filters={"location": "Toronto"},
+            results_count=25,
+            response_time_ms=150,
+        )
 
-        # Verify database interaction
-        mock_db_session.add.assert_called_once()
-        mock_db_session.commit.assert_called_once()
-
-        # Verify the UsageAnalytics object was created correctly
-        added_object = mock_db_session.add.call_args[0][0]
-        assert isinstance(added_object, UsageAnalytics)
-        assert added_object.action_type == "search"
-        assert added_object.endpoint == "/api/search"
-        assert added_object.session_id == sample_usage_data["session_id"]
+        result = await async_session.execute(
+            select(UsageAnalytics).where(UsageAnalytics.session_id == "search-test")
+        )
+        record = result.scalar_one_or_none()
+        assert record.search_query == "data engineer"
+        assert record.search_filters == {"location": "Toronto"}
+        assert record.results_count == 25
+        assert record.response_time_ms == 150
 
     @pytest.mark.asyncio
-    async def test_track_activity_minimal_data(
-        self, analytics_service, mock_db_session
+    async def test_track_activity_generates_session_id(
+        self, service, async_session: AsyncSession
     ):
-        """Test activity tracking with minimal required data."""
-        await analytics_service.track_activity(
-            db=mock_db_session, action_type="view", endpoint="/api/jobs/123"
+        """Test that session_id is auto-generated if not provided"""
+        await service.track_activity(
+            db=async_session,
+            action_type="view",
+            endpoint="/api/jobs/123",
         )
 
-        mock_db_session.add.assert_called_once()
-        mock_db_session.commit.assert_called_once()
+        result = await async_session.execute(select(UsageAnalytics))
+        record = result.scalar_one_or_none()
+        assert record is not None
+        assert record.session_id is not None and len(record.session_id) > 0
 
-        added_object = mock_db_session.add.call_args[0][0]
-        assert isinstance(added_object, UsageAnalytics)
-        assert added_object.action_type == "view"
-        assert added_object.endpoint == "/api/jobs/123"
-        assert added_object.http_method == "GET"  # Default value
-        assert added_object.status_code == 200  # Default value
 
+class TestTrackAIUsage:
     @pytest.mark.asyncio
-    async def test_record_system_metrics(self, analytics_service, mock_db_session):
-        """Test system metrics recording."""
-        metrics_data = {
-            "cpu_usage_percent": 45.5,
-            "memory_usage_percent": 62.3,
-            "disk_usage_percent": 78.9,
-            "active_connections": 25,
-            "request_count": 1500,
-            "error_count": 3,
-            "average_response_time_ms": 120.5,
-        }
-
-        await analytics_service.record_system_metrics(
-            db=mock_db_session, **metrics_data
+    async def test_track_ai_usage_basic(self, service, async_session: AsyncSession):
+        """Test AI usage tracking"""
+        await service.track_ai_usage(
+            db=async_session,
+            service_type="openai",
+            operation_type="embedding",
+            model_name="text-embedding-3-small",
+            input_tokens=500,
+            output_tokens=0,
+            cost_usd=Decimal("0.01"),
         )
 
-        mock_db_session.add.assert_called_once()
-        mock_db_session.commit.assert_called_once()
-
-        added_object = mock_db_session.add.call_args[0][0]
-        assert isinstance(added_object, SystemMetrics)
-        assert added_object.cpu_usage_percent == 45.5
-        assert added_object.memory_usage_percent == 62.3
-        assert added_object.active_connections == 25
-
-    @pytest.mark.asyncio
-    async def test_track_ai_usage(self, analytics_service, mock_db_session):
-        """Test AI usage tracking."""
-        ai_usage_data = {
-            "operation_type": "embedding_generation",
-            "model_name": "text-embedding-ada-002",
-            "tokens_used": 1500,
-            "cost_usd": Decimal("0.0006"),
-            "processing_time_ms": 2500,
-            "batch_size": 10,
-            "request_id": str(uuid.uuid4()),
-        }
-
-        await analytics_service.track_ai_usage(db=mock_db_session, **ai_usage_data)
-
-        mock_db_session.add.assert_called_once()
-        mock_db_session.commit.assert_called_once()
-
-        added_object = mock_db_session.add.call_args[0][0]
-        assert isinstance(added_object, AIUsageTracking)
-        assert added_object.operation_type == "embedding_generation"
-        assert added_object.model_name == "text-embedding-ada-002"
-        assert added_object.tokens_used == 1500
-        assert added_object.cost_usd == Decimal("0.0006")
+        result = await async_session.execute(select(AIUsageTracking))
+        record = result.scalar_one_or_none()
+        assert record is not None
+        assert record.service_type == "openai"
+        assert record.operation_type == "embedding"
+        assert record.total_tokens == 500  # input + output
+        assert record.cost_usd == Decimal("0.01")
 
     @pytest.mark.asyncio
-    async def test_get_usage_statistics_basic(self, analytics_service, mock_db_session):
-        """Test getting basic usage statistics."""
-        # Mock database results
-        mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = [
-            Mock(action_type="search", count=100),
-            Mock(action_type="view", count=150),
-            Mock(action_type="upload", count=25),
-        ]
-        mock_db_session.execute.return_value = mock_result
-
-        stats = await analytics_service.get_usage_statistics(db=mock_db_session, days=7)
-
-        assert isinstance(stats, dict)
-        mock_db_session.execute.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_get_system_health_metrics(self, analytics_service, mock_db_session):
-        """Test getting system health metrics."""
-        # Mock database results for system metrics
-        mock_result = Mock()
-        mock_result.scalars.return_value.first.return_value = Mock(
-            cpu_usage_percent=45.5,
-            memory_usage_percent=62.3,
-            disk_usage_percent=78.9,
-            active_connections=25,
-            error_count=2,
-            timestamp=datetime.utcnow(),
-        )
-        mock_db_session.execute.return_value = mock_result
-
-        health = await analytics_service.get_system_health_metrics(db=mock_db_session)
-
-        assert isinstance(health, dict)
-        mock_db_session.execute.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_get_ai_usage_summary(self, analytics_service, mock_db_session):
-        """Test getting AI usage summary."""
-        # Mock database results
-        mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = [
-            Mock(
-                operation_type="embedding_generation",
-                model_name="text-embedding-ada-002",
-                total_tokens=15000,
-                total_cost=Decimal("6.00"),
-                operation_count=100,
-                avg_processing_time=2500.0,
-            )
-        ]
-        mock_db_session.execute.return_value = mock_result
-
-        summary = await analytics_service.get_ai_usage_summary(
-            db=mock_db_session, days=30
+    async def test_track_ai_usage_with_error(
+        self, service, async_session: AsyncSession
+    ):
+        """Test AI usage tracking with error"""
+        await service.track_ai_usage(
+            db=async_session,
+            service_type="openai",
+            operation_type="completion",
+            model_name="gpt-4",
+            success="error",
+            error_message="Rate limit exceeded",
         )
 
+        result = await async_session.execute(select(AIUsageTracking))
+        record = result.scalar_one_or_none()
+        assert record.success == "error"
+        assert record.error_message == "Rate limit exceeded"
+
+
+class TestGetUsageStatistics:
+    @pytest.mark.asyncio
+    async def test_get_usage_statistics_day(self, service, async_session: AsyncSession):
+        """Test getting usage statistics for a day"""
+        # Create test data with explicit timestamps
+        from jd_ingestion.database.models import UsageAnalytics, AIUsageTracking
+
+        now = datetime.utcnow()
+
+        # Create UsageAnalytics record with timestamp
+        usage_record = UsageAnalytics(
+            timestamp=now,
+            session_id="s1",
+            action_type="search",
+            endpoint="/api/search",
+            http_method="GET",
+            response_time_ms=100,
+        )
+        async_session.add(usage_record)
+
+        # Create AIUsageTracking record with request_timestamp
+        ai_record = AIUsageTracking(
+            service_type="openai",
+            operation_type="embedding",
+            model_name="test-model",
+            input_tokens=100,
+            output_tokens=50,
+            total_tokens=150,
+            cost_usd=Decimal("0.05"),
+            request_timestamp=now,
+        )
+        async_session.add(ai_record)
+        await async_session.commit()
+
+        # Query with date range that includes the records
+        end_date = now + timedelta(minutes=1)
+        start_date = now - timedelta(minutes=1)
+
+        stats = await service.get_usage_statistics(
+            db=async_session, period="day", start_date=start_date, end_date=end_date
+        )
+
+        assert stats["period"] == "day"
+        assert "usage" in stats
+        assert "ai_usage" in stats
+        assert stats["usage"]["total_requests"] == 1
+        assert stats["ai_usage"]["total_requests"] == 1
+        assert stats["ai_usage"]["total_tokens"] == 150
+
+    @pytest.mark.asyncio
+    async def test_get_usage_statistics_custom_range(
+        self, service, async_session: AsyncSession
+    ):
+        """Test getting usage statistics with custom date range"""
+        start = datetime.utcnow() - timedelta(days=7)
+        end = datetime.utcnow()
+
+        stats = await service.get_usage_statistics(
+            db=async_session, period="week", start_date=start, end_date=end
+        )
+
+        assert "start_date" in stats
+        assert "end_date" in stats
+        assert stats["usage"]["total_requests"] >= 0
+
+
+class TestGenerateSystemMetrics:
+    @pytest.mark.asyncio
+    async def test_generate_system_metrics_daily(
+        self, service, async_session: AsyncSession
+    ):
+        """Test generating daily system metrics"""
+        # Create some test data
+        await service.track_activity(
+            db=async_session,
+            action_type="search",
+            endpoint="/api/search",
+            session_id="test",
+        )
+
+        result = await service.generate_system_metrics(
+            db=async_session, metric_type="daily"
+        )
+
+        assert result["metric_type"] == "daily"
+        assert "period_start" in result
+        assert "period_end" in result
+        assert "metrics_id" in result
+        assert "summary" in result
+
+    @pytest.mark.asyncio
+    async def test_generate_system_metrics_creates_record(
+        self, service, async_session: AsyncSession
+    ):
+        """Test that system metrics are persisted"""
+        await service.generate_system_metrics(db=async_session, metric_type="hourly")
+
+        result = await async_session.execute(
+            select(SystemMetrics).where(SystemMetrics.metric_type == "hourly")
+        )
+        record = result.scalar_one_or_none()
+        assert record is not None
+        assert record.metric_type == "hourly"
+
+
+class TestGetAnalyticsDashboard:
+    @pytest.mark.asyncio
+    async def test_get_analytics_dashboard(self, service, async_session: AsyncSession):
+        """Test analytics dashboard generation"""
+        dashboard = await service.get_analytics_dashboard(db=async_session)
+
+        assert "recent_activity" in dashboard
+        assert "weekly_trends" in dashboard
+        assert "generated_at" in dashboard
+        assert dashboard["recent_activity"]["period"] == "day"
+        assert dashboard["weekly_trends"]["period"] == "week"
+
+
+class TestGetSummaryStats:
+    @pytest.mark.asyncio
+    async def test_get_summary_stats_empty(self, service, async_session: AsyncSession):
+        """Test summary stats with no data"""
+        stats = await service.get_summary_stats(db=async_session)
+
+        assert "total_jobs" in stats
+        assert "jobs_with_embeddings" in stats
+        assert "total_content_chunks" in stats
+        assert "embedding_coverage_percent" in stats
+        assert stats["total_jobs"] >= 0
+
+
+class TestGetQualityMetrics:
+    @pytest.mark.asyncio
+    async def test_get_quality_metrics(self, service, async_session: AsyncSession):
+        """Test quality metrics retrieval"""
+        metrics = await service.get_quality_metrics(db=async_session)
+
+        assert "avg_content_completeness" in metrics
+        assert "avg_sections_completeness" in metrics
+        assert "total_processing_errors" in metrics
+        assert "quality_coverage_percent" in metrics
+
+
+class TestGetAIUsageStats:
+    @pytest.mark.asyncio
+    async def test_get_ai_usage_stats(self, service, async_session: AsyncSession):
+        """Test AI usage stats for last 30 days"""
+        # Create test data - use explicit insert to control timestamp
+        from jd_ingestion.database.models import AIUsageTracking
+
+        ai_record = AIUsageTracking(
+            service_type="openai",
+            operation_type="completion",
+            model_name="gpt-4",
+            input_tokens=1000,
+            output_tokens=500,
+            total_tokens=1500,
+            cost_usd=Decimal("0.15"),
+            success="success",
+            request_timestamp=datetime.now(),  # Use datetime.now() for consistency
+        )
+        async_session.add(ai_record)
+        await async_session.commit()
+
+        stats = await service.get_ai_usage_stats(db=async_session)
+
+        assert "total_requests" in stats
+        assert "total_tokens" in stats
+        assert "total_cost_usd" in stats
+        assert "success_rate_percent" in stats
+        assert stats["total_requests"] >= 1
+        assert stats["total_tokens"] >= 1500
+
+
+class TestGetContentDistribution:
+    @pytest.mark.asyncio
+    async def test_get_content_distribution(self, service, async_session: AsyncSession):
+        """Test content distribution stats"""
+        distribution = await service.get_content_distribution(db=async_session)
+
+        assert "by_department" in distribution
+        assert "by_section_type" in distribution
+        assert isinstance(distribution["by_department"], dict)
+
+
+class TestGetPerformanceStats:
+    @pytest.mark.asyncio
+    async def test_get_performance_stats(self, service, async_session: AsyncSession):
+        """Test performance statistics"""
+        # Create upload activity with processing time
+        await service.track_activity(
+            db=async_session,
+            action_type="upload",
+            endpoint="/api/upload",
+            processing_time_ms=5000,
+        )
+
+        stats = await service.get_performance_stats(db=async_session)
+
+        assert "avg_processing_time_ms" in stats
+        assert "processing_health" in stats
+        assert stats["processing_health"] in ["good", "slow"]
+
+
+class TestBackwardsCompatibility:
+    @pytest.mark.asyncio
+    async def test_record_system_metrics(self, service, async_session: AsyncSession):
+        """Test backwards compatibility wrapper"""
+        # Should not raise error
+        await service.record_system_metrics(db=async_session)
+
+    @pytest.mark.asyncio
+    async def test_get_system_health_metrics(
+        self, service, async_session: AsyncSession
+    ):
+        """Test system health metrics wrapper"""
+        metrics = await service.get_system_health_metrics(db=async_session)
+        assert "avg_processing_time_ms" in metrics
+
+    @pytest.mark.asyncio
+    async def test_get_ai_usage_summary(self, service, async_session: AsyncSession):
+        """Test AI usage summary wrapper"""
+        summary = await service.get_ai_usage_summary(db=async_session, days=30)
         assert isinstance(summary, list)
-        mock_db_session.execute.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_get_popular_search_terms(self, analytics_service, mock_db_session):
-        """Test getting popular search terms."""
-        # Mock database results
-        mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = [
-            Mock(search_query="software engineer", search_count=50),
-            Mock(search_query="data scientist", search_count=35),
-            Mock(search_query="project manager", search_count=28),
-        ]
-        mock_db_session.execute.return_value = mock_result
+    async def test_get_data_quality_metrics(self, service, async_session: AsyncSession):
+        """Test data quality metrics wrapper"""
+        metrics = await service.get_data_quality_metrics(db=async_session, days=7)
+        assert isinstance(metrics, list)
 
-        terms = await analytics_service.get_popular_search_terms(
-            db=mock_db_session, days=7, limit=10
-        )
 
-        assert isinstance(terms, list)
-        mock_db_session.execute.assert_called_once()
-
+class TestGetDatabaseStatistics:
     @pytest.mark.asyncio
-    async def test_get_database_statistics(self, analytics_service, mock_db_session):
-        """Test getting database statistics."""
-        # Mock multiple database results
-        results = [
-            Mock(),  # job_descriptions count
-            Mock(),  # content_chunks count
-            Mock(),  # job_sections count
-            Mock(),  # job_metadata count
-        ]
-        results[0].scalar.return_value = 1500
-        results[1].scalar.return_value = 7500
-        results[2].scalar.return_value = 3000
-        results[3].scalar.return_value = 1200
-        mock_db_session.execute.side_effect = results
+    async def test_get_database_statistics(self, service, async_session: AsyncSession):
+        """Test database statistics"""
+        stats = await service.get_database_statistics(db=async_session)
 
-        stats = await analytics_service.get_database_statistics(db=mock_db_session)
-
-        assert isinstance(stats, dict)
         assert "total_job_descriptions" in stats
         assert "total_content_chunks" in stats
         assert "total_job_sections" in stats
-        assert "total_job_metadata" in stats
-        assert mock_db_session.execute.call_count == 4
+        assert all(isinstance(v, int) for v in stats.values())
 
+
+class TestGetPopularSearchTerms:
     @pytest.mark.asyncio
-    async def test_get_data_quality_metrics(self, analytics_service, mock_db_session):
-        """Test getting data quality metrics."""
-        # Mock database results
-        mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = [
-            Mock(
-                metric_name="completeness_score",
-                metric_value=0.95,
-                job_id=123,
-                timestamp=datetime.utcnow(),
-            ),
-            Mock(
-                metric_name="accuracy_score",
-                metric_value=0.88,
-                job_id=124,
-                timestamp=datetime.utcnow(),
-            ),
-        ]
-        mock_db_session.execute.return_value = mock_result
+    async def test_get_popular_search_terms_empty(
+        self, service, async_session: AsyncSession
+    ):
+        """Test popular search terms with no data"""
+        terms = await service.get_popular_search_terms(
+            db=async_session, days=7, limit=10
+        )
+        assert isinstance(terms, list)
 
-        metrics = await analytics_service.get_data_quality_metrics(
-            db=mock_db_session, days=7
+
+class TestGetProcessingPerformance:
+    @pytest.mark.asyncio
+    async def test_get_processing_performance(
+        self, service, async_session: AsyncSession
+    ):
+        """Test processing performance metrics"""
+        # Create upload activities
+        await service.track_activity(
+            db=async_session,
+            action_type="upload",
+            endpoint="/api/upload",
+            processing_time_ms=3000,
         )
 
-        assert isinstance(metrics, list)
-        mock_db_session.execute.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_get_processing_performance(self, analytics_service, mock_db_session):
-        """Test getting processing performance metrics."""
-        # Mock database results
-        mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = [
-            Mock(
-                action_type="file_processing",
-                avg_processing_time=5500.0,
-                total_operations=150,
-                success_rate=0.96,
-                date=datetime.utcnow().date(),
-            )
-        ]
-        mock_db_session.execute.return_value = mock_result
-
-        performance = await analytics_service.get_processing_performance(
-            db=mock_db_session, days=30
+        performance = await service.get_processing_performance(
+            db=async_session, days=30
         )
-
         assert isinstance(performance, list)
-        mock_db_session.execute.assert_called_once()
 
-    @pytest.mark.asyncio
-    async def test_track_activity_exception_handling(
-        self, analytics_service, mock_db_session
-    ):
-        """Test activity tracking with database exception."""
-        # Mock database exception
-        mock_db_session.commit.side_effect = Exception("Database connection error")
 
-        # Should not raise exception
-        await analytics_service.track_activity(
-            db=mock_db_session, action_type="test", endpoint="/test"
-        )
-
-        mock_db_session.add.assert_called_once()
-        mock_db_session.commit.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_session_cache_functionality(self, analytics_service):
-        """Test session caching functionality."""
-        session_id = str(uuid.uuid4())
-
-        # Initially empty
-        assert len(analytics_service.session_cache) == 0
-
-        # Could be used for session tracking in future implementations
-        analytics_service.session_cache[session_id] = {
-            "start_time": datetime.utcnow(),
-            "activity_count": 1,
-        }
-
-        assert session_id in analytics_service.session_cache
-        assert analytics_service.session_cache[session_id]["activity_count"] == 1
-
-    @pytest.mark.asyncio
-    async def test_get_usage_statistics_with_date_range(
-        self, analytics_service, mock_db_session
-    ):
-        """Test usage statistics with specific date range."""
-        start_date = datetime.utcnow() - timedelta(days=30)
-        end_date = datetime.utcnow()
-
-        mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = []
-        mock_db_session.execute.return_value = mock_result
-
-        stats = await analytics_service.get_usage_statistics(
-            db=mock_db_session, start_date=start_date, end_date=end_date
-        )
-
-        assert isinstance(stats, dict)
-        mock_db_session.execute.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_track_ai_usage_minimal_data(
-        self, analytics_service, mock_db_session
-    ):
-        """Test AI usage tracking with minimal required data."""
-        await analytics_service.track_ai_usage(
-            db=mock_db_session,
-            operation_type="text_completion",
-            model_name="gpt-3.5-turbo",
-            tokens_used=500,
-        )
-
-        mock_db_session.add.assert_called_once()
-        mock_db_session.commit.assert_called_once()
-
-        added_object = mock_db_session.add.call_args[0][0]
-        assert isinstance(added_object, AIUsageTracking)
-        assert added_object.operation_type == "text_completion"
-        assert added_object.tokens_used == 500
-        assert added_object.cost_usd is None  # Not required
-
-    @pytest.mark.asyncio
-    async def test_record_system_metrics_minimal_data(
-        self, analytics_service, mock_db_session
-    ):
-        """Test system metrics recording with minimal data."""
-        await analytics_service.record_system_metrics(
-            db=mock_db_session, cpu_usage_percent=25.0
-        )
-
-        mock_db_session.add.assert_called_once()
-        mock_db_session.commit.assert_called_once()
-
-        added_object = mock_db_session.add.call_args[0][0]
-        assert isinstance(added_object, SystemMetrics)
-        assert added_object.cpu_usage_percent == 25.0
-        assert added_object.memory_usage_percent is None  # Optional field
+class TestGlobalServiceInstance:
+    def test_global_instance_exists(self):
+        """Test that global analytics_service instance exists"""
+        assert analytics_service is not None
+        assert isinstance(analytics_service, AnalyticsService)

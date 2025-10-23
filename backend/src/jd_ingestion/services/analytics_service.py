@@ -863,7 +863,7 @@ class AnalyticsService:
                 SearchAnalytics.query_text,
                 func.count(SearchAnalytics.id).label("search_count"),
             )
-            .where(SearchAnalytics.created_at >= cutoff_date)
+            .where(SearchAnalytics.timestamp >= cutoff_date)
             .group_by(SearchAnalytics.query_text)
             .order_by(func.count(SearchAnalytics.id).desc())
             .limit(limit)
