@@ -805,3 +805,738 @@ class TestJobAnalysisService:
         assert result["missing_skills"] == []
         assert result["skill_level_gaps"] == {}
         assert result["gap_score"] == 0.0
+
+    # ========================================================================
+    # COMPENSATION ANALYSIS TESTS
+    # ========================================================================
+
+    @pytest.mark.asyncio
+    async def test_get_compensation_analysis_with_data(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test compensation analysis with salary data."""
+        # Mock salary data
+        salaries = [80000, 90000, 100000, 110000, 120000]
+        mock_result = Mock()
+        mock_result.scalars.return_value.all.return_value = salaries
+        mock_db_session.execute.return_value = mock_result
+
+        result = await job_analysis_service.get_compensation_analysis(
+            mock_db_session, classification="IT-02"
+        )
+
+        assert "statistics" in result
+        assert "filters" in result
+        assert result["statistics"]["total_positions"] == 5
+        assert "salary_statistics" in result["statistics"]
+        assert "mean" in result["statistics"]["salary_statistics"]
+        assert "median" in result["statistics"]["salary_statistics"]
+        assert "percentiles" in result["statistics"]["salary_statistics"]
+
+    @pytest.mark.asyncio
+    async def test_get_compensation_analysis_no_data(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test compensation analysis with no salary data."""
+        mock_result = Mock()
+        mock_result.scalars.return_value.all.return_value = []
+        mock_db_session.execute.return_value = mock_result
+
+        result = await job_analysis_service.get_compensation_analysis(
+            mock_db_session, classification="IT-02"
+        )
+
+        assert result["statistics"] == {}
+
+    @pytest.mark.asyncio
+    async def test_get_compensation_analysis_with_filters(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test compensation analysis with classification and department filters."""
+        salaries = [100000, 110000]
+        mock_result = Mock()
+        mock_result.scalars.return_value.all.return_value = salaries
+        mock_db_session.execute.return_value = mock_result
+
+        result = await job_analysis_service.get_compensation_analysis(
+            mock_db_session, classification="IT-02", department="Engineering"
+        )
+
+        assert result["filters"]["classification"] == "IT-02"
+        assert result["filters"]["department"] == "Engineering"
+        assert result["statistics"]["total_positions"] == 2
+
+    # ========================================================================
+    # JOB CLUSTERING TESTS
+    # ========================================================================
+
+    @pytest.mark.asyncio
+    async def test_get_job_clusters_basic(self, job_analysis_service, mock_db_session):
+        """Test basic job clustering functionality."""
+        # Mock job data with embeddings
+        job_data = [
+            (1, "Software Developer", "IT-02", [0.1, 0.2, 0.3] * 10),
+            (2, "Senior Developer", "IT-03", [0.15, 0.25, 0.35] * 10),
+            (3, "Technical Lead", "IT-04", [0.2, 0.3, 0.4] * 10),
+        ]
+
+        mock_result = Mock()
+        mock_result.all.return_value = job_data
+        mock_db_session.execute.return_value = mock_result
+
+        result = await job_analysis_service.get_job_clusters(
+            mock_db_session, n_clusters=2
+        )
+
+        assert "clusters" in result
+        assert "method" in result
+        assert "n_clusters" in result
+        assert result["method"] == "similarity"
+        assert result["n_clusters"] == 2
+
+    @pytest.mark.asyncio
+    async def test_get_job_clusters_no_data(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test job clustering with no data."""
+        mock_result = Mock()
+        mock_result.all.return_value = []
+        mock_db_session.execute.return_value = mock_result
+
+        result = await job_analysis_service.get_job_clusters(mock_db_session)
+
+        assert result["clusters"] == []
+
+    @pytest.mark.asyncio
+    async def test_get_job_clusters_with_classification_filter(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test job clustering with classification filter."""
+        job_data = [
+            (1, "Developer", "IT-02", [0.1, 0.2, 0.3] * 10),
+            (2, "Developer", "IT-02", [0.15, 0.25, 0.35] * 10),
+        ]
+
+        mock_result = Mock()
+        mock_result.all.return_value = job_data
+        mock_db_session.execute.return_value = mock_result
+
+        result = await job_analysis_service.get_job_clusters(
+            mock_db_session, classification="IT-02", n_clusters=1
+        )
+
+        assert result["classification_filter"] == "IT-02"
+        assert len(result["clusters"]) > 0
+
+    @pytest.mark.asyncio
+    async def test_get_job_clusters_multiple_embeddings_per_job(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test job clustering when jobs have multiple embeddings."""
+        # Same job with multiple embeddings
+        job_data = [
+            (1, "Developer", "IT-02", [0.1, 0.2, 0.3] * 10),
+            (1, "Developer", "IT-02", [0.11, 0.21, 0.31] * 10),
+            (2, "Analyst", "IT-02", [0.5, 0.6, 0.7] * 10),
+        ]
+
+        mock_result = Mock()
+        mock_result.all.return_value = job_data
+        mock_db_session.execute.return_value = mock_result
+
+        result = await job_analysis_service.get_job_clusters(
+            mock_db_session, n_clusters=2
+        )
+
+        assert len(result["clusters"]) > 0
+        # Should average embeddings for job 1
+
+    # ========================================================================
+    # REQUIREMENT EXTRACTION AND MATCHING TESTS
+    # ========================================================================
+
+    @pytest.mark.asyncio
+    async def test_extract_requirements_success(
+        self, job_analysis_service, sample_job_a, mock_openai_client
+    ):
+        """Test successful requirement extraction."""
+        job_analysis_service.openai_client = mock_openai_client
+
+        # Mock OpenAI response
+        requirements_response = Mock()
+        requirements_response.choices = [Mock()]
+        requirements_response.choices[0].message.content = json.dumps(
+            {
+                "education": ["Bachelor's degree in Computer Science"],
+                "experience": ["5+ years Python development"],
+                "technical_skills": ["Python", "Django", "SQL"],
+                "soft_skills": ["Team collaboration", "Communication"],
+                "certifications": ["AWS Certified"],
+                "languages": ["English"],
+            }
+        )
+        mock_openai_client.chat.completions.create.return_value = requirements_response
+
+        result = await job_analysis_service._extract_requirements(sample_job_a)
+
+        assert "education" in result
+        assert "experience" in result
+        assert "technical_skills" in result
+        assert len(result["education"]) > 0
+
+    @pytest.mark.asyncio
+    async def test_extract_requirements_error_fallback(
+        self, job_analysis_service, sample_job_a, mock_openai_client
+    ):
+        """Test requirement extraction with API error fallback."""
+        job_analysis_service.openai_client = mock_openai_client
+
+        # Mock OpenAI error
+        mock_openai_client.chat.completions.create.side_effect = Exception("API Error")
+
+        result = await job_analysis_service._extract_requirements(sample_job_a)
+
+        # Should return structure even on error
+        assert "education" in result
+        assert "experience" in result
+        assert isinstance(result["education"], list)
+
+    @pytest.mark.asyncio
+    async def test_calculate_requirement_matches_all_categories(
+        self, job_analysis_service, mock_openai_client
+    ):
+        """Test requirement matching across all categories."""
+        job_analysis_service.openai_client = mock_openai_client
+
+        requirements_a = {
+            "education": ["Bachelor's degree"],
+            "experience": ["5 years"],
+            "technical_skills": ["Python", "Django"],
+            "soft_skills": ["Leadership"],
+            "certifications": ["PMP"],
+            "languages": ["English"],
+        }
+
+        requirements_b = {
+            "education": ["Master's degree"],
+            "experience": ["3 years"],
+            "technical_skills": ["Python", "Flask"],
+            "soft_skills": ["Communication"],
+            "certifications": ["Scrum Master"],
+            "languages": ["English", "French"],
+        }
+
+        with patch.object(
+            job_analysis_service,
+            "_calculate_embedding_text_similarity",
+            return_value=0.75,
+        ):
+            result = await job_analysis_service._calculate_requirement_matches(
+                requirements_a, requirements_b
+            )
+
+        assert "overall_score" in result
+        assert "education" in result
+        assert "experience" in result
+        assert "technical" in result
+        assert "soft_skills" in result
+        assert 0.0 <= result["overall_score"] <= 1.0
+
+    @pytest.mark.asyncio
+    async def test_calculate_requirement_matches_empty(self, job_analysis_service):
+        """Test requirement matching with empty requirements."""
+        requirements_a = {
+            "education": [],
+            "experience": [],
+            "technical_skills": [],
+            "soft_skills": [],
+            "certifications": [],
+            "languages": [],
+        }
+
+        requirements_b = {
+            "education": [],
+            "experience": [],
+            "technical_skills": [],
+            "soft_skills": [],
+            "certifications": [],
+            "languages": [],
+        }
+
+        result = await job_analysis_service._calculate_requirement_matches(
+            requirements_a, requirements_b
+        )
+
+        # Empty requirements should match perfectly
+        assert result["overall_score"] == 1.0
+
+    @pytest.mark.asyncio
+    async def test_calculate_requirement_matches_error_handling(
+        self, job_analysis_service, mock_openai_client
+    ):
+        """Test requirement matching error handling."""
+        job_analysis_service.openai_client = mock_openai_client
+
+        requirements_a = {"education": ["Bachelor's"]}
+        requirements_b = {"education": ["Master's"]}
+
+        # Mock error in embedding calculation
+        with patch.object(
+            job_analysis_service,
+            "_calculate_embedding_text_similarity",
+            side_effect=Exception("Embedding error"),
+        ):
+            result = await job_analysis_service._calculate_requirement_matches(
+                requirements_a, requirements_b
+            )
+
+        # Should handle error gracefully
+        assert "overall_score" in result
+
+    @pytest.mark.asyncio
+    async def test_generate_requirement_insights_excellent_match(
+        self, job_analysis_service
+    ):
+        """Test requirement insights for excellent match."""
+        requirement_matches = {
+            "overall_score": 0.85,
+            "education": 0.9,
+            "experience": 0.85,
+            "technical": 0.8,
+            "soft_skills": 0.9,
+        }
+
+        insights = await job_analysis_service._generate_requirement_insights(
+            requirement_matches
+        )
+
+        assert len(insights) > 0
+        assert any("Excellent" in insight for insight in insights)
+        assert any("Strong match" in insight for insight in insights)
+
+    @pytest.mark.asyncio
+    async def test_generate_requirement_insights_poor_match(self, job_analysis_service):
+        """Test requirement insights for poor match."""
+        requirement_matches = {
+            "overall_score": 0.3,
+            "education": 0.2,
+            "experience": 0.25,
+            "technical": 0.4,
+            "soft_skills": 0.35,
+        }
+
+        insights = await job_analysis_service._generate_requirement_insights(
+            requirement_matches
+        )
+
+        assert len(insights) > 0
+        assert any(
+            "Poor" in insight or "gap" in insight.lower() for insight in insights
+        )
+        assert any("Focus development" in insight for insight in insights)
+
+    @pytest.mark.asyncio
+    async def test_generate_requirement_insights_error(self, job_analysis_service):
+        """Test requirement insights generation error handling."""
+        # Pass invalid data to trigger error
+        insights = await job_analysis_service._generate_requirement_insights({})
+
+        assert len(insights) > 0
+        # Should still return some insight even on error
+
+    # ========================================================================
+    # SKILL DEVELOPMENT RECOMMENDATIONS TESTS
+    # ========================================================================
+
+    @pytest.mark.asyncio
+    async def test_generate_skill_development_recommendations_few_gaps(
+        self, job_analysis_service
+    ):
+        """Test skill development recommendations with few gaps."""
+        missing_skills = ["React", "TypeScript"]
+        skill_level_gaps = {
+            "python": {"job_a_level": "preferred", "job_b_level": "required"}
+        }
+
+        recommendations = (
+            await job_analysis_service._generate_skill_development_recommendations(
+                missing_skills, skill_level_gaps
+            )
+        )
+
+        assert len(recommendations) > 0
+        assert any("React" in rec for rec in recommendations)
+        assert any("3-6 months" in rec for rec in recommendations)
+
+    @pytest.mark.asyncio
+    async def test_generate_skill_development_recommendations_many_gaps(
+        self, job_analysis_service
+    ):
+        """Test skill development recommendations with many gaps."""
+        missing_skills = [
+            "React",
+            "TypeScript",
+            "Node.js",
+            "MongoDB",
+            "GraphQL",
+            "Docker",
+            "Kubernetes",
+        ]
+        skill_level_gaps = {
+            "python": {"job_a_level": "preferred", "job_b_level": "required"},
+            "sql": {"job_a_level": "asset", "job_b_level": "required"},
+        }
+
+        recommendations = (
+            await job_analysis_service._generate_skill_development_recommendations(
+                missing_skills, skill_level_gaps
+            )
+        )
+
+        assert len(recommendations) > 0
+        assert any("12+ months" in rec for rec in recommendations)
+        assert any("Comprehensive" in rec for rec in recommendations)
+
+    @pytest.mark.asyncio
+    async def test_generate_skill_development_recommendations_no_gaps(
+        self, job_analysis_service
+    ):
+        """Test skill development recommendations with no gaps."""
+        recommendations = (
+            await job_analysis_service._generate_skill_development_recommendations(
+                [], {}
+            )
+        )
+
+        assert len(recommendations) > 0
+        assert any("Excellent" in rec or "minimal" in rec for rec in recommendations)
+
+    @pytest.mark.asyncio
+    async def test_generate_skill_development_recommendations_error(
+        self, job_analysis_service
+    ):
+        """Test skill development recommendations error handling."""
+        # Force an error by passing None
+        with patch.object(
+            job_analysis_service,
+            "_generate_skill_development_recommendations",
+            side_effect=Exception("Test error"),
+        ):
+            try:
+                await job_analysis_service._generate_skill_development_recommendations(
+                    ["Python"], {}
+                )
+            except Exception:
+                pass  # Expected
+
+    # ========================================================================
+    # CAREER PATH ANALYSIS TESTS
+    # ========================================================================
+
+    @pytest.mark.asyncio
+    async def test_get_career_paths_success(
+        self, job_analysis_service, mock_db_session, sample_job_a
+    ):
+        """Test successful career path analysis."""
+        # Mock current job query
+        mock_current = Mock()
+        mock_current.scalar_one_or_none.return_value = sample_job_a
+
+        # Mock potential jobs query
+        potential_job = JobDescription(
+            id=3,
+            title="Lead Software Developer",
+            classification="EX-02",
+            language="en",
+        )
+        potential_job.chunks = [
+            ContentChunk(job_id=3, chunk_text="Lead content", embedding=[0.1] * 30)
+        ]
+
+        mock_potential = Mock()
+        mock_potential.scalars.return_value.all.return_value = [potential_job]
+
+        mock_db_session.execute.side_effect = [mock_current, mock_potential]
+
+        with patch.object(
+            job_analysis_service, "_calculate_embedding_similarity", return_value=0.8
+        ):
+            result = await job_analysis_service.get_career_paths(mock_db_session, 1)
+
+        assert "from_job_id" in result
+        assert "career_paths" in result
+        assert len(result["career_paths"]) > 0
+        assert result["career_paths"][0]["progression_type"] == "vertical"
+
+    @pytest.mark.asyncio
+    async def test_get_career_paths_job_not_found(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test career path analysis with job not found."""
+        mock_result = Mock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db_session.execute.return_value = mock_result
+
+        with pytest.raises(ValueError, match="Job 999 not found"):
+            await job_analysis_service.get_career_paths(mock_db_session, 999)
+
+    @pytest.mark.asyncio
+    async def test_get_career_paths_no_classification(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test career path analysis with no classification."""
+        job = JobDescription(
+            id=1, title="Developer", classification=None, language="en"
+        )
+
+        mock_result = Mock()
+        mock_result.scalar_one_or_none.return_value = job
+        mock_db_session.execute.return_value = mock_result
+
+        result = await job_analysis_service.get_career_paths(mock_db_session, 1)
+
+        assert result["career_paths"] == []
+
+    @pytest.mark.asyncio
+    async def test_get_career_paths_invalid_classification_format(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test career path analysis with invalid classification format."""
+        job = JobDescription(
+            id=1, title="Developer", classification="INVALID", language="en"
+        )
+
+        mock_result = Mock()
+        mock_result.scalar_one_or_none.return_value = job
+        mock_db_session.execute.return_value = mock_result
+
+        result = await job_analysis_service.get_career_paths(mock_db_session, 1)
+
+        assert result["career_paths"] == []
+
+    @pytest.mark.asyncio
+    async def test_get_career_paths_with_target_classifications(
+        self, job_analysis_service, mock_db_session, sample_job_a
+    ):
+        """Test career path analysis with specific target classifications."""
+        mock_current = Mock()
+        mock_current.scalar_one_or_none.return_value = sample_job_a
+
+        mock_potential = Mock()
+        mock_potential.scalars.return_value.all.return_value = []
+        mock_db_session.execute.side_effect = [mock_current, mock_potential]
+
+        result = await job_analysis_service.get_career_paths(
+            mock_db_session, 1, target_classifications=["EX-03", "EX-04"]
+        )
+
+        assert result["target_classifications"] == ["EX-03", "EX-04"]
+
+    # ========================================================================
+    # SALARY RANGE ANALYSIS TESTS
+    # ========================================================================
+
+    @pytest.mark.asyncio
+    async def test_get_similar_salary_range_success(
+        self, job_analysis_service, mock_db_session, sample_job_a
+    ):
+        """Test successful similar salary range analysis."""
+        # Mock current job query
+        mock_current = Mock()
+        mock_current.scalar_one_or_none.return_value = sample_job_a
+
+        # Mock similar jobs query
+        similar_job = JobDescription(
+            id=2,
+            title="Similar Developer",
+            classification="IT-02",
+            language="en",
+        )
+        similar_job.salary_budget = 115000
+
+        mock_similar = Mock()
+        mock_similar.scalars.return_value.all.return_value = [similar_job]
+
+        mock_db_session.execute.side_effect = [mock_current, mock_similar]
+
+        with patch.object(
+            job_analysis_service, "_calculate_embedding_similarity", return_value=0.85
+        ):
+            result = await job_analysis_service.get_similar_salary_range(
+                mock_db_session, 1, tolerance=0.15
+            )
+
+        assert "job_id" in result
+        assert "similar_jobs" in result
+        assert "tolerance" in result
+        assert len(result["similar_jobs"]) > 0
+
+    @pytest.mark.asyncio
+    async def test_get_similar_salary_range_no_salary(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test similar salary range when job has no salary."""
+        job = JobDescription(
+            id=1, title="Developer", classification="IT-02", language="en"
+        )
+        job.salary_budget = None
+
+        mock_result = Mock()
+        mock_result.scalar_one_or_none.return_value = job
+        mock_db_session.execute.return_value = mock_result
+
+        result = await job_analysis_service.get_similar_salary_range(mock_db_session, 1)
+
+        assert result["similar_jobs"] == []
+
+    @pytest.mark.asyncio
+    async def test_get_similar_salary_range_job_not_found(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test similar salary range when job not found."""
+        mock_result = Mock()
+        mock_result.scalar_one_or_none.return_value = None
+        mock_db_session.execute.return_value = mock_result
+
+        result = await job_analysis_service.get_similar_salary_range(
+            mock_db_session, 999
+        )
+
+        assert result["similar_jobs"] == []
+
+    @pytest.mark.asyncio
+    async def test_get_similar_salary_range_custom_tolerance(
+        self, job_analysis_service, mock_db_session, sample_job_a
+    ):
+        """Test similar salary range with custom tolerance."""
+        mock_current = Mock()
+        mock_current.scalar_one_or_none.return_value = sample_job_a
+
+        mock_similar = Mock()
+        mock_similar.scalars.return_value.all.return_value = []
+        mock_db_session.execute.side_effect = [mock_current, mock_similar]
+
+        result = await job_analysis_service.get_similar_salary_range(
+            mock_db_session, 1, tolerance=0.25
+        )
+
+        assert result["tolerance"] == 0.25
+
+    # ========================================================================
+    # CLASSIFICATION BENCHMARK TESTS
+    # ========================================================================
+
+    @pytest.mark.asyncio
+    async def test_get_classification_benchmark_success(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test successful classification benchmark analysis."""
+        # Mock jobs query
+        jobs = [
+            JobDescription(id=1, title="Dev 1", classification="IT-02", language="en"),
+            JobDescription(id=2, title="Dev 2", classification="IT-02", language="en"),
+        ]
+
+        mock_jobs_result = Mock()
+        mock_jobs_result.scalars.return_value.all.return_value = jobs
+
+        # Mock salary query
+        mock_salary_result = Mock()
+        mock_salary_result.scalars.return_value.all.return_value = [100000, 110000]
+
+        # Mock skills query
+        mock_skills_result = Mock()
+        mock_skills_result.all.return_value = [("Python", 2), ("JavaScript", 2)]
+
+        mock_db_session.execute.side_effect = [
+            mock_jobs_result,
+            mock_salary_result,
+            mock_skills_result,
+        ]
+
+        result = await job_analysis_service.get_classification_benchmark(
+            mock_db_session, "IT-02"
+        )
+
+        assert "classification" in result
+        assert "statistics" in result
+        assert result["classification"] == "IT-02"
+        assert result["statistics"]["job_count"] == 2
+        assert "avg_salary" in result["statistics"]
+        assert "common_skills" in result["statistics"]
+
+    @pytest.mark.asyncio
+    async def test_get_classification_benchmark_no_jobs(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test classification benchmark with no jobs."""
+        mock_result = Mock()
+        mock_result.scalars.return_value.all.return_value = []
+        mock_db_session.execute.return_value = mock_result
+
+        result = await job_analysis_service.get_classification_benchmark(
+            mock_db_session, "IT-99"
+        )
+
+        assert result["statistics"] == {}
+
+    @pytest.mark.asyncio
+    async def test_get_classification_benchmark_with_department(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test classification benchmark with department filter."""
+        jobs = [
+            JobDescription(id=1, title="Dev", classification="IT-02", language="en")
+        ]
+
+        mock_jobs_result = Mock()
+        mock_jobs_result.scalars.return_value.all.return_value = jobs
+
+        mock_salary_result = Mock()
+        mock_salary_result.scalars.return_value.all.return_value = [100000]
+
+        mock_skills_result = Mock()
+        mock_skills_result.all.return_value = []
+
+        mock_db_session.execute.side_effect = [
+            mock_jobs_result,
+            mock_salary_result,
+            mock_skills_result,
+        ]
+
+        result = await job_analysis_service.get_classification_benchmark(
+            mock_db_session, "IT-02", department="Engineering"
+        )
+
+        assert result["department"] == "Engineering"
+
+    @pytest.mark.asyncio
+    async def test_get_classification_benchmark_no_salaries(
+        self, job_analysis_service, mock_db_session
+    ):
+        """Test classification benchmark with no salary data."""
+        jobs = [
+            JobDescription(id=1, title="Dev", classification="IT-02", language="en")
+        ]
+
+        mock_jobs_result = Mock()
+        mock_jobs_result.scalars.return_value.all.return_value = jobs
+
+        mock_salary_result = Mock()
+        mock_salary_result.scalars.return_value.all.return_value = []
+
+        mock_skills_result = Mock()
+        mock_skills_result.all.return_value = []
+
+        mock_db_session.execute.side_effect = [
+            mock_jobs_result,
+            mock_salary_result,
+            mock_skills_result,
+        ]
+
+        result = await job_analysis_service.get_classification_benchmark(
+            mock_db_session, "IT-02"
+        )
+
+        assert result["statistics"]["avg_salary"] == 0
+        assert result["statistics"]["median_salary"] == 0

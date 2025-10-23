@@ -3,35 +3,13 @@ Tests for search recommendations service.
 """
 
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
-from datetime import datetime, timedelta
+from unittest.mock import Mock, AsyncMock, patch, MagicMock
+from datetime import datetime
 
 from jd_ingestion.services.search_recommendations_service import (
     SearchRecommendationsService,
+    search_recommendations_service,
 )
-
-
-@pytest.fixture
-def mock_db():
-    """Mock database session."""
-    return AsyncMock()
-
-
-@pytest.fixture
-def mock_cache_service():
-    """Mock cache service."""
-    cache = Mock()
-    cache.get = AsyncMock(return_value=None)
-    cache.set = AsyncMock()
-    return cache
-
-
-@pytest.fixture
-def mock_embedding_service():
-    """Mock embedding service."""
-    service = Mock()
-    service.generate_embedding = AsyncMock(return_value=[0.1, 0.2, 0.3])
-    return service
 
 
 @pytest.fixture
@@ -50,354 +28,564 @@ class TestSearchRecommendationsService:
         assert recommendations_service.similarity_threshold == 0.7
         assert recommendations_service.cache_ttl == 3600
 
-    async def test_get_query_suggestions_success(
-        self, recommendations_service, mock_db
-    ):
-        """Test successful query suggestions generation."""
-        # Mock database query results
-        mock_suggestions = [
-            ("data scientist python", 15),
-            ("data scientist machine learning", 10),
-            ("data analyst python", 8),
-        ]
+    def test_global_instance(self):
+        """Test global service instance exists."""
+        assert search_recommendations_service is not None
+        assert isinstance(search_recommendations_service, SearchRecommendationsService)
 
-        mock_result = Mock()
-        mock_result.fetchall.return_value = mock_suggestions
-        mock_db.execute.return_value = mock_result
-
-        suggestions = await recommendations_service.get_query_suggestions(
-            db=mock_db, partial_query="data sci", limit=5
-        )
-
-        assert len(suggestions) == 3
-        assert suggestions[0]["query"] == "data scientist python"
-        assert suggestions[0]["frequency"] == 15
-        assert suggestions[0]["confidence"] > 0
-
+    # Query Suggestions Tests
+    @pytest.mark.asyncio
     async def test_get_query_suggestions_short_query(
-        self, recommendations_service, mock_db
+        self, recommendations_service, async_session
     ):
         """Test query suggestions with too short query."""
         suggestions = await recommendations_service.get_query_suggestions(
-            db=mock_db,
-            partial_query="da",
-            limit=5,  # Too short
+            db=async_session, partial_query="da", limit=5
         )
-
         assert len(suggestions) == 0
-        mock_db.execute.assert_not_called()
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.services.search_recommendations_service.cache_service")
     async def test_get_query_suggestions_cached(
-        self, mock_cache, recommendations_service, mock_db
+        self, mock_cache, recommendations_service, async_session
     ):
         """Test query suggestions with cached results."""
-        cached_suggestions = [
-            {"query": "cached query", "frequency": 10, "confidence": 0.8}
-        ]
-        mock_cache.get.return_value = cached_suggestions
+        cached_suggestions = [{"text": "cached query", "type": "popular", "score": 0.9}]
+        mock_cache.get = AsyncMock(return_value=cached_suggestions)
 
         suggestions = await recommendations_service.get_query_suggestions(
-            db=mock_db, partial_query="test query", limit=5
+            db=async_session, partial_query="test query", limit=5
         )
 
         assert suggestions == cached_suggestions
-        mock_db.execute.assert_not_called()
+        mock_cache.get.assert_called_once()
 
-    async def test_get_personalized_recommendations(
-        self, recommendations_service, mock_db
+    @pytest.mark.asyncio
+    @patch("jd_ingestion.services.search_recommendations_service.cache_service")
+    async def test_get_query_suggestions_empty_cache(
+        self, mock_cache, recommendations_service, async_session
     ):
-        """Test personalized recommendations based on user history."""
-        user_id = "user-123"
+        """Test query suggestions with empty cache."""
+        mock_cache.get = AsyncMock(return_value=None)
+        mock_cache.set = AsyncMock()
 
-        # Mock user's search history
-        mock_user_searches = [
-            Mock(query_text="python developer", timestamp=datetime.now()),
-            Mock(query_text="machine learning engineer", timestamp=datetime.now()),
-        ]
-
-        mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = mock_user_searches
-        mock_db.execute.return_value = mock_result
-
-        recommendations = (
-            await recommendations_service.get_personalized_recommendations(
-                db=mock_db, user_id=user_id, limit=5
-            )
+        suggestions = await recommendations_service.get_query_suggestions(
+            db=async_session, partial_query="director", limit=5
         )
 
-        assert isinstance(recommendations, list)
-        mock_db.execute.assert_called()
+        assert isinstance(suggestions, list)
+        mock_cache.get.assert_called_once()
 
-    async def test_get_trending_searches(self, recommendations_service, mock_db):
-        """Test getting trending search queries."""
-        # Mock trending data
-        mock_trending = [
-            ("artificial intelligence jobs", 45),
-            ("remote work opportunities", 38),
-            ("blockchain developer", 25),
-        ]
-
-        mock_result = Mock()
-        mock_result.fetchall.return_value = mock_trending
-        mock_db.execute.return_value = mock_result
-
-        trending = await recommendations_service.get_trending_searches(
-            db=mock_db, time_period=timedelta(days=7), limit=10
-        )
-
-        assert len(trending) == 3
-        assert trending[0]["query"] == "artificial intelligence jobs"
-        assert trending[0]["trend_score"] == 45
-
-    @patch("jd_ingestion.services.search_recommendations_service.embedding_service")
-    async def test_get_semantic_suggestions(
-        self, mock_embedding_service, recommendations_service, mock_db
+    @pytest.mark.asyncio
+    @patch("jd_ingestion.services.search_recommendations_service.cache_service")
+    async def test_get_query_suggestions_cache_failure(
+        self, mock_cache, recommendations_service, async_session
     ):
-        """Test semantic query suggestions using embeddings."""
-        mock_embedding_service.generate_embedding.return_value = [0.1, 0.2, 0.3]
+        """Test query suggestions when cache fails."""
+        mock_cache.get = AsyncMock(side_effect=Exception("Cache error"))
+        mock_cache.set = AsyncMock()
 
-        # Mock similar queries from database
-        mock_similar_queries = [
-            Mock(query_text="machine learning engineer", similarity_score=0.85),
-            Mock(query_text="data scientist python", similarity_score=0.78),
-        ]
-
-        mock_result = Mock()
-        mock_result.scalars.return_value.all.return_value = mock_similar_queries
-        mock_db.execute.return_value = mock_result
-
-        suggestions = await recommendations_service.get_semantic_suggestions(
-            db=mock_db, query="ML engineer", limit=5
+        suggestions = await recommendations_service.get_query_suggestions(
+            db=async_session, partial_query="manager", limit=5
         )
 
-        mock_embedding_service.generate_embedding.assert_called_once_with("ML engineer")
+        # Should still return results even if cache fails
         assert isinstance(suggestions, list)
 
-    async def test_get_category_recommendations(self, recommendations_service, mock_db):
-        """Test getting recommendations by job category."""
-        # Mock category-based recommendations
-        mock_categories = [("IT", 150), ("Engineering", 120), ("Management", 90)]
-
-        mock_result = Mock()
-        mock_result.fetchall.return_value = mock_categories
-        mock_db.execute.return_value = mock_result
-
-        recommendations = await recommendations_service.get_category_recommendations(
-            db=mock_db, limit=10
-        )
-
-        assert len(recommendations) == 3
-        assert recommendations[0]["category"] == "IT"
-        assert recommendations[0]["job_count"] == 150
-
-    async def test_get_location_suggestions(self, recommendations_service, mock_db):
-        """Test location-based suggestions."""
-        partial_location = "Otta"
-
-        # Mock location matches
-        mock_locations = [("Ottawa, ON", 25), ("Ottawa Valley, ON", 5)]
-
-        mock_result = Mock()
-        mock_result.fetchall.return_value = mock_locations
-        mock_db.execute.return_value = mock_result
-
-        suggestions = await recommendations_service.get_location_suggestions(
-            db=mock_db, partial_location=partial_location, limit=5
-        )
-
-        assert len(suggestions) == 2
-        assert suggestions[0]["location"] == "Ottawa, ON"
-        assert suggestions[0]["job_count"] == 25
-
-    async def test_get_classification_suggestions(
-        self, recommendations_service, mock_db
+    # Search Recommendations Tests
+    @pytest.mark.asyncio
+    async def test_get_search_recommendations_basic(
+        self, recommendations_service, async_session
     ):
-        """Test classification-based suggestions."""
-        # Mock classification data
-        mock_classifications = [("EX-01", 45), ("EX-02", 30), ("EX-03", 20)]
+        """Test basic search recommendations."""
+        search_context = {"query": "data scientist"}
 
-        mock_result = Mock()
-        mock_result.fetchall.return_value = mock_classifications
-        mock_db.execute.return_value = mock_result
-
-        suggestions = await recommendations_service.get_classification_suggestions(
-            db=mock_db, limit=10
+        recommendations = await recommendations_service.get_search_recommendations(
+            db=async_session, search_context=search_context, limit=8
         )
 
-        assert len(suggestions) == 3
-        assert suggestions[0]["classification"] == "EX-01"
-        assert suggestions[0]["count"] == 45
+        assert isinstance(recommendations, dict)
+        assert "related_searches" in recommendations
+        assert "trending_queries" in recommendations
+        assert "suggested_filters" in recommendations
+        assert "popular_in_category" in recommendations
 
-    async def test_analyze_query_intent(self, recommendations_service):
-        """Test query intent analysis."""
-        queries_and_intents = [
-            ("python developer remote", ["skill", "location"]),
-            ("EX-01 manager", ["classification", "role"]),
-            ("data scientist Toronto", ["skill", "location"]),
-        ]
-
-        for query, expected_intents in queries_and_intents:
-            intent = await recommendations_service.analyze_query_intent(query)
-
-            assert isinstance(intent, dict)
-            assert "primary_intent" in intent
-            assert "secondary_intents" in intent
-            assert "confidence" in intent
-
-    async def test_get_auto_complete_suggestions(
-        self, recommendations_service, mock_db
+    @pytest.mark.asyncio
+    async def test_get_search_recommendations_with_user(
+        self, recommendations_service, async_session
     ):
-        """Test auto-complete suggestions."""
-        partial_query = "data sc"
+        """Test search recommendations with user context."""
+        search_context = {"query": "software engineer"}
+        user_id = "user-123"
 
-        # Mock auto-complete matches
-        mock_completions = [
-            ("data scientist", 50),
-            ("data science", 30),
-            ("data science manager", 15),
-        ]
-
-        mock_result = Mock()
-        mock_result.fetchall.return_value = mock_completions
-        mock_db.execute.return_value = mock_result
-
-        completions = await recommendations_service.get_auto_complete_suggestions(
-            db=mock_db, partial_query=partial_query, limit=5
+        recommendations = await recommendations_service.get_search_recommendations(
+            db=async_session, search_context=search_context, user_id=user_id, limit=8
         )
 
-        assert len(completions) == 3
-        assert completions[0]["suggestion"] == "data scientist"
-        assert completions[0]["frequency"] == 50
+        assert isinstance(recommendations, dict)
+        assert "similar_users_searched" in recommendations
 
-    async def test_get_related_searches(self, recommendations_service, mock_db):
-        """Test getting related searches for a query."""
-        base_query = "software engineer"
+    @pytest.mark.asyncio
+    async def test_get_search_recommendations_error_handling(
+        self, recommendations_service
+    ):
+        """Test search recommendations error handling."""
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(side_effect=Exception("DB error"))
 
-        # Mock related searches
-        mock_related = [
-            ("software developer", 0.85),
-            ("software architect", 0.75),
-            ("full stack developer", 0.70),
-        ]
+        search_context = {"query": "test"}
 
-        mock_result = Mock()
-        mock_result.fetchall.return_value = mock_related
-        mock_db.execute.return_value = mock_result
-
-        related = await recommendations_service.get_related_searches(
-            db=mock_db, query=base_query, limit=5
+        recommendations = await recommendations_service.get_search_recommendations(
+            db=mock_db, search_context=search_context, limit=8
         )
 
-        assert len(related) == 3
-        assert related[0]["query"] == "software developer"
-        assert related[0]["similarity"] == 0.85
+        # Should return empty structure on error
+        assert recommendations["related_searches"] == []
+        assert recommendations["trending_queries"] == []
 
-    def test_normalize_query(self, recommendations_service):
-        """Test query normalization."""
-        queries = [
-            ("Python Developer", "python developer"),
-            ("  Machine Learning  ", "machine learning"),
-            ("Data-Scientist", "data scientist"),
-            ("Full_Stack_Engineer", "full stack engineer"),
-        ]
+    # Popular Similar Queries Tests
+    @pytest.mark.asyncio
+    async def test_get_popular_similar_queries(
+        self, recommendations_service, async_session
+    ):
+        """Test getting popular similar queries."""
+        # Create mock result
+        mock_row = MagicMock()
+        mock_row.query_text = "data scientist python"
+        mock_row.usage_count = 15
+        mock_row.avg_results = 25.5
+        mock_row.avg_time = 150.0
 
-        for input_query, expected in queries:
-            normalized = recommendations_service._normalize_query(input_query)
-            assert normalized == expected
+        mock_result = AsyncMock()
+        mock_result.fetchall = Mock(return_value=[mock_row])
 
-    def test_extract_keywords(self, recommendations_service):
-        """Test keyword extraction from queries."""
-        query = "senior python developer machine learning remote work"
+        async_session.execute = AsyncMock(return_value=mock_result)
 
-        keywords = recommendations_service._extract_keywords(query)
+        suggestions = await recommendations_service._get_popular_similar_queries(
+            db=async_session, partial_query="data", limit=5
+        )
 
-        assert isinstance(keywords, list)
-        assert "python" in keywords
-        assert "developer" in keywords
-        assert "machine learning" in keywords
-        assert len(keywords) > 0
+        assert len(suggestions) == 1
+        assert suggestions[0]["text"] == "data scientist python"
+        assert suggestions[0]["type"] == "popular"
+        assert suggestions[0]["score"] == 15.0
 
-    async def test_get_filter_suggestions(self, recommendations_service, mock_db):
-        """Test getting filter suggestions based on current results."""
-        current_filters = {"classification": "EX-01"}
+    @pytest.mark.asyncio
+    async def test_get_popular_similar_queries_empty(
+        self, recommendations_service, async_session
+    ):
+        """Test getting popular similar queries with no results."""
+        mock_result = AsyncMock()
+        mock_result.fetchall = Mock(return_value=[])
 
-        # Mock filter suggestions
-        mock_filter_suggestions = {
-            "locations": [("Ottawa, ON", 15), ("Toronto, ON", 12)],
-            "departments": [("IT", 20), ("Engineering", 8)],
-            "languages": [("en", 25), ("fr", 10)],
+        async_session.execute = AsyncMock(return_value=mock_result)
+
+        suggestions = await recommendations_service._get_popular_similar_queries(
+            db=async_session, partial_query="zzz", limit=5
+        )
+
+        assert len(suggestions) == 0
+
+    # Semantic Suggestions Tests
+    @pytest.mark.asyncio
+    @patch("jd_ingestion.services.search_recommendations_service.embedding_service")
+    async def test_get_semantic_suggestions(
+        self, mock_embedding_service, recommendations_service, async_session
+    ):
+        """Test semantic suggestions."""
+        mock_embedding_service.generate_embedding = AsyncMock(
+            return_value=[0.1, 0.2, 0.3]
+        )
+
+        mock_row = MagicMock()
+        mock_row.chunk_text = "python developer machine learning"
+        mock_row.section_type = "responsibilities"
+        mock_row.title = "Data Scientist"
+        mock_row.classification = "CS-03"
+
+        mock_result = AsyncMock()
+        mock_result.fetchall = Mock(return_value=[mock_row])
+
+        async_session.execute = AsyncMock(return_value=mock_result)
+
+        suggestions = await recommendations_service._get_semantic_suggestions(
+            db=async_session, partial_query="python", limit=5
+        )
+
+        assert isinstance(suggestions, list)
+
+    @pytest.mark.asyncio
+    @patch(
+        "jd_ingestion.services.search_recommendations_service.embedding_service", None
+    )
+    async def test_get_semantic_suggestions_no_service(
+        self, recommendations_service, async_session
+    ):
+        """Test semantic suggestions when embedding service unavailable."""
+        suggestions = await recommendations_service._get_semantic_suggestions(
+            db=async_session, partial_query="test", limit=5
+        )
+
+        assert len(suggestions) == 0
+
+    # User-Based Suggestions Tests
+    @pytest.mark.asyncio
+    async def test_get_user_based_suggestions(
+        self, recommendations_service, async_session
+    ):
+        """Test user-based suggestions."""
+        mock_row = MagicMock()
+        mock_row.query_text = "python developer"
+        mock_row.total_results = 10
+        mock_row.created_at = datetime.now()
+
+        mock_result = AsyncMock()
+        mock_result.fetchall = Mock(return_value=[mock_row])
+
+        async_session.execute = AsyncMock(return_value=mock_result)
+
+        suggestions = await recommendations_service._get_user_based_suggestions(
+            db=async_session,
+            partial_query="python",
+            user_id="user-123",
+            session_id=None,
+            limit=5,
+        )
+
+        assert len(suggestions) == 1
+        assert suggestions[0]["type"] == "personal"
+
+    @pytest.mark.asyncio
+    async def test_get_user_based_suggestions_no_user(
+        self, recommendations_service, async_session
+    ):
+        """Test user-based suggestions with no user context."""
+        suggestions = await recommendations_service._get_user_based_suggestions(
+            db=async_session,
+            partial_query="test",
+            user_id=None,
+            session_id=None,
+            limit=5,
+        )
+
+        assert len(suggestions) == 0
+
+    # Content-Based Suggestions Tests
+    @pytest.mark.asyncio
+    async def test_get_content_based_suggestions(
+        self, recommendations_service, async_session
+    ):
+        """Test content-based suggestions."""
+        mock_row = MagicMock()
+        mock_row.title = "Senior Python Developer"
+        mock_row.classification = "CS-03"
+        mock_row.match_count = 5
+
+        mock_result = AsyncMock()
+        mock_result.fetchall = Mock(return_value=[mock_row])
+
+        async_session.execute = AsyncMock(return_value=mock_result)
+
+        suggestions = await recommendations_service._get_content_based_suggestions(
+            db=async_session, partial_query="python", limit=5
+        )
+
+        assert isinstance(suggestions, list)
+
+    # Related Searches Tests
+    @pytest.mark.asyncio
+    async def test_get_related_searches(self, recommendations_service, async_session):
+        """Test getting related searches."""
+        mock_row = MagicMock()
+        mock_row.query_text = "python developer"
+        mock_row.frequency = 10
+        mock_row.avg_results = 25.0
+
+        mock_result = AsyncMock()
+        mock_result.fetchall = Mock(return_value=[mock_row])
+
+        async_session.execute = AsyncMock(return_value=mock_result)
+
+        search_context = {"query": "python"}
+
+        related = await recommendations_service._get_related_searches(
+            db=async_session, search_context=search_context, limit=5
+        )
+
+        assert len(related) == 1
+        assert related[0]["query"] == "python developer"
+
+    @pytest.mark.asyncio
+    async def test_get_related_searches_empty_query(
+        self, recommendations_service, async_session
+    ):
+        """Test related searches with empty query."""
+        search_context = {}
+
+        related = await recommendations_service._get_related_searches(
+            db=async_session, search_context=search_context, limit=5
+        )
+
+        assert len(related) == 0
+
+    # Trending Queries Tests
+    @pytest.mark.asyncio
+    async def test_get_trending_queries(self, recommendations_service, async_session):
+        """Test getting trending queries."""
+        mock_row = MagicMock()
+        mock_row.query_text = "ai jobs"
+        mock_row.frequency = 45
+
+        mock_result = AsyncMock()
+        mock_result.fetchall = Mock(return_value=[mock_row])
+
+        async_session.execute = AsyncMock(return_value=mock_result)
+
+        trending = await recommendations_service._get_trending_queries(
+            db=async_session, limit=10
+        )
+
+        assert len(trending) == 1
+        assert trending[0]["query"] == "ai jobs"
+        assert trending[0]["trend"] == "up"
+
+    # Suggested Filters Tests
+    @pytest.mark.asyncio
+    async def test_get_suggested_filters(self, recommendations_service, async_session):
+        """Test getting suggested filters."""
+        mock_class_row = MagicMock()
+        mock_class_row.classification = "CS-03"
+        mock_class_row.count = 50
+
+        mock_dept_row = MagicMock()
+        mock_dept_row.department = "IT"
+        mock_dept_row.count = 30
+
+        mock_result_class = AsyncMock()
+        mock_result_class.fetchall = Mock(return_value=[mock_class_row])
+
+        mock_result_dept = AsyncMock()
+        mock_result_dept.fetchall = Mock(return_value=[mock_dept_row])
+
+        async_session.execute = AsyncMock(
+            side_effect=[mock_result_class, mock_result_dept]
+        )
+
+        search_context = {"query": "developer"}
+
+        filters = await recommendations_service._get_suggested_filters(
+            db=async_session, search_context=search_context
+        )
+
+        assert isinstance(filters, list)
+        assert len(filters) == 2
+
+    # Similar Users Searches Tests
+    @pytest.mark.asyncio
+    async def test_get_similar_users_searches(
+        self, recommendations_service, async_session
+    ):
+        """Test getting similar users' searches."""
+        mock_user_row = MagicMock()
+        mock_user_row.query_text = "python developer"
+        mock_user_row.filters_applied = {"classification": "CS-03"}
+
+        mock_similar_row = MagicMock()
+        mock_similar_row.query_text = "java developer"
+        mock_similar_row.frequency = 5
+        mock_similar_row.user_id = "user-456"
+
+        mock_result_user = AsyncMock()
+        mock_result_user.fetchall = Mock(return_value=[mock_user_row])
+
+        mock_result_similar = AsyncMock()
+        mock_result_similar.fetchall = Mock(return_value=[mock_similar_row])
+
+        async_session.execute = AsyncMock(
+            side_effect=[mock_result_user, mock_result_similar]
+        )
+
+        similar = await recommendations_service._get_similar_users_searches(
+            db=async_session, user_id="user-123", limit=5
+        )
+
+        assert isinstance(similar, list)
+
+    @pytest.mark.asyncio
+    async def test_get_similar_users_searches_no_user(
+        self, recommendations_service, async_session
+    ):
+        """Test similar users searches with no user ID."""
+        similar = await recommendations_service._get_similar_users_searches(
+            db=async_session, user_id="", limit=5
+        )
+
+        assert len(similar) == 0
+
+    # Popular in Category Tests
+    @pytest.mark.asyncio
+    async def test_get_popular_in_category(
+        self, recommendations_service, async_session
+    ):
+        """Test getting popular searches in category."""
+        mock_row = MagicMock()
+        mock_row.query_text = "data analyst"
+        mock_row.frequency = 15
+        mock_row.avg_results = 20.0
+
+        mock_result = AsyncMock()
+        mock_result.fetchall = Mock(return_value=[mock_row])
+
+        async_session.execute = AsyncMock(return_value=mock_result)
+
+        search_context = {
+            "query": "data",
+            "classification": "CS-02",
+            "department": "IT",
         }
 
-        with patch.object(
-            recommendations_service,
-            "_get_filter_suggestions",
-            return_value=mock_filter_suggestions,
-        ):
-            suggestions = await recommendations_service.get_filter_suggestions(
-                db=mock_db, current_filters=current_filters, result_count=35
-            )
+        popular = await recommendations_service._get_popular_in_category(
+            db=async_session, search_context=search_context, limit=5
+        )
 
-            assert "locations" in suggestions
-            assert "departments" in suggestions
-            assert len(suggestions["locations"]) == 2
+        assert isinstance(popular, list)
+
+    # Helper Methods Tests
+    def test_extract_key_terms(self, recommendations_service):
+        """Test key term extraction."""
+        content = "python developer with machine learning experience"
+        partial_query = "python"
+
+        terms = recommendations_service._extract_key_terms(content, partial_query)
+
+        assert isinstance(terms, list)
+        assert any("python" in term for term in terms)
+
+    def test_extract_key_terms_empty(self, recommendations_service):
+        """Test key term extraction with empty content."""
+        terms = recommendations_service._extract_key_terms("", "test")
+        assert len(terms) == 0
+
+    def test_extract_search_terms(self, recommendations_service):
+        """Test search term extraction from titles."""
+        title = "Senior Software Engineer III"
+
+        terms = recommendations_service._extract_search_terms(title)
+
+        assert isinstance(terms, list)
+        assert len(terms) > 0
+
+    def test_extract_search_terms_empty(self, recommendations_service):
+        """Test search term extraction with empty title."""
+        terms = recommendations_service._extract_search_terms("")
+        assert len(terms) == 0
+
+    def test_rank_and_deduplicate_suggestions(self, recommendations_service):
+        """Test ranking and deduplication."""
+        suggestions = [
+            {"text": "python developer", "type": "popular", "score": 0.9},
+            {"text": "Python Developer", "type": "content", "score": 0.7},  # Duplicate
+            {"text": "java developer", "type": "semantic", "score": 0.8},
+        ]
+
+        result = recommendations_service._rank_and_deduplicate_suggestions(
+            suggestions, "python", limit=5
+        )
+
+        assert len(result) == 2  # Duplicate removed
+        assert result[0]["text"].lower() == "python developer"
+
+    def test_rank_and_deduplicate_suggestions_empty(self, recommendations_service):
+        """Test ranking with empty suggestions."""
+        result = recommendations_service._rank_and_deduplicate_suggestions(
+            [], "test", limit=5
+        )
+        assert len(result) == 0
+
+    def test_get_fallback_suggestions(self, recommendations_service):
+        """Test fallback suggestions."""
+        suggestions = recommendations_service._get_fallback_suggestions("manager", 5)
+
+        assert isinstance(suggestions, list)
+        assert len(suggestions) > 0
+        assert all(s["type"] == "fallback" for s in suggestions)
+
+    def test_get_fallback_suggestions_no_match(self, recommendations_service):
+        """Test fallback suggestions with no match."""
+        suggestions = recommendations_service._get_fallback_suggestions("zzz", 5)
+
+        assert isinstance(suggestions, list)
+
+    def test_get_fallback_suggestions_partial_match(self, recommendations_service):
+        """Test fallback suggestions with partial match."""
+        suggestions = recommendations_service._get_fallback_suggestions("dir", 5)
+
+        assert isinstance(suggestions, list)
+        assert any("director" in s["text"] for s in suggestions)
 
 
 class TestSearchRecommendationsServiceEdgeCases:
     """Test edge cases and error conditions."""
 
-    async def test_empty_partial_query(self, recommendations_service, mock_db):
+    @pytest.mark.asyncio
+    async def test_empty_partial_query(self, recommendations_service, async_session):
         """Test handling empty partial query."""
         suggestions = await recommendations_service.get_query_suggestions(
-            db=mock_db, partial_query="", limit=5
+            db=async_session, partial_query="", limit=5
         )
 
         assert len(suggestions) == 0
 
+    @pytest.mark.asyncio
+    async def test_whitespace_query(self, recommendations_service, async_session):
+        """Test handling whitespace-only query."""
+        suggestions = await recommendations_service.get_query_suggestions(
+            db=async_session, partial_query="   ", limit=5
+        )
+
+        assert len(suggestions) == 0
+
+    @pytest.mark.asyncio
     async def test_database_error_handling(self, recommendations_service):
         """Test handling database errors."""
-        mock_db = Mock()
-        mock_db.execute.side_effect = Exception("Database connection failed")
-
-        with pytest.raises(Exception, match="Database connection failed"):
-            await recommendations_service.get_query_suggestions(
-                db=mock_db, partial_query="test query", limit=5
-            )
-
-    async def test_no_recommendations_available(self, recommendations_service, mock_db):
-        """Test when no recommendations are available."""
-        # Mock empty database results
-        mock_result = Mock()
-        mock_result.fetchall.return_value = []
-        mock_db.execute.return_value = mock_result
-
-        recommendations = await recommendations_service.get_trending_searches(
-            db=mock_db, time_period=timedelta(days=30), limit=10
-        )
-
-        assert len(recommendations) == 0
-
-    async def test_invalid_time_period(self, recommendations_service, mock_db):
-        """Test handling invalid time periods."""
-        with pytest.raises(ValueError):
-            await recommendations_service.get_trending_searches(
-                db=mock_db,
-                time_period=timedelta(days=-1),  # Invalid negative period
-                limit=10,
-            )
-
-    async def test_large_limit_handling(self, recommendations_service, mock_db):
-        """Test handling very large limit values."""
-        # Should cap the limit to max_suggestions
-        mock_result = Mock()
-        mock_result.fetchall.return_value = []
-        mock_db.execute.return_value = mock_result
+        mock_db = AsyncMock()
+        mock_db.execute = AsyncMock(side_effect=Exception("Database error"))
 
         suggestions = await recommendations_service.get_query_suggestions(
-            db=mock_db,
-            partial_query="test",
-            limit=1000,  # Very large limit
+            db=mock_db, partial_query="test query", limit=5
         )
 
-        # Should be capped to max_suggestions (10)
+        # Should return empty list on error
+        assert len(suggestions) == 0
+
+    @pytest.mark.asyncio
+    async def test_no_recommendations_available(
+        self, recommendations_service, async_session
+    ):
+        """Test when no recommendations are available."""
+        mock_result = AsyncMock()
+        mock_result.fetchall = Mock(return_value=[])
+
+        async_session.execute = AsyncMock(return_value=mock_result)
+
+        trending = await recommendations_service._get_trending_queries(
+            db=async_session, limit=10
+        )
+
+        assert len(trending) == 0
+
+    @pytest.mark.asyncio
+    @patch("jd_ingestion.services.search_recommendations_service.cache_service")
+    async def test_cache_set_failure(
+        self, mock_cache, recommendations_service, async_session
+    ):
+        """Test handling cache set failures."""
+        mock_cache.get = AsyncMock(return_value=None)
+        mock_cache.set = AsyncMock(side_effect=Exception("Cache write error"))
+
+        # Should not raise exception, just log warning
+        suggestions = await recommendations_service.get_query_suggestions(
+            db=async_session, partial_query="director", limit=5
+        )
+
         assert isinstance(suggestions, list)

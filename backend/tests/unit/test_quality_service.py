@@ -72,8 +72,8 @@ class TestQualityService:
             ),
         ]
 
-        # Add metadata
-        job.metadata_entry = JobMetadata(
+        # Add metadata (use job_metadata to match service)
+        job.job_metadata = JobMetadata(
             reports_to="Director of Engineering",
             department="Information Technology",
             location="Ottawa, ON",
@@ -119,7 +119,7 @@ class TestQualityService:
         ]
 
         # No metadata or chunks
-        job.metadata_entry = None
+        job.job_metadata = None
         job.chunks = []
 
         return job
@@ -347,7 +347,7 @@ class TestQualityService:
         self, quality_service, complete_job_description
     ):
         """Test metadata completeness calculation for complete metadata."""
-        score = quality_service._calculate_metadata_completeness(
+        score = quality_service._calculate_job_metadata_completeness(
             complete_job_description
         )
         assert isinstance(score, Decimal)
@@ -355,8 +355,8 @@ class TestQualityService:
 
     def test_calculate_metadata_completeness_no_metadata(self, quality_service):
         """Test metadata completeness when no metadata exists."""
-        job = JobDescription(metadata_entry=None)
-        score = quality_service._calculate_metadata_completeness(job)
+        job = JobDescription(job_metadata=None)
+        score = quality_service._calculate_job_metadata_completeness(job)
         assert score == Decimal("0.000")
 
     def test_assess_structured_fields_complete(
@@ -372,7 +372,7 @@ class TestQualityService:
             title="Test Job",
             job_number="123",
             classification=None,
-            metadata_entry=None,
+            job_metadata=None,
         )
         result = quality_service._assess_structured_fields(job)
         assert result == "partial"
@@ -380,7 +380,7 @@ class TestQualityService:
     def test_assess_structured_fields_missing(self, quality_service):
         """Test structured fields assessment for job with missing fields."""
         job = JobDescription(
-            title=None, job_number=None, classification=None, metadata_entry=None
+            title=None, job_number=None, classification=None, job_metadata=None
         )
         result = quality_service._assess_structured_fields(job)
         assert result == "missing"
@@ -728,3 +728,454 @@ class TestQualityService:
         assert isinstance(metrics["validation_results"], dict)
         assert isinstance(metrics["quality_flags"], dict)
         assert metrics["calculation_version"] == "1.0"
+
+    # Additional edge case tests for improved coverage
+
+    def test_calculate_content_completeness_edge_cases(self, quality_service):
+        """Test content completeness with various edge cases."""
+        # Job with exactly 100 chars (boundary)
+        job = JobDescription(raw_content="x" * 100, sections=[], chunks=[])
+        score = quality_service._calculate_content_completeness(job)
+        assert score == Decimal("0.000")  # sections and chunks missing
+
+        # Job with 99 chars (just below threshold)
+        job = JobDescription(raw_content="x" * 99, sections=[], chunks=[])
+        score = quality_service._calculate_content_completeness(job)
+        assert score == Decimal("0.000")
+
+        # Job with 101 chars (just above threshold)
+        job = JobDescription(raw_content="x" * 101)
+        job.sections = []
+        job.chunks = []
+        score = quality_service._calculate_content_completeness(job)
+        assert score == Decimal("0.250")  # Only raw content present
+
+    def test_calculate_metadata_completeness_partial(self, quality_service):
+        """Test metadata completeness with partial metadata."""
+        # Only 3 of 6 fields present
+        job = JobDescription()
+        job.job_metadata = JobMetadata(
+            reports_to="Manager",
+            department="IT",
+            location="Ottawa",
+            fte_count=None,
+            salary_budget=None,
+            effective_date=None,
+        )
+        score = quality_service._calculate_job_metadata_completeness(job)
+        assert score == Decimal("0.500")  # 3/6 fields
+
+        # Only 1 field present
+        job.job_metadata = JobMetadata(
+            reports_to="Manager",
+            department=None,
+            location=None,
+            fte_count=None,
+            salary_budget=None,
+            effective_date=None,
+        )
+        score = quality_service._calculate_job_metadata_completeness(job)
+        assert float(score) < 0.2  # 1/6 fields
+
+    def test_calculate_metadata_completeness_empty_strings(self, quality_service):
+        """Test metadata completeness with empty strings."""
+        job = JobDescription()
+        job.job_metadata = JobMetadata(
+            reports_to="",  # Empty string should not count
+            department="  ",  # Whitespace only should not count
+            location="Ottawa",
+            fte_count=0,  # Zero should count
+            salary_budget=0.0,  # Zero should count
+            effective_date=datetime.utcnow(),
+        )
+        score = quality_service._calculate_job_metadata_completeness(job)
+        assert score == Decimal("0.667")  # 4/6 fields (location, fte, salary, date)
+
+    def test_assess_sections_coverage_boundary_80_percent(self, quality_service):
+        """Test sections coverage at 80% boundary (complete threshold)."""
+        job = JobDescription()
+        # Provide exactly 5 of 6 expected sections (83.3%)
+        job.sections = [
+            JobSection(
+                section_type="general_accountability", section_content="content"
+            ),
+            JobSection(
+                section_type="organization_structure", section_content="content"
+            ),
+            JobSection(section_type="nature_and_scope", section_content="content"),
+            JobSection(
+                section_type="specific_accountabilities", section_content="content"
+            ),
+            JobSection(section_type="dimensions", section_content="content"),
+        ]
+        result = quality_service._assess_sections_coverage(job)
+        assert result == "complete"  # 5/6 = 0.833 >= 0.8
+
+    def test_assess_sections_coverage_boundary_40_percent(self, quality_service):
+        """Test sections coverage at 40% boundary (partial threshold)."""
+        job = JobDescription()
+        # Provide exactly 2 of 6 expected sections (33.3%)
+        job.sections = [
+            JobSection(
+                section_type="general_accountability", section_content="content"
+            ),
+            JobSection(
+                section_type="organization_structure", section_content="content"
+            ),
+        ]
+        result = quality_service._assess_sections_coverage(job)
+        assert result == "missing"  # 2/6 = 0.333 < 0.4
+
+        # Provide 3 of 6 (50%)
+        job.sections.append(
+            JobSection(section_type="nature_and_scope", section_content="content")
+        )
+        result = quality_service._assess_sections_coverage(job)
+        assert result == "partial"  # 3/6 = 0.5 >= 0.4
+
+    def test_assess_embeddings_coverage_boundary_cases(self, quality_service):
+        """Test embeddings coverage at boundary conditions."""
+        job = JobDescription()
+
+        # Exactly 50% coverage (boundary for partial)
+        job.chunks = [
+            ContentChunk(embedding=[0.1, 0.2]),
+            ContentChunk(embedding=None),
+        ]
+        result = quality_service._assess_embeddings_coverage(job)
+        assert result == "partial"
+
+        # Just below 50%
+        job.chunks = [
+            ContentChunk(embedding=[0.1, 0.2]),
+            ContentChunk(embedding=None),
+            ContentChunk(embedding=None),
+        ]
+        result = quality_service._assess_embeddings_coverage(job)
+        assert result == "missing"  # 1/3 = 0.333 < 0.5
+
+    def test_assess_embeddings_coverage_all_none(self, quality_service):
+        """Test embeddings coverage when chunks exist but all embeddings are None."""
+        job = JobDescription()
+        job.chunks = [
+            ContentChunk(embedding=None),
+            ContentChunk(embedding=None),
+            ContentChunk(embedding=None),
+        ]
+        result = quality_service._assess_embeddings_coverage(job)
+        assert result == "missing"  # 0/3 = 0
+
+    def test_assess_processing_quality_exactly_3_sections(self, quality_service):
+        """Test processing quality with exactly 3 sections (boundary)."""
+        job = JobDescription()
+        job.sections = [
+            JobSection(section_type="section1", section_content="content"),
+            JobSection(section_type="section2", section_content="content"),
+            JobSection(section_type="section3", section_content="content"),
+        ]
+        result = quality_service._assess_processing_quality(job)
+        assert result["content_extraction_success"] == "success"  # >= 3 sections
+
+    def test_assess_processing_quality_two_sections(self, quality_service):
+        """Test processing quality with 2 sections."""
+        job = JobDescription()
+        job.sections = [
+            JobSection(section_type="section1", section_content="content"),
+            JobSection(section_type="section2", section_content="content"),
+        ]
+        result = quality_service._assess_processing_quality(job)
+        assert result["content_extraction_success"] == "partial"  # < 3 sections
+
+    def test_analyze_content_characteristics_empty_sections(self, quality_service):
+        """Test content characteristics with empty section content."""
+        job = JobDescription(raw_content="test content")
+        job.sections = [
+            JobSection(section_type="test", section_content=None),
+            JobSection(section_type="test2", section_content=""),
+            JobSection(section_type="test3", section_content="valid"),
+        ]
+        job.chunks = []
+
+        result = quality_service._analyze_content_characteristics(job)
+        assert result["raw_content_length"] == 12
+        assert result["processed_content_length"] == 5  # Only "valid"
+        assert result["sections_extracted_count"] == 3
+        assert result["chunks_generated_count"] == 0
+
+    def test_assess_language_quality_no_language(self, quality_service):
+        """Test language quality when language is not set."""
+        job = JobDescription(language=None, raw_content="test content")
+        result = quality_service._assess_language_quality(job)
+        assert result["language_detection_confidence"] == Decimal("0.800")
+        assert result["encoding_issues_detected"] == "none"
+
+    def test_assess_language_quality_short_content(self, quality_service):
+        """Test language quality with insufficient content for analysis."""
+        job = JobDescription(language="en", raw_content="test")
+        result = quality_service._assess_language_quality(job)
+        # Should still return confidence even with short content
+        assert "language_detection_confidence" in result
+        assert result["encoding_issues_detected"] == "none"
+
+    def test_assess_language_quality_language_mismatch_french(self, quality_service):
+        """Test language quality with French labeled as English."""
+        job = JobDescription(
+            language="en",
+            raw_content="Le développeur sera responsable de la création des applications pour les clients et les utilisateurs dans le système",
+        )
+        result = quality_service._assess_language_quality(job)
+        assert (
+            float(result["language_detection_confidence"]) < 0.5
+        )  # Should detect mismatch
+
+    def test_assess_language_quality_language_mismatch_english(self, quality_service):
+        """Test language quality with English labeled as French."""
+        job = JobDescription(
+            language="fr",
+            raw_content="The developer will be responsible for creating applications for the clients and users in the system",
+        )
+        result = quality_service._assess_language_quality(job)
+        assert (
+            float(result["language_detection_confidence"]) < 0.5
+        )  # Should detect mismatch
+
+    def test_assess_language_quality_minor_encoding_issues(self, quality_service):
+        """Test language quality with minor encoding issues."""
+        job = JobDescription(
+            language="fr", raw_content="Le dÃ©veloppeur avec expÃ©rience en Ã©quipe"
+        )
+        result = quality_service._assess_language_quality(job)
+        assert result["encoding_issues_detected"] == "minor"
+
+    def test_validate_content_long_content_warning(self, quality_service):
+        """Test content validation with unusually long content."""
+        job = JobDescription(
+            title="Test",
+            job_number="123",
+            classification="EX-01",
+            raw_content="x" * 100001,  # Over 100KB
+        )
+        job.sections = [JobSection(section_type="test", section_content="content")]
+        job.chunks = [ContentChunk(chunk_text="test", chunk_index=0)]
+
+        result = quality_service._validate_content(job)
+        assert "Raw content unusually long" in result["warnings"]
+
+    def test_validate_content_multiple_errors(self, quality_service):
+        """Test content validation accumulating multiple errors."""
+        job = JobDescription(
+            title=None,
+            job_number=None,
+            classification=None,
+            raw_content="short",  # Too short
+        )
+        job.sections = []
+        job.chunks = []
+
+        result = quality_service._validate_content(job)
+        assert result["error_count"] >= 5
+        assert "Missing job number" in result["errors"]
+        assert "Missing job title" in result["errors"]
+        assert "Missing classification" in result["errors"]
+        assert "Raw content too short or missing" in result["errors"]
+        assert "No sections extracted" in result["errors"]
+        assert "No content chunks generated" in result["errors"]
+
+    def test_validate_content_chunks_without_embeddings(self, quality_service):
+        """Test validation warning for chunks without embeddings."""
+        job = JobDescription(
+            title="Test",
+            job_number="123",
+            classification="EX-01",
+            raw_content="x" * 200,
+        )
+        job.sections = [JobSection(section_type="test", section_content="content")]
+        job.chunks = [
+            ContentChunk(chunk_text="test1", chunk_index=0, embedding=[0.1, 0.2]),
+            ContentChunk(chunk_text="test2", chunk_index=1, embedding=None),
+            ContentChunk(chunk_text="test3", chunk_index=2, embedding=None),
+        ]
+
+        result = quality_service._validate_content(job)
+        assert "2 chunks missing embeddings" in result["warnings"]
+
+    def test_generate_quality_flags_all_issues(self, quality_service):
+        """Test quality flags with all possible issues."""
+        job = JobDescription()
+        job.sections = []
+        job.chunks = []
+
+        validation_results = {
+            "error_count": 5,
+            "warning_count": 10,
+            "errors": ["error1", "error2"],
+            "warnings": ["warn1", "warn2", "warn3"],
+        }
+
+        flags = quality_service._generate_quality_flags(job, validation_results)
+        assert flags["high_quality"] is False
+        assert flags["needs_review"] is True
+        assert flags["processing_issues"] is True
+        assert flags["content_issues"] is True
+        assert "Review processing errors" in flags["recommendations"]
+        assert "Consider reprocessing file" in flags["recommendations"]
+        assert "Review section extraction" in flags["recommendations"]
+        assert "Generate content chunks" in flags["recommendations"]
+        assert "Review content quality warnings" in flags["recommendations"]
+
+    def test_generate_quality_flags_missing_embeddings_only(self, quality_service):
+        """Test quality flags for job with missing embeddings."""
+        job = JobDescription()
+        job.sections = [
+            JobSection(section_type="test1", section_content="content"),
+            JobSection(section_type="test2", section_content="content"),
+            JobSection(section_type="test3", section_content="content"),
+        ]
+        job.chunks = [
+            ContentChunk(chunk_text="test", chunk_index=0, embedding=None),
+        ]
+
+        validation_results = {"error_count": 0, "warning_count": 1}
+        flags = quality_service._generate_quality_flags(job, validation_results)
+        assert "Generate missing embeddings" in flags["recommendations"]
+
+    def test_generate_quality_flags_two_warnings_no_review(self, quality_service):
+        """Test quality flags with exactly 2 warnings (below review threshold)."""
+        job = JobDescription()
+        job.sections = [JobSection(section_type="test", section_content="content")]
+        job.chunks = [ContentChunk(chunk_text="test", chunk_index=0)]
+
+        validation_results = {"error_count": 0, "warning_count": 2}
+        flags = quality_service._generate_quality_flags(job, validation_results)
+        assert flags["needs_review"] is False  # <= 2 warnings
+
+    def test_generate_quality_flags_three_warnings_needs_review(self, quality_service):
+        """Test quality flags with exactly 3 warnings (at review threshold)."""
+        job = JobDescription()
+        job.sections = [JobSection(section_type="test", section_content="content")]
+        job.chunks = [ContentChunk(chunk_text="test", chunk_index=0)]
+
+        validation_results = {"error_count": 0, "warning_count": 3}
+        flags = quality_service._generate_quality_flags(job, validation_results)
+        assert flags["needs_review"] is True  # > 2 warnings
+        assert "Review content quality warnings" in flags["recommendations"]
+
+    @pytest.mark.asyncio
+    async def test_get_system_quality_report_empty_database(
+        self, quality_service, mock_db_session
+    ):
+        """Test system quality report with no data."""
+        # Mock empty stats
+        mock_stats = Mock()
+        mock_stats.total_jobs = 0
+        mock_stats.avg_content_completeness = None
+        mock_stats.avg_sections_completeness = None
+        mock_stats.avg_metadata_completeness = None
+        mock_stats.total_processing_errors = None
+        mock_stats.total_validation_errors = None
+
+        mock_db_session.execute.side_effect = [
+            Mock(first=Mock(return_value=mock_stats)),
+            Mock(fetchall=Mock(return_value=[])),
+        ]
+
+        report = await quality_service._get_system_quality_report(mock_db_session)
+
+        assert report["overview"]["total_jobs_analyzed"] == 0
+        assert report["overview"]["average_content_completeness"] == 0.0
+        assert report["overview"]["total_processing_errors"] == 0
+        assert len(report["quality_distribution"]) == 0
+
+    @pytest.mark.asyncio
+    async def test_batch_calculate_all_failures(self, quality_service, mock_db_session):
+        """Test batch calculation when all jobs fail."""
+        job_ids = [1, 2, 3]
+
+        with patch.object(
+            quality_service, "calculate_quality_metrics_for_job"
+        ) as mock_calc:
+            mock_calc.side_effect = ValueError("Processing failed")
+
+            results = await quality_service.batch_calculate_quality_metrics(
+                mock_db_session, job_ids
+            )
+
+            assert results["total_jobs"] == 3
+            assert results["successful"] == 0
+            assert results["failed"] == 3
+            assert len(results["errors"]) == 3
+
+    @pytest.mark.asyncio
+    async def test_calculate_quality_metrics_for_job_database_error(
+        self, quality_service, mock_db_session
+    ):
+        """Test error handling during database operations."""
+        mock_db_session.execute.side_effect = Exception("Database connection lost")
+
+        with pytest.raises(Exception, match="Database connection lost"):
+            await quality_service.calculate_quality_metrics_for_job(
+                mock_db_session, 123
+            )
+
+    @pytest.mark.asyncio
+    async def test_get_quality_report_error_handling(
+        self, quality_service, mock_db_session
+    ):
+        """Test error handling in get_quality_report."""
+        mock_db_session.execute.side_effect = Exception("Query failed")
+
+        with pytest.raises(Exception, match="Query failed"):
+            await quality_service.get_quality_report(mock_db_session, 123)
+
+    def test_assess_structured_fields_with_whitespace(self, quality_service):
+        """Test structured fields assessment with whitespace-only values."""
+        job = JobDescription(
+            title="  ",  # Whitespace only
+            job_number="   ",
+            classification="EX-01",  # Valid
+        )
+        job.job_metadata = JobMetadata(department="IT")  # Valid
+
+        result = quality_service._assess_structured_fields(job)
+        assert result == "partial"  # Only 2 of 4 fields valid
+
+    def test_calculate_sections_completeness_case_insensitive(self, quality_service):
+        """Test sections completeness is case-insensitive."""
+        job = JobDescription()
+        job.sections = [
+            JobSection(
+                section_type="GENERAL_ACCOUNTABILITY", section_content="content"
+            ),
+            JobSection(
+                section_type="Organization_Structure", section_content="content"
+            ),
+            JobSection(section_type="nature_and_scope", section_content="content"),
+            JobSection(
+                section_type="SPECIFIC_ACCOUNTABILITIES", section_content="content"
+            ),
+            JobSection(section_type="Dimensions", section_content="content"),
+            JobSection(
+                section_type="Knowledge_Skills_Abilities", section_content="content"
+            ),
+        ]
+
+        score = quality_service._calculate_sections_completeness(job)
+        assert score == Decimal(
+            "1.000"
+        )  # All sections should match despite case differences
+
+    @pytest.mark.asyncio
+    async def test_calculate_metrics_integration(
+        self, quality_service, complete_job_description
+    ):
+        """Test _calculate_metrics with various completeness levels."""
+        metrics = await quality_service._calculate_metrics(complete_job_description)
+
+        # Verify overall quality for complete job
+        assert float(metrics["content_completeness_score"]) == 1.0
+        assert float(metrics["sections_completeness_score"]) == 1.0
+        assert float(metrics["metadata_completeness_score"]) == 1.0
+        assert metrics["has_structured_fields"] == "complete"
+        assert metrics["has_all_sections"] == "complete"
+        assert metrics["has_embeddings"] == "complete"
+        assert metrics["content_extraction_success"] == "success"
