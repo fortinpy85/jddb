@@ -471,13 +471,18 @@ class JobAnalysisService:
 
         # Add new skills
         for skill in skills:
+            # Map level to is_required and proficiency_level
+            level = skill.get("level", "preferred")
+            is_required = level == "required"
+
             job_skill = JobSkill(
                 job_id=job_id,
-                skill_category=skill["category"],
+                skill_category=skill.get("category"),
                 skill_name=skill["name"],
-                skill_level=skill["level"],
-                confidence_score=skill["confidence"],
-                extracted_from_section=skill["section"],
+                proficiency_level=level,
+                is_required=is_required,
+                confidence_score=skill.get("confidence", 0.0),
+                extracted_context=skill.get("context") or skill.get("section"),
             )
             db.add(job_skill)
 
@@ -712,8 +717,8 @@ class JobAnalysisService:
         # Check if comparison already exists
         existing_query = select(JobComparison).where(
             and_(  # type: ignore[attr-defined]
-                JobComparison.job_a_id == job_a_id,  # type: ignore[attr-defined]
-                JobComparison.job_b_id == job_b_id,
+                JobComparison.job1_id == job_a_id,  # type: ignore[attr-defined]
+                JobComparison.job2_id == job_b_id,
                 JobComparison.comparison_type == comparison_type,
             )
         )
@@ -722,28 +727,32 @@ class JobAnalysisService:
         existing = result.scalar_one_or_none()
 
         if existing:
-            # Update existing  # type: ignore[attr-defined]
-            existing.section_scores = analysis.get("section_similarities", {})  # type: ignore[attr-defined]
-            existing.metadata_comparison = analysis.get("metadata_comparison", {})  # type: ignore[attr-defined]
-            existing.skills_analysis = analysis.get("skills_analysis", {})  # type: ignore[attr-defined]
-            existing.overall_score = (
+            # Update existing
+            existing.similarity_score = (
                 analysis.get("overall_similarity")
                 or analysis.get("gap_score")
                 or analysis.get("overall_match_score")
-            )  # type: ignore[attr-defined]
-            existing.updated_at = func.now()
+            )
+            # Store detailed analysis in differences field
+            existing.differences = {
+                "section_similarities": analysis.get("section_similarities", {}),
+                "metadata_comparison": analysis.get("metadata_comparison", {}),
+                "skills_analysis": analysis.get("skills_analysis", {}),
+            }
         else:
             # Create new
             comparison = JobComparison(
-                job_a_id=job_a_id,
-                job_b_id=job_b_id,
+                job1_id=job_a_id,
+                job2_id=job_b_id,
                 comparison_type=comparison_type,
-                overall_score=analysis.get("overall_similarity")
+                similarity_score=analysis.get("overall_similarity")
                 or analysis.get("gap_score")
                 or analysis.get("overall_match_score"),
-                section_scores=analysis.get("section_similarities", {}),
-                metadata_comparison=analysis.get("metadata_comparison", {}),
-                skills_analysis=analysis.get("skills_analysis", {}),
+                differences={
+                    "section_similarities": analysis.get("section_similarities", {}),
+                    "metadata_comparison": analysis.get("metadata_comparison", {}),
+                    "skills_analysis": analysis.get("skills_analysis", {}),
+                },
             )
             db.add(comparison)
 

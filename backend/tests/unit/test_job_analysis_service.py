@@ -726,7 +726,7 @@ class TestJobAnalysisService:
     async def test_cache_comparison_update(self, job_analysis_service, mock_db_session):
         """Test updating existing comparison result."""
         # Mock existing comparison
-        existing_comparison = JobComparison(id=1, job_a_id=1, job_b_id=2)
+        existing_comparison = JobComparison(id=1, job1_id=1, job2_id=2)
         mock_result = Mock()
         mock_result.scalar_one_or_none.return_value = existing_comparison
         mock_db_session.execute.return_value = mock_result
