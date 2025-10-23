@@ -374,9 +374,9 @@ class TestJobAnalysisService:
             JobSkill(
                 skill_category="technical",
                 skill_name="Python",
-                skill_level="required",
+                proficiency_level="required",
+                is_required=True,
                 confidence_score=0.9,
-                extracted_from_section="technical",
             )
         ]
 
@@ -389,7 +389,8 @@ class TestJobAnalysisService:
         assert len(result) == 1
         assert result[0]["name"] == "Python"
         assert result[0]["category"] == "technical"
-        assert result[0]["level"] == "required"
+        assert result[0]["level"] == "required"  # From proficiency_level
+        assert result[0]["confidence"] == 0.9
 
     @pytest.mark.asyncio
     async def test_extract_job_skills_fresh(

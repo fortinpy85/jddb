@@ -367,9 +367,12 @@ class JobAnalysisService:
                     {
                         "category": skill.skill_category,
                         "name": skill.skill_name,  # type: ignore[attr-defined]
-                        "level": skill.skill_level,
-                        "confidence": float(skill.confidence_score),  # type: ignore[attr-defined]
-                        "section": skill.extracted_from_section,
+                        "level": skill.proficiency_level
+                        or ("required" if skill.is_required else "preferred"),
+                        "confidence": float(skill.confidence_score)
+                        if skill.confidence_score
+                        else 0.0,  # type: ignore[attr-defined]
+                        "context": skill.extracted_context,
                     }
                     for skill in cached_skills
                 ]
