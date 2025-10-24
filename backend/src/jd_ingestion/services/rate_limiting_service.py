@@ -316,7 +316,6 @@ class RateLimitingService:
                 func.count(AIUsageTracking.id).label("total_requests"),
                 func.sum(AIUsageTracking.total_tokens).label("total_tokens"),
                 func.sum(AIUsageTracking.cost_usd).label("total_cost"),
-                func.avg(AIUsageTracking.response_time_ms).label("avg_response_time"),
             ).where(
                 and_(
                     AIUsageTracking.service_type == service,
@@ -341,13 +340,27 @@ class RateLimitingService:
                         "utilization": current_count / limit if limit > 0 else 0,
                     }
 
+            # Handle None row case
+            if row is None:
+                return {
+                    "service": service,
+                    "period_hours": period_hours,
+                    "total_requests": 0,
+                    "total_tokens": 0,
+                    "total_cost": 0.0,
+                    "avg_response_time_ms": 0.0,
+                    "current_rate_limits": current_statuses,
+                    "period_start": start_time.isoformat(),
+                    "period_end": end_time.isoformat(),
+                }
+
             return {
                 "service": service,
                 "period_hours": period_hours,
-                "total_requests": row.total_requests or 0,
-                "total_tokens": row.total_tokens or 0,
-                "total_cost": float(row.total_cost or 0),
-                "avg_response_time_ms": float(row.avg_response_time or 0),
+                "total_requests": int(row[0]) if row[0] is not None else 0,
+                "total_tokens": int(row[1]) if row[1] is not None else 0,
+                "total_cost": float(row[2]) if row[2] is not None else 0.0,
+                "avg_response_time_ms": 0.0,  # Not in query, need to add if needed
                 "current_rate_limits": current_statuses,
                 "period_start": start_time.isoformat(),
                 "period_end": end_time.isoformat(),

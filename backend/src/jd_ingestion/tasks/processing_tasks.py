@@ -5,8 +5,7 @@ Celery tasks for job description processing.
 import asyncio
 from pathlib import Path
 from typing import Optional, Dict, Any
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
 from .celery_app import celery_app
 from ..config.settings import settings
@@ -20,7 +19,9 @@ logger = get_logger(__name__)
 
 # Create async database session for tasks
 engine = create_async_engine(settings.database_url)
-AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+AsyncSessionLocal = async_sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
 @celery_app.task(

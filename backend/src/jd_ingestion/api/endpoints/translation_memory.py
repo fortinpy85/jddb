@@ -361,14 +361,14 @@ async def update_translation(
             )
 
         # Update target text
-        translation.target_text = request.target_text
-        translation.updated_at = datetime.utcnow()
+        translation.target_text = request.target_text  # type: ignore[assignment]
+        translation.updated_at = datetime.utcnow()  # type: ignore[assignment]
 
         # Update quality and confidence scores if provided
         if request.quality_score is not None:
-            translation.quality_score = request.quality_score
+            translation.quality_score = request.quality_score  # type: ignore[assignment]
         if request.confidence_score is not None:
-            translation.confidence_score = request.confidence_score
+            translation.confidence_score = request.confidence_score  # type: ignore[assignment]
 
         # Add feedback to metadata if provided
         if request.feedback:
@@ -395,10 +395,10 @@ async def update_translation(
                 "id": translation.id,
                 "source_text": translation.source_text,
                 "target_text": translation.target_text,
-                "quality_score": float(translation.quality_score)
+                "quality_score": float(translation.quality_score)  # type: ignore[arg-type]
                 if translation.quality_score
                 else None,
-                "confidence_score": float(translation.confidence_score)
+                "confidence_score": float(translation.confidence_score)  # type: ignore[arg-type]
                 if translation.confidence_score
                 else None,
                 "updated_at": translation.updated_at.isoformat(),

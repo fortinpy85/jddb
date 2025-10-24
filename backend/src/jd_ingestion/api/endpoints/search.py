@@ -88,7 +88,7 @@ async def search_jobs_get(
     department: Optional[str] = Query(None, description="Department filter"),
     limit: int = Query(20, description="Maximum number of results", ge=1, le=100),
     use_semantic_search: bool = Query(True, description="Use semantic search"),
-    request: Request = None,
+    request: Optional[Request] = None,
     db: AsyncSession = Depends(get_async_session),
 ):
     """Search job descriptions using GET request with query parameters."""
@@ -100,6 +100,13 @@ async def search_jobs_get(
         department=department,
         limit=limit,
         use_semantic_search=use_semantic_search,
+        effective_date_from=None,
+        effective_date_to=None,
+        salary_min=None,
+        salary_max=None,
+        location=None,
+        min_fte=None,
+        max_fte=None,
     )
 
     # Delegate to the main search function
@@ -111,7 +118,7 @@ async def search_jobs_get(
 @retry_on_failure(max_retries=2, base_delay=1.0)
 async def search_jobs(
     search_query: SearchQuery,
-    request: Request,
+    request: Optional[Request] = None,
     db: AsyncSession = Depends(get_async_session),
 ):
     """Search job descriptions using semantic or full-text search."""
@@ -120,9 +127,11 @@ async def search_jobs(
 
     # Start search session for analytics
     search_id = await search_analytics_service.start_search_session(
-        session_id=request.headers.get("x-session-id", "anonymous"),
-        user_id=request.headers.get("x-user-id"),
-        ip_address=request.client.host if request.client else None,
+        session_id=request.headers.get("x-session-id", "anonymous")
+        if request
+        else "anonymous",
+        user_id=request.headers.get("x-user-id") if request else None,
+        ip_address=request.client.host if request and request.client else None,
     )
 
     # Extract filters for analytics
@@ -176,7 +185,8 @@ async def search_jobs(
                         "relevance_score": result["relevance_score"],
                         "matching_sections": matching_sections,
                         "snippet": _extract_snippet(
-                            job.raw_content, search_query.query
+                            str(job.raw_content) if job.raw_content else "",
+                            search_query.query,
                         ),
                     }
                 )
@@ -193,9 +203,11 @@ async def search_jobs(
                 embedding_time_ms=embedding_time_ms,
                 total_results=len(detailed_results),
                 returned_results=len(detailed_results),
-                session_id=request.headers.get("x-session-id", "anonymous"),
-                user_id=request.headers.get("x-user-id"),
-                ip_address=request.client.host if request.client else None,
+                session_id=request.headers.get("x-session-id", "anonymous")
+                if request
+                else "anonymous",
+                user_id=request.headers.get("x-user-id") if request else None,
+                ip_address=request.client.host if request and request.client else None,
             )
 
             return {
@@ -220,9 +232,11 @@ async def search_jobs(
         execution_time_ms=execution_time_ms,
         total_results=fulltext_result.get("total_results", 0),
         returned_results=fulltext_result.get("total_results", 0),
-        session_id=request.headers.get("x-session-id", "anonymous"),
-        user_id=request.headers.get("x-user-id"),
-        ip_address=request.client.host if request.client else None,
+        session_id=request.headers.get("x-session-id", "anonymous")
+        if request
+        else "anonymous",
+        user_id=request.headers.get("x-user-id") if request else None,
+        ip_address=request.client.host if request and request.client else None,
     )
 
     return fulltext_result
@@ -272,7 +286,9 @@ async def semantic_search(
                 "language": result["language"],
                 "relevance_score": result["relevance_score"],
                 "matching_sections": matching_sections,
-                "snippet": _extract_snippet(job.raw_content, search_query.query),
+                "snippet": _extract_snippet(
+                    str(job.raw_content) if job.raw_content else "", search_query.query
+                ),
                 "matching_chunks": result.get("matching_chunks", 0),
             }
         )
@@ -290,7 +306,7 @@ async def semantic_search(
 @retry_on_failure(max_retries=2, base_delay=1.0)
 async def advanced_search_with_filters(
     search_query: SearchQuery,
-    request: Request,
+    request: Optional[Request] = None,
     db: AsyncSession = Depends(get_async_session),
 ):
     """Advanced search with date range, salary bands, and metadata filters."""
@@ -348,7 +364,6 @@ async def advanced_search_with_filters(
                 JobDescription.title,
                 JobDescription.classification,
                 JobDescription.language,
-                JobDescription.status,
                 JobDescription.created_at,
                 JobMetadata.salary_budget,
                 JobMetadata.effective_date,
@@ -364,7 +379,7 @@ async def advanced_search_with_filters(
             )
 
             # Apply filters
-            where_clauses = [JobDescription.status == "processed"]
+            where_clauses = []
 
             if search_query.classification:
                 where_clauses.append(
@@ -417,12 +432,12 @@ async def advanced_search_with_filters(
 
             # Text search filter
             if search_query.query.strip():
-                # Use full-text search on title and content
+                # Use full-text search on title and raw_content
                 text_search_clause = func.to_tsvector(
                     "english",
                     func.coalesce(JobDescription.title, "")
                     + " "
-                    + func.coalesce(JobDescription.content, ""),
+                    + func.coalesce(JobDescription.raw_content, ""),
                 ).match(func.plainto_tsquery("english", search_query.query))
                 where_clauses.append(text_search_clause)
 
@@ -438,7 +453,7 @@ async def advanced_search_with_filters(
                             "english",
                             func.coalesce(JobDescription.title, "")
                             + " "
-                            + func.coalesce(JobDescription.content, ""),
+                            + func.coalesce(JobDescription.raw_content, ""),
                         ),
                         func.plainto_tsquery("english", search_query.query),
                     ).desc(),
@@ -457,28 +472,33 @@ async def advanced_search_with_filters(
             # Format results
             search_results = []
             for row in rows:
+                # Access row attributes correctly
+                row_dict = row._mapping
                 search_results.append(
                     {
-                        "job_id": row.id,
-                        "job_number": row.job_number,
-                        "title": row.title,
-                        "classification": row.classification,
-                        "language": row.language,
-                        "status": row.status,
+                        "job_id": row_dict["id"],
+                        "job_number": row_dict["job_number"],
+                        "title": row_dict["title"],
+                        "classification": row_dict["classification"],
+                        "language": row_dict["language"],
                         "created_at": (
-                            row.created_at.isoformat() if row.created_at else None
-                        ),
-                        "salary_budget": (
-                            float(row.salary_budget) if row.salary_budget else None
-                        ),
-                        "effective_date": (
-                            row.effective_date.isoformat()
-                            if row.effective_date
+                            row_dict["created_at"].isoformat()
+                            if row_dict["created_at"]
                             else None
                         ),
-                        "department": row.department,
-                        "location": row.location,
-                        "fte_count": row.fte_count,
+                        "salary_budget": (
+                            float(row_dict["salary_budget"])
+                            if row_dict["salary_budget"]
+                            else None
+                        ),
+                        "effective_date": (
+                            row_dict["effective_date"].isoformat()
+                            if row_dict["effective_date"]
+                            else None
+                        ),
+                        "department": row_dict["department"],
+                        "location": row_dict["location"],
+                        "fte_count": row_dict["fte_count"],
                     }
                 )
 
@@ -604,7 +624,6 @@ async def get_filter_statistics(db: AsyncSession = Depends(get_async_session)):
             classification_stats_query = (
                 select(JobDescription.classification, func.count().label("count"))
                 .where(
-                    JobDescription.status == "processed",
                     JobDescription.classification.isnot(None),
                 )
                 .group_by(JobDescription.classification)
@@ -617,7 +636,6 @@ async def get_filter_statistics(db: AsyncSession = Depends(get_async_session)):
             language_stats_query = (
                 select(JobDescription.language, func.count().label("count"))
                 .where(
-                    JobDescription.status == "processed",
                     JobDescription.language.isnot(None),
                 )
                 .group_by(JobDescription.language)
@@ -631,39 +649,41 @@ async def get_filter_statistics(db: AsyncSession = Depends(get_async_session)):
                 "salary_statistics": {
                     "min_salary": (
                         float(salary_stats.min_salary)
-                        if salary_stats.min_salary
+                        if salary_stats and salary_stats.min_salary
                         else None
                     ),
                     "max_salary": (
                         float(salary_stats.max_salary)
-                        if salary_stats.max_salary
+                        if salary_stats and salary_stats.max_salary
                         else None
                     ),
                     "avg_salary": (
                         float(salary_stats.avg_salary)
-                        if salary_stats.avg_salary
+                        if salary_stats and salary_stats.avg_salary
                         else None
                     ),
-                    "salary_count": salary_stats.salary_count,
+                    "salary_count": salary_stats.salary_count if salary_stats else 0,
                 },
                 "date_statistics": {
                     "earliest_date": (
                         date_stats.earliest_date.isoformat()
-                        if date_stats.earliest_date
+                        if date_stats and date_stats.earliest_date
                         else None
                     ),
                     "latest_date": (
                         date_stats.latest_date.isoformat()
-                        if date_stats.latest_date
+                        if date_stats and date_stats.latest_date
                         else None
                     ),
-                    "date_count": date_stats.date_count,
+                    "date_count": date_stats.date_count if date_stats else 0,
                 },
                 "fte_statistics": {
-                    "min_fte": fte_stats.min_fte,
-                    "max_fte": fte_stats.max_fte,
-                    "avg_fte": float(fte_stats.avg_fte) if fte_stats.avg_fte else None,
-                    "fte_count": fte_stats.fte_count,
+                    "min_fte": fte_stats.min_fte if fte_stats else None,
+                    "max_fte": fte_stats.max_fte if fte_stats else None,
+                    "avg_fte": float(fte_stats.avg_fte)
+                    if fte_stats and fte_stats.avg_fte
+                    else None,
+                    "fte_count": fte_stats.fte_count if fte_stats else 0,
                 },
                 "department_distribution": [
                     {"department": row.department, "count": row.count}
@@ -747,7 +767,16 @@ async def find_similar_jobs_optimized(
 
                 if source_chunks:
                     # Use batch similarity search for better performance
-                    source_embeddings = [chunk.embedding for chunk in source_chunks]
+                    # Cast embeddings to list[float] as they come from database
+                    source_embeddings: list[list[float]] = []
+                    for chunk in source_chunks:
+                        if chunk.embedding is not None:
+                            # pgvector returns embeddings as lists already
+                            if isinstance(chunk.embedding, list):
+                                source_embeddings.append(chunk.embedding)  # type: ignore[arg-type]
+                            else:
+                                # Convert to list if needed
+                                source_embeddings.append(list(chunk.embedding))  # type: ignore[arg-type]
 
                     batch_results = (
                         await optimized_embedding_service.batch_similarity_search(
@@ -759,37 +788,39 @@ async def find_similar_jobs_optimized(
                     )
 
                     # Aggregate results efficiently
-                    job_similarities = {}
+                    job_similarities: Dict[int, Dict[str, Any]] = {}
                     for results_batch in batch_results:
-                        for chunk in results_batch:
-                            job_id_key = chunk["job_id"]
+                        for result_dict in results_batch:
+                            # result_dict is a dictionary from batch_similarity_search
+                            job_id_key = result_dict["job_id"]
                             if job_id_key == job_id:  # Skip self
                                 continue
 
                             # Apply filters if specified
                             if (
                                 classification_filter
-                                and chunk.get("classification") != classification_filter
+                                and result_dict.get("classification")
+                                != classification_filter
                             ):
                                 continue
                             if (
                                 language_filter
-                                and chunk.get("language") != language_filter
+                                and result_dict.get("language") != language_filter
                             ):
                                 continue
 
                             if job_id_key not in job_similarities:
                                 job_similarities[job_id_key] = {
-                                    "job_id": chunk["job_id"],
-                                    "job_number": chunk["job_number"],
-                                    "title": chunk["title"],
-                                    "classification": chunk["classification"],
-                                    "language": chunk["language"],
+                                    "job_id": result_dict["job_id"],
+                                    "job_number": result_dict["job_number"],
+                                    "title": result_dict["title"],
+                                    "classification": result_dict["classification"],
+                                    "language": result_dict["language"],
                                     "similarity_scores": [],
                                     "matching_chunks": 0,
                                 }
                             job_similarities[job_id_key]["similarity_scores"].append(
-                                chunk["similarity_score"]
+                                result_dict["similarity_score"]
                             )
                             job_similarities[job_id_key]["matching_chunks"] += 1
 
@@ -881,7 +912,7 @@ async def find_similar_jobs_optimized(
         )
 
         similar_result = await db.execute(similar_query)
-        similar_jobs = similar_result.fetchall()
+        similar_jobs_rows = similar_result.fetchall()
 
         return {
             "source_job": {
@@ -892,16 +923,16 @@ async def find_similar_jobs_optimized(
             },
             "similar_jobs": [
                 {
-                    "id": job["id"],
-                    "job_number": job["job_number"],
-                    "title": job["title"],
-                    "classification": job["classification"],
-                    "language": job["language"],
-                    "similarity_score": float(job["rank"]),
+                    "id": job._mapping["id"],
+                    "job_number": job._mapping["job_number"],
+                    "title": job._mapping["title"],
+                    "classification": job._mapping["classification"],
+                    "language": job._mapping["language"],
+                    "similarity_score": float(job._mapping["rank"]),
                 }
-                for job in similar_jobs
+                for job in similar_jobs_rows
             ],
-            "total_found": len(similar_jobs),
+            "total_found": len(similar_jobs_rows),
             "search_method": "text_similarity",
         }
 
@@ -924,7 +955,13 @@ async def compare_jobs(
             JobDescription.id.in_([job1_id, job2_id])
         )
         jobs_result = await db.execute(jobs_query)
-        jobs = {job.id: job for job in jobs_result.scalars().all()}
+        jobs_list = jobs_result.scalars().all()
+
+        # Create dictionary with int keys, not Column types
+        jobs: Dict[int, JobDescription] = {}
+        for job in jobs_list:
+            job_id_value = int(job.id) if job.id is not None else 0
+            jobs[job_id_value] = job
 
         if job1_id not in jobs or job2_id not in jobs:
             raise HTTPException(
@@ -940,11 +977,14 @@ async def compare_jobs(
         sections_result = await db.execute(sections_query)
         sections_by_job: Dict[int, Dict[str, str]] = {}
         for section in sections_result.scalars().all():
-            if section.job_id not in sections_by_job:
-                sections_by_job[section.job_id] = {}
-            sections_by_job[section.job_id][section.section_type] = (
-                section.section_content
+            section_job_id = int(section.job_id) if section.job_id is not None else 0
+            if section_job_id not in sections_by_job:
+                sections_by_job[section_job_id] = {}
+            section_type_str = str(section.section_type) if section.section_type else ""
+            section_content_str = (
+                str(section.section_content) if section.section_content else ""
             )
+            sections_by_job[section_job_id][section_type_str] = section_content_str
 
         # Get content chunks with embeddings for similarity analysis
         chunks_query = select(ContentChunk).where(
@@ -954,9 +994,10 @@ async def compare_jobs(
         chunks_result = await db.execute(chunks_query)
         chunks_by_job: Dict[int, List[ContentChunk]] = {}
         for chunk in chunks_result.scalars().all():
-            if chunk.job_id not in chunks_by_job:
-                chunks_by_job[chunk.job_id] = []
-            chunks_by_job[chunk.job_id].append(chunk)
+            chunk_job_id = int(chunk.job_id) if chunk.job_id is not None else 0
+            if chunk_job_id not in chunks_by_job:
+                chunks_by_job[chunk_job_id] = []
+            chunks_by_job[chunk_job_id].append(chunk)
 
         # Calculate overall similarity using chunk embeddings
         overall_similarity = 0.0
@@ -968,9 +1009,17 @@ async def compare_jobs(
             # Calculate pairwise similarities between all chunks
             similarities = []
             for chunk1 in job1_chunks:
+                if chunk1.embedding is None:
+                    continue
+                # Convert embedding to list[float]
+                embedding1 = (
+                    list(chunk1.embedding)
+                    if isinstance(chunk1.embedding, (list, tuple))
+                    else chunk1.embedding
+                )
                 for chunk2 in job2_chunks:
                     similar_chunks = await embedding_service.find_similar_chunks(
-                        query_embedding=chunk1.embedding,
+                        query_embedding=embedding1,  # type: ignore[arg-type]
                         db=db,
                         job_id_exclude=job1_id,
                         limit=1,
@@ -1045,7 +1094,10 @@ async def compare_jobs(
                 "job2": job2.language,
                 "match": job1.language == job2.language,
             },
-            "title_similarity": _calculate_title_similarity(job1.title, job2.title),
+            "title_similarity": _calculate_title_similarity(
+                str(job1.title) if job1.title else "",
+                str(job2.title) if job2.title else "",
+            ),
         }
 
         return {
@@ -1203,7 +1255,7 @@ async def get_search_facets(db: AsyncSession = Depends(get_async_session)):
             ContentChunk.embedding.isnot(None)
         )
         embedding_result = await db.execute(embedding_query)
-        embedding_count = embedding_result.scalar()
+        embedding_count = embedding_result.scalar() or 0
 
         return {
             "classifications": classifications,
@@ -1279,7 +1331,9 @@ async def _fulltext_search(
                 "language": row.language,
                 "relevance_score": float(row.rank),
                 "matching_sections": matching_sections,
-                "snippet": _extract_snippet(job.raw_content, search_query.query),
+                "snippet": _extract_snippet(
+                    str(job.raw_content) if job.raw_content else "", search_query.query
+                ),
             }
         )
 
@@ -1310,8 +1364,11 @@ async def _get_matching_sections(
 
     for section in sections:
         # Simple keyword matching for sections
+        section_content_str = (
+            str(section.section_content) if section.section_content else ""
+        )
         if any(
-            word.lower() in section.section_content.lower()
+            word.lower() in section_content_str.lower()
             for word in search_query.query.split()
         ):
             matching_sections.append(
@@ -1319,7 +1376,7 @@ async def _get_matching_sections(
                     "section_type": section.section_type,
                     "section_id": section.id,
                     "snippet": _extract_snippet(
-                        section.section_content, search_query.query
+                        section_content_str, search_query.query
                     ),
                 }
             )

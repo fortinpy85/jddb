@@ -114,7 +114,7 @@ async def process_single_file(
                 # Handle Word documents with python-docx
                 from docx import Document
 
-                doc = Document(file_path_obj)
+                doc = Document(str(file_path_obj))
                 raw_content = "\n".join(
                     [paragraph.text for paragraph in doc.paragraphs]
                 )
@@ -397,7 +397,7 @@ async def process_single_file(
                         saved_chunks = saved_chunks_result.scalars().all()
 
                         # Generate embeddings in batches
-                        chunk_texts = [chunk.chunk_text for chunk in saved_chunks]
+                        chunk_texts = [str(chunk.chunk_text) for chunk in saved_chunks]
                         embeddings = await embedding_service.generate_embeddings_batch(
                             chunk_texts, batch_size=50
                         )
@@ -443,7 +443,7 @@ async def process_single_file(
 
                     # Extract skills from the raw content
                     extracted_skills = await skill_extraction_service.extract_and_save_skills(
-                        job_id=job_id,
+                        job_id=int(job_id),
                         job_text=raw_content,
                         db=db,
                         confidence_threshold=0.5,  # Only include skills with 50%+ confidence
@@ -637,6 +637,7 @@ async def upload_file(
         # Check file size
         if (
             hasattr(file, "size")
+            and file.size is not None
             and file.size > settings.max_file_size_mb * 1024 * 1024
         ):
             raise HTTPException(
@@ -950,7 +951,7 @@ async def generate_embeddings_for_existing_jobs(
         # Process embeddings in the background
         background_tasks.add_task(
             _generate_embeddings_background_task,
-            chunks_without_embeddings,
+            list(chunks_without_embeddings),
             force_regenerate,
             db,
         )
@@ -987,7 +988,7 @@ async def _generate_embeddings_background_task(
 
         for i in range(0, len(chunks), batch_size):
             batch = chunks[i : i + batch_size]
-            batch_texts = [chunk.chunk_text for chunk in batch]
+            batch_texts = [str(chunk.chunk_text) for chunk in batch]
 
             logger.info(
                 f"Processing batch {i // batch_size + 1} of {(len(chunks) + batch_size - 1) // batch_size}"

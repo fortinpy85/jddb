@@ -730,17 +730,20 @@ class JobAnalysisService:
 
         if existing:
             # Update existing
-            existing.similarity_score = (
+            similarity = (
                 analysis.get("overall_similarity")
                 or analysis.get("gap_score")
                 or analysis.get("overall_match_score")
             )
+            if similarity is not None:
+                existing.similarity_score = float(similarity)  # type: ignore[assignment]
             # Store detailed analysis in differences field
-            existing.differences = {
+            differences_dict = {
                 "section_similarities": analysis.get("section_similarities", {}),
                 "metadata_comparison": analysis.get("metadata_comparison", {}),
                 "skills_analysis": analysis.get("skills_analysis", {}),
             }
+            existing.differences = differences_dict  # type: ignore[assignment]
         else:
             # Create new
             comparison = JobComparison(

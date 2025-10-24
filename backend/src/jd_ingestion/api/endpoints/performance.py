@@ -266,7 +266,7 @@ async def performance_health_check(db: AsyncSession = Depends(get_async_session)
                 "check": "index_availability",
                 "duration_ms": round(index_check_time * 1000, 2),
                 "result": index_count,
-                "status": "healthy" if index_count > 0 else "warning",
+                "status": "healthy" if (index_count or 0) > 0 else "warning",
             }
         )
 

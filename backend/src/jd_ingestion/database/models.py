@@ -107,15 +107,15 @@ class User(Base):
         # Truncate password to ensure it's within bcrypt limits
         if len(password.encode("utf-8")) > 72:
             password = password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
-        self.password_hash = pwd_context.hash(password)
+        self.password_hash = pwd_context.hash(password)  # type: ignore[assignment]
 
     def verify_password(self, password: str) -> bool:
         """Verify a password against the hash."""
-        return bool(pwd_context.verify(password, self.password_hash))
+        return bool(pwd_context.verify(password, self.password_hash))  # type: ignore[arg-type]
 
     def update_last_login(self) -> None:
         """Update the last login timestamp."""
-        self.last_login = datetime.utcnow()
+        self.last_login = datetime.utcnow()  # type: ignore[assignment]
 
 
 class UserSession(Base):
@@ -319,9 +319,9 @@ class DataQualityMetrics(Base):
     job_id = Column(
         Integer, ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False
     )
-    content_completeness_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
-    sections_completeness_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
-    metadata_completeness_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
+    content_completeness_score: float = Column(DECIMAL(4, 3), nullable=True)  # type: ignore[assignment]
+    sections_completeness_score: float = Column(DECIMAL(4, 3), nullable=True)  # type: ignore[assignment]
+    metadata_completeness_score: float = Column(DECIMAL(4, 3), nullable=True)  # type: ignore[assignment]
     has_structured_fields = Column(String(10), nullable=True)
     has_all_sections = Column(String(10), nullable=True)
     has_embeddings = Column(String(10), nullable=True)
@@ -332,7 +332,7 @@ class DataQualityMetrics(Base):
     processed_content_length = Column(Integer, nullable=True)
     sections_extracted_count = Column(Integer, nullable=True)
     chunks_generated_count = Column(Integer, nullable=True)
-    language_detection_confidence: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
+    language_detection_confidence: float = Column(DECIMAL(4, 3), nullable=True)  # type: ignore[assignment]
     encoding_issues_detected = Column(String(10), nullable=True)
     validation_results = Column(JSONBType, nullable=True)
     quality_flags = Column(JSONBType, nullable=True)
@@ -355,7 +355,7 @@ class JobComparison(Base):
         Integer, ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False
     )
     comparison_type = Column(String(50), nullable=True)
-    similarity_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
+    similarity_score: float = Column(DECIMAL(4, 3), nullable=True)  # type: ignore[assignment]
     differences = Column(JSONBType, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
@@ -418,7 +418,7 @@ class JobSkill(Base):
     proficiency_level = Column(String(50), nullable=True)
     is_required = Column(Boolean, default=False, nullable=False)
     extracted_context = Column(Text, nullable=True)
-    confidence_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
+    confidence_score: float = Column(DECIMAL(4, 3), nullable=True)  # type: ignore[assignment]
 
     # Relationships
     job = relationship("JobDescription")
@@ -460,14 +460,14 @@ class SystemMetrics(Base):
     total_uploads = Column(Integer, nullable=True)
     total_exports = Column(Integer, nullable=True)
     avg_response_time_ms = Column(Integer, nullable=True)
-    error_rate: DECIMAL = Column(DECIMAL(5, 4), nullable=True)
+    error_rate: float = Column(DECIMAL(5, 4), nullable=True)  # type: ignore[assignment]
     total_ai_requests = Column(Integer, nullable=True)
     total_tokens_used = Column(Integer, nullable=True)
-    total_ai_cost_usd: DECIMAL = Column(DECIMAL(12, 6), nullable=True)
+    total_ai_cost_usd: float = Column(DECIMAL(12, 6), nullable=True)  # type: ignore[assignment]
     total_jobs_processed = Column(Integer, nullable=True)
     total_embeddings_generated = Column(Integer, nullable=True)
     storage_size_bytes = Column(Integer, nullable=True)
-    avg_data_quality_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
+    avg_data_quality_score: float = Column(DECIMAL(4, 3), nullable=True)  # type: ignore[assignment]
     period_start = Column(DateTime, nullable=True)
     period_end = Column(DateTime, nullable=True)
     detailed_metrics = Column(JSONBType, nullable=True)
@@ -483,7 +483,7 @@ class AIUsageTracking(Base):
     input_tokens = Column(Integer, nullable=True)
     output_tokens = Column(Integer, nullable=True)
     total_tokens = Column(Integer, nullable=True)
-    cost_usd: DECIMAL = Column(DECIMAL(10, 6), nullable=True)
+    cost_usd: float = Column(DECIMAL(10, 6), nullable=True)  # type: ignore[assignment]
     request_id = Column(String(100), nullable=True)
     model_name = Column(String(100), nullable=True)
     success = Column(String(10), nullable=True)
@@ -523,9 +523,7 @@ class RLHFFeedback(Base):
     user_action = Column(
         String(50), nullable=False, index=True
     )  # accepted, rejected, modified
-    confidence: DECIMAL = Column(
-        DECIMAL(4, 3), nullable=True
-    )  # AI confidence score (0.000-1.000)
+    confidence = Column(Float, nullable=True)  # AI confidence score (0.000-1.000)
     feedback_metadata = Column(
         JSONBType, nullable=True
     )  # Additional context (renamed from 'metadata' to avoid SQLAlchemy reserved name)
@@ -588,8 +586,8 @@ class TranslationMemory(Base):
     target_language = Column(String(10), nullable=False, index=True)
     domain = Column(String(100), nullable=True, index=True)
     subdomain = Column(String(100), nullable=True)
-    quality_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
-    confidence_score: DECIMAL = Column(DECIMAL(4, 3), nullable=True)
+    quality_score: float = Column(DECIMAL(4, 3), nullable=True)  # type: ignore[assignment]
+    confidence_score: float = Column(DECIMAL(4, 3), nullable=True)  # type: ignore[assignment]
     usage_count = Column(Integer, default=0, nullable=False)
     last_used = Column(DateTime, nullable=True)
     translation_metadata = Column(JSONBType, nullable=True)

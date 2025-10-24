@@ -9,7 +9,7 @@ This module provides WebSocket connections for:
 """
 
 import json
-from typing import Dict, List
+from typing import Optional, Dict, List
 from fastapi import WebSocket, WebSocketDisconnect, Depends, HTTPException
 from fastapi.routing import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -121,7 +121,7 @@ class ConnectionManager:
             logger.error(f"Error sending message to websocket: {e}")
 
     async def broadcast_to_session(
-        self, session_id: str, message: dict, exclude: WebSocket = None
+        self, session_id: str, message: dict, exclude: Optional[WebSocket] = None
     ):
         """Broadcast a message to all connections in a session."""
         if session_id not in self.active_connections:

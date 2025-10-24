@@ -121,17 +121,23 @@ def create_feedback(
         )
 
         return RLHFFeedbackResponse(
-            id=result.id,
-            user_id=result.user_id,
-            job_id=result.job_id,
-            event_type=result.event_type,
-            original_text=result.original_text,
-            suggested_text=result.suggested_text,
-            final_text=result.final_text,
-            suggestion_type=result.suggestion_type,
-            user_action=result.user_action,
+            id=int(result.id),
+            user_id=int(result.user_id) if result.user_id is not None else None,
+            job_id=int(result.job_id) if result.job_id is not None else None,
+            event_type=str(result.event_type),
+            original_text=str(result.original_text),
+            suggested_text=str(result.suggested_text)
+            if result.suggested_text is not None
+            else None,
+            final_text=str(result.final_text)
+            if result.final_text is not None
+            else None,
+            suggestion_type=str(result.suggestion_type)
+            if result.suggestion_type is not None
+            else None,
+            user_action=str(result.user_action),
             confidence=float(result.confidence) if result.confidence else None,
-            metadata=result.metadata,
+            metadata=dict(result.metadata) if result.metadata else None,  # type: ignore[call-overload]
             created_at=result.created_at.isoformat(),
         )
 
@@ -174,17 +180,23 @@ def create_bulk_feedback(
 
         return [
             RLHFFeedbackResponse(
-                id=result.id,
-                user_id=result.user_id,
-                job_id=result.job_id,
-                event_type=result.event_type,
-                original_text=result.original_text,
-                suggested_text=result.suggested_text,
-                final_text=result.final_text,
-                suggestion_type=result.suggestion_type,
-                user_action=result.user_action,
+                id=int(result.id),
+                user_id=int(result.user_id) if result.user_id is not None else None,
+                job_id=int(result.job_id) if result.job_id is not None else None,
+                event_type=str(result.event_type),
+                original_text=str(result.original_text),
+                suggested_text=str(result.suggested_text)
+                if result.suggested_text is not None
+                else None,
+                final_text=str(result.final_text)
+                if result.final_text is not None
+                else None,
+                suggestion_type=str(result.suggestion_type)
+                if result.suggestion_type is not None
+                else None,
+                user_action=str(result.user_action),
                 confidence=float(result.confidence) if result.confidence else None,
-                metadata=result.metadata,
+                metadata=dict(result.metadata) if result.metadata else None,  # type: ignore[call-overload]
                 created_at=result.created_at.isoformat(),
             )
             for result in results
@@ -214,17 +226,23 @@ def get_user_feedback(
 
         return [
             RLHFFeedbackResponse(
-                id=result.id,
-                user_id=result.user_id,
-                job_id=result.job_id,
-                event_type=result.event_type,
-                original_text=result.original_text,
-                suggested_text=result.suggested_text,
-                final_text=result.final_text,
-                suggestion_type=result.suggestion_type,
-                user_action=result.user_action,
+                id=int(result.id),
+                user_id=int(result.user_id) if result.user_id is not None else None,
+                job_id=int(result.job_id) if result.job_id is not None else None,
+                event_type=str(result.event_type),
+                original_text=str(result.original_text),
+                suggested_text=str(result.suggested_text)
+                if result.suggested_text is not None
+                else None,
+                final_text=str(result.final_text)
+                if result.final_text is not None
+                else None,
+                suggestion_type=str(result.suggestion_type)
+                if result.suggestion_type is not None
+                else None,
+                user_action=str(result.user_action),
                 confidence=float(result.confidence) if result.confidence else None,
-                metadata=result.metadata,
+                metadata=dict(result.metadata) if result.metadata else None,  # type: ignore[call-overload]
                 created_at=result.created_at.isoformat(),
             )
             for result in results

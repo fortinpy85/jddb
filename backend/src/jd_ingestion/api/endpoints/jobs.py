@@ -2,7 +2,7 @@
 import csv
 import io
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, cast
 
 # Third-party imports
 from fastapi import APIRouter, Depends, HTTPException, Query, Security
@@ -676,7 +676,7 @@ async def reprocess_job(
             raise HTTPException(status_code=404, detail="Job description not found")
 
         # Update processed date to mark as reprocessed
-        job.processed_date = datetime.utcnow()
+        job.processed_date = datetime.utcnow()  # type: ignore[assignment]
         await db.commit()
 
         logger.info(
@@ -794,7 +794,7 @@ async def update_job(
                 db.add(metadata)
 
         # Update timestamp
-        job.updated_at = datetime.utcnow()
+        job.updated_at = datetime.utcnow()  # type: ignore[assignment]
 
         await db.commit()
         await db.refresh(job)
@@ -867,10 +867,10 @@ async def update_job_section(
 
         # Update section content
         if "section_content" in section_update:
-            section.section_content = section_update["section_content"]
+            section.section_content = section_update["section_content"]  # type: ignore[assignment]
 
         # Update job timestamp
-        job.updated_at = datetime.utcnow()
+        job.updated_at = datetime.utcnow()  # type: ignore[assignment]
 
         await db.commit()
         await db.refresh(section)
@@ -980,7 +980,7 @@ async def bulk_export_jobs(
         # Fetch additional data if requested
         jobs_data = []
         for job in jobs:
-            job_data = {
+            job_dict = {
                 "id": job.id,
                 "job_number": job.job_number,
                 "title": job.title,
@@ -993,10 +993,10 @@ async def bulk_export_jobs(
             }
 
             if include_content:
-                job_data["raw_content"] = job.raw_content
+                job_dict["raw_content"] = job.raw_content
 
             if include_sections:
-                job_data["sections"] = [
+                job_dict["sections"] = [
                     {
                         "section_type": s.section_type,
                         "section_content": s.section_content,
@@ -1006,7 +1006,7 @@ async def bulk_export_jobs(
                 ]
 
             if include_metadata and job.job_metadata:
-                job_data["metadata"] = {
+                job_dict["metadata"] = {
                     "department": job.job_metadata.department,
                     "reports_to": job.job_metadata.reports_to,
                     "location": job.job_metadata.location,
@@ -1014,7 +1014,7 @@ async def bulk_export_jobs(
                     "salary_budget": job.job_metadata.salary_budget,
                 }
 
-            jobs_data.append(job_data)
+            jobs_data.append(job_dict)
 
         # Generate export based on format
         if export_format == "json":
@@ -1027,41 +1027,47 @@ async def bulk_export_jobs(
             if jobs_data:
                 # Flatten the data for CSV
                 flattened_data = []
-                for job in jobs_data:
+                for job_dict in jobs_data:
                     row = {
-                        "id": job["id"],
-                        "job_number": job["job_number"],
-                        "title": job["title"],
-                        "classification": job["classification"],
-                        "language": job["language"],
-                        "file_path": job["file_path"],
-                        "processed_date": job["processed_date"],
-                        "created_at": job["created_at"],
-                        "updated_at": job["updated_at"],
+                        "id": job_dict["id"],
+                        "job_number": job_dict["job_number"],
+                        "title": job_dict["title"],
+                        "classification": job_dict["classification"],
+                        "language": job_dict["language"],
+                        "file_path": job_dict["file_path"],
+                        "processed_date": job_dict["processed_date"],
+                        "created_at": job_dict["created_at"],
+                        "updated_at": job_dict["updated_at"],
                     }
 
-                    if include_metadata and "metadata" in job and job["metadata"]:
-                        metadata = job["metadata"]
+                    if (
+                        include_metadata
+                        and "metadata" in job_dict
+                        and job_dict["metadata"]
+                    ):
+                        metadata_dict: Dict[str, Any] = cast(
+                            Dict[str, Any], job_dict["metadata"]
+                        )
                         row.update(
                             {
-                                "department": metadata.get("department"),
-                                "reports_to": metadata.get("reports_to"),
-                                "location": metadata.get("location"),
-                                "fte_count": metadata.get("fte_count"),
-                                "salary_budget": metadata.get("salary_budget"),
+                                "department": metadata_dict.get("department"),
+                                "reports_to": metadata_dict.get("reports_to"),
+                                "location": metadata_dict.get("location"),
+                                "fte_count": metadata_dict.get("fte_count"),
+                                "salary_budget": metadata_dict.get("salary_budget"),
                             }
                         )
 
-                    if include_sections and "sections" in job:
+                    if include_sections and "sections" in job_dict:
                         # Add section content as separate columns
                         sections_dict = {
                             s["section_type"]: s["section_content"]
-                            for s in job["sections"]
+                            for s in cast(List[Dict[str, Any]], job_dict["sections"])
                         }
                         row.update(sections_dict)
 
                     if include_content:
-                        row["raw_content"] = job.get("raw_content", "")
+                        row["raw_content"] = job_dict.get("raw_content", "")
 
                     flattened_data.append(row)
 
@@ -1080,16 +1086,20 @@ async def bulk_export_jobs(
             output_lines.append("=" * 50)
             output_lines.append("")
 
-            for i, job in enumerate(jobs_data, 1):
-                output_lines.append(f"JOB {i}: {job['title']} ({job['job_number']})")
+            for i, job_dict in enumerate(jobs_data, 1):
+                output_lines.append(
+                    f"JOB {i}: {job_dict['title']} ({job_dict['job_number']})"
+                )
                 output_lines.append("-" * 50)
-                output_lines.append(f"ID: {job['id']}")
-                output_lines.append(f"Classification: {job['classification']}")
-                output_lines.append(f"Language: {job['language']}")
-                output_lines.append(f"Processed: {job['processed_date']}")
+                output_lines.append(f"ID: {job_dict['id']}")
+                output_lines.append(f"Classification: {job_dict['classification']}")
+                output_lines.append(f"Language: {job_dict['language']}")
+                output_lines.append(f"Processed: {job_dict['processed_date']}")
 
-                if include_metadata and "metadata" in job and job["metadata"]:
-                    metadata = job["metadata"]
+                if include_metadata and "metadata" in job_dict and job_dict["metadata"]:
+                    metadata: Dict[str, Any] = cast(
+                        Dict[str, Any], job_dict["metadata"]
+                    )
                     output_lines.append("")
                     output_lines.append("METADATA:")
                     for key, value in metadata.items():
@@ -1098,10 +1108,13 @@ async def bulk_export_jobs(
                                 f"  {key.replace('_', ' ').title()}: {value}"
                             )
 
-                if include_sections and "sections" in job:
+                if include_sections and "sections" in job_dict:
                     output_lines.append("")
                     output_lines.append("SECTIONS:")
-                    for section in job["sections"]:
+                    sections_list: List[Dict[str, Any]] = cast(
+                        List[Dict[str, Any]], job_dict["sections"]
+                    )
+                    for section in sections_list:
                         output_lines.append(
                             f"  {section['section_type'].replace('_', ' ').title()}:"
                         )
@@ -1112,7 +1125,9 @@ async def bulk_export_jobs(
                 if include_content:
                     output_lines.append("")
                     output_lines.append("CONTENT:")
-                    output_lines.append(job.get("raw_content", "")[:500] + "...")
+                    output_lines.append(
+                        cast(str, job_dict.get("raw_content", ""))[:500] + "..."
+                    )
 
                 output_lines.append("")
                 output_lines.append("")

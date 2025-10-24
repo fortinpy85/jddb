@@ -333,9 +333,14 @@ class AnalyticsService:
         ai_stats_result = await db.execute(ai_stats_query)
         ai_stats = ai_stats_result.first()
 
-        total_ai_requests = ai_stats.total_requests or 0
-        total_tokens = ai_stats.total_tokens or 0
-        total_cost = float(ai_stats.total_cost or 0)
+        if ai_stats is None:
+            total_ai_requests = 0
+            total_tokens = 0
+            total_cost = 0.0
+        else:
+            total_ai_requests = ai_stats.total_requests or 0
+            total_tokens = ai_stats.total_tokens or 0
+            total_cost = float(ai_stats.total_cost or 0)
 
         # Usage by service type
         service_breakdown_query = (
@@ -748,17 +753,28 @@ class AnalyticsService:
         )
         total_jobs = total_jobs_result.scalar_one()
 
-        return {
-            "avg_content_completeness": float(quality_stats[0] or 0),
-            "avg_sections_completeness": float(quality_stats[1] or 0),
-            "avg_metadata_completeness": float(quality_stats[2] or 0),
-            "jobs_with_quality_data": quality_stats[3] or 0,
-            "total_processing_errors": quality_stats[4] or 0,
-            "total_validation_errors": quality_stats[5] or 0,
-            "quality_coverage_percent": round(
-                (quality_stats[3] or 0) / max(total_jobs, 1) * 100, 1
-            ),
-        }
+        if quality_stats is None:
+            return {
+                "avg_content_completeness": 0.0,
+                "avg_sections_completeness": 0.0,
+                "avg_metadata_completeness": 0.0,
+                "jobs_with_quality_data": 0,
+                "total_processing_errors": 0,
+                "total_validation_errors": 0,
+                "quality_coverage_percent": 0.0,
+            }
+        else:
+            return {
+                "avg_content_completeness": float(quality_stats[0] or 0),
+                "avg_sections_completeness": float(quality_stats[1] or 0),
+                "avg_metadata_completeness": float(quality_stats[2] or 0),
+                "jobs_with_quality_data": quality_stats[3] or 0,
+                "total_processing_errors": quality_stats[4] or 0,
+                "total_validation_errors": quality_stats[5] or 0,
+                "quality_coverage_percent": round(
+                    (quality_stats[3] or 0) / max(total_jobs, 1) * 100, 1
+                ),
+            }
 
     async def get_ai_usage_stats(self, db: AsyncSession) -> dict:
         """Get AI usage statistics for the last 30 days."""
@@ -777,16 +793,26 @@ class AnalyticsService:
         )
         ai_stats = ai_stats_result.fetchone()
 
-        return {
-            "total_requests": ai_stats[0] or 0,
-            "total_tokens": ai_stats[1] or 0,
-            "total_cost_usd": float(ai_stats[2] or 0),
-            "successful_requests": ai_stats[3] or 0,
-            "failed_requests": ai_stats[4] or 0,
-            "success_rate_percent": round(
-                (ai_stats[3] or 0) / max(ai_stats[0] or 1, 1) * 100, 1
-            ),
-        }
+        if ai_stats is None:
+            return {
+                "total_requests": 0,
+                "total_tokens": 0,
+                "total_cost_usd": 0.0,
+                "successful_requests": 0,
+                "failed_requests": 0,
+                "success_rate_percent": 0.0,
+            }
+        else:
+            return {
+                "total_requests": ai_stats[0] or 0,
+                "total_tokens": ai_stats[1] or 0,
+                "total_cost_usd": float(ai_stats[2] or 0),
+                "successful_requests": ai_stats[3] or 0,
+                "failed_requests": ai_stats[4] or 0,
+                "success_rate_percent": round(
+                    (ai_stats[3] or 0) / max(ai_stats[0] or 1, 1) * 100, 1
+                ),
+            }
 
     async def get_content_distribution(self, db: AsyncSession) -> dict:
         """Get content distribution statistics."""
@@ -868,7 +894,7 @@ class AnalyticsService:
             .order_by(func.count(SearchAnalytics.id).desc())
             .limit(limit)
         )
-        return result.all()
+        return list(result.all())
 
     async def get_database_statistics(self, db: AsyncSession) -> dict:
         """Get database statistics."""
@@ -906,7 +932,7 @@ class AnalyticsService:
             )
             .order_by(UsageAnalytics.timestamp.desc())
         )
-        return result.scalars().all()
+        return list(result.scalars().all())
 
 
 # Global service instance

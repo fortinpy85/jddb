@@ -71,7 +71,7 @@ async def get_all_preferences(
 
         # Convert to dictionary
         preferences_dict = {
-            pref.preference_key: pref.preference_value for pref in preferences_list
+            str(pref.preference_key): pref.preference_value for pref in preferences_list
         }
 
         logger.info(
@@ -233,7 +233,7 @@ async def get_preference(
             raise HTTPException(status_code=404, detail=f"Preference '{key}' not found")
 
         return PreferenceResponse(
-            key=preference.preference_key,
+            key=str(preference.preference_key),
             value=preference.preference_value,
             updated_at=preference.updated_at.isoformat()
             if preference.updated_at
@@ -272,7 +272,7 @@ async def delete_preference(
 
         await db.commit()
 
-        if result.rowcount == 0:
+        if result.rowcount == 0:  # type: ignore[attr-defined]
             raise HTTPException(status_code=404, detail=f"Preference '{key}' not found")
 
         logger.info(f"Deleted preference '{key}' for session {session_id}")
@@ -306,7 +306,7 @@ async def reset_all_preferences(
 
         await db.commit()
 
-        deleted_count = result.rowcount
+        deleted_count = result.rowcount  # type: ignore[attr-defined]
         logger.info(f"Reset {deleted_count} preferences for session {session_id}")
 
         return {

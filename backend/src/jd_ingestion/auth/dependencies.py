@@ -17,7 +17,7 @@ from .service import (
     PreferenceService,
     verify_access_token,
 )
-from .models import User
+from ..database.models import User as DBUser
 from ..database.connection import get_async_session
 from ..utils.logging import get_logger
 
@@ -58,7 +58,7 @@ async def get_preference_service(
 async def get_current_user_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     session_service: SessionService = Depends(get_session_service),
-) -> Optional[User]:
+) -> Optional[DBUser]:
     """
     Get current user from JWT token or session token (optional).
     Returns None if no valid authentication is provided.
@@ -93,8 +93,8 @@ async def get_current_user_optional(
 
 
 async def get_current_user(
-    current_user: Optional[User] = Depends(get_current_user_optional),
-) -> User:
+    current_user: Optional[DBUser] = Depends(get_current_user_optional),
+) -> DBUser:
     """
     Get current user from JWT token or session token (required).
     Raises HTTPException if no valid authentication is provided.
@@ -108,7 +108,7 @@ async def get_current_user(
     return current_user
 
 
-async def get_active_user(current_user: User = Depends(get_current_user)) -> User:
+async def get_active_user(current_user: DBUser = Depends(get_current_user)) -> DBUser:
     """Get current active user."""
     if not current_user.is_active:
         raise HTTPException(
@@ -127,7 +127,7 @@ def require_role(required_role: str):
             ...
     """
 
-    async def role_checker(current_user: User = Depends(get_active_user)) -> User:
+    async def role_checker(current_user: DBUser = Depends(get_active_user)) -> DBUser:
         if current_user.role != required_role:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -148,7 +148,7 @@ def require_roles(required_roles: list):
             ...
     """
 
-    async def roles_checker(current_user: User = Depends(get_active_user)) -> User:
+    async def roles_checker(current_user: DBUser = Depends(get_active_user)) -> DBUser:
         if current_user.role not in required_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -175,16 +175,26 @@ def require_permission(
     """
 
     async def permission_checker(
-        current_user: User = Depends(get_active_user),
+        current_user: DBUser = Depends(get_active_user),
         permission_service: PermissionService = Depends(get_permission_service),
-    ) -> User:
+    ) -> DBUser:
         # Admin users have all permissions
-        if current_user.is_admin:
+        user_role = (
+            str(current_user.role)
+            if not isinstance(current_user.role, str)
+            else current_user.role
+        )
+        if user_role.lower() == "admin":
             return current_user
 
         # Check specific permission
+        user_id = (
+            int(current_user.id)
+            if not isinstance(current_user.id, int)
+            else current_user.id
+        )
         has_permission = await permission_service.check_permission(
-            current_user.id, resource_type, permission_type, resource_id
+            user_id, resource_type, permission_type, resource_id
         )
 
         if not has_permission:
@@ -201,7 +211,7 @@ def require_permission(
 class UserContext:
     """User context for request-scoped user information."""
 
-    def __init__(self, user: Optional[User] = None):
+    def __init__(self, user: Optional[DBUser] = None):
         self.user = user
 
     @property
@@ -212,21 +222,37 @@ class UserContext:
     @property
     def user_id(self) -> Optional[int]:
         """Get user ID."""
-        return self.user.id if self.user else None
+        if self.user:
+            uid = self.user.id
+            return int(uid) if not isinstance(uid, int) else uid
+        return None
 
     @property
     def username(self) -> Optional[str]:
         """Get username."""
-        return self.user.username if self.user else None
+        if self.user:
+            uname = self.user.username
+            return str(uname) if not isinstance(uname, str) else uname
+        return None
 
     @property
     def role(self) -> Optional[str]:
         """Get user role."""
-        return self.user.role if self.user else None
+        if self.user:
+            urole = self.user.role
+            return str(urole) if not isinstance(urole, str) else urole
+        return None
 
     def has_role(self, role: str) -> bool:
         """Check if user has specific role."""
-        return self.user.role == role if self.user else False
+        if self.user:
+            urole = (
+                str(self.user.role)
+                if not isinstance(self.user.role, str)
+                else self.user.role
+            )
+            return urole == role
+        return False
 
     def has_any_role(self, roles: list) -> bool:
         """Check if user has any of the specified roles."""
@@ -234,7 +260,7 @@ class UserContext:
 
 
 async def get_user_context(
-    current_user: Optional[User] = Depends(get_current_user_optional),
+    current_user: Optional[DBUser] = Depends(get_current_user_optional),
 ) -> UserContext:
     """Get user context for the current request."""
     return UserContext(current_user)
@@ -247,13 +273,13 @@ require_translator = require_roles(["admin", "translator", "editor"])
 require_reviewer = require_roles(["admin", "reviewer", "editor"])
 
 # Type aliases for cleaner type hints
-CurrentUser = Annotated[User, Depends(get_current_user)]
-OptionalCurrentUser = Annotated[Optional[User], Depends(get_current_user_optional)]
-ActiveUser = Annotated[User, Depends(get_active_user)]
-AdminUser = Annotated[User, Depends(require_admin)]
-EditorUser = Annotated[User, Depends(require_editor)]
-TranslatorUser = Annotated[User, Depends(require_translator)]
-ReviewerUser = Annotated[User, Depends(require_reviewer)]
+CurrentUser = Annotated[DBUser, Depends(get_current_user)]
+OptionalCurrentUser = Annotated[Optional[DBUser], Depends(get_current_user_optional)]
+ActiveUser = Annotated[DBUser, Depends(get_active_user)]
+AdminUser = Annotated[DBUser, Depends(require_admin)]
+EditorUser = Annotated[DBUser, Depends(require_editor)]
+TranslatorUser = Annotated[DBUser, Depends(require_translator)]
+ReviewerUser = Annotated[DBUser, Depends(require_reviewer)]
 
 # Alias for backwards compatibility with tests
 get_optional_current_user = get_current_user_optional

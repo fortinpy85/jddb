@@ -93,13 +93,16 @@ class SystemMonitor:
                     await session.execute(text("SELECT 1"))
 
                     # Check connection pool
-                    pool = session.get_bind().pool
-                    pool_status = {
-                        "size": pool.size(),
-                        "checked_in": pool.checkedin(),
-                        "checked_out": pool.checkedout(),
-                        "overflow": pool.overflow(),
-                    }
+                    bind = session.get_bind()
+                    pool_status = {}
+                    if hasattr(bind, "pool"):
+                        pool = bind.pool  # type: ignore[attr-defined]
+                        pool_status = {
+                            "size": pool.size(),  # type: ignore[attr-defined,union-attr]
+                            "checked_in": pool.checkedin(),  # type: ignore[attr-defined,union-attr]
+                            "checked_out": pool.checkedout(),  # type: ignore[attr-defined,union-attr]
+                            "overflow": pool.overflow(),  # type: ignore[attr-defined,union-attr]
+                        }
 
                     # Test query performance
                     start_time = datetime.utcnow()
@@ -344,9 +347,11 @@ class SystemMonitor:
                     logger.warning("Failed to get Celery metrics", error=str(e))
 
             # Log business metrics
-            if "database" in metrics:
-                total_jobs = sum(metrics["database"]["job_counts"].values())
-                log_business_metric("total_jobs", total_jobs, "gauge")
+            if "database" in metrics and isinstance(metrics.get("database"), dict):
+                db_metrics = metrics["database"]
+                if isinstance(db_metrics.get("job_counts"), dict):
+                    total_jobs = sum(db_metrics["job_counts"].values())  # type: ignore[union-attr]
+                    log_business_metric("total_jobs", total_jobs, "gauge")
                 log_business_metric(
                     "recent_jobs_1h", metrics["database"]["recent_jobs_1h"], "gauge"
                 )

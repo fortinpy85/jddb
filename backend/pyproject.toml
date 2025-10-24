@@ -81,6 +81,7 @@ ruff = "^0.13.1"
 types-passlib = "^1.7.7.20250602"
 aiosqlite = "^0.21.0"
 safety = "^3.6.2"
+pylint = "^4.0.2"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

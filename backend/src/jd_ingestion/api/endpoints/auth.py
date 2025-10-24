@@ -24,8 +24,10 @@ from ...auth.service import (
     PreferenceService,
     create_access_token,
 )
-from ...auth.models import User
+from ...auth.models import User as AuthUser
+from ...database.models import User as DBUser
 from ...utils.logging import get_logger
+from typing import Union
 
 logger = get_logger(__name__)
 
@@ -60,18 +62,49 @@ class UserResponse(BaseModel):
     created_at: str
 
     @classmethod
-    def from_user(cls, user: User) -> "UserResponse":
+    def from_user(cls, user: Union[AuthUser, DBUser]) -> "UserResponse":
+        # Cast Column types to Python types for mypy compliance
         return cls(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            role=user.role,
-            department=user.department,
-            security_clearance=user.security_clearance,
-            preferred_language=user.preferred_language,
-            is_active=user.is_active,
+            id=int(user.id) if not isinstance(user.id, int) else user.id,
+            username=str(user.username)
+            if not isinstance(user.username, str)
+            else user.username,
+            email=str(user.email) if not isinstance(user.email, str) else user.email,
+            first_name=(
+                str(user.first_name)
+                if not isinstance(user.first_name, str)
+                else user.first_name
+            )
+            if user.first_name
+            else None,
+            last_name=(
+                str(user.last_name)
+                if not isinstance(user.last_name, str)
+                else user.last_name
+            )
+            if user.last_name
+            else None,
+            role=str(user.role) if not isinstance(user.role, str) else user.role,
+            department=(
+                str(user.department)
+                if not isinstance(user.department, str)
+                else user.department
+            )
+            if user.department
+            else None,
+            security_clearance=(
+                str(user.security_clearance)
+                if not isinstance(user.security_clearance, str)
+                else user.security_clearance
+            )
+            if user.security_clearance
+            else None,
+            preferred_language=str(user.preferred_language)
+            if not isinstance(user.preferred_language, str)
+            else user.preferred_language,
+            is_active=bool(user.is_active)
+            if not isinstance(user.is_active, bool)
+            else user.is_active,
             last_login=user.last_login.isoformat() if user.last_login else None,
             created_at=user.created_at.isoformat(),
         )
@@ -139,7 +172,7 @@ async def register_user(
 @router.post("/login", response_model=TokenResponse)
 async def login_user(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    request: Request = None,
+    request: Optional[Request] = None,
     user_service: UserService = Depends(get_user_service),
     session_service: SessionService = Depends(get_session_service),
 ):
@@ -157,7 +190,7 @@ async def login_user(
         user_by_email = await user_service.get_user_by_email(form_data.username)
         if user_by_email:
             user = await user_service.authenticate_user(
-                user_by_email.username, form_data.password
+                str(user_by_email.username), form_data.password
             )
 
     if not user:
@@ -179,7 +212,7 @@ async def login_user(
     user_agent = request.headers.get("user-agent") if request else None
 
     _ = await session_service.create_session(
-        user_id=user.id, ip_address=ip_address, user_agent=user_agent
+        user_id=int(user.id), ip_address=ip_address, user_agent=user_agent
     )
 
     logger.info(f"User logged in: {user.username}")
@@ -222,7 +255,12 @@ async def update_current_user(
     update_data = user_update.dict(exclude_unset=True)
 
     try:
-        updated_user = await user_service.update_user(current_user.id, **update_data)
+        user_id = (
+            int(current_user.id)
+            if not isinstance(current_user.id, int)
+            else current_user.id
+        )
+        updated_user = await user_service.update_user(user_id, **update_data)
         if not updated_user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
@@ -242,8 +280,13 @@ async def change_password(
     user_service: UserService = Depends(get_user_service),
 ):
     """Change current user password."""
+    user_id = (
+        int(current_user.id)
+        if not isinstance(current_user.id, int)
+        else current_user.id
+    )
     success = await user_service.change_password(
-        current_user.id, password_data.current_password, password_data.new_password
+        user_id, password_data.current_password, password_data.new_password
     )
 
     if not success:
@@ -262,7 +305,12 @@ async def get_user_preferences(
     preference_service: PreferenceService = Depends(get_preference_service),
 ):
     """Get all user preferences."""
-    preferences = await preference_service.get_all_preferences(current_user.id)
+    user_id = (
+        int(current_user.id)
+        if not isinstance(current_user.id, int)
+        else current_user.id
+    )
+    preferences = await preference_service.get_all_preferences(user_id)
     return {"preferences": preferences}
 
 
@@ -273,8 +321,13 @@ async def set_user_preference(
     preference_service: PreferenceService = Depends(get_preference_service),
 ):
     """Set a user preference."""
+    user_id = (
+        int(current_user.id)
+        if not isinstance(current_user.id, int)
+        else current_user.id
+    )
     preference = await preference_service.set_preference(
-        current_user.id, preference_data.key, preference_data.value
+        user_id, preference_data.key, preference_data.value
     )
 
     return {
@@ -291,7 +344,12 @@ async def get_user_preference(
     preference_service: PreferenceService = Depends(get_preference_service),
 ):
     """Get a specific user preference."""
-    value = await preference_service.get_preference(current_user.id, key)
+    user_id = (
+        int(current_user.id)
+        if not isinstance(current_user.id, int)
+        else current_user.id
+    )
+    value = await preference_service.get_preference(user_id, key)
 
     if value is None:
         raise HTTPException(
@@ -308,7 +366,12 @@ async def delete_user_preference(
     preference_service: PreferenceService = Depends(get_preference_service),
 ):
     """Delete a user preference."""
-    success = await preference_service.delete_preference(current_user.id, key)
+    user_id = (
+        int(current_user.id)
+        if not isinstance(current_user.id, int)
+        else current_user.id
+    )
+    success = await preference_service.delete_preference(user_id, key)
 
     if not success:
         raise HTTPException(

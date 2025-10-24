@@ -149,7 +149,9 @@ async def create_saved_search(
         await db.commit()
         await db.refresh(saved_search)
 
-        return CreateSavedSearchResponse(status="success", search=saved_search)
+        return CreateSavedSearchResponse(
+            status="success", search=SavedSearchDetail.from_orm(saved_search)
+        )
 
     except HTTPException:
         # Re-raise HTTP exceptions (like 400 for missing headers)
@@ -253,7 +255,7 @@ async def list_saved_searches(
 
         return ListSavedSearchResponse(
             status="success",
-            searches=searches,
+            searches=[SavedSearchDetail.from_orm(search) for search in searches],
             pagination={
                 "skip": skip,
                 "limit": limit,
@@ -322,7 +324,9 @@ async def get_saved_search(
             resource_id=str(search_id),
         )
 
-        return GetSavedSearchResponse(status="success", search=search)
+        return GetSavedSearchResponse(
+            status="success", search=SavedSearchDetail.from_orm(search)
+        )
 
     except HTTPException:
         raise
@@ -379,23 +383,23 @@ async def update_saved_search(
 
         # Update fields
         if search_update.name is not None:
-            search.name = search_update.name
+            search.name = search_update.name  # type: ignore[assignment]
         if search_update.description is not None:
-            search.description = search_update.description
+            search.description = search_update.description  # type: ignore[assignment]
         if search_update.search_query is not None:
-            search.search_query = search_update.search_query
+            search.search_query = search_update.search_query  # type: ignore[assignment]
         if search_update.search_type is not None:
-            search.search_type = search_update.search_type
+            search.search_type = search_update.search_type  # type: ignore[assignment]
         if search_update.search_filters is not None:
-            search.search_filters = search_update.search_filters
+            search.search_filters = search_update.search_filters  # type: ignore[assignment]
         if search_update.is_public is not None:
-            search.is_public = search_update.is_public
+            search.is_public = search_update.is_public  # type: ignore[assignment]
         if search_update.is_favorite is not None:
-            search.is_favorite = search_update.is_favorite
+            search.is_favorite = search_update.is_favorite  # type: ignore[assignment]
         if search_update.search_metadata is not None:
-            search.search_metadata = search_update.search_metadata
+            search.search_metadata = search_update.search_metadata  # type: ignore[assignment]
 
-        search.updated_at = func.now()
+        search.updated_at = datetime.utcnow()  # type: ignore[assignment]
 
         await db.commit()
         await db.refresh(search)
@@ -413,7 +417,9 @@ async def update_saved_search(
 
         logger.info("Saved search updated", search_id=search_id, name=search.name)
 
-        return UpdateSavedSearchResponse(status="success", search=search)
+        return UpdateSavedSearchResponse(
+            status="success", search=SavedSearchDetail.from_orm(search)
+        )
 
     except HTTPException:
         raise
@@ -539,8 +545,8 @@ async def execute_saved_search(
             )
 
         # Update usage statistics
-        search.last_used = func.now()
-        search.use_count = (search.use_count or 0) + 1
+        search.last_used = datetime.utcnow()  # type: ignore[assignment]
+        search.use_count = (int(search.use_count) if search.use_count else 0) + 1  # type: ignore[assignment]
 
         await db.commit()
 
@@ -553,8 +559,10 @@ async def execute_saved_search(
             session_id=user_info["session_id"],
             user_id=user_info["user_id"],
             resource_id=str(search_id),
-            search_query=search.search_query,
-            search_filters=search.search_filters,
+            search_query=str(search.search_query) if search.search_query else None,
+            search_filters=dict(search.search_filters)
+            if search.search_filters
+            else None,
         )
 
         logger.info("Saved search executed", search_id=search_id, name=search.name)
@@ -667,29 +675,27 @@ async def set_user_preference(
             )
 
         # Check if preference exists
-        query = select(UserPreference).where(
-            and_(
-                (
-                    UserPreference.user_id == user_info["user_id"]
-                    if user_info["user_id"]
-                    else True
-                ),
-                (
-                    UserPreference.session_id == user_info["session_id"]
-                    if user_info["session_id"]
-                    else True
-                ),
+        conditions = []
+        if user_info["user_id"]:
+            conditions.append(UserPreference.user_id == user_info["user_id"])
+        if user_info["session_id"]:
+            conditions.append(UserPreference.session_id == user_info["session_id"])
+
+        conditions.extend(
+            [
                 UserPreference.preference_type == preference_request.preference_type,
                 UserPreference.preference_key == preference_request.preference_key,
-            )
+            ]
         )
+
+        query = select(UserPreference).where(and_(*conditions))
         result = await db.execute(query)
         existing_pref = result.scalar_one_or_none()
 
         if existing_pref:
             # Update existing preference
-            existing_pref.preference_value = preference_request.preference_value
-            existing_pref.updated_at = func.now()
+            existing_pref.preference_value = preference_request.preference_value  # type: ignore[assignment]
+            existing_pref.updated_at = datetime.utcnow()  # type: ignore[assignment]
             await db.commit()
             pref_id = existing_pref.id
         else:
@@ -752,23 +758,13 @@ async def get_user_preferences(
                 detail="Either x-user-id or x-session-id header is required",
             )
 
-        query = select(UserPreference).where(
-            and_(
-                UserPreference.preference_type == preference_type,
-                or_(
-                    (
-                        UserPreference.user_id == user_info["user_id"]
-                        if user_info["user_id"]
-                        else False
-                    ),
-                    (
-                        UserPreference.session_id == user_info["session_id"]
-                        if user_info["session_id"]
-                        else False
-                    ),
-                ),
-            )
-        )
+        conditions = [UserPreference.preference_type == preference_type]
+        if user_info["user_id"]:
+            conditions.append(UserPreference.user_id == user_info["user_id"])
+        if user_info["session_id"]:
+            conditions.append(UserPreference.session_id == user_info["session_id"])
+
+        query = select(UserPreference).where(or_(*conditions))
 
         result = await db.execute(query)
         preferences = result.scalars().all()

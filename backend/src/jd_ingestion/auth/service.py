@@ -180,7 +180,7 @@ class UserService:
         if not user:
             return False
 
-        user.is_active = False
+        user.is_active = False  # type: ignore[assignment]
         await self.db.commit()
 
         logger.info(f"Deactivated user: {user.username}")
@@ -200,7 +200,19 @@ class SessionService:
         user_agent: Optional[str] = None,
     ) -> UserSession:
         """Create a new user session."""
-        session = UserSession.create_session(user_id, ip_address, user_agent)
+        # Create session manually since UserSession doesn't have create_session method
+        import secrets
+
+        session_token = secrets.token_urlsafe(32)
+        expires_at = datetime.utcnow() + timedelta(days=30)  # 30 days expiration
+
+        session = UserSession(
+            user_id=user_id,
+            session_token=session_token,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            expires_at=expires_at,
+        )
 
         self.db.add(session)
         await self.db.commit()
@@ -224,14 +236,20 @@ class SessionService:
         """Validate session and return user if valid."""
         session = await self.get_session(session_token)
 
-        if not session or not session.is_valid:
+        if not session or not self._is_session_valid(session):
             return None
 
         # Update last activity
-        session.last_activity = datetime.utcnow()
+        session.last_activity = datetime.utcnow()  # type: ignore[assignment]
         await self.db.commit()
 
         return session.user
+
+    def _is_session_valid(self, session: UserSession) -> bool:
+        """Check if session is still valid."""
+        return bool(
+            session.expires_at > datetime.utcnow() and session.last_activity is not None
+        )
 
     async def invalidate_session(self, session_token: str) -> bool:
         """Invalidate a session."""
@@ -253,7 +271,7 @@ class SessionService:
         result = await self.db.execute(
             select(UserSession).where(UserSession.expires_at < datetime.utcnow())
         )
-        expired_sessions = result.scalars().all()
+        expired_sessions = result.scalars().all()  # type: ignore[attr-defined]
 
         for session in expired_sessions:
             await self.db.delete(session)
@@ -326,21 +344,27 @@ class PermissionService:
             conditions.append(UserPermission.resource_id == None)  # type: ignore # noqa: E711
 
         result = await self.db.execute(select(UserPermission).where(and_(*conditions)))
-        permissions = result.scalars().all()
+        permissions = result.scalars().all()  # type: ignore[attr-defined]
 
         # Check if any valid permission exists
         for permission in permissions:
-            if permission.is_valid:
+            if self._is_permission_valid(permission):
                 return True
 
         return False
+
+    def _is_permission_valid(self, permission: UserPermission) -> bool:
+        """Check if permission is still valid."""
+        return bool(
+            permission.expires_at is None or permission.expires_at > datetime.utcnow()
+        )
 
     async def get_user_permissions(self, user_id: int) -> List[UserPermission]:
         """Get all permissions for a user."""
         result = await self.db.execute(
             select(UserPermission).where(UserPermission.user_id == user_id)
         )
-        return result.scalars().all()
+        return result.scalars().all()  # type: ignore[return-value]
 
     async def revoke_permission(self, permission_id: int) -> bool:
         """Revoke a specific permission."""
@@ -415,9 +439,9 @@ class PreferenceService:
         result = await self.db.execute(
             select(UserPreference).where(UserPreference.user_id == user_id)
         )
-        preferences = result.scalars().all()
+        preferences = result.scalars().all()  # type: ignore[attr-defined]
 
-        return {pref.preference_key: pref.preference_value for pref in preferences}
+        return {str(pref.preference_key): pref.preference_value for pref in preferences}
 
     async def delete_preference(self, user_id: int, key: str) -> bool:
         """Delete a user preference."""

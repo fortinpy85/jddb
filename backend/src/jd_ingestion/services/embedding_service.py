@@ -749,9 +749,14 @@ class EmbeddingService:
 
             for chunk in chunks_without_embeddings:
                 try:
-                    embedding = await self.generate_embedding(chunk.chunk_text)
+                    chunk_text = (
+                        str(chunk.chunk_text)
+                        if not isinstance(chunk.chunk_text, str)
+                        else chunk.chunk_text
+                    )
+                    embedding = await self.generate_embedding(chunk_text)
                     if embedding:
-                        chunk.embedding = embedding
+                        chunk.embedding = embedding  # type: ignore[assignment]
                         success_count += 1
                     else:
                         logger.warning(

@@ -307,7 +307,7 @@ class TranslationMemoryService:
         quality_query = select(func.avg(TranslationMemory.quality_score)).where(
             and_(
                 TranslationMemory.project_id == project_id,
-                TranslationMemory.quality_score.isnot(None),
+                TranslationMemory.quality_score.is_not(None),  # type: ignore[attr-defined]
             )
         )
         quality_result = await db.execute(quality_query)
@@ -376,20 +376,24 @@ class TranslationMemoryService:
             logger.warning(f"Translation memory {memory_id} not found")
             return False
 
-        translation.quality_score = quality_score
+        translation.quality_score = quality_score  # type: ignore[assignment]
         if confidence_score is not None:
-            translation.confidence_score = confidence_score
+            translation.confidence_score = confidence_score  # type: ignore[assignment]
 
         if feedback:
             if translation.translation_metadata is None:
-                translation.translation_metadata = {}
-            translation.translation_metadata["feedback"] = feedback
-            translation.translation_metadata["updated_by"] = updated_by
-            translation.translation_metadata["updated_at"] = (
-                datetime.utcnow().isoformat()
+                translation.translation_metadata = {}  # type: ignore[assignment]
+            metadata_dict = (
+                dict(translation.translation_metadata)
+                if translation.translation_metadata
+                else {}
             )
+            metadata_dict["feedback"] = feedback
+            metadata_dict["updated_by"] = updated_by
+            metadata_dict["updated_at"] = datetime.utcnow().isoformat()
+            translation.translation_metadata = metadata_dict  # type: ignore[assignment]
 
-        translation.updated_at = datetime.utcnow()
+        translation.updated_at = datetime.utcnow()  # type: ignore[assignment]
 
         await db.commit()
 
@@ -455,7 +459,7 @@ class TranslationMemoryService:
             }
 
             if include_metadata:
-                item["metadata"] = {
+                item["metadata"] = {  # type: ignore[assignment]
                     "id": translation.id,
                     "subdomain": translation.subdomain,
                     "confidence_score": float(translation.confidence_score)
@@ -470,7 +474,7 @@ class TranslationMemoryService:
                     else None,
                 }
                 if translation.translation_metadata:
-                    item["metadata"]["custom"] = translation.translation_metadata
+                    item["metadata"]["custom"] = translation.translation_metadata  # type: ignore[index]
 
             exported_translations.append(item)
 
@@ -505,20 +509,26 @@ class TranslationMemoryService:
             return False
 
         if used_translation:
-            translation.usage_count += 1
-            translation.last_used = datetime.utcnow()
+            translation.usage_count += 1  # type: ignore[assignment]
+            translation.last_used = datetime.utcnow()  # type: ignore[assignment]
 
         if user_feedback:
             if translation.translation_metadata is None:
-                translation.translation_metadata = {}
-            if "feedback_history" not in translation.translation_metadata:
-                translation.translation_metadata["feedback_history"] = []
-            translation.translation_metadata["feedback_history"].append(
+                translation.translation_metadata = {}  # type: ignore[assignment]
+            metadata_dict = (
+                dict(translation.translation_metadata)
+                if translation.translation_metadata
+                else {}
+            )
+            if "feedback_history" not in metadata_dict:
+                metadata_dict["feedback_history"] = []
+            metadata_dict["feedback_history"].append(
                 {
                     "feedback": user_feedback,
                     "timestamp": datetime.utcnow().isoformat(),
                 }
             )
+            translation.translation_metadata = metadata_dict  # type: ignore[assignment]
 
         await db.commit()
 
@@ -603,12 +613,12 @@ class TranslationMemoryService:
             raise ValueError(f"Translation {translation_id} not found")
 
         if target_text is not None:
-            translation.target_text = target_text
+            translation.target_text = target_text  # type: ignore[assignment]
 
         if quality_score is not None:
-            translation.quality_score = quality_score
+            translation.quality_score = quality_score  # type: ignore[assignment]
 
-        translation.updated_at = datetime.utcnow()
+        translation.updated_at = datetime.utcnow()  # type: ignore[assignment]
 
         await db.commit()
         await db.refresh(translation)

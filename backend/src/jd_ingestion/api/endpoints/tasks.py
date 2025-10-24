@@ -53,6 +53,7 @@ async def upload_and_process_file(
         # Check file size
         if (
             hasattr(file, "size")
+            and file.size is not None
             and file.size > settings.max_file_size_mb * 1024 * 1024
         ):
             raise HTTPException(

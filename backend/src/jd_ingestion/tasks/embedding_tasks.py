@@ -4,8 +4,7 @@ Celery tasks for embedding generation.
 
 import asyncio
 from typing import List, Dict, Any, Optional
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import select
 
 from .celery_app import celery_app
@@ -19,7 +18,9 @@ logger = get_logger(__name__)
 
 # Create async database session for tasks
 engine = create_async_engine(settings.database_url)
-AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+AsyncSessionLocal = async_sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
 
 
 @celery_app.task(
@@ -159,11 +160,13 @@ async def _generate_embeddings_for_job_async(job_id: int, task) -> Dict[str, Any
                 for chunk in batch:
                     try:
                         embedding = await embedding_service.generate_embedding(
-                            chunk.chunk_text
+                            str(chunk.chunk_text)
+                            if not isinstance(chunk.chunk_text, str)
+                            else chunk.chunk_text
                         )
 
                         if embedding:
-                            chunk.embedding = embedding
+                            chunk.embedding = embedding  # type: ignore[assignment]
                             successful_embeddings += 1
                         else:
                             logger.warning(
@@ -416,7 +419,12 @@ async def _generate_missing_embeddings_async(
                 )
 
                 # Generate embeddings for this batch
-                texts = [chunk.chunk_text for chunk in batch]
+                texts = [
+                    str(chunk.chunk_text)
+                    if not isinstance(chunk.chunk_text, str)
+                    else chunk.chunk_text
+                    for chunk in batch
+                ]
                 embeddings = await embedding_service.generate_embeddings_batch(
                     texts, batch_size=len(batch)
                 )
@@ -424,7 +432,7 @@ async def _generate_missing_embeddings_async(
                 # Update chunks with embeddings
                 for chunk, embedding in zip(batch, embeddings):
                     if embedding:
-                        chunk.embedding = embedding
+                        chunk.embedding = embedding  # type: ignore[assignment]
                         successful_embeddings += 1
                     else:
                         failed_embeddings += 1

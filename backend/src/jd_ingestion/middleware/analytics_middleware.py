@@ -76,7 +76,7 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
     async def _track_request(
         self,
         request: Request,
-        response: Response = None,
+        response: Optional[Response] = None,
         response_time_ms: int = 0,
         session_id: Optional[str] = None,
         error: Optional[str] = None,

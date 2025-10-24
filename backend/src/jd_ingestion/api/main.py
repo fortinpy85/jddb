@@ -258,7 +258,9 @@ async def health_check(db: AsyncSession = Depends(get_async_session)):
     """Health check endpoint."""
     try:
         # Test database connection
-        await db.execute("SELECT 1")
+        from sqlalchemy import text
+
+        await db.execute(text("SELECT 1"))
 
         return {"status": "healthy", "database": "connected", "version": "1.0.0"}
     except Exception as e:
