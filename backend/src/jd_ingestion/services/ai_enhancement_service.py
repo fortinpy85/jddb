@@ -662,7 +662,9 @@ Return ONLY valid JSON, no other text."""
         # Feminine-coded language (for balance - overuse discourages men)
         feminine_coded_words = {
             "support": ["assist", "enable", "facilitate"],
+            "supportive": ["helpful", "enabling", "facilitating"],
             "nurture": ["develop", "cultivate", "foster"],
+            "nurturing": ["developing", "cultivating", "fostering"],
             "collaborate": ["work together", "partner"],
             "empathetic": ["understanding", "perceptive"],
             "interpersonal": ["communication", "relationship"],
@@ -1174,8 +1176,8 @@ Return ONLY valid JSON, no other text."""
                 "severity": "medium",
                 "explanation": "Unnecessarily high bar; may exclude ESL speakers",
             },
-            # Socioeconomic barriers
-            "own laptop": {
+            # Socioeconomic barriers (using regex patterns for flexibility)
+            r"own (a |an )?laptop": {
                 "alternatives": [
                     "laptop provided",
                     "access to computer",
@@ -1184,7 +1186,7 @@ Return ONLY valid JSON, no other text."""
                 "severity": "medium",
                 "explanation": "Creates socioeconomic barrier; employer should provide equipment",
             },
-            "own computer": {
+            r"own (a |an )?computer": {
                 "alternatives": ["computer provided", "equipment supplied"],
                 "severity": "medium",
                 "explanation": "Socioeconomic barrier; provide necessary equipment",
@@ -1225,7 +1227,11 @@ Return ONLY valid JSON, no other text."""
 
         # Check for cultural bias terms
         for term, info in cultural_bias_patterns.items():
-            pattern = r"\b" + re.escape(term) + r"\b"
+            # Check if term is already a regex pattern (starts with r" or has regex metacharacters)
+            if term.startswith(r"own ("):  # Specific check for our regex patterns
+                pattern = r"\b" + term + r"\b"
+            else:
+                pattern = r"\b" + re.escape(term) + r"\b"
             for match in re.finditer(pattern, text, re.IGNORECASE):
                 issues.append(
                     {
