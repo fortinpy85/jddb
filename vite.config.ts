@@ -58,6 +58,6 @@ export default defineConfig({
         drop_console: true, // Remove console logs in production
         drop_debugger: true,
       },
-    },
+    } as any, // Type assertion for terser options compatibility
   },
 });

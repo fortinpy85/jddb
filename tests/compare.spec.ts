@@ -125,6 +125,6 @@ test.describe("Job Comparison", () => {
     // The actual comparison interface may be under development
     const pageContent = await page.textContent("body");
     expect(pageContent).toBeTruthy();
-    expect(pageContent.length).toBeGreaterThan(0);
+    expect(pageContent?.length).toBeGreaterThan(0);
   });
 });

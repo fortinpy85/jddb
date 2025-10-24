@@ -20,7 +20,7 @@ console.log(`📁 Static Files: ${DIST_DIR}`);
 
 const server = serve({
   port: SERVER_PORT,
-  async fetch(req) {
+  async fetch(req: Request) {
     const url = new URL(req.url);
     console.log(`${req.method} ${url.pathname}`);
 
@@ -97,7 +97,7 @@ const server = serve({
     }
   },
 
-  error(error) {
+  error(error: Error) {
     console.error("❌ Server Error:", error);
     return new Response("500 - Server Error", {
       status: 500,

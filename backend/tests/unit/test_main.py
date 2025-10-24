@@ -154,9 +154,9 @@ class TestRouterInclusion:
         for endpoint in endpoints_to_test:
             response = client.get(endpoint)
             # Should not be 404 (route not found)
-            assert (
-                response.status_code != 404
-            ), f"Router for {endpoint} not properly included"
+            assert response.status_code != 404, (
+                f"Router for {endpoint} not properly included"
+            )
 
 
 class TestStatusEndpoint:

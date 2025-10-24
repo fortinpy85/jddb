@@ -312,7 +312,10 @@ ${requirements.additionalInfo}
           );
         }
       } catch (error) {
-        logger.warn("Quality scoring API failed, using fallback value:", error);
+        logger.warn(
+          "Quality scoring API failed, using fallback value:",
+          error as Error,
+        );
         // Continue with fallback value
       }
 

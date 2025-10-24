@@ -172,7 +172,7 @@ describe("SectionEditor", () => {
       const editButton = screen.getByRole("button", { name: /edit/i });
       await userEvent.click(editButton);
 
-      const textarea = screen.getByRole("textbox");
+      const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
       await userEvent.clear(textarea);
       await userEvent.type(textarea, "Line 1{Enter}Line 2{Enter}Line 3");
 

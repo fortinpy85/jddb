@@ -14,8 +14,8 @@ from typing import List
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 
-from src.jd_ingestion.config.settings import settings
-from src.jd_ingestion.database.models import (
+from jd_ingestion.config.settings import settings
+from jd_ingestion.database.models import (
     JobDescription,
     JobMetadata,
     ContentChunks,
