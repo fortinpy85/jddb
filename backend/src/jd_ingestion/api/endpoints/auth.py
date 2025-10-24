@@ -7,7 +7,7 @@ registration, session management, and user profile operations.
 
 from datetime import timedelta
 from typing import Optional, Any
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, Field
 
@@ -172,7 +172,6 @@ async def register_user(
 @router.post("/login", response_model=TokenResponse)
 async def login_user(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    request: Optional[Request] = None,
     user_service: UserService = Depends(get_user_service),
     session_service: SessionService = Depends(get_session_service),
 ):
@@ -208,8 +207,8 @@ async def login_user(
     )
 
     # Create session for longer-term authentication
-    ip_address = getattr(request.client, "host", None) if request else None
-    user_agent = request.headers.get("user-agent") if request else None
+    ip_address = None  # Could be extracted from Request if needed
+    user_agent = None  # Could be extracted from Request if needed
 
     _ = await session_service.create_session(
         user_id=int(user.id), ip_address=ip_address, user_agent=user_agent
