@@ -257,6 +257,40 @@ class SkillExtractionService:
             )
             raise
 
+    async def remove_job_skills(
+        self,
+        job_id: int,
+        db: AsyncSession,
+    ) -> None:
+        """
+        Remove all skill associations for a job.
+
+        Args:
+            job_id: Job description ID
+            db: Database session
+        """
+        try:
+            await db.execute(
+                job_description_skills.delete().where(
+                    job_description_skills.c.job_id == job_id
+                )
+            )
+            await db.commit()
+
+            logger.info(
+                f"Removed all skills for job {job_id}",
+                job_id=job_id,
+            )
+
+        except Exception as e:
+            logger.error(
+                f"Failed to remove skills for job {job_id}",
+                job_id=job_id,
+                error=str(e),
+            )
+            await db.rollback()
+            raise
+
 
 # Singleton instance
 skill_extraction_service = SkillExtractionService()

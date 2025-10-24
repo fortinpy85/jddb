@@ -528,6 +528,132 @@ class TranslationMemoryService:
 
         return True
 
+    # Alias methods to match test expectations
+    async def add_translation(
+        self,
+        project_id: int,
+        source_text: str,
+        target_text: str,
+        source_language: str,
+        target_language: str,
+        context: Optional[str] = None,
+        created_by: Optional[int] = None,
+        db: Optional[AsyncSession] = None,
+    ) -> Dict[str, Any]:
+        """Alias for add_translation_memory with context parameter."""
+        return await self.add_translation_memory(
+            project_id=project_id,
+            source_text=source_text,
+            target_text=target_text,
+            source_language=source_language,
+            target_language=target_language,
+            domain=context,
+            created_by=created_by,
+            db=db,
+        )
+
+    async def get_project_translations(
+        self,
+        project_id: int,
+        db: Optional[AsyncSession] = None,
+    ) -> List[Dict[str, Any]]:
+        """Get all translations for a project."""
+        if db is None:
+            raise ValueError("Database session is required")
+
+        query = (
+            select(TranslationMemory)
+            .where(TranslationMemory.project_id == project_id)
+            .order_by(TranslationMemory.created_at.desc())
+        )
+
+        result = await db.execute(query)
+        translations = result.scalars().all()
+
+        return [
+            {
+                "id": t.id,
+                "source_text": t.source_text,
+                "target_text": t.target_text,
+                "source_language": t.source_language,
+                "target_language": t.target_language,
+                "domain": t.domain,
+                "quality_score": float(t.quality_score) if t.quality_score else None,
+                "created_at": t.created_at,
+            }
+            for t in translations
+        ]
+
+    async def update_translation(
+        self,
+        translation_id: int,
+        target_text: Optional[str] = None,
+        quality_score: Optional[float] = None,
+        db: Optional[AsyncSession] = None,
+    ) -> Dict[str, Any]:
+        """Update an existing translation."""
+        if db is None:
+            raise ValueError("Database session is required")
+
+        query = select(TranslationMemory).where(TranslationMemory.id == translation_id)
+        result = await db.execute(query)
+        translation = result.scalar_one_or_none()
+
+        if not translation:
+            raise ValueError(f"Translation {translation_id} not found")
+
+        if target_text is not None:
+            translation.target_text = target_text
+
+        if quality_score is not None:
+            translation.quality_score = quality_score
+
+        translation.updated_at = datetime.utcnow()
+
+        await db.commit()
+        await db.refresh(translation)
+
+        logger.info(f"Updated translation ID: {translation_id}")
+
+        return {
+            "id": translation.id,
+            "source_text": translation.source_text,
+            "target_text": translation.target_text,
+            "quality_score": float(translation.quality_score)
+            if translation.quality_score
+            else None,
+            "updated_at": translation.updated_at,
+        }
+
+    async def delete_translation(
+        self,
+        translation_id: int,
+        db: Optional[AsyncSession] = None,
+    ) -> bool:
+        """Delete a translation. Alias for delete_translation_memory."""
+        return await self.delete_translation_memory(translation_id, db)
+
+    async def get_project_stats(
+        self,
+        project_id: int,
+        db: Optional[AsyncSession] = None,
+    ) -> Dict[str, Any]:
+        """Get project statistics. Alias for get_project_statistics."""
+        stats = await self.get_project_statistics(project_id, db)
+
+        # Get project info
+        assert db is not None, "Database session is required"
+        query = select(TranslationProject).where(TranslationProject.id == project_id)
+        result = await db.execute(query)
+        project = result.scalar_one_or_none()
+
+        if project:
+            stats["project_id"] = project.id
+            stats["project_name"] = project.name
+            stats["translation_count"] = stats["total_translations"]
+
+        return stats
+
 
 # Global service instance
 translation_memory_service = TranslationMemoryService()

@@ -128,6 +128,10 @@ class EmbeddingService:
             )
             return None
 
+    async def get_embedding(self, text: str) -> Optional[List[float]]:
+        """Alias for generate_embedding for backward compatibility."""
+        return await self.generate_embedding(text)
+
     async def generate_embeddings_batch(
         self, texts: List[str], batch_size: int = 100
     ) -> List[Optional[List[float]]]:

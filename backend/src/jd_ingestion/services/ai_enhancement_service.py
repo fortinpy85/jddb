@@ -41,7 +41,7 @@ class AIEnhancementService:
         self.db = db
         self.client: Optional[Any] = None
 
-        if AsyncOpenAI is not None and hasattr(settings, "openai_api_key"):  # type: ignore[truthy-function]
+        if AsyncOpenAI is not None and settings.openai_api_key:  # type: ignore[truthy-function]
             try:
                 self.client = AsyncOpenAI(api_key=settings.openai_api_key)
             except Exception as e:
@@ -426,7 +426,7 @@ Return ONLY valid JSON, no other text."""
         suggestions = []
 
         # Check for overly long sentences
-        sentences = text.split(".")
+        sentences = [s.strip() for s in re.split(r"[.!?]+", text) if s.strip()]
         position = 0
         for sentence in sentences:
             word_count = len(sentence.split())

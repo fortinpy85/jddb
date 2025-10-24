@@ -618,9 +618,9 @@ class TestJobsEndpointsIntegration:
         for endpoint in endpoints_to_test:
             response = client.get(endpoint, headers={"X-API-Key": "test_key"})
             # Should not be 404 (route not found) - could be 401, 403, or 500 due to auth/db issues
-            assert response.status_code != 404, (
-                f"Endpoint {endpoint} not properly routed"
-            )
+            assert (
+                response.status_code != 404
+            ), f"Endpoint {endpoint} not properly routed"
 
     @patch("jd_ingestion.api.endpoints.jobs.get_api_key")
     def test_api_key_required(self, mock_get_api_key):
