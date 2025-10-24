@@ -11,6 +11,9 @@ from sqlalchemy.orm import Session
 
 from ...database.connection import get_db
 from ...services.rlhf_service import RLHFService
+from ...utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/rlhf", tags=["rlhf"])
 
@@ -142,8 +145,9 @@ def create_feedback(
         )
 
     except Exception as e:
+        logger.error(f"Failed to create feedback: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=500, detail=f"Failed to create feedback: {str(e)}"
+            status_code=500, detail="Failed to create feedback. Please try again later."
         )
 
 
@@ -203,8 +207,9 @@ def create_bulk_feedback(
         ]
 
     except Exception as e:
+        logger.error(f"Failed to create bulk feedback: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=500, detail=f"Failed to create bulk feedback: {str(e)}"
+            status_code=500, detail="Failed to create bulk feedback. Please try again later."
         )
 
 
@@ -249,8 +254,9 @@ def get_user_feedback(
         ]
 
     except Exception as e:
+        logger.error(f"Failed to get user feedback for user_id={user_id}: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=500, detail=f"Failed to get user feedback: {str(e)}"
+            status_code=500, detail="Failed to get user feedback. Please try again later."
         )
 
 
@@ -273,8 +279,9 @@ def get_acceptance_rate(
         return AcceptanceRateResponse(**stats)
 
     except Exception as e:
+        logger.error(f"Failed to get acceptance rate: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=500, detail=f"Failed to get acceptance rate: {str(e)}"
+            status_code=500, detail="Failed to get acceptance rate. Please try again later."
         )
 
 
@@ -290,8 +297,9 @@ def get_type_statistics(
         return [TypeStatisticsResponse(**item) for item in stats]
 
     except Exception as e:
+        logger.error(f"Failed to get type statistics: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=500, detail=f"Failed to get type statistics: {str(e)}"
+            status_code=500, detail="Failed to get type statistics. Please try again later."
         )
 
 
@@ -322,6 +330,7 @@ def export_training_data(
         }
 
     except Exception as e:
+        logger.error(f"Failed to export training data: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=500, detail=f"Failed to export training data: {str(e)}"
+            status_code=500, detail="Failed to export training data. Please try again later."
         )
