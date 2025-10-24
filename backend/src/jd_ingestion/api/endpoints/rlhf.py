@@ -209,7 +209,8 @@ def create_bulk_feedback(
     except Exception as e:
         logger.error(f"Failed to create bulk feedback: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=500, detail="Failed to create bulk feedback. Please try again later."
+            status_code=500,
+            detail="Failed to create bulk feedback. Please try again later.",
         )
 
 
@@ -254,9 +255,13 @@ def get_user_feedback(
         ]
 
     except Exception as e:
-        logger.error(f"Failed to get user feedback for user_id={user_id}: {str(e)}", exc_info=True)
+        logger.error(
+            f"Failed to get user feedback for user_id={user_id}: {str(e)}",
+            exc_info=True,
+        )
         raise HTTPException(
-            status_code=500, detail="Failed to get user feedback. Please try again later."
+            status_code=500,
+            detail="Failed to get user feedback. Please try again later.",
         )
 
 
@@ -281,7 +286,8 @@ def get_acceptance_rate(
     except Exception as e:
         logger.error(f"Failed to get acceptance rate: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=500, detail="Failed to get acceptance rate. Please try again later."
+            status_code=500,
+            detail="Failed to get acceptance rate. Please try again later.",
         )
 
 
@@ -299,7 +305,8 @@ def get_type_statistics(
     except Exception as e:
         logger.error(f"Failed to get type statistics: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=500, detail="Failed to get type statistics. Please try again later."
+            status_code=500,
+            detail="Failed to get type statistics. Please try again later.",
         )
 
 
@@ -332,5 +339,6 @@ def export_training_data(
     except Exception as e:
         logger.error(f"Failed to export training data: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=500, detail="Failed to export training data. Please try again later."
+            status_code=500,
+            detail="Failed to export training data. Please try again later.",
         )
