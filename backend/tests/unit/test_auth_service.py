@@ -102,20 +102,37 @@ class TestUserService:
         mock_result = Mock()
         mock_result.scalar_one_or_none.return_value = None  # No existing user
         mock_db.execute = AsyncMock(return_value=mock_result)
-        mock_db.add = Mock()
+
+        # Mock add to capture the created user and set its ID
+        created_user = None
+
+        def mock_add(user):
+            nonlocal created_user
+            created_user = user
+            user.id = 1  # Simulate database assigning an ID
+
+        mock_db.add = Mock(side_effect=mock_add)
         mock_db.commit = AsyncMock()
-        mock_db.refresh = AsyncMock()
 
-        with patch("jd_ingestion.auth.service.User", return_value=mock_user):
-            user = await service.create_user(
-                username="testuser", email="test@example.com", password="password123"
-            )
+        # Mock refresh to populate the user (simulating database refresh)
+        async def mock_refresh(user):
+            # Populate user attributes as if from database
+            user.created_at = datetime.utcnow()
+            user.is_active = True
 
-            assert user == mock_user
-            mock_user.set_password.assert_called_once_with("password123")
-            mock_db.add.assert_called_once_with(mock_user)
-            mock_db.commit.assert_called_once()
-            mock_db.refresh.assert_called_once_with(mock_user)
+        mock_db.refresh = AsyncMock(side_effect=mock_refresh)
+
+        user = await service.create_user(
+            username="testuser", email="test@example.com", password="password123"
+        )
+
+        assert user is not None
+        assert user.username == "testuser"
+        assert user.email == "test@example.com"
+        assert user.id == 1
+        mock_db.add.assert_called_once()
+        mock_db.commit.assert_called_once()
+        mock_db.refresh.assert_called_once()
 
     async def test_create_user_username_exists(self, mock_db):
         """Test user creation with existing username."""
@@ -455,15 +472,33 @@ class TestPreferenceService:
         mock_result = Mock()
         mock_result.scalar_one_or_none.return_value = None
         mock_db.execute = AsyncMock(return_value=mock_result)
-        mock_db.add = Mock()
-        mock_db.commit = AsyncMock()
-        mock_db.refresh = AsyncMock()
 
-        with patch(
-            "jd_ingestion.auth.service.UserPreference", return_value=mock_preference
-        ):
-            preference = await service.set_preference(1, "theme", "dark")
-            assert preference == mock_preference
+        # Mock add to capture the created preference
+        created_pref = None
+
+        def mock_add(pref):
+            nonlocal created_pref
+            created_pref = pref
+            pref.id = 1  # Simulate database assigning an ID
+
+        mock_db.add = Mock(side_effect=mock_add)
+        mock_db.commit = AsyncMock()
+
+        # Mock refresh to populate the preference
+        async def mock_refresh(pref):
+            pref.created_at = datetime.utcnow()
+
+        mock_db.refresh = AsyncMock(side_effect=mock_refresh)
+
+        preference = await service.set_preference(1, "theme", "dark")
+
+        assert preference is not None
+        assert preference.user_id == 1
+        assert preference.preference_key == "theme"
+        assert preference.preference_value == "dark"
+        assert preference.id == 1
+        mock_db.add.assert_called_once()
+        mock_db.commit.assert_called_once()
 
     async def test_set_preference_existing(self, mock_db, mock_preference):
         """Test updating existing preference."""

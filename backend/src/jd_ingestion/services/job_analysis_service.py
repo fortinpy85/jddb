@@ -18,6 +18,7 @@ from sklearn.cluster import KMeans
 
 from ..database.models import (
     JobDescription,
+    JobMetadata,
     ContentChunk,
     JobComparison,
     JobSkill,
@@ -41,15 +42,16 @@ class JobAnalysisService:
         department: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Comprehensive compensation analysis across positions."""
-        # Query for jobs
-        # Note: salary_budget and department fields don't exist in current schema
-        query = select(JobDescription.salary_budget).where(  # type: ignore[attr-defined]
-            JobDescription.salary_budget.isnot(None)  # type: ignore[attr-defined]
+        # Query for jobs with salary_budget from JobMetadata
+        query = (
+            select(JobMetadata.salary_budget)
+            .join(JobDescription, JobMetadata.job_id == JobDescription.id)
+            .where(JobMetadata.salary_budget.isnot(None))
         )
         if classification:
             query = query.where(JobDescription.classification == classification)
         if department:
-            query = query.where(JobDescription.department == department)  # type: ignore[attr-defined]
+            query = query.where(JobMetadata.department == department)
 
         result = await db.execute(query)
         salaries = [s for s in result.scalars().all() if s is not None]
@@ -809,7 +811,7 @@ class JobAnalysisService:
                     "knowledge_skills",
                     "nature_and_scope",
                 ]:
-                    section_content = section.content or ""
+                    section_content = section.section_content or ""
 
                     if section.section_type == "specific_accountabilities":
                         accountability_text += section_content + "\n"
@@ -855,8 +857,8 @@ class JobAnalysisService:
 
         except Exception as e:
             logger.error(f"Error extracting requirements for job {job.id}: {str(e)}")
-            # Fallback: extract basic requirements from text  # type: ignore[attr-defined]
-            full_text = job.original_content or ""
+            # Fallback: extract basic requirements from text
+            full_text = job.raw_content or ""
             if "degree" in full_text.lower() or "bachelor" in full_text.lower():
                 requirements["education"].append("Bachelor's degree")
             if "experience" in full_text.lower():
@@ -1066,45 +1068,48 @@ class JobAnalysisService:
         self, db: AsyncSession, job_id: int, tolerance: float = 0.15
     ) -> Dict[str, Any]:
         """Find jobs with similar salary ranges."""
-        # Get the current job's salary
-        current_job_query = select(JobDescription).where(JobDescription.id == job_id)
-        current_job_result = await db.execute(current_job_query)
-        current_job = current_job_result.scalar_one_or_none()
-        # type: ignore[attr-defined]
-        if not current_job or not current_job.salary_budget:
+        # Get the current job's salary from JobMetadata
+        current_query = (
+            select(JobMetadata.salary_budget)
+            .join(JobDescription, JobMetadata.job_id == JobDescription.id)
+            .where(JobDescription.id == job_id)
+        )
+        current_result = await db.execute(current_query)
+        current_salary = current_result.scalar_one_or_none()
+
+        if not current_salary:
             return {"job_id": job_id, "similar_jobs": []}
 
-        # Calculate salary range  # type: ignore[attr-defined]
-        min_salary = current_job.salary_budget * (1 - tolerance)  # type: ignore[attr-defined]
-        max_salary = current_job.salary_budget * (1 + tolerance)
+        # Calculate salary range
+        min_salary = current_salary * (1 - tolerance)
+        max_salary = current_salary * (1 + tolerance)
 
-        # Query for similar jobs
+        # Query for similar jobs with salary in range
         similar_jobs_query = (
-            select(JobDescription)
+            select(JobDescription, JobMetadata.salary_budget, JobMetadata.department)
+            .join(JobMetadata, JobDescription.id == JobMetadata.job_id)
             .where(
                 and_(
-                    JobDescription.id != job_id,  # type: ignore[attr-defined]
-                    JobDescription.salary_budget.between(min_salary, max_salary),
+                    JobDescription.id != job_id,
+                    JobMetadata.salary_budget.between(min_salary, max_salary),
                 )
             )
             .limit(20)
         )
 
         similar_jobs_result = await db.execute(similar_jobs_query)
-        similar_jobs = similar_jobs_result.scalars().all()
+        similar_jobs = similar_jobs_result.all()
 
         similar_jobs_data = []
-        for job in similar_jobs:
-            similarity = await self._calculate_embedding_similarity(  # type: ignore[attr-defined]
-                db, current_job.id, job.id
-            )
+        for job, salary, department in similar_jobs:
+            similarity = await self._calculate_embedding_similarity(db, job_id, job.id)
             similar_jobs_data.append(
                 {
                     "id": job.id,
                     "title": job.title,
-                    "classification": job.classification,  # type: ignore[attr-defined]
-                    "salary": job.salary_budget,  # type: ignore[attr-defined]
-                    "department": job.department,
+                    "classification": job.classification,
+                    "salary": salary,
+                    "department": department,
                     "similarity_score": round(similarity, 2),
                 }
             )
@@ -1119,23 +1124,24 @@ class JobAnalysisService:
         self, db: AsyncSession, classification: str, department: Optional[str] = None
     ) -> Dict[str, Any]:
         """Get benchmark data for a specific job classification."""
-        # Query for jobs in the given classification
-        query = select(JobDescription).where(
-            JobDescription.classification == classification
+        # Query for jobs in the given classification with metadata
+        query = (
+            select(JobDescription.id)
+            .join(JobMetadata, JobDescription.id == JobMetadata.job_id)
+            .where(JobDescription.classification == classification)
         )
-        if department:  # type: ignore[attr-defined]
-            query = query.where(JobDescription.department == department)
+        if department:
+            query = query.where(JobMetadata.department == department)
 
         result = await db.execute(query)
-        jobs = result.scalars().all()
+        job_ids = [row for row in result.scalars().all()]
 
-        if not jobs:
+        if not job_ids:
             return {"classification": classification, "statistics": {}}
 
         # Get salary data from job_metadata
-        job_ids = [job.id for job in jobs]  # type: ignore[attr-defined]
-        salary_query = select(JobDescription.salary_budget).where(
-            JobDescription.id.in_(job_ids)
+        salary_query = select(JobMetadata.salary_budget).where(
+            and_(JobMetadata.job_id.in_(job_ids), JobMetadata.salary_budget.isnot(None))
         )
         salary_result = await db.execute(salary_query)
         salaries = [s for s in salary_result.scalars().all() if s is not None]
@@ -1153,7 +1159,7 @@ class JobAnalysisService:
 
         # Calculate statistics
         statistics = {
-            "job_count": len(jobs),
+            "job_count": len(job_ids),
             "avg_salary": round(np.mean(salaries), 2) if salaries else 0,
             "median_salary": round(np.median(salaries), 2) if salaries else 0,
             "salary_range": {

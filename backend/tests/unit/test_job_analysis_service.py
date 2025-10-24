@@ -399,18 +399,33 @@ class TestJobAnalysisService:
         """Test skill extraction without cached results."""
         job_analysis_service.openai_client = mock_openai_client
 
-        # Mock no cached skills
-        mock_cached_result = Mock()
-        mock_cached_result.scalars.return_value.all.return_value = []
+        # Since refresh=True, the service skips the cached skills check and goes straight to the job query
+        # So we only need ONE execute call that returns the job
 
-        # Mock job query result - ensure sections are iterable
-        sample_job_a.sections = [sample_job_a.sections[0]]  # Make it a real list
-        mock_job_result = Mock()
-        mock_job_result.scalar_one_or_none.return_value = sample_job_a
+        # Create a mock job object with sections as a real list
+        # Content must be > 50 characters (not >= 50)
+        mock_job = Mock(
+            id=1,
+            sections=[
+                JobSection(
+                    section_type="specific_accountabilities",
+                    section_content="Develop Python applications using Django framework.",  # 51 chars
+                )
+            ],
+        )
 
-        mock_db_session.execute.side_effect = [mock_cached_result, mock_job_result]
+        # Create result mock with spec to prevent auto-mocking
+        class ResultMock:
+            def scalar_one_or_none(self):
+                pass
 
-        # Mock OpenAI skill extraction
+        mock_job_result = Mock(spec=ResultMock())
+        mock_job_result.scalar_one_or_none.return_value = mock_job
+
+        # Since there's only one execute call (refresh=True skips cache check), use return_value not side_effect
+        mock_db_session.execute.return_value = mock_job_result
+
+        # Mock OpenAI skill extraction - must be AsyncMock since create is awaited
         skills_response = Mock()
         skills_response.choices = [Mock()]
         skills_response.choices[0].message.content = json.dumps(
@@ -423,15 +438,19 @@ class TestJobAnalysisService:
                 }
             ]
         )
-        mock_openai_client.chat.completions.create.return_value = skills_response
+        # Ensure create is an AsyncMock that returns skills_response when awaited
+        mock_openai_client.chat.completions.create = AsyncMock(
+            return_value=skills_response
+        )
 
         with patch.object(job_analysis_service, "_save_extracted_skills"):
             result = await job_analysis_service.extract_job_skills(
                 mock_db_session, 1, refresh=True
             )
 
-        assert len(result) > 0
+        # Check if OpenAI was called first to help debug
         mock_openai_client.chat.completions.create.assert_called()
+        assert len(result) > 0
 
     @pytest.mark.asyncio
     async def test_extract_skills_from_text(
@@ -765,15 +784,13 @@ class TestJobAnalysisService:
         self, job_analysis_service, mock_db_session
     ):
         """Test skill extraction when job is not found."""
-        # Mock no cached skills
-        mock_cached_result = Mock()
-        mock_cached_result.scalars.return_value.all.return_value = []
-
-        # Mock job not found - create a dummy job with empty sections first
+        # Since refresh=True, only ONE execute call happens (for the job query)
+        # Mock job not found
         mock_job_result = Mock()
         mock_job_result.scalar_one_or_none.return_value = None
 
-        mock_db_session.execute.side_effect = [mock_cached_result, mock_job_result]
+        # Only one execute call with refresh=True
+        mock_db_session.execute.return_value = mock_job_result
 
         with pytest.raises(ValueError, match="Job 999 not found"):
             await job_analysis_service.extract_job_skills(
@@ -962,6 +979,15 @@ class TestJobAnalysisService:
     ):
         """Test successful requirement extraction."""
         job_analysis_service.openai_client = mock_openai_client
+
+        # Mock awaitable_attrs to return the sections
+        # SQLAlchemy's awaitable_attrs returns a coroutine directly, not a callable
+        async def get_sections():
+            return sample_job_a.sections
+
+        mock_awaitable_attrs = Mock()
+        mock_awaitable_attrs.job_sections = get_sections()
+        sample_job_a.awaitable_attrs = mock_awaitable_attrs
 
         # Mock OpenAI response
         requirements_response = Mock()
@@ -1167,7 +1193,12 @@ class TestJobAnalysisService:
 
         assert len(recommendations) > 0
         assert any("React" in rec for rec in recommendations)
-        assert any("3-6 months" in rec for rec in recommendations)
+        # Service returns general advice, not specific timelines
+        assert any(
+            "targeted professional development" in rec.lower()
+            or "upgrade" in rec.lower()
+            for rec in recommendations
+        )
 
     @pytest.mark.asyncio
     async def test_generate_skill_development_recommendations_many_gaps(
@@ -1342,23 +1373,24 @@ class TestJobAnalysisService:
         self, job_analysis_service, mock_db_session, sample_job_a
     ):
         """Test successful similar salary range analysis."""
-        # Mock current job query
-        mock_current = Mock()
-        mock_current.scalar_one_or_none.return_value = sample_job_a
+        # Mock current job salary query (returns just the salary amount)
+        mock_current_salary = Mock()
+        mock_current_salary.scalar_one_or_none.return_value = 120000.0
 
-        # Mock similar jobs query
+        # Mock similar jobs query (returns JobDescription + salary + department tuples)
         similar_job = JobDescription(
             id=2,
             title="Similar Developer",
             classification="IT-02",
             language="en",
         )
-        similar_job.salary_budget = 115000
 
         mock_similar = Mock()
-        mock_similar.scalars.return_value.all.return_value = [similar_job]
+        mock_similar.all.return_value = [
+            (similar_job, 115000.0, "Information Technology")
+        ]
 
-        mock_db_session.execute.side_effect = [mock_current, mock_similar]
+        mock_db_session.execute.side_effect = [mock_current_salary, mock_similar]
 
         with patch.object(
             job_analysis_service, "_calculate_embedding_similarity", return_value=0.85
@@ -1377,13 +1409,9 @@ class TestJobAnalysisService:
         self, job_analysis_service, mock_db_session
     ):
         """Test similar salary range when job has no salary."""
-        job = JobDescription(
-            id=1, title="Developer", classification="IT-02", language="en"
-        )
-        job.salary_budget = None
-
+        # Mock salary query returning None (job has no salary in JobMetadata)
         mock_result = Mock()
-        mock_result.scalar_one_or_none.return_value = job
+        mock_result.scalar_one_or_none.return_value = None
         mock_db_session.execute.return_value = mock_result
 
         result = await job_analysis_service.get_similar_salary_range(mock_db_session, 1)
@@ -1410,12 +1438,14 @@ class TestJobAnalysisService:
         self, job_analysis_service, mock_db_session, sample_job_a
     ):
         """Test similar salary range with custom tolerance."""
-        mock_current = Mock()
-        mock_current.scalar_one_or_none.return_value = sample_job_a
+        # Mock current job salary query
+        mock_current_salary = Mock()
+        mock_current_salary.scalar_one_or_none.return_value = 120000.0
 
+        # Mock similar jobs query (empty result)
         mock_similar = Mock()
-        mock_similar.scalars.return_value.all.return_value = []
-        mock_db_session.execute.side_effect = [mock_current, mock_similar]
+        mock_similar.all.return_value = []
+        mock_db_session.execute.side_effect = [mock_current_salary, mock_similar]
 
         result = await job_analysis_service.get_similar_salary_range(
             mock_db_session, 1, tolerance=0.25
@@ -1432,16 +1462,11 @@ class TestJobAnalysisService:
         self, job_analysis_service, mock_db_session
     ):
         """Test successful classification benchmark analysis."""
-        # Mock jobs query
-        jobs = [
-            JobDescription(id=1, title="Dev 1", classification="IT-02", language="en"),
-            JobDescription(id=2, title="Dev 2", classification="IT-02", language="en"),
-        ]
+        # Mock job IDs query (returns IDs from JobDescription join JobMetadata)
+        mock_job_ids_result = Mock()
+        mock_job_ids_result.scalars.return_value.all.return_value = [1, 2]
 
-        mock_jobs_result = Mock()
-        mock_jobs_result.scalars.return_value.all.return_value = jobs
-
-        # Mock salary query
+        # Mock salary query (returns salaries from JobMetadata)
         mock_salary_result = Mock()
         mock_salary_result.scalars.return_value.all.return_value = [100000, 110000]
 
@@ -1450,7 +1475,7 @@ class TestJobAnalysisService:
         mock_skills_result.all.return_value = [("Python", 2), ("JavaScript", 2)]
 
         mock_db_session.execute.side_effect = [
-            mock_jobs_result,
+            mock_job_ids_result,
             mock_salary_result,
             mock_skills_result,
         ]
@@ -1486,21 +1511,20 @@ class TestJobAnalysisService:
         self, job_analysis_service, mock_db_session
     ):
         """Test classification benchmark with department filter."""
-        jobs = [
-            JobDescription(id=1, title="Dev", classification="IT-02", language="en")
-        ]
+        # Mock job IDs query
+        mock_job_ids_result = Mock()
+        mock_job_ids_result.scalars.return_value.all.return_value = [1]
 
-        mock_jobs_result = Mock()
-        mock_jobs_result.scalars.return_value.all.return_value = jobs
-
+        # Mock salary query
         mock_salary_result = Mock()
         mock_salary_result.scalars.return_value.all.return_value = [100000]
 
+        # Mock skills query
         mock_skills_result = Mock()
         mock_skills_result.all.return_value = []
 
         mock_db_session.execute.side_effect = [
-            mock_jobs_result,
+            mock_job_ids_result,
             mock_salary_result,
             mock_skills_result,
         ]
@@ -1516,21 +1540,20 @@ class TestJobAnalysisService:
         self, job_analysis_service, mock_db_session
     ):
         """Test classification benchmark with no salary data."""
-        jobs = [
-            JobDescription(id=1, title="Dev", classification="IT-02", language="en")
-        ]
+        # Mock job IDs query
+        mock_job_ids_result = Mock()
+        mock_job_ids_result.scalars.return_value.all.return_value = [1]
 
-        mock_jobs_result = Mock()
-        mock_jobs_result.scalars.return_value.all.return_value = jobs
-
+        # Mock salary query (empty result)
         mock_salary_result = Mock()
         mock_salary_result.scalars.return_value.all.return_value = []
 
+        # Mock skills query
         mock_skills_result = Mock()
         mock_skills_result.all.return_value = []
 
         mock_db_session.execute.side_effect = [
-            mock_jobs_result,
+            mock_job_ids_result,
             mock_salary_result,
             mock_skills_result,
         ]

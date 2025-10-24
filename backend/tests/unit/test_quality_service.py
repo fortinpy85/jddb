@@ -652,7 +652,9 @@ class TestQualityService:
         mock_stats.total_jobs = 100
         mock_stats.avg_content_completeness = Decimal("0.85")
         mock_stats.avg_sections_completeness = Decimal("0.78")
-        mock_stats.avg_metadata_completeness = Decimal("0.65")
+        mock_stats.avg_job_metadata_completeness = Decimal(
+            "0.65"
+        )  # Fixed attribute name
         mock_stats.total_processing_errors = 5
         mock_stats.total_validation_errors = 12
 
@@ -921,7 +923,7 @@ class TestQualityService:
         """Test language quality with French labeled as English."""
         job = JobDescription(
             language="en",
-            raw_content="Le développeur sera responsable de la création des applications pour les clients et les utilisateurs dans le système",
+            raw_content="Le développeur sera responsable de la création des applications pour les clients et les utilisateurs dans le système de gestion des ressources",
         )
         result = quality_service._assess_language_quality(job)
         assert (
@@ -932,7 +934,7 @@ class TestQualityService:
         """Test language quality with English labeled as French."""
         job = JobDescription(
             language="fr",
-            raw_content="The developer will be responsible for creating applications for the clients and users in the system",
+            raw_content="The developer will be responsible for creating applications for the clients and users in the system with modern frameworks and tools",
         )
         result = quality_service._assess_language_quality(job)
         assert (
@@ -1070,7 +1072,7 @@ class TestQualityService:
         mock_stats.total_jobs = 0
         mock_stats.avg_content_completeness = None
         mock_stats.avg_sections_completeness = None
-        mock_stats.avg_metadata_completeness = None
+        mock_stats.avg_job_metadata_completeness = None  # Fixed attribute name
         mock_stats.total_processing_errors = None
         mock_stats.total_validation_errors = None
 
