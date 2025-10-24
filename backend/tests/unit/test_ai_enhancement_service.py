@@ -401,3 +401,206 @@ def test_get_standard_sections(ai_enhancement_service):
     assert len(sections) > 0
     # Check that standard sections are present
     assert "general_accountability" in sections or len(sections) > 0
+
+
+# Async method tests
+@pytest.mark.asyncio
+async def test_generate_suggestions_no_openai_client(ai_enhancement_service):
+    """Test suggestion generation without OpenAI client."""
+    ai_enhancement_service.client = None
+    text = "This is a test job description with some grammar issues."
+
+    result = await ai_enhancement_service.generate_suggestions(text)
+
+    # Should return dict with suggestions and overall_score
+    assert isinstance(result, dict)
+    assert "suggestions" in result
+    assert "overall_score" in result
+    assert isinstance(result["suggestions"], list)
+
+
+@pytest.mark.asyncio
+async def test_check_compliance_basic(ai_enhancement_service):
+    """Test compliance checking."""
+    text = "Job description with basic requirements."
+
+    result = await ai_enhancement_service.check_compliance(text)
+
+    assert isinstance(result, dict)
+    assert "compliance_score" in result
+    assert "issues" in result
+    assert isinstance(result["issues"], list)
+
+
+@pytest.mark.asyncio
+async def test_analyze_bias_comprehensive(ai_enhancement_service):
+    """Test comprehensive bias analysis."""
+    text = "We need an aggressive leader. He must be young and energetic."
+
+    result = await ai_enhancement_service.analyze_bias(text)
+
+    assert isinstance(result, dict)
+    assert "issues" in result
+    assert "inclusivity_score" in result
+    assert isinstance(result["issues"], list)
+    # Should detect gender and age bias
+    assert len(result["issues"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_generate_template_basic(ai_enhancement_service):
+    """Test template generation."""
+    result = await ai_enhancement_service.generate_template(
+        classification="CS-03", language="en", custom_requirements={}
+    )
+
+    assert isinstance(result, dict)
+    assert "sections" in result
+    assert isinstance(result["sections"], dict)
+
+
+@pytest.mark.asyncio
+async def test_generate_template_french(ai_enhancement_service):
+    """Test French template generation."""
+    result = await ai_enhancement_service.generate_template(
+        classification="EX-01", language="fr", custom_requirements={}
+    )
+
+    assert isinstance(result, dict)
+    assert "sections" in result
+    # French templates should have French text
+    for section_content in result["sections"].values():
+        assert isinstance(section_content, str)
+
+
+@pytest.mark.asyncio
+async def test_calculate_comprehensive_quality_score(ai_enhancement_service):
+    """Test comprehensive quality scoring."""
+    job_data = {
+        "title": "Software Developer",
+        "sections": {
+            "general_accountability": " ".join(["Lead development projects"] * 20),
+            "key_responsibilities": " ".join(["Design and develop software"] * 20),
+        },
+        "raw_content": "Software developer position with various responsibilities.",
+    }
+
+    result = await ai_enhancement_service.calculate_comprehensive_quality_score(
+        job_data
+    )
+
+    assert isinstance(result, dict)
+    assert "overall_score" in result
+    assert "quality_level" in result
+    assert "dimension_scores" in result
+    assert 0 <= result["overall_score"] <= 100
+
+
+@pytest.mark.asyncio
+async def test_complete_section_without_ai(ai_enhancement_service):
+    """Test section completion without AI client."""
+    ai_enhancement_service.client = None
+
+    result = await ai_enhancement_service.complete_section(
+        section_type="responsibilities",
+        partial_content="Lead software development",
+        classification="CS-03",
+    )
+
+    # Without AI client, should return dict with completed_content
+    assert isinstance(result, dict)
+    assert "completed_content" in result
+    assert "message" in result
+    assert isinstance(result["completed_content"], str)
+    assert len(result["completed_content"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_enhance_content_without_ai(ai_enhancement_service):
+    """Test content enhancement without AI client."""
+    ai_enhancement_service.client = None
+
+    result = await ai_enhancement_service.enhance_content(
+        text="Basic job description", enhancement_types=["clarity"]
+    )
+
+    # Should return dict with enhanced_text
+    assert isinstance(result, dict)
+    assert "enhanced_text" in result
+    assert "message" in result
+    assert isinstance(result["enhanced_text"], str)
+    assert len(result["enhanced_text"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_translate_content_without_ai(ai_enhancement_service):
+    """Test translation without AI client."""
+    ai_enhancement_service.client = None
+
+    result = await ai_enhancement_service.translate_content(
+        text="Hello world", target_language="fr"
+    )
+
+    # Should return placeholder or original text
+    assert isinstance(result, str)
+
+
+# Additional edge case tests
+def test_check_grammar_edge_cases(ai_enhancement_service):
+    """Test grammar checking with edge cases."""
+    # Empty text
+    assert ai_enhancement_service._check_grammar("") == []
+
+    # Single word
+    suggestions = ai_enhancement_service._check_grammar("word")
+    assert isinstance(suggestions, list)
+
+    # Very long text
+    long_text = "word " * 1000
+    suggestions = ai_enhancement_service._check_grammar(long_text)
+    assert isinstance(suggestions, list)
+
+
+def test_check_style_edge_cases(ai_enhancement_service):
+    """Test style checking with edge cases."""
+    # Text with no passive voice
+    text = "The developer writes code. The team delivers results."
+    suggestions = ai_enhancement_service._check_style(text)
+    assert isinstance(suggestions, list)
+
+
+def test_calculate_quality_score_edge_cases(ai_enhancement_service):
+    """Test quality score edge cases."""
+    # Empty text with no suggestions (empty text gets penalty)
+    score = ai_enhancement_service._calculate_quality_score("", [])
+    assert 0.0 <= score <= 1.0
+
+    # Good text with no suggestions should get high score
+    good_text = "This is a well-written job description with proper grammar and style."
+    score = ai_enhancement_service._calculate_quality_score(good_text, [])
+    assert score == 1.0
+
+    # Text with many suggestions
+    many_suggestions = [{"type": "grammar", "confidence": 0.9} for _ in range(50)]
+    score = ai_enhancement_service._calculate_quality_score(
+        "text with issues", many_suggestions
+    )
+    assert 0.0 <= score <= 1.0
+
+
+def test_check_clarity_with_various_lengths(ai_enhancement_service):
+    """Test clarity checking with various text lengths."""
+    # Very short text
+    short_result = ai_enhancement_service._check_clarity("Short.")
+    assert short_result == []
+
+    # Medium text
+    medium_text = " ".join(["This is a sentence."] * 5)
+    medium_result = ai_enhancement_service._check_clarity(medium_text)
+    assert isinstance(medium_result, list)
+
+    # Long complex sentences
+    long_sentence = " ".join(["word"] * 100)
+    long_result = ai_enhancement_service._check_clarity(long_sentence)
+    assert isinstance(long_result, list)
+    assert len(long_result) > 0  # Should flag long sentence
