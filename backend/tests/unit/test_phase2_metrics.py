@@ -346,7 +346,11 @@ class TestMetricsCollector:
         """Test database metrics collection."""
         # Mock database session and queries
         mock_db = AsyncMock()
-        mock_get_session.return_value.__aiter__.return_value = [mock_db]
+
+        async def mock_async_gen():
+            yield mock_db
+
+        mock_get_session.return_value = mock_async_gen()
 
         # Mock query results
         mock_result = Mock()
@@ -385,7 +389,11 @@ class TestMetricsCollector:
     async def test_save_metrics_to_database(self, mock_get_session):
         """Test saving metrics to database."""
         mock_db = AsyncMock()
-        mock_get_session.return_value.__aiter__.return_value = [mock_db]
+
+        async def mock_async_gen():
+            yield mock_db
+
+        mock_get_session.return_value = mock_async_gen()
 
         collector = MetricsCollector()
         # Set some test metrics

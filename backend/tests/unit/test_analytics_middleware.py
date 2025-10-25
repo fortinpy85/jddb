@@ -172,9 +172,13 @@ class TestAnalyticsMiddleware:
         app = Mock()
         middleware = AnalyticsMiddleware(app)
 
-        # Mock database session
+        # Mock database session as async generator
         mock_db = AsyncMock()
-        mock_get_session.return_value.__aenter__.return_value = [mock_db]
+
+        async def mock_async_gen():
+            yield mock_db
+
+        mock_get_session.return_value = mock_async_gen()
 
         # Mock analytics service
         mock_analytics_service.track_activity = AsyncMock()
@@ -209,9 +213,13 @@ class TestAnalyticsMiddleware:
         app = Mock()
         middleware = AnalyticsMiddleware(app)
 
-        # Mock database session
+        # Mock database session as async generator
         mock_db = AsyncMock()
-        mock_get_session.return_value.__aenter__.return_value = [mock_db]
+
+        async def mock_async_gen():
+            yield mock_db
+
+        mock_get_session.return_value = mock_async_gen()
 
         # Mock analytics service
         mock_analytics_service.track_activity = AsyncMock()
@@ -358,9 +366,13 @@ class TestAnalyticsMiddleware:
         app = Mock()
         middleware = AnalyticsMiddleware(app)
 
-        # Mock database session
+        # Mock database session as async generator
         mock_db = AsyncMock()
-        mock_get_session.return_value.__aenter__.return_value = [mock_db]
+
+        async def mock_async_gen():
+            yield mock_db
+
+        mock_get_session.return_value = mock_async_gen()
 
         # Mock analytics service
         mock_analytics_service.track_activity = AsyncMock()
@@ -437,9 +449,13 @@ class TestAnalyticsMiddlewareIntegration:
         self, mock_analytics_service, mock_get_session, mock_app
     ):
         """Test middleware with tracking enabled."""
-        # Mock database session
+        # Mock database session as async generator
         mock_db = AsyncMock()
-        mock_get_session.return_value.__aiter__ = AsyncMock(return_value=[mock_db])
+
+        async def mock_async_gen():
+            yield mock_db
+
+        mock_get_session.return_value = mock_async_gen()
 
         # Mock analytics service
         mock_analytics_service.track_activity = AsyncMock()

@@ -215,8 +215,11 @@ class TestAuditLogger:
         ):
             # Mock database session
             mock_db = AsyncMock()
-            mock_session.return_value.__aenter__.return_value = mock_db
-            mock_session.return_value.__aiter__ = AsyncMock(return_value=[mock_db])
+
+            async def mock_async_gen():
+                yield mock_db
+
+            mock_session.return_value = mock_async_gen()
 
             result = await logger.log_event(sample_event)
 
@@ -258,8 +261,11 @@ class TestAuditLogger:
         ):
             # Mock successful database operations
             mock_db = AsyncMock()
-            mock_session.return_value.__aenter__.return_value = mock_db
-            mock_session.return_value.__aiter__ = AsyncMock(return_value=[mock_db])
+
+            async def mock_async_gen():
+                yield mock_db
+
+            mock_session.return_value = mock_async_gen()
 
             # Add events beyond cache size
             for i in range(3):
@@ -294,8 +300,11 @@ class TestAuditLogger:
         ):
             # Mock successful database operations
             mock_db = AsyncMock()
-            mock_session.return_value.__aenter__.return_value = mock_db
-            mock_session.return_value.__aiter__ = AsyncMock(return_value=[mock_db])
+
+            async def mock_async_gen():
+                yield mock_db
+
+            mock_session.return_value = mock_async_gen()
 
             test_cases = [
                 (AuditSeverity.CRITICAL, mock_logger.critical),
@@ -334,8 +343,11 @@ class TestAuditLogger:
             patch("jd_ingestion.audit.logger.logger"),
         ):
             mock_db = AsyncMock()
-            mock_session.return_value.__aenter__.return_value = mock_db
-            mock_session.return_value.__aiter__ = AsyncMock(return_value=[mock_db])
+
+            async def mock_async_gen():
+                yield mock_db
+
+            mock_session.return_value = mock_async_gen()
 
             result = await logger.log_user_authentication(
                 user_id=123,
@@ -365,8 +377,11 @@ class TestAuditLogger:
             patch("jd_ingestion.audit.logger.logger"),
         ):
             mock_db = AsyncMock()
-            mock_session.return_value.__aenter__.return_value = mock_db
-            mock_session.return_value.__aiter__ = AsyncMock(return_value=[mock_db])
+
+            async def mock_async_gen():
+                yield mock_db
+
+            mock_session.return_value = mock_async_gen()
 
             result = await logger.log_user_authentication(
                 user_id=123, username="test_user", action="login", success=False
@@ -385,8 +400,11 @@ class TestAuditLogger:
             patch("jd_ingestion.audit.logger.logger"),
         ):
             mock_db = AsyncMock()
-            mock_session.return_value.__aenter__.return_value = mock_db
-            mock_session.return_value.__aiter__ = AsyncMock(return_value=[mock_db])
+
+            async def mock_async_gen():
+                yield mock_db
+
+            mock_session.return_value = mock_async_gen()
 
             result = await logger.log_document_access(
                 user_id=123,
@@ -412,8 +430,11 @@ class TestAuditLogger:
             patch("jd_ingestion.audit.logger.logger"),
         ):
             mock_db = AsyncMock()
-            mock_session.return_value.__aenter__.return_value = mock_db
-            mock_session.return_value.__aiter__ = AsyncMock(return_value=[mock_db])
+
+            async def mock_async_gen():
+                yield mock_db
+
+            mock_session.return_value = mock_async_gen()
 
             result = await logger.log_editing_session(
                 user_id=123,
@@ -439,8 +460,11 @@ class TestAuditLogger:
             patch("jd_ingestion.audit.logger.logger"),
         ):
             mock_db = AsyncMock()
-            mock_session.return_value.__aenter__.return_value = mock_db
-            mock_session.return_value.__aiter__ = AsyncMock(return_value=[mock_db])
+
+            async def mock_async_gen():
+                yield mock_db
+
+            mock_session.return_value = mock_async_gen()
 
             result = await logger.log_document_change(
                 user_id=123,
@@ -470,8 +494,11 @@ class TestAuditLogger:
             patch("jd_ingestion.audit.logger.logger"),
         ):
             mock_db = AsyncMock()
-            mock_session.return_value.__aenter__.return_value = mock_db
-            mock_session.return_value.__aiter__ = AsyncMock(return_value=[mock_db])
+
+            async def mock_async_gen():
+                yield mock_db
+
+            mock_session.return_value = mock_async_gen()
 
             result = await logger.log_permission_change(
                 admin_user_id=123,
@@ -499,8 +526,11 @@ class TestAuditLogger:
             patch("jd_ingestion.audit.logger.logger"),
         ):
             mock_db = AsyncMock()
-            mock_session.return_value.__aenter__.return_value = mock_db
-            mock_session.return_value.__aiter__ = AsyncMock(return_value=[mock_db])
+
+            async def mock_async_gen():
+                yield mock_db
+
+            mock_session.return_value = mock_async_gen()
 
             result = await logger.log_security_event(
                 event_description="Suspicious login attempt",
@@ -714,8 +744,11 @@ class TestEventTypeMappings:
             patch("jd_ingestion.audit.logger.logger"),
         ):
             mock_db = AsyncMock()
-            mock_session.return_value.__aenter__.return_value = mock_db
-            mock_session.return_value.__aiter__ = AsyncMock(return_value=[mock_db])
+
+            async def mock_async_gen():
+                yield mock_db
+
+            mock_session.return_value = mock_async_gen()
 
             test_cases = [
                 ("login", AuditEventType.USER_LOGIN),
@@ -745,8 +778,11 @@ class TestEventTypeMappings:
             patch("jd_ingestion.audit.logger.logger"),
         ):
             mock_db = AsyncMock()
-            mock_session.return_value.__aenter__.return_value = mock_db
-            mock_session.return_value.__aiter__ = AsyncMock(return_value=[mock_db])
+
+            async def mock_async_gen():
+                yield mock_db
+
+            mock_session.return_value = mock_async_gen()
 
             test_cases = [
                 ("view", AuditEventType.DOCUMENT_VIEW),
