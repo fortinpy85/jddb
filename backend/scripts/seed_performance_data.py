@@ -18,7 +18,7 @@ from jd_ingestion.config.settings import settings
 from jd_ingestion.database.models import (
     JobDescription,
     JobMetadata,
-    ContentChunks,
+    ContentChunk,
     SearchAnalytics,
     TranslationProject,
     TranslationMemory,
@@ -298,7 +298,7 @@ def create_sample_content_chunks(session, jobs: List[JobDescription]):
             chunk_words = words[j : j + chunk_size]
             chunk_text = " ".join(chunk_words)
 
-            chunk = ContentChunks(
+            chunk = ContentChunk(
                 job_id=job.id,
                 chunk_index=j // chunk_size,
                 chunk_text=chunk_text,
