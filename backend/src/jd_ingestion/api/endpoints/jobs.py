@@ -351,6 +351,21 @@ async def get_job_stats(
         raise HTTPException(status_code=500, detail="Failed to retrieve statistics")
 
 
+@router.get("/statistics")
+@cache_result(ttl=120, key_prefix="jobs_statistics")  # Cache for 2 minutes
+@handle_errors(
+    operation_name="get_job_statistics",
+    context={"endpoint": "/jobs/statistics", "method": "GET"},
+)
+@retry_on_failure()
+async def get_job_statistics(
+    db: AsyncSession = Depends(get_async_session), api_key: str = Security(get_api_key)
+):
+    """Get job statistics (alias for /stats endpoint). Cached for 2 minutes."""
+    # Reuse the same logic as get_job_stats
+    return await get_job_stats(db=db, api_key=api_key)
+
+
 @router.get("/stats/comprehensive")
 @handle_errors(
     operation_name="get_comprehensive_stats",

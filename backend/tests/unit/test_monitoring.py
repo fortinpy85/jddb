@@ -76,7 +76,11 @@ class TestSystemMonitor:
         mock_result.scalar.return_value = 100
         mock_session.execute.return_value = mock_result
 
-        mock_get_session.return_value.__aenter__.return_value = mock_session
+        # Mock get_async_session as async generator
+        async def mock_session_generator():
+            yield mock_session
+
+        mock_get_session.return_value = mock_session_generator()
 
         # Mock Redis initialization
         with patch("jd_ingestion.utils.monitoring.redis.from_url"):
@@ -116,7 +120,11 @@ class TestSystemMonitor:
         mock_bind.pool = mock_pool
         mock_session.get_bind.return_value = mock_bind
 
-        mock_get_session.return_value.__aenter__.return_value = mock_session
+        # Mock get_async_session as async generator
+        async def mock_session_generator():
+            yield mock_session
+
+        mock_get_session.return_value = mock_session_generator()
 
         with patch("jd_ingestion.utils.monitoring.redis.from_url"):
             monitor = SystemMonitor()
@@ -177,11 +185,10 @@ class TestSystemMonitor:
         mock_redis_client = MagicMock()
         mock_redis_client.ping.side_effect = Exception("Redis ping failed")
 
-        with patch(
-            "jd_ingestion.utils.monitoring.redis.from_url",
-            return_value=mock_redis_client,
-        ):
+        with patch("jd_ingestion.utils.monitoring.redis.from_url"):
             monitor = SystemMonitor()
+            # Set redis_client directly to test ping failure
+            monitor.redis_client = mock_redis_client
 
         result = monitor._check_redis_health()
 
@@ -336,7 +343,12 @@ class TestSystemMonitor:
         mock_result3.fetchone.return_value = (100, 75)
 
         mock_session.execute.side_effect = [mock_result1, mock_result2, mock_result3]
-        mock_get_session.return_value.__aenter__.return_value = mock_session
+
+        # Mock get_async_session as async generator
+        async def mock_session_generator():
+            yield mock_session
+
+        mock_get_session.return_value = mock_session_generator()
 
         # Mock Redis client for Celery metrics
         mock_redis = MagicMock()
