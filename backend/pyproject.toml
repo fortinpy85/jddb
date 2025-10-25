@@ -176,6 +176,8 @@ markers = [
 ]
 filterwarnings = [
     "ignore::DeprecationWarning",
-    "ignore::PendingDeprecationWarning"
+    "ignore::PendingDeprecationWarning",
+    "ignore::RuntimeWarning:httpx"
 ]
 asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "auto"

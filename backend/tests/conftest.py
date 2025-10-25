@@ -197,6 +197,7 @@ def test_client(test_session):
 async def async_client(async_session):
     """Create async test client."""
     from httpx import ASGITransport
+    import asyncio
 
     # Create a wrapper that returns the session directly
     async def override_get_async_session():
@@ -211,10 +212,18 @@ async def async_client(async_session):
 
     # Modern httpx API requires ASGITransport
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
-        yield client
+    client = AsyncClient(transport=transport, base_url="http://test")
 
-    app.dependency_overrides.clear()
+    try:
+        yield client
+    finally:
+        # Ensure proper cleanup even if event loop is closing
+        try:
+            await client.aclose()
+        except (RuntimeError, asyncio.CancelledError):
+            # Event loop already closed, ignore cleanup errors
+            pass
+        app.dependency_overrides.clear()
 
 
 @pytest.fixture
