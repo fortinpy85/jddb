@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
 # Third-party imports
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, desc, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -88,7 +88,6 @@ async def search_jobs_get(
     department: Optional[str] = Query(None, description="Department filter"),
     limit: int = Query(20, description="Maximum number of results", ge=1, le=100),
     use_semantic_search: bool = Query(True, description="Use semantic search"),
-    request: Optional[Request] = None,
     db: AsyncSession = Depends(get_async_session),
 ):
     """Search job descriptions using GET request with query parameters."""
@@ -110,7 +109,7 @@ async def search_jobs_get(
     )
 
     # Delegate to the main search function
-    return await search_jobs(search_query, request, db)
+    return await search_jobs(search_query, db)
 
 
 @router.post("/")
@@ -118,7 +117,6 @@ async def search_jobs_get(
 @retry_on_failure(max_retries=2, base_delay=1.0)
 async def search_jobs(
     search_query: SearchQuery,
-    request: Optional[Request] = None,
     db: AsyncSession = Depends(get_async_session),
 ):
     """Search job descriptions using semantic or full-text search."""
@@ -126,12 +124,11 @@ async def search_jobs(
     search_id = None
 
     # Start search session for analytics
+    # Note: Request parameters disabled due to FastAPI Pydantic limitations
     search_id = await search_analytics_service.start_search_session(
-        session_id=request.headers.get("x-session-id", "anonymous")
-        if request
-        else "anonymous",
-        user_id=request.headers.get("x-user-id") if request else None,
-        ip_address=request.client.host if request and request.client else None,
+        session_id="anonymous",
+        user_id=None,
+        ip_address=None,
     )
 
     # Extract filters for analytics
@@ -203,11 +200,9 @@ async def search_jobs(
                 embedding_time_ms=embedding_time_ms,
                 total_results=len(detailed_results),
                 returned_results=len(detailed_results),
-                session_id=request.headers.get("x-session-id", "anonymous")
-                if request
-                else "anonymous",
-                user_id=request.headers.get("x-user-id") if request else None,
-                ip_address=request.client.host if request and request.client else None,
+                session_id="anonymous",
+                user_id=None,
+                ip_address=None,
             )
 
             return {
@@ -232,11 +227,9 @@ async def search_jobs(
         execution_time_ms=execution_time_ms,
         total_results=fulltext_result.get("total_results", 0),
         returned_results=fulltext_result.get("total_results", 0),
-        session_id=request.headers.get("x-session-id", "anonymous")
-        if request
-        else "anonymous",
-        user_id=request.headers.get("x-user-id") if request else None,
-        ip_address=request.client.host if request and request.client else None,
+        session_id="anonymous",
+        user_id=None,
+        ip_address=None,
     )
 
     return fulltext_result
@@ -306,7 +299,6 @@ async def semantic_search(
 @retry_on_failure(max_retries=2, base_delay=1.0)
 async def advanced_search_with_filters(
     search_query: SearchQuery,
-    request: Optional[Request] = None,
     db: AsyncSession = Depends(get_async_session),
 ):
     """Advanced search with date range, salary bands, and metadata filters."""
