@@ -438,7 +438,9 @@ jobs:
         run: poetry install --no-interaction
 
       - name: Install frontend dependencies
-        run: bun install
+        run: |
+          rm -rf node_modules
+          bun install --force
 
       - name: Wait for services
         run: |
@@ -553,7 +555,9 @@ jobs:
         run: poetry install --no-interaction
 
       - name: Install frontend dependencies
-        run: bun install
+        run: |
+          rm -rf node_modules
+          bun install --force
 
       - name: Wait for services
         run: |
@@ -702,7 +706,8 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: https://api.jddb.example.com/api
         run: |
-          bun install
+          rm -rf node_modules
+          bun install --force
           bun run build
 
       - name: Create deployment artifacts
