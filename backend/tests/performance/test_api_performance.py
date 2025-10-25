@@ -11,15 +11,30 @@ import time
 from fastapi.testclient import TestClient
 
 from src.jd_ingestion.api.main import app
+from src.jd_ingestion.auth.api_key import get_api_key
+
+
+@pytest.fixture(scope="class")
+def performance_client():
+    """Create a test client with API key override for performance tests."""
+
+    def override_get_api_key():
+        """Override API key validation for tests."""
+        return "test-api-key"
+
+    app.dependency_overrides[get_api_key] = override_get_api_key
+    client = TestClient(app)
+    yield client
+    app.dependency_overrides.clear()
 
 
 class TestAPIPerformance:
     """Performance tests for critical API endpoints."""
 
     @pytest.mark.benchmark(group="search")
-    def test_search_performance(self, benchmark):
+    def test_search_performance(self, benchmark, performance_client):
         """Test search endpoint performance."""
-        client = TestClient(app)
+        client = performance_client
 
         def search_operation():
             response = client.get("/api/search?q=manager&limit=10")
@@ -30,9 +45,9 @@ class TestAPIPerformance:
         assert "results" in result
 
     @pytest.mark.benchmark(group="jobs")
-    def test_job_listing_performance(self, benchmark):
+    def test_job_listing_performance(self, benchmark, performance_client):
         """Test job listing endpoint performance."""
-        client = TestClient(app)
+        client = performance_client
 
         def job_listing_operation():
             response = client.get("/api/jobs?limit=20&skip=0")
@@ -43,9 +58,9 @@ class TestAPIPerformance:
         assert "jobs" in result
 
     @pytest.mark.benchmark(group="jobs")
-    def test_job_statistics_performance(self, benchmark):
+    def test_job_statistics_performance(self, benchmark, performance_client):
         """Test job statistics endpoint performance."""
-        client = TestClient(app)
+        client = performance_client
 
         def stats_operation():
             response = client.get("/api/jobs/statistics")
@@ -56,9 +71,9 @@ class TestAPIPerformance:
         assert "total_jobs" in result
 
     @pytest.mark.benchmark(group="translation")
-    def test_translation_memory_search(self, benchmark):
+    def test_translation_memory_search(self, benchmark, performance_client):
         """Test translation memory search performance."""
-        client = TestClient(app)
+        client = performance_client
 
         def tm_search_operation():
             response = client.post(
@@ -76,9 +91,9 @@ class TestAPIPerformance:
         assert "suggestions" in result
 
     @pytest.mark.benchmark(group="vector_search")
-    def test_vector_similarity_search(self, benchmark):
+    def test_vector_similarity_search(self, benchmark, performance_client):
         """Test vector similarity search performance."""
-        client = TestClient(app)
+        client = performance_client
 
         def vector_search_operation():
             response = client.get(
@@ -91,9 +106,9 @@ class TestAPIPerformance:
         assert "results" in result
 
     @pytest.mark.benchmark(group="analytics")
-    def test_analytics_performance(self, benchmark):
+    def test_analytics_performance(self, benchmark, performance_client):
         """Test analytics endpoint performance."""
-        client = TestClient(app)
+        client = performance_client
 
         def analytics_operation():
             response = client.get("/api/analytics/performance-summary")
@@ -103,9 +118,9 @@ class TestAPIPerformance:
         result = benchmark(analytics_operation)
         assert "summary" in result
 
-    def test_concurrent_search_requests(self):
+    def test_concurrent_search_requests(self, performance_client):
         """Test performance under concurrent load."""
-        client = TestClient(app)
+        client = performance_client
         num_concurrent = 10
         search_queries = [
             "software engineer",
@@ -168,12 +183,12 @@ class TestAPIPerformance:
             f"Maximum response time too high: {max_response_time:.3f}s"
         )
 
-    def test_memory_usage_under_load(self):
+    def test_memory_usage_under_load(self, performance_client):
         """Test memory usage under sustained load."""
         import psutil
         import os
 
-        client = TestClient(app)
+        client = performance_client
         process = psutil.Process(os.getpid())
 
         # Get initial memory usage
@@ -204,9 +219,9 @@ class TestAPIPerformance:
             f"Memory increase too high: {memory_increase:.1f}MB"
         )
 
-    def test_database_connection_pool_performance(self):
+    def test_database_connection_pool_performance(self, performance_client):
         """Test database connection pool performance."""
-        client = TestClient(app)
+        client = performance_client
 
         # Test rapid consecutive database operations
         start_time = time.time()
