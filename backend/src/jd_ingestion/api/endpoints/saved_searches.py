@@ -40,7 +40,7 @@ class SavedSearchDetail(BaseModel):
     last_execution_time_ms: Optional[int] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CreateSavedSearchResponse(BaseModel):
