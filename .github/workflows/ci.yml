@@ -474,7 +474,7 @@ jobs:
           DATA_DIRECTORY: /tmp/test_data
           ENVIRONMENT: testing
         run: |
-          poetry run uvicorn src.jd_ingestion.main:app --host 0.0.0.0 --port 8000 &
+          poetry run uvicorn src.jd_ingestion.api.main:app --host 0.0.0.0 --port 8000 &
           sleep 10
 
       - name: Build and start frontend
@@ -593,7 +593,7 @@ jobs:
           DATA_DIRECTORY: /tmp/perf_data
           ENVIRONMENT: testing
         run: |
-          poetry run uvicorn src.jd_ingestion.main:app --host 0.0.0.0 --port 8000 &
+          poetry run uvicorn src.jd_ingestion.api.main:app --host 0.0.0.0 --port 8000 &
           sleep 15
 
       - name: Run backend performance tests
@@ -714,10 +714,20 @@ jobs:
 
       - name: Create deployment artifacts
         run: |
-          mkdir -p dist/
-          cp -r backend/dist/ dist/backend/
-          cp -r .next/ dist/frontend/
-          cp -r public/ dist/frontend/public/
+          mkdir -p dist/backend dist/frontend
+          # Copy backend dist if it exists
+          if [ -d "backend/dist" ]; then
+            cp -r backend/dist/* dist/backend/
+          fi
+          # Copy Next.js build output
+          if [ -d ".next" ]; then
+            cp -r .next/ dist/frontend/
+          fi
+          # Copy public directory
+          if [ -d "public" ]; then
+            cp -r public/ dist/frontend/public/
+          fi
+          # Create tarball
           tar -czf jddb-release-${{ github.sha }}.tar.gz dist/
 
       - name: Upload build artifacts

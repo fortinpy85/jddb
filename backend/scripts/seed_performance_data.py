@@ -470,8 +470,16 @@ def main():
     """Main seeding function."""
     logger.info("Starting performance data seeding...")
 
-    # Create database engine and session
-    engine = create_engine(settings.database_url)
+    # Create database engine and session - use sync URL
+    db_url = (
+        settings.database_sync_url
+        if hasattr(settings, "database_sync_url")
+        else settings.database_url
+    )
+    # Convert async URL to sync if needed
+    if db_url.startswith("postgresql+asyncpg://"):
+        db_url = db_url.replace("postgresql+asyncpg://", "postgresql://")
+    engine = create_engine(db_url)
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = SessionLocal()
 

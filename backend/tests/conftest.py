@@ -36,16 +36,17 @@ def test_sync_db_url() -> str:
     return "sqlite:///:memory:"
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 async def async_engine(test_db_url):
     """Create test async database engine."""
-    engine = create_async_engine(test_db_url, echo=False)
+    engine = create_async_engine(test_db_url, echo=False, pool_pre_ping=True)
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     yield engine
 
+    # Properly dispose of the engine
     await engine.dispose()
 
 
@@ -210,12 +211,9 @@ async def async_client(async_session):
 
     # Modern httpx API requires ASGITransport
     transport = ASGITransport(app=app)
-    client = AsyncClient(transport=transport, base_url="http://test")
-    await client.__aenter__()
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
 
-    yield client
-
-    await client.__aexit__(None, None, None)
     app.dependency_overrides.clear()
 
 
