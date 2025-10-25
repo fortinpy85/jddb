@@ -4,15 +4,9 @@ Tests for job analysis API endpoints.
 
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 
 from jd_ingestion.api.main import app
-
-
-@pytest.fixture
-def client():
-    """Create test client."""
-    return TestClient(app)
 
 
 @pytest.fixture
@@ -29,8 +23,9 @@ def mock_job_analysis_service():
 class TestJobAnalysisEndpoints:
     """Test job analysis endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analysis.job_analysis_service")
-    def test_compare_jobs_success(self, mock_service, client):
+    async def test_compare_jobs_success(self, mock_service):
         """Test successful job comparison."""
         mock_service.compare_jobs = AsyncMock(
             return_value={
@@ -54,15 +49,19 @@ class TestJobAnalysisEndpoints:
             "include_details": True,
         }
 
-        response = client.post("/api/analysis/compare", json=comparison_data)
-        assert response.status_code == 200
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analysis/compare", json=comparison_data)
 
+        assert response.status_code == 200
         data = response.json()
         assert data["similarity_score"] == 0.85
         assert "details" in data
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analysis.job_analysis_service")
-    def test_compare_jobs_not_found(self, mock_service, client):
+    async def test_compare_jobs_not_found(self, mock_service):
         """Test job comparison with non-existent job."""
         mock_service.compare_jobs = AsyncMock(
             side_effect=ValueError("One or both jobs not found")
@@ -70,52 +69,73 @@ class TestJobAnalysisEndpoints:
 
         comparison_data = {"job_a_id": 999, "job_b_id": 1000}
 
-        response = client.post("/api/analysis/compare", json=comparison_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analysis/compare", json=comparison_data)
+
         assert response.status_code == 404
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analysis.job_analysis_service")
-    def test_compare_jobs_invalid_data(self, mock_service, client):
+    async def test_compare_jobs_invalid_data(self, mock_service):
         """Test job comparison with invalid data."""
         comparison_data = {"job_a_id": "invalid", "job_b_id": 2}  # Should be int
 
-        response = client.post("/api/analysis/compare", json=comparison_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analysis/compare", json=comparison_data)
+
         assert response.status_code == 422
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analysis.job_analysis_service")
-    def test_analyze_skill_gap_success(self, mock_service, client):
+    async def test_analyze_skill_gap_success(self, mock_service):
         """Test successful skill gap analysis."""
-        mock_service.analyze_skill_gap = AsyncMock(
+        # The skill-gap endpoint actually calls compare_jobs with skill_gap analysis type
+        mock_service.compare_jobs = AsyncMock(
             return_value={
-                "current_job_id": 1,
-                "target_job_id": 2,
-                "skill_gaps": [
-                    {
-                        "skill": "Python Programming",
-                        "current_level": "intermediate",
-                        "required_level": "advanced",
-                        "gap_score": 0.3,
+                "analyses": {
+                    "skill_gap": {
+                        "current_job_id": 1,
+                        "target_job_id": 2,
+                        "skill_gaps": [
+                            {
+                                "skill": "Python Programming",
+                                "current_level": "intermediate",
+                                "required_level": "advanced",
+                                "gap_score": 0.3,
+                            }
+                        ],
+                        "development_suggestions": [
+                            "Complete advanced Python certification",
+                            "Work on machine learning projects",
+                        ],
                     }
-                ],
-                "development_suggestions": [
-                    "Complete advanced Python certification",
-                    "Work on machine learning projects",
-                ],
+                }
             }
         )
 
         skill_gap_data = {"job_a_id": 1, "job_b_id": 2, "include_suggestions": True}
 
-        response = client.post("/api/analysis/skill-gap", json=skill_gap_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analysis/skill-gap", json=skill_gap_data)
+
         assert response.status_code == 200
 
         data = response.json()
         assert len(data["skill_gaps"]) == 1
         assert len(data["development_suggestions"]) == 2
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analysis.job_analysis_service")
-    def test_get_career_recommendations_success(self, mock_service, client):
+    async def test_get_career_recommendations_success(self, mock_service):
         """Test successful career path recommendations."""
-        mock_service.get_career_recommendations = AsyncMock(
+        # The endpoint is called career-paths, not career-recommendations
+        mock_service.get_career_paths = AsyncMock(
             return_value={
                 "current_job_id": 1,
                 "recommendations": [
@@ -135,17 +155,22 @@ class TestJobAnalysisEndpoints:
             }
         )
 
-        response = client.get("/api/analysis/career-recommendations/1")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analysis/career-paths/1")
+
         assert response.status_code == 200
 
         data = response.json()
         assert len(data["recommendations"]) == 1
         assert data["recommendations"][0]["feasibility_score"] == 0.85
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analysis.job_analysis_service")
-    def test_get_career_recommendations_with_filters(self, mock_service, client):
+    async def test_get_career_recommendations_with_filters(self, mock_service):
         """Test career recommendations with query filters."""
-        mock_service.get_career_recommendations = AsyncMock(
+        mock_service.get_career_paths = AsyncMock(
             return_value={
                 "current_job_id": 1,
                 "recommendations": [],
@@ -153,30 +178,27 @@ class TestJobAnalysisEndpoints:
             }
         )
 
-        response = client.get(
-            "/api/analysis/career-recommendations/1?min_feasibility=0.8&limit=5"
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analysis/career-paths/1?limit=5")
+
         assert response.status_code == 200
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analysis.job_analysis_service")
-    def test_batch_compare_jobs_success(self, mock_service, client):
+    async def test_batch_compare_jobs_success(self, mock_service):
         """Test successful batch job comparison."""
-        mock_service.batch_compare_jobs = AsyncMock(
+        # Batch compare loops through job IDs and calls compare_jobs for each
+        # It needs job_b with title and classification fields
+        mock_service.compare_jobs = AsyncMock(
             return_value={
-                "base_job_id": 1,
-                "comparisons": [
-                    {
-                        "job_id": 2,
-                        "similarity_score": 0.85,
-                        "comparison_type": "similarity",
-                    },
-                    {
-                        "job_id": 3,
-                        "similarity_score": 0.72,
-                        "comparison_type": "similarity",
-                    },
-                ],
-                "total_comparisons": 2,
+                "job_b": {"title": "Test Job Title", "classification": "EX-01"},
+                "analyses": {
+                    "similarity": {
+                        "overall_similarity": 0.85,
+                    }
+                },
             }
         )
 
@@ -187,15 +209,20 @@ class TestJobAnalysisEndpoints:
             "limit": 10,
         }
 
-        response = client.post("/api/analysis/batch-compare", json=batch_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analysis/batch-compare", json=batch_data)
+
         assert response.status_code == 200
 
         data = response.json()
-        assert len(data["comparisons"]) == 2
+        assert len(data["results"]) == 2
         assert data["base_job_id"] == 1
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analysis.job_analysis_service")
-    def test_batch_compare_limit_validation(self, mock_service, client):
+    async def test_batch_compare_limit_validation(self, mock_service):
         """Test batch comparison with limit validation."""
         batch_data = {
             "base_job_id": 1,
@@ -203,46 +230,73 @@ class TestJobAnalysisEndpoints:
             "limit": 100,  # Exceeds max limit of 50
         }
 
-        response = client.post("/api/analysis/batch-compare", json=batch_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analysis/batch-compare", json=batch_data)
+
         assert response.status_code == 422
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analysis.job_analysis_service")
-    def test_compare_jobs_service_error(self, mock_service, client):
+    async def test_compare_jobs_service_error(self, mock_service):
         """Test handling service errors in job comparison."""
         mock_service.compare_jobs = AsyncMock(side_effect=Exception("Service error"))
 
         comparison_data = {"job_a_id": 1, "job_b_id": 2}
 
-        response = client.post("/api/analysis/compare", json=comparison_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analysis/compare", json=comparison_data)
+
         assert response.status_code == 500
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analysis.job_analysis_service")
-    def test_skill_gap_analysis_no_suggestions(self, mock_service, client):
+    async def test_skill_gap_analysis_no_suggestions(self, mock_service):
         """Test skill gap analysis without development suggestions."""
-        mock_service.analyze_skill_gap = AsyncMock(
+        # The skill-gap endpoint actually calls compare_jobs with skill_gap analysis type
+        mock_service.compare_jobs = AsyncMock(
             return_value={
-                "current_job_id": 1,
-                "target_job_id": 2,
-                "skill_gaps": [],
-                "development_suggestions": [],
+                "analyses": {
+                    "skill_gap": {
+                        "current_job_id": 1,
+                        "target_job_id": 2,
+                        "skill_gaps": [],
+                        "development_suggestions": [],
+                    }
+                }
             }
         )
 
         skill_gap_data = {"job_a_id": 1, "job_b_id": 2, "include_suggestions": False}
 
-        response = client.post("/api/analysis/skill-gap", json=skill_gap_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analysis/skill-gap", json=skill_gap_data)
+
         assert response.status_code == 200
 
         data = response.json()
         assert len(data["skill_gaps"]) == 0
         assert len(data["development_suggestions"]) == 0
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analysis.job_analysis_service")
-    def test_career_recommendations_not_found(self, mock_service, client):
+    async def test_career_recommendations_not_found(self, mock_service):
         """Test career recommendations for non-existent job."""
-        mock_service.get_career_recommendations = AsyncMock(return_value=None)
+        # The endpoint raises 404 only when ValueError is raised
+        mock_service.get_career_paths = AsyncMock(
+            side_effect=ValueError("Job not found")
+        )
 
-        response = client.get("/api/analysis/career-recommendations/999")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analysis/career-paths/999")
+
         assert response.status_code == 404
 
     def test_job_comparison_request_validation(self):
@@ -305,9 +359,10 @@ class TestJobAnalysisEndpoints:
 class TestAnalysisEndpointsIntegration:
     """Integration tests for analysis endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analysis.get_async_session")
     @patch("jd_ingestion.api.endpoints.analysis.job_analysis_service")
-    def test_compare_jobs_with_database(self, mock_service, mock_get_session, client):
+    async def test_compare_jobs_with_database(self, mock_service, mock_get_session):
         """Test job comparison with database session."""
         mock_db = AsyncMock()
         mock_get_session.return_value.__aenter__.return_value = mock_db
@@ -318,11 +373,16 @@ class TestAnalysisEndpointsIntegration:
 
         comparison_data = {"job_a_id": 1, "job_b_id": 2}
 
-        response = client.post("/api/analysis/compare", json=comparison_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analysis/compare", json=comparison_data)
+
         assert response.status_code == 200
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analysis.job_analysis_service")
-    def test_multiple_comparison_types(self, mock_service, client):
+    async def test_multiple_comparison_types(self, mock_service):
         """Test job comparison with multiple analysis types."""
         mock_service.compare_jobs = AsyncMock(
             return_value={
@@ -341,7 +401,11 @@ class TestAnalysisEndpointsIntegration:
             "include_details": True,
         }
 
-        response = client.post("/api/analysis/compare", json=comparison_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analysis/compare", json=comparison_data)
+
         assert response.status_code == 200
 
         data = response.json()

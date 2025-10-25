@@ -96,10 +96,12 @@ async def list_jobs(
             detail="Both 'page' and 'size' parameters must be provided together",
         )
 
-    # Build base query - load quality_metrics and skills relationships
+    # Build base query - eagerly load related data to prevent N+1 queries
     base_query = select(JobDescription).options(
         selectinload(JobDescription.quality_metrics),
         selectinload(JobDescription.skills),
+        selectinload(JobDescription.sections),  # Load job sections
+        selectinload(JobDescription.job_metadata),  # Load metadata
     )
 
     # Apply filters
