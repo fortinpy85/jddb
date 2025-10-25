@@ -13,8 +13,9 @@ from sqlalchemy import (
     DECIMAL,
     Table,
     Float,
+    UniqueConstraint,
 )
-from sqlalchemy.orm import relationship, DeclarativeBase
+from sqlalchemy.orm import relationship, DeclarativeBase, synonym
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.types import TypeDecorator
 from pgvector.sqlalchemy import Vector
@@ -48,6 +49,12 @@ class JSONBType(TypeDecorator):
             return dialect.type_descriptor(JSONB())
         else:
             return dialect.type_descriptor(JSON())
+
+    def __repr__(self):
+        return "JSONB"
+
+    def __str__(self):
+        return "JSONB"
 
 
 class Base(DeclarativeBase):
@@ -166,6 +173,12 @@ class UserPreference(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, onupdate=datetime.utcnow, nullable=True)
 
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "preference_type", "preference_key", name="uq_user_preference"
+        ),
+    )
+
 
 class SavedSearch(Base):
     __tablename__ = "saved_searches"
@@ -176,9 +189,9 @@ class SavedSearch(Base):
     user_id = Column(String, nullable=True)
     session_id = Column(String, nullable=True)
     search_query = Column(Text, nullable=True)
-    search_type = Column(String, default="general", nullable=False)
+    search_type = Column(String, default="text", nullable=False)
     search_filters = Column(JSONBType, nullable=True)
-    is_public = Column(String, default="false", nullable=False)
+    is_public = Column(String, default="private", nullable=False)
     is_favorite = Column(String, default="false", nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, onupdate=datetime.utcnow, nullable=True)
@@ -203,7 +216,9 @@ class JobDescription(Base):
     processed_date = Column(DateTime, default=datetime.utcnow, nullable=True)
     file_hash = Column(String(64), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, onupdate=datetime.utcnow, nullable=True)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True
+    )
 
     # Relationships with CASCADE delete-orphan for proper ORM-level deletion handling
     sections = relationship(
@@ -215,6 +230,8 @@ class JobDescription(Base):
     job_metadata = relationship(
         "JobMetadata", back_populates="job", uselist=False, cascade="all, delete-orphan"
     )
+    # Synonym for backward compatibility - tests expect 'metadata_entry'
+    metadata_entry = synonym("job_metadata")
     quality_metrics = relationship(
         "DataQualityMetrics",
         back_populates="job",
@@ -317,7 +334,10 @@ class DataQualityMetrics(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     job_id = Column(
-        Integer, ForeignKey("job_descriptions.id", ondelete="CASCADE"), nullable=False
+        Integer,
+        ForeignKey("job_descriptions.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
     )
     content_completeness_score: float = Column(DECIMAL(4, 3), nullable=True)  # type: ignore[assignment]
     sections_completeness_score: float = Column(DECIMAL(4, 3), nullable=True)  # type: ignore[assignment]
@@ -325,8 +345,8 @@ class DataQualityMetrics(Base):
     has_structured_fields = Column(String(10), nullable=True)
     has_all_sections = Column(String(10), nullable=True)
     has_embeddings = Column(String(10), nullable=True)
-    processing_errors_count = Column(Integer, nullable=True)
-    validation_errors_count = Column(Integer, nullable=True)
+    processing_errors_count = Column(Integer, default=0, nullable=True)
+    validation_errors_count = Column(Integer, default=0, nullable=True)
     content_extraction_success = Column(String(10), nullable=True)
     raw_content_length = Column(Integer, nullable=True)
     processed_content_length = Column(Integer, nullable=True)
@@ -356,6 +376,8 @@ class JobComparison(Base):
     )
     comparison_type = Column(String(50), nullable=True)
     similarity_score: float = Column(DECIMAL(4, 3), nullable=True)  # type: ignore[assignment]
+    overall_score: float = Column(DECIMAL(4, 3), nullable=True)  # type: ignore[assignment]
+    section_scores = Column(JSONBType, nullable=True)
     differences = Column(JSONBType, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
