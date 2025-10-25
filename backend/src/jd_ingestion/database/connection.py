@@ -30,12 +30,26 @@ sync_engine = create_engine(
     settings.database_sync_url,
     echo=settings.debug,
     pool_pre_ping=True,
+    pool_size=20,  # Increased from default 5
+    max_overflow=40,  # Increased from default 10
+    pool_recycle=3600,  # Recycle connections after 1 hour
+    pool_timeout=30,  # Wait up to 30s for connection
 )
 
 async_engine = create_async_engine(
     settings.database_url,
     echo=settings.debug,
-    pool_pre_ping=True,
+    pool_pre_ping=True,  # Verify connections before use
+    pool_size=20,  # Increased from default 5 for concurrent load
+    max_overflow=40,  # Increased from default 10 to handle spikes
+    pool_recycle=3600,  # Recycle connections after 1 hour to prevent stale connections
+    pool_timeout=30,  # Wait up to 30s for connection acquisition
+    connect_args={
+        "server_settings": {
+            "application_name": "jd_ingestion_engine",
+            "jit": "off",  # Disable JIT for faster simple queries
+        }
+    },
 )
 
 SessionLocal = sessionmaker(
