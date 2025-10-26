@@ -312,7 +312,7 @@ class TestGetJob:
         )
         # Add mock relationships
         job.sections = []
-        job.job_metadata = None
+        job.metadata_entry = None
         job.chunks = []
         job.quality_metrics = []
         return job
