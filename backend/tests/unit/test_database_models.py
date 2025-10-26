@@ -635,7 +635,7 @@ class TestRelationships:
         """Test JobDescription relationship configurations."""
         # Test relationship properties exist
         assert hasattr(JobDescription.sections, "property")
-        assert hasattr(JobDescription.metadata_entry, "property")
+        assert hasattr(JobDescription.job_metadata, "property")
         assert hasattr(JobDescription.chunks, "property")
 
         # Test back_populates configuration

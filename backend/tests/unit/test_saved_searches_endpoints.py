@@ -23,7 +23,7 @@ def override_get_async_session(mock_db_session):
     """Override function for database dependency."""
 
     async def _override():
-        return mock_db_session
+        yield mock_db_session
 
     return _override
 
