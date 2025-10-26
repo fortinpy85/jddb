@@ -4,18 +4,12 @@ Tests for task management API endpoints.
 
 import pytest
 from unittest.mock import Mock, patch, AsyncMock, mock_open
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 from pathlib import Path
 import tempfile
 import os
 
 from jd_ingestion.api.main import app
-
-
-@pytest.fixture
-def client():
-    """Create test client."""
-    return TestClient(app)
 
 
 @pytest.fixture
@@ -64,9 +58,10 @@ def mock_settings():
 class TestUploadAndProcessEndpoint:
     """Test file upload and processing endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.process_single_file_task")
     @patch("jd_ingestion.api.endpoints.tasks.settings")
-    def test_upload_and_process_file_success(self, mock_settings, mock_task, client):
+    async def test_upload_and_process_file_success(self, mock_settings, mock_task):
         """Test successful file upload and processing."""
         mock_settings.supported_extensions_list = [".txt", ".docx", ".pdf"]
         mock_settings.max_file_size_mb = 10
@@ -89,11 +84,14 @@ class TestUploadAndProcessEndpoint:
             with patch("builtins.open", mock_open()) as _mock_file:
                 with patch("pathlib.Path.mkdir"):
                     with open(tmp_file_path, "rb") as file:
-                        response = client.post(
-                            "/api/tasks/upload",
-                            files={"file": ("test.txt", file, "text/plain")},
-                            params={"generate_embeddings": True},
-                        )
+                        async with AsyncClient(
+                            transport=ASGITransport(app=app), base_url="http://test"
+                        ) as ac:
+                            response = await ac.post(
+                                "/api/tasks/upload",
+                                files={"file": ("test.txt", file, "text/plain")},
+                                params={"generate_embeddings": True},
+                            )
 
             assert response.status_code == 200
             data = response.json()
@@ -107,16 +105,21 @@ class TestUploadAndProcessEndpoint:
             except (PermissionError, OSError):
                 pass  # Ignore file locking issues on Windows
 
-    def test_upload_file_no_filename(self, client):
+    @pytest.mark.asyncio
+    async def test_upload_file_no_filename(self):
         """Test upload with no filename."""
-        response = client.post(
-            "/api/tasks/upload", files={"file": ("", b"content", "text/plain")}
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/tasks/upload", files={"file": ("", b"content", "text/plain")}
+            )
         assert response.status_code == 400
         assert "No filename provided" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.settings")
-    def test_upload_file_unsupported_extension(self, mock_settings, client):
+    async def test_upload_file_unsupported_extension(self, mock_settings):
         """Test upload with unsupported file extension."""
         mock_settings.supported_extensions_list = [".txt"]
 
@@ -129,10 +132,13 @@ class TestUploadAndProcessEndpoint:
 
         try:
             with open(tmp_file_path, "rb") as file:
-                response = client.post(
-                    "/api/tasks/upload",
-                    files={"file": ("test.xyz", file, "application/octet-stream")},
-                )
+                async with AsyncClient(
+                    transport=ASGITransport(app=app), base_url="http://test"
+                ) as ac:
+                    response = await ac.post(
+                        "/api/tasks/upload",
+                        files={"file": ("test.xyz", file, "application/octet-stream")},
+                    )
 
             assert response.status_code == 400
             assert "Unsupported file extension" in response.json()["detail"]
@@ -143,8 +149,9 @@ class TestUploadAndProcessEndpoint:
             except (PermissionError, OSError):
                 pass  # Ignore file locking issues on Windows
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.settings")
-    def test_upload_file_too_large(self, mock_settings, client):
+    async def test_upload_file_too_large(self, mock_settings):
         """Test upload with file too large."""
         mock_settings.supported_extensions_list = [".txt"]
         mock_settings.max_file_size_mb = 1  # 1MB limit
@@ -179,9 +186,10 @@ class TestUploadAndProcessEndpoint:
 class TestBatchProcessEndpoint:
     """Test batch processing endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.batch_process_files_task")
     @patch("pathlib.Path.exists")
-    def test_batch_process_directory_success(self, mock_exists, mock_task, client):
+    async def test_batch_process_directory_success(self, mock_exists, mock_task):
         """Test successful batch processing."""
         mock_exists.return_value = True
 
@@ -189,15 +197,18 @@ class TestBatchProcessEndpoint:
         mock_task_instance.id = "batch-task-456"
         mock_task.delay.return_value = mock_task_instance
 
-        response = client.post(
-            "/api/tasks/batch-process",
-            params={
-                "directory_path": "/test/path",
-                "max_files": 10,
-                "recursive": True,
-                "generate_embeddings": True,
-            },
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/tasks/batch-process",
+                params={
+                    "directory_path": "/test/path",
+                    "max_files": 10,
+                    "recursive": True,
+                    "generate_embeddings": True,
+                },
+            )
 
         assert response.status_code == 200
         data = response.json()
@@ -205,28 +216,37 @@ class TestBatchProcessEndpoint:
         assert data["task_id"] == "batch-task-456"
         assert data["directory"] == "/test/path"
 
+    @pytest.mark.asyncio
     @patch("pathlib.Path.exists")
-    def test_batch_process_directory_not_found(self, mock_exists, client):
+    async def test_batch_process_directory_not_found(self, mock_exists):
         """Test batch processing with non-existent directory."""
         mock_exists.return_value = False
 
-        response = client.post(
-            "/api/tasks/batch-process", params={"directory_path": "/nonexistent/path"}
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/tasks/batch-process",
+                params={"directory_path": "/nonexistent/path"},
+            )
 
         assert response.status_code == 400
         assert "Directory does not exist" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.batch_process_files_task")
     @patch("pathlib.Path.exists")
-    def test_batch_process_task_submission_error(self, mock_exists, mock_task, client):
+    async def test_batch_process_task_submission_error(self, mock_exists, mock_task):
         """Test batch processing with task submission error."""
         mock_exists.return_value = True
         mock_task.delay.side_effect = Exception("Celery connection failed")
 
-        response = client.post(
-            "/api/tasks/batch-process", params={"directory_path": "/test/path"}
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/tasks/batch-process", params={"directory_path": "/test/path"}
+            )
 
         assert response.status_code == 500
         assert "Batch processing submission failed" in response.json()["detail"]
@@ -235,14 +255,20 @@ class TestBatchProcessEndpoint:
 class TestEmbeddingGenerationEndpoints:
     """Test embedding generation endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.generate_embeddings_for_job_task")
-    def test_generate_embeddings_for_job_success(self, mock_task, client):
+    async def test_generate_embeddings_for_job_success(self, mock_task):
         """Test successful embedding generation for single job."""
         mock_task_instance = Mock()
         mock_task_instance.id = "embed-task-789"
         mock_task.delay.return_value = mock_task_instance
 
-        response = client.post("/api/tasks/generate-embeddings", params={"job_id": 123})
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/tasks/generate-embeddings", params={"job_id": 123}
+            )
 
         assert response.status_code == 200
         data = response.json()
@@ -250,26 +276,36 @@ class TestEmbeddingGenerationEndpoints:
         assert data["task_id"] == "embed-task-789"
         assert data["job_id"] == 123
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.generate_embeddings_for_job_task")
-    def test_generate_embeddings_for_job_error(self, mock_task, client):
+    async def test_generate_embeddings_for_job_error(self, mock_task):
         """Test embedding generation with error."""
         mock_task.delay.side_effect = Exception("Embedding service unavailable")
 
-        response = client.post("/api/tasks/generate-embeddings", params={"job_id": 123})
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/tasks/generate-embeddings", params={"job_id": 123}
+            )
 
         assert response.status_code == 500
         assert "Embedding generation submission failed" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.batch_generate_embeddings_task")
-    def test_batch_generate_embeddings_success(self, mock_task, client):
+    async def test_batch_generate_embeddings_success(self, mock_task):
         """Test successful batch embedding generation."""
         mock_task_instance = Mock()
         mock_task_instance.id = "batch-embed-task-101"
         mock_task.delay.return_value = mock_task_instance
 
-        response = client.post(
-            "/api/tasks/batch-generate-embeddings", json=[1, 2, 3, 4, 5]
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/tasks/batch-generate-embeddings", json=[1, 2, 3, 4, 5]
+            )
 
         assert response.status_code == 200
         data = response.json()
@@ -277,23 +313,31 @@ class TestEmbeddingGenerationEndpoints:
         assert data["task_id"] == "batch-embed-task-101"
         assert data["job_ids"] == [1, 2, 3, 4, 5]
 
-    def test_batch_generate_embeddings_empty_list(self, client):
+    @pytest.mark.asyncio
+    async def test_batch_generate_embeddings_empty_list(self):
         """Test batch embedding generation with empty job list."""
-        response = client.post("/api/tasks/batch-generate-embeddings", json=[])
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/tasks/batch-generate-embeddings", json=[])
 
         assert response.status_code == 400
         assert "No job IDs provided" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.generate_missing_embeddings_task")
-    def test_generate_missing_embeddings_success(self, mock_task, client):
+    async def test_generate_missing_embeddings_success(self, mock_task):
         """Test successful missing embeddings generation."""
         mock_task_instance = Mock()
         mock_task_instance.id = "missing-embed-task-202"
         mock_task.delay.return_value = mock_task_instance
 
-        response = client.post(
-            "/api/tasks/generate-missing-embeddings", params={"limit": 100}
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/tasks/generate-missing-embeddings", params={"limit": 100}
+            )
 
         assert response.status_code == 200
         data = response.json()
@@ -301,14 +345,18 @@ class TestEmbeddingGenerationEndpoints:
         assert data["task_id"] == "missing-embed-task-202"
         assert data["limit"] == 100
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.generate_missing_embeddings_task")
-    def test_generate_missing_embeddings_no_limit(self, mock_task, client):
+    async def test_generate_missing_embeddings_no_limit(self, mock_task):
         """Test missing embeddings generation without limit."""
         mock_task_instance = Mock()
         mock_task_instance.id = "missing-embed-task-203"
         mock_task.delay.return_value = mock_task_instance
 
-        response = client.post("/api/tasks/generate-missing-embeddings")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/tasks/generate-missing-embeddings")
 
         assert response.status_code == 200
         data = response.json()
@@ -318,8 +366,9 @@ class TestEmbeddingGenerationEndpoints:
 class TestTaskStatusEndpoints:
     """Test task status and result endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.celery_app")
-    def test_get_task_status_pending(self, mock_celery_app, client):
+    async def test_get_task_status_pending(self, mock_celery_app):
         """Test getting status of pending task."""
         mock_result = Mock()
         mock_result.status = "PENDING"
@@ -330,7 +379,10 @@ class TestTaskStatusEndpoints:
 
         mock_celery_app.AsyncResult.return_value = mock_result
 
-        response = client.get("/api/tasks/test-task-123/status")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/tasks/test-task-123/status")
 
         assert response.status_code == 200
         data = response.json()
@@ -339,8 +391,9 @@ class TestTaskStatusEndpoints:
         assert data["ready"] is False
         assert data["info"] == {"current": 0, "total": 100}
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.celery_app")
-    def test_get_task_status_success(self, mock_celery_app, client):
+    async def test_get_task_status_success(self, mock_celery_app):
         """Test getting status of successful task."""
         mock_result = Mock()
         mock_result.status = "SUCCESS"
@@ -351,7 +404,10 @@ class TestTaskStatusEndpoints:
 
         mock_celery_app.AsyncResult.return_value = mock_result
 
-        response = client.get("/api/tasks/test-task-123/status")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/tasks/test-task-123/status")
 
         assert response.status_code == 200
         data = response.json()
@@ -360,8 +416,9 @@ class TestTaskStatusEndpoints:
         assert data["successful"] is True
         assert data["result"]["processed_files"] == 5
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.celery_app")
-    def test_get_task_status_failure(self, mock_celery_app, client):
+    async def test_get_task_status_failure(self, mock_celery_app):
         """Test getting status of failed task."""
         mock_result = Mock()
         mock_result.status = "FAILURE"
@@ -372,7 +429,10 @@ class TestTaskStatusEndpoints:
 
         mock_celery_app.AsyncResult.return_value = mock_result
 
-        response = client.get("/api/tasks/test-task-123/status")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/tasks/test-task-123/status")
 
         assert response.status_code == 200
         data = response.json()
@@ -380,8 +440,9 @@ class TestTaskStatusEndpoints:
         assert data["failed"] is True
         assert "Task processing failed" in data["error"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.celery_app")
-    def test_get_task_result_success(self, mock_celery_app, client):
+    async def test_get_task_result_success(self, mock_celery_app):
         """Test getting result of completed task."""
         mock_result = Mock()
         mock_result.status = "SUCCESS"
@@ -391,7 +452,10 @@ class TestTaskStatusEndpoints:
 
         mock_celery_app.AsyncResult.return_value = mock_result
 
-        response = client.get("/api/tasks/test-task-123/result")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/tasks/test-task-123/result")
 
         assert response.status_code == 200
         data = response.json()
@@ -399,21 +463,26 @@ class TestTaskStatusEndpoints:
         assert data["status"] == "SUCCESS"
         assert data["result"]["job_id"] == 123
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.celery_app")
-    def test_get_task_result_not_ready(self, mock_celery_app, client):
+    async def test_get_task_result_not_ready(self, mock_celery_app):
         """Test getting result of task not yet completed."""
         mock_result = Mock()
         mock_result.ready.return_value = False
 
         mock_celery_app.AsyncResult.return_value = mock_result
 
-        response = client.get("/api/tasks/test-task-123/result")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/tasks/test-task-123/result")
 
         assert response.status_code == 202
         assert "Task not yet completed" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.celery_app")
-    def test_get_task_result_failed(self, mock_celery_app, client):
+    async def test_get_task_result_failed(self, mock_celery_app):
         """Test getting result of failed task."""
         mock_result = Mock()
         mock_result.ready.return_value = True
@@ -422,7 +491,10 @@ class TestTaskStatusEndpoints:
 
         mock_celery_app.AsyncResult.return_value = mock_result
 
-        response = client.get("/api/tasks/test-task-123/result")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/tasks/test-task-123/result")
 
         assert response.status_code == 500
         assert "Task failed" in response.json()["detail"]
@@ -431,10 +503,14 @@ class TestTaskStatusEndpoints:
 class TestTaskCancellationEndpoint:
     """Test task cancellation endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.celery_app")
-    def test_cancel_task_success(self, mock_celery_app, client):
+    async def test_cancel_task_success(self, mock_celery_app):
         """Test successful task cancellation."""
-        response = client.delete("/api/tasks/test-task-123")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.delete("/api/tasks/test-task-123")
 
         assert response.status_code == 200
         data = response.json()
@@ -445,12 +521,16 @@ class TestTaskCancellationEndpoint:
             "test-task-123", terminate=True
         )
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.celery_app")
-    def test_cancel_task_error(self, mock_celery_app, client):
+    async def test_cancel_task_error(self, mock_celery_app):
         """Test task cancellation with error."""
         mock_celery_app.control.revoke.side_effect = Exception("Celery error")
 
-        response = client.delete("/api/tasks/test-task-123")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.delete("/api/tasks/test-task-123")
 
         assert response.status_code == 500
         assert "Failed to cancel task" in response.json()["detail"]
@@ -459,8 +539,9 @@ class TestTaskCancellationEndpoint:
 class TestTaskListingEndpoints:
     """Test task listing and statistics endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.celery_app")
-    def test_list_active_tasks_success(self, mock_celery_app, client):
+    async def test_list_active_tasks_success(self, mock_celery_app):
         """Test successful listing of active tasks."""
         mock_inspect = Mock()
         mock_inspect.active.return_value = {
@@ -489,7 +570,10 @@ class TestTaskListingEndpoints:
         }
         mock_celery_app.control.inspect.return_value = mock_inspect
 
-        response = client.get("/api/tasks/")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/tasks/")
 
         assert response.status_code == 200
         data = response.json()
@@ -498,22 +582,27 @@ class TestTaskListingEndpoints:
         assert len(data["workers"]) == 2
         assert data["active_tasks"][0]["task_id"] == "task-1"
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.celery_app")
-    def test_list_active_tasks_no_tasks(self, mock_celery_app, client):
+    async def test_list_active_tasks_no_tasks(self, mock_celery_app):
         """Test listing active tasks when none exist."""
         mock_inspect = Mock()
         mock_inspect.active.return_value = None
         mock_celery_app.control.inspect.return_value = mock_inspect
 
-        response = client.get("/api/tasks/")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/tasks/")
 
         assert response.status_code == 200
         data = response.json()
         assert data["total_active"] == 0
         assert len(data["active_tasks"]) == 0
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.celery_app")
-    def test_get_task_stats_success(self, mock_celery_app, client):
+    async def test_get_task_stats_success(self, mock_celery_app):
         """Test successful task statistics retrieval."""
         mock_inspect = Mock()
         mock_inspect.active.return_value = {
@@ -527,7 +616,10 @@ class TestTaskListingEndpoints:
         mock_inspect.registered.return_value = {"worker1": ["task1", "task2", "task3"]}
         mock_celery_app.control.inspect.return_value = mock_inspect
 
-        response = client.get("/api/tasks/stats")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/tasks/stats")
 
         assert response.status_code == 200
         data = response.json()
@@ -539,12 +631,16 @@ class TestTaskListingEndpoints:
         assert "processing" in data["queues"]
         assert "embeddings" in data["queues"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.celery_app")
-    def test_get_task_stats_error(self, mock_celery_app, client):
+    async def test_get_task_stats_error(self, mock_celery_app):
         """Test task statistics with Celery error."""
         mock_celery_app.control.inspect.side_effect = Exception("Celery unavailable")
 
-        response = client.get("/api/tasks/stats")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/tasks/stats")
 
         assert response.status_code == 500
         assert "Failed to get task stats" in response.json()["detail"]
@@ -553,43 +649,63 @@ class TestTaskListingEndpoints:
 class TestTaskEndpointsEdgeCases:
     """Test edge cases and error conditions."""
 
-    def test_task_status_invalid_task_id(self, client):
+    @pytest.mark.asyncio
+    async def test_task_status_invalid_task_id(self):
         """Test getting status with invalid task ID format."""
         with patch("jd_ingestion.api.endpoints.tasks.celery_app") as mock_celery_app:
             mock_celery_app.AsyncResult.side_effect = Exception("Invalid task ID")
 
-            response = client.get("/api/tasks/invalid-id/status")
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.get("/api/tasks/invalid-id/status")
             assert response.status_code == 500
 
-    def test_upload_file_invalid_content_type(self, client):
+    @pytest.mark.asyncio
+    async def test_upload_file_invalid_content_type(self):
         """Test file upload validation handles various scenarios."""
         # Test with missing file parameter would be handled by FastAPI validation
-        response = client.post("/api/tasks/upload")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/tasks/upload")
         assert response.status_code == 422  # Validation error
 
-    def test_batch_process_invalid_parameters(self, client):
+    @pytest.mark.asyncio
+    async def test_batch_process_invalid_parameters(self):
         """Test batch processing with invalid parameter types."""
         # Invalid max_files type
-        response = client.post(
-            "/api/tasks/batch-process",
-            params={"directory_path": "/test/path", "max_files": "not_an_int"},
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/tasks/batch-process",
+                params={"directory_path": "/test/path", "max_files": "not_an_int"},
+            )
         assert response.status_code == 422
 
-    def test_batch_generate_embeddings_invalid_job_ids(self, client):
+    @pytest.mark.asyncio
+    async def test_batch_generate_embeddings_invalid_job_ids(self):
         """Test batch embedding generation with invalid job IDs."""
         # Non-integer job IDs
-        response = client.post(
-            "/api/tasks/batch-generate-embeddings", json=["not", "integers"]
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/tasks/batch-generate-embeddings", json=["not", "integers"]
+            )
         assert response.status_code == 422
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.celery_app")
-    def test_task_operations_celery_unavailable(self, mock_celery_app, client):
+    async def test_task_operations_celery_unavailable(self, mock_celery_app):
         """Test task operations when Celery is unavailable."""
         mock_celery_app.AsyncResult.side_effect = Exception("Celery broker unavailable")
 
-        response = client.get("/api/tasks/test-task/status")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/tasks/test-task/status")
         assert response.status_code == 500
         assert "Failed to get task status" in response.json()["detail"]
 
@@ -597,8 +713,9 @@ class TestTaskEndpointsEdgeCases:
 class TestTaskEndpointsIntegration:
     """Test integration aspects of task endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.tasks.get_async_session")
-    def test_task_endpoints_database_dependency(self, mock_get_session, client):
+    async def test_task_endpoints_database_dependency(self, mock_get_session):
         """Test that task endpoints properly handle database dependency."""
         mock_db = AsyncMock()
         mock_get_session.return_value.__aenter__.return_value = mock_db
@@ -628,10 +745,16 @@ class TestTaskEndpointsIntegration:
 
                         try:
                             with open(tmp_file_path, "rb") as file:
-                                response = client.post(
-                                    "/api/tasks/upload",
-                                    files={"file": ("test.txt", file, "text/plain")},
-                                )
+                                async with AsyncClient(
+                                    transport=ASGITransport(app=app),
+                                    base_url="http://test",
+                                ) as ac:
+                                    response = await ac.post(
+                                        "/api/tasks/upload",
+                                        files={
+                                            "file": ("test.txt", file, "text/plain")
+                                        },
+                                    )
                             assert response.status_code == 200
                         finally:
                             try:
@@ -639,7 +762,8 @@ class TestTaskEndpointsIntegration:
                             except (PermissionError, OSError):
                                 pass  # Ignore file locking issues on Windows
 
-    def test_task_endpoint_error_logging(self, client):
+    @pytest.mark.asyncio
+    async def test_task_endpoint_error_logging(self):
         """Test that task endpoints properly log errors."""
         with patch("jd_ingestion.api.endpoints.tasks.logger") as mock_logger:
             with patch(
@@ -647,7 +771,10 @@ class TestTaskEndpointsIntegration:
             ) as mock_celery_app:
                 mock_celery_app.AsyncResult.side_effect = Exception("Test error")
 
-                response = client.get("/api/tasks/test-task/status")
+                async with AsyncClient(
+                    transport=ASGITransport(app=app), base_url="http://test"
+                ) as ac:
+                    response = await ac.get("/api/tasks/test-task/status")
                 assert response.status_code == 500
 
                 # Verify error was logged

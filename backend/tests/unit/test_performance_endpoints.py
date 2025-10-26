@@ -5,7 +5,7 @@ Tests for performance monitoring API endpoints.
 import pytest
 from unittest.mock import AsyncMock, Mock, patch
 from fastapi import HTTPException
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 
 from jd_ingestion.api.main import app
 from jd_ingestion.api.endpoints.performance import (
@@ -542,45 +542,51 @@ class TestPerformanceHealthCheck:
 class TestPerformanceEndpointsIntegration:
     """Test performance endpoints integration."""
 
-    def test_performance_endpoints_routing(self):
+    @pytest.mark.asyncio
+    async def test_performance_endpoints_routing(self):
         """Test that performance endpoints are properly routed."""
-        client = TestClient(app)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            endpoints_to_test = [
+                "/api/performance/stats",
+                "/api/performance/health",
+            ]
 
-        endpoints_to_test = [
-            "/api/performance/stats",
-            "/api/performance/health",
-        ]
+            for endpoint in endpoints_to_test:
+                response = await ac.get(endpoint)
+                # Should not be 404 (route not found) - could be auth/db related errors
+                assert response.status_code != 404, (
+                    f"Endpoint {endpoint} not properly routed"
+                )
 
-        for endpoint in endpoints_to_test:
-            response = client.get(endpoint)
-            # Should not be 404 (route not found) - could be auth/db related errors
-            assert response.status_code != 404, (
-                f"Endpoint {endpoint} not properly routed"
-            )
-
-    def test_performance_benchmark_post_routing(self):
+    @pytest.mark.asyncio
+    async def test_performance_benchmark_post_routing(self):
         """Test that benchmark POST endpoint is properly routed."""
-        client = TestClient(app)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            benchmark_data = {
+                "query_text": "Senior Policy Advisor",
+                "limit": 10,
+                "similarity_threshold": 0.7,
+            }
 
-        benchmark_data = {
-            "query_text": "Senior Policy Advisor",
-            "limit": 10,
-            "similarity_threshold": 0.7,
-        }
+            response = await ac.post(
+                "/api/performance/benchmark/vector-search", json=benchmark_data
+            )
+            # Should not be 404 (route not found)
+            assert response.status_code != 404
 
-        response = client.post(
-            "/api/performance/benchmark/vector-search", json=benchmark_data
-        )
-        # Should not be 404 (route not found)
-        assert response.status_code != 404
-
-    def test_performance_optimize_post_routing(self):
+    @pytest.mark.asyncio
+    async def test_performance_optimize_post_routing(self):
         """Test that optimize POST endpoint is properly routed."""
-        client = TestClient(app)
-
-        response = client.post("/api/performance/optimize/indexes")
-        # Should not be 404 (route not found)
-        assert response.status_code != 404
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/performance/optimize/indexes")
+            # Should not be 404 (route not found)
+            assert response.status_code != 404
 
 
 class TestPerformanceDataModels:

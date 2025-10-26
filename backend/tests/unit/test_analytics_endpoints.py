@@ -4,15 +4,9 @@ Tests for analytics API endpoints.
 
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 
 from jd_ingestion.api.main import app
-
-
-@pytest.fixture
-def client():
-    """Create test client."""
-    return TestClient(app)
 
 
 @pytest.fixture
@@ -75,69 +69,89 @@ def sample_ai_usage_data():
 class TestActivityTrackingEndpoints:
     """Test activity tracking endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_track_activity_success(self, mock_service, client, sample_activity_data):
+    async def test_track_activity_success(self, mock_service, sample_activity_data):
         """Test successful activity tracking."""
         mock_service.track_activity = AsyncMock()
 
-        response = client.post(
-            "/api/analytics/track/activity",
-            json=sample_activity_data,
-            headers={"x-session-id": "session-123", "user-agent": "test-browser"},
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/analytics/track/activity",
+                json=sample_activity_data,
+                headers={"x-session-id": "session-123", "user-agent": "test-browser"},
+            )
         assert response.status_code == 200
 
         data = response.json()
         assert data["status"] == "success"
         assert data["message"] == "Activity tracked successfully"
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_track_activity_service_error(
-        self, mock_service, client, sample_activity_data
+    async def test_track_activity_service_error(
+        self, mock_service, sample_activity_data
     ):
         """Test activity tracking with service error."""
         mock_service.track_activity = AsyncMock(side_effect=Exception("Database error"))
 
-        response = client.post(
-            "/api/analytics/track/activity", json=sample_activity_data
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/analytics/track/activity", json=sample_activity_data
+            )
         assert response.status_code == 500
         assert "Failed to track activity" in response.json()["detail"]
 
-    def test_track_activity_invalid_data(self, client):
+    @pytest.mark.asyncio
+    async def test_track_activity_invalid_data(self):
         """Test activity tracking with invalid data."""
         invalid_data = {
             "action_type": "",  # Empty required field
             "endpoint": "/api/search/",
         }
 
-        response = client.post("/api/analytics/track/activity", json=invalid_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analytics/track/activity", json=invalid_data)
         assert response.status_code == 422
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_track_ai_usage_success(self, mock_service, client, sample_ai_usage_data):
+    async def test_track_ai_usage_success(self, mock_service, sample_ai_usage_data):
         """Test successful AI usage tracking."""
         mock_service.track_ai_usage = AsyncMock()
 
-        response = client.post(
-            "/api/analytics/track/ai-usage", json=sample_ai_usage_data
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/analytics/track/ai-usage", json=sample_ai_usage_data
+            )
         assert response.status_code == 200
 
         data = response.json()
         assert data["status"] == "success"
         assert data["message"] == "AI usage tracked successfully"
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_track_ai_usage_error(self, mock_service, client, sample_ai_usage_data):
+    async def test_track_ai_usage_error(self, mock_service, sample_ai_usage_data):
         """Test AI usage tracking with error."""
         mock_service.track_ai_usage = AsyncMock(
             side_effect=Exception("Tracking failed")
         )
 
-        response = client.post(
-            "/api/analytics/track/ai-usage", json=sample_ai_usage_data
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/analytics/track/ai-usage", json=sample_ai_usage_data
+            )
         assert response.status_code == 500
         assert "Failed to track AI usage" in response.json()["detail"]
 

@@ -5,19 +5,13 @@ Tests for health check endpoints.
 import pytest
 from unittest.mock import AsyncMock, Mock, patch
 from datetime import datetime
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 
 from jd_ingestion.api.main import app
 
 
 @pytest.fixture
-def client():
-    """Create test client."""
-    return TestClient(app)
-
-
-@pytest.fixture
-def mock_health_status():
+def mock_health_data():
     """Mock health status data."""
     return {
         "status": "healthy",
@@ -53,9 +47,13 @@ def mock_health_status():
 class TestHealthEndpoints:
     """Test health check endpoints."""
 
-    def test_basic_health_check(self, client):
+    @pytest.mark.asyncio
+    async def test_basic_health_check(self):
         """Test basic health check endpoint."""
-        response = client.get("/api/health/")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/health/")
         assert response.status_code == 200
 
         data = response.json()
@@ -64,15 +62,19 @@ class TestHealthEndpoints:
         assert data["service"] == "jd-ingestion"
         assert data["version"] == "1.0.0"
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.health.get_health_status")
     @patch("jd_ingestion.api.endpoints.health.log_business_metric")
-    def test_detailed_health_check_success(
-        self, mock_log_metric, mock_health_status, client, mock_health_data
+    async def test_detailed_health_check_success(
+        self, mock_log_metric, mock_health_status, mock_health_data
     ):
         """Test detailed health check success."""
         mock_health_status.return_value = mock_health_data
 
-        response = client.get("/api/health/detailed")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/health/detailed")
         assert response.status_code == 200
 
         data = response.json()
@@ -85,18 +87,23 @@ class TestHealthEndpoints:
             "health_check_requests", 1, "counter", {"type": "detailed"}
         )
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.health.get_health_status")
-    def test_detailed_health_check_failure(self, mock_health_status, client):
+    async def test_detailed_health_check_failure(self, mock_health_status):
         """Test detailed health check failure."""
         mock_health_status.side_effect = Exception("Health check failed")
 
-        response = client.get("/api/health/detailed")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/health/detailed")
         assert response.status_code == 503
         assert "Health check failed" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.health.check_system_alerts")
     @patch("jd_ingestion.api.endpoints.health.log_business_metric")
-    def test_system_alerts_success(self, mock_log_metric, mock_alerts, client):
+    async def test_system_alerts_success(self, mock_log_metric, mock_alerts):
         """Test system alerts endpoint success."""
         mock_alerts.return_value = [
             {
@@ -106,7 +113,10 @@ class TestHealthEndpoints:
             }
         ]
 
-        response = client.get("/api/health/alerts")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/health/alerts")
         assert response.status_code == 200
 
         data = response.json()
@@ -116,12 +126,16 @@ class TestHealthEndpoints:
         mock_alerts.assert_called_once()
         mock_log_metric.assert_called_once_with("alert_check_requests", 1, "counter")
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.health.check_system_alerts")
-    def test_system_alerts_failure(self, mock_alerts, client):
+    async def test_system_alerts_failure(self, mock_alerts):
         """Test system alerts endpoint failure."""
         mock_alerts.side_effect = Exception("Alert check failed")
 
-        response = client.get("/api/health/alerts")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/health/alerts")
         assert response.status_code == 500
         assert "Alert check failed" in response.json()["detail"]
 

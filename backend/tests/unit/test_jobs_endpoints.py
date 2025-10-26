@@ -312,7 +312,7 @@ class TestGetJob:
         )
         # Add mock relationships
         job.sections = []
-        job.metadata_entry = None
+        job.job_metadata = None
         job.chunks = []
         job.quality_metrics = []
         return job
@@ -614,7 +614,9 @@ class TestJobsEndpointsIntegration:
             "/api/jobs/export/formats",
         ]
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             for endpoint in endpoints_to_test:
                 response = await ac.get(endpoint, headers={"X-API-Key": "test_key"})
                 # Should not be 404 (route not found) - could be 401, 403, or 500 due to auth/db issues
@@ -638,7 +640,9 @@ class TestJobsEndpointsIntegration:
             "/api/jobs/export/formats",
         ]
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             for endpoint in endpoints:
                 response = await ac.get(endpoint)
                 assert response.status_code == 403
@@ -670,9 +674,13 @@ class TestJobsEndpointValidation:
     @pytest.mark.asyncio
     async def test_job_id_validation_via_client(self):
         """Test job ID validation through test client."""
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             # Test with invalid job ID (string instead of int)
-            response = await ac.get("/api/jobs/invalid_id", headers={"X-API-Key": "test_key"})
+            response = await ac.get(
+                "/api/jobs/invalid_id", headers={"X-API-Key": "test_key"}
+            )
             # Should be 422 (validation error) or handled by FastAPI
             assert response.status_code in [422, 404, 401, 403, 500]
 

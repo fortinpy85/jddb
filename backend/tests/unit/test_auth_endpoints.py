@@ -5,18 +5,12 @@ Tests for authentication API endpoints.
 import pytest
 from unittest.mock import AsyncMock, patch
 from datetime import datetime
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 from fastapi import status
 
 from jd_ingestion.api.main import app
 from jd_ingestion.auth.models import User, UserSession
 from jd_ingestion.auth.service import UserService
-
-
-@pytest.fixture
-def client():
-    """Create test client."""
-    return TestClient(app)
 
 
 @pytest.fixture
@@ -63,8 +57,9 @@ def auth_headers(mock_session: UserSession) -> dict:
 class TestAuthEndpoints:
     """Test authentication endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.auth.get_user_service")
-    def test_register_user_success(self, mock_get_service, client, mock_user):
+    async def test_register_user_success(self, mock_get_service, mock_user):
         """Test successful user registration."""
         mock_service = AsyncMock(spec=UserService)
         mock_service.create_user = AsyncMock(return_value=mock_user)
@@ -79,7 +74,10 @@ class TestAuthEndpoints:
             "role": "user",
         }
 
-        response = client.post("/api/auth/register", json=user_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/auth/register", json=user_data)
         assert response.status_code == status.HTTP_201_CREATED
 
         data = response.json()
@@ -87,8 +85,9 @@ class TestAuthEndpoints:
         assert data["email"] == "test@example.com"
         assert data["is_active"] is True
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.auth.get_user_service")
-    def test_register_user_failure(self, mock_get_service, client):
+    async def test_register_user_failure(self, mock_get_service):
         """Test user registration failure."""
         mock_service = AsyncMock(spec=UserService)
         mock_service.create_user.side_effect = ValueError("Username already exists")
@@ -100,6 +99,9 @@ class TestAuthEndpoints:
             "password": "password123",
         }
 
-        response = client.post("/api/auth/register", json=user_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/auth/register", json=user_data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Username already exists" in response.json()["detail"]
