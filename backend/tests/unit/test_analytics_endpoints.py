@@ -159,8 +159,9 @@ class TestActivityTrackingEndpoints:
 class TestUsageStatisticsEndpoints:
     """Test usage statistics endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_get_usage_statistics_success(self, mock_service, client):
+    async def test_get_usage_statistics_success(self, mock_service):
         """Test successful usage statistics retrieval."""
         mock_stats = {
             "usage": {"total_requests": 1500, "unique_sessions": 250},
@@ -170,34 +171,46 @@ class TestUsageStatisticsEndpoints:
         }
         mock_service.get_usage_statistics = AsyncMock(return_value=mock_stats)
 
-        response = client.get("/api/analytics/statistics?period=day")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/statistics?period=day")
         assert response.status_code == 200
 
         data = response.json()
         assert data["status"] == "success"
         assert data["statistics"]["usage"]["total_requests"] == 1500
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_get_usage_statistics_with_dates(self, mock_service, client):
+    async def test_get_usage_statistics_with_dates(self, mock_service):
         """Test usage statistics with custom date range."""
         mock_service.get_usage_statistics = AsyncMock(return_value={})
 
         start_date = "2024-01-01T00:00:00"
         end_date = "2024-01-31T23:59:59"
 
-        response = client.get(
-            f"/api/analytics/statistics?period=custom&start_date={start_date}&end_date={end_date}"
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                f"/api/analytics/statistics?period=custom&start_date={start_date}&end_date={end_date}"
+            )
         assert response.status_code == 200
 
-    def test_get_usage_statistics_invalid_date(self, client):
+    @pytest.mark.asyncio
+    async def test_get_usage_statistics_invalid_date(self):
         """Test usage statistics with invalid date format."""
-        response = client.get("/api/analytics/statistics?start_date=invalid-date")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/statistics?start_date=invalid-date")
         assert response.status_code == 400
         assert "Invalid date format" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_get_analytics_dashboard_success(self, mock_service, client):
+    async def test_get_analytics_dashboard_success(self, mock_service):
         """Test successful analytics dashboard retrieval."""
         mock_dashboard = {
             "overview": {"total_users": 150, "total_requests": 5000},
@@ -206,15 +219,19 @@ class TestUsageStatisticsEndpoints:
         }
         mock_service.get_analytics_dashboard = AsyncMock(return_value=mock_dashboard)
 
-        response = client.get("/api/analytics/dashboard")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/dashboard")
         assert response.status_code == 200
 
         data = response.json()
         assert data["status"] == "success"
         assert data["dashboard"]["overview"]["total_users"] == 150
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_generate_system_metrics_success(self, mock_service, client):
+    async def test_generate_system_metrics_success(self, mock_service):
         """Test successful system metrics generation."""
         mock_metrics = {
             "metric_type": "daily",
@@ -223,16 +240,23 @@ class TestUsageStatisticsEndpoints:
         }
         mock_service.generate_system_metrics = AsyncMock(return_value=mock_metrics)
 
-        response = client.post("/api/analytics/metrics/generate?metric_type=daily")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analytics/metrics/generate?metric_type=daily")
         assert response.status_code == 200
 
         data = response.json()
         assert data["status"] == "success"
         assert data["metrics"]["metric_type"] == "daily"
 
-    def test_generate_system_metrics_invalid_type(self, client):
+    @pytest.mark.asyncio
+    async def test_generate_system_metrics_invalid_type(self):
         """Test system metrics generation with invalid type."""
-        response = client.post("/api/analytics/metrics/generate?metric_type=invalid")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analytics/metrics/generate?metric_type=invalid")
         assert response.status_code == 400
         assert "Invalid metric type" in response.json()["detail"]
 
@@ -240,8 +264,9 @@ class TestUsageStatisticsEndpoints:
 class TestAnalyticsSpecificEndpoints:
     """Test specific analytics endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_get_search_patterns_success(self, mock_service, client):
+    async def test_get_search_patterns_success(self, mock_service):
         """Test successful search patterns retrieval."""
         mock_stats = {
             "search_patterns": {
@@ -254,15 +279,19 @@ class TestAnalyticsSpecificEndpoints:
         }
         mock_service.get_usage_statistics = AsyncMock(return_value=mock_stats)
 
-        response = client.get("/api/analytics/search-patterns?period=week&limit=10")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/search-patterns?period=week&limit=10")
         assert response.status_code == 200
 
         data = response.json()
         assert data["status"] == "success"
         assert len(data["search_patterns"]["popular_searches"]) == 2
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_get_search_patterns_with_limit(self, mock_service, client):
+    async def test_get_search_patterns_with_limit(self, mock_service):
         """Test search patterns limiting when results exceed limit."""
         # Create 25 popular searches
         popular_searches = [
@@ -277,7 +306,10 @@ class TestAnalyticsSpecificEndpoints:
         mock_service.get_usage_statistics = AsyncMock(return_value=mock_stats)
 
         # Request with limit of 10
-        response = client.get("/api/analytics/search-patterns?period=month&limit=10")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/search-patterns?period=month&limit=10")
         assert response.status_code == 200
 
         data = response.json()
@@ -287,8 +319,9 @@ class TestAnalyticsSpecificEndpoints:
         # Should be the first 10 (highest counts)
         assert data["search_patterns"]["popular_searches"][0]["query"] == "query_0"
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_get_performance_metrics_success(self, mock_service, client):
+    async def test_get_performance_metrics_success(self, mock_service):
         """Test successful performance metrics retrieval."""
         mock_stats = {
             "performance": {
@@ -299,22 +332,29 @@ class TestAnalyticsSpecificEndpoints:
         }
         mock_service.get_usage_statistics = AsyncMock(return_value=mock_stats)
 
-        response = client.get("/api/analytics/performance?period=day")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/performance?period=day")
         assert response.status_code == 200
 
         data = response.json()
         assert data["status"] == "success"
         assert data["performance"]["avg_response_time"] == 150.5
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_get_performance_summary_success(self, mock_service, client):
+    async def test_get_performance_summary_success(self, mock_service):
         """Test successful performance summary retrieval."""
         mock_stats = {
             "performance": {"avg_response_time": 150.5, "total_requests": 1000}
         }
         mock_service.get_usage_statistics = AsyncMock(return_value=mock_stats)
 
-        response = client.get("/api/analytics/performance-summary?period=day")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/performance-summary?period=day")
         assert response.status_code == 200
 
         data = response.json()
@@ -322,8 +362,9 @@ class TestAnalyticsSpecificEndpoints:
         assert "summary" in data
         assert data["summary"]["avg_response_time"] == 150.5
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_get_ai_usage_analysis_success(self, mock_service, client):
+    async def test_get_ai_usage_analysis_success(self, mock_service):
         """Test successful AI usage analysis retrieval."""
         mock_stats = {
             "ai_usage": {
@@ -334,15 +375,19 @@ class TestAnalyticsSpecificEndpoints:
         }
         mock_service.get_usage_statistics = AsyncMock(return_value=mock_stats)
 
-        response = client.get("/api/analytics/ai-usage?period=week")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/ai-usage?period=week")
         assert response.status_code == 200
 
         data = response.json()
         assert data["status"] == "success"
         assert data["ai_usage"]["total_cost_usd"] == 125.50
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_get_usage_trends_success(self, mock_service, client):
+    async def test_get_usage_trends_success(self, mock_service):
         """Test successful usage trends retrieval."""
         # Mock daily stats for trend calculation
         mock_daily_stats = {
@@ -352,7 +397,10 @@ class TestAnalyticsSpecificEndpoints:
         }
         mock_service.get_usage_statistics = AsyncMock(return_value=mock_daily_stats)
 
-        response = client.get("/api/analytics/trends?metric=requests&days=7")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/trends?metric=requests&days=7")
         assert response.status_code == 200
 
         data = response.json()
@@ -360,8 +408,9 @@ class TestAnalyticsSpecificEndpoints:
         assert data["metric"] == "requests"
         assert len(data["trends"]) == 7
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_get_trends_sessions_metric(self, mock_service, client):
+    async def test_get_trends_sessions_metric(self, mock_service):
         """Test trends endpoint with sessions metric."""
         mock_daily_stats = {
             "usage": {"total_requests": 100, "unique_sessions": 50},
@@ -370,15 +419,19 @@ class TestAnalyticsSpecificEndpoints:
         }
         mock_service.get_usage_statistics = AsyncMock(return_value=mock_daily_stats)
 
-        response = client.get("/api/analytics/trends?metric=sessions&days=3")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/trends?metric=sessions&days=3")
         assert response.status_code == 200
 
         data = response.json()
         assert data["metric"] == "sessions"
         assert len(data["trends"]) == 3
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_get_trends_searches_metric(self, mock_service, client):
+    async def test_get_trends_searches_metric(self, mock_service):
         """Test trends endpoint with searches metric."""
         mock_daily_stats = {
             "usage": {"total_requests": 100, "unique_sessions": 50},
@@ -387,15 +440,19 @@ class TestAnalyticsSpecificEndpoints:
         }
         mock_service.get_usage_statistics = AsyncMock(return_value=mock_daily_stats)
 
-        response = client.get("/api/analytics/trends?metric=searches&days=3")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/trends?metric=searches&days=3")
         assert response.status_code == 200
 
         data = response.json()
         assert data["metric"] == "searches"
         assert len(data["trends"]) == 3
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_get_trends_ai_cost_metric(self, mock_service, client):
+    async def test_get_trends_ai_cost_metric(self, mock_service):
         """Test trends endpoint with ai_cost metric."""
         mock_daily_stats = {
             "usage": {"total_requests": 100, "unique_sessions": 50},
@@ -404,15 +461,19 @@ class TestAnalyticsSpecificEndpoints:
         }
         mock_service.get_usage_statistics = AsyncMock(return_value=mock_daily_stats)
 
-        response = client.get("/api/analytics/trends?metric=ai_cost&days=3")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/trends?metric=ai_cost&days=3")
         assert response.status_code == 200
 
         data = response.json()
         assert data["metric"] == "ai_cost"
         assert len(data["trends"]) == 3
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_get_trends_unknown_metric(self, mock_service, client):
+    async def test_get_trends_unknown_metric(self, mock_service):
         """Test trends endpoint with unknown metric defaults to 0."""
         mock_daily_stats = {
             "usage": {"total_requests": 100, "unique_sessions": 50},
@@ -421,7 +482,10 @@ class TestAnalyticsSpecificEndpoints:
         }
         mock_service.get_usage_statistics = AsyncMock(return_value=mock_daily_stats)
 
-        response = client.get("/api/analytics/trends?metric=unknown&days=3")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/trends?metric=unknown&days=3")
         assert response.status_code == 200
 
         data = response.json()
@@ -429,13 +493,17 @@ class TestAnalyticsSpecificEndpoints:
         # Values should be 0 for unknown metric
         assert all(trend["value"] == 0 for trend in data["trends"])
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_export_analytics_data_json(self, mock_service, client):
+    async def test_export_analytics_data_json(self, mock_service):
         """Test analytics data export in JSON format."""
         mock_stats = {"usage": {"total_requests": 1000}}
         mock_service.get_usage_statistics = AsyncMock(return_value=mock_stats)
 
-        response = client.get("/api/analytics/export?period=month&format=json")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/export?period=month&format=json")
         assert response.status_code == 200
 
         data = response.json()
@@ -443,13 +511,17 @@ class TestAnalyticsSpecificEndpoints:
         assert data["format"] == "json"
         assert data["data"]["usage"]["total_requests"] == 1000
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_export_analytics_data_csv(self, mock_service, client):
+    async def test_export_analytics_data_csv(self, mock_service):
         """Test analytics data export in CSV format."""
         mock_stats = {"usage": {"total_requests": 1000}}
         mock_service.get_usage_statistics = AsyncMock(return_value=mock_stats)
 
-        response = client.get("/api/analytics/export?period=month&format=csv")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/export?period=month&format=csv")
         assert response.status_code == 200
 
         data = response.json()
@@ -457,9 +529,13 @@ class TestAnalyticsSpecificEndpoints:
         assert data["format"] == "csv"
         assert "CSV export would be implemented" in data["message"]
 
-    def test_generate_session_id_success(self, client):
+    @pytest.mark.asyncio
+    async def test_generate_session_id_success(self):
         """Test session ID generation."""
-        response = client.get("/api/analytics/session/generate")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/session/generate")
         assert response.status_code == 200
 
         data = response.json()
@@ -471,8 +547,9 @@ class TestAnalyticsSpecificEndpoints:
 class TestErrorMetricsEndpoints:
     """Test error metrics endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.error_handler")
-    def test_get_error_metrics_success(self, mock_error_handler, client):
+    async def test_get_error_metrics_success(self, mock_error_handler):
         """Test successful error metrics retrieval."""
         mock_error_stats = {
             "total_errors": 50,
@@ -483,7 +560,10 @@ class TestErrorMetricsEndpoints:
         }
         mock_error_handler.get_error_stats.return_value = mock_error_stats
 
-        response = client.get("/api/analytics/errors/metrics")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/errors/metrics")
         assert response.status_code == 200
 
         data = response.json()
@@ -493,8 +573,9 @@ class TestErrorMetricsEndpoints:
         assert "breakdown" in data["error_metrics"]
         assert "health_indicators" in data["error_metrics"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.error_handler")
-    def test_get_error_metrics_empty_stats(self, mock_error_handler, client):
+    async def test_get_error_metrics_empty_stats(self, mock_error_handler):
         """Test error metrics with empty statistics."""
         mock_error_handler.get_error_stats.return_value = {
             "total_errors": 0,
@@ -504,20 +585,27 @@ class TestErrorMetricsEndpoints:
             "by_severity": {},
         }
 
-        response = client.get("/api/analytics/errors/metrics")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/errors/metrics")
         assert response.status_code == 200
 
         data = response.json()
         assert data["error_metrics"]["summary"]["total_errors"] == 0
         assert data["error_metrics"]["summary"]["recovery_rate_percent"] == 0.0
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.error_handler")
-    def test_reset_error_metrics_success(self, mock_error_handler, client):
+    async def test_reset_error_metrics_success(self, mock_error_handler):
         """Test successful error metrics reset."""
         mock_current_stats = {"total_errors": 25, "by_category": {"api": 10}}
         mock_error_handler.get_error_stats.return_value = mock_current_stats
 
-        response = client.post("/api/analytics/errors/reset")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analytics/errors/reset")
         assert response.status_code == 200
 
         data = response.json()
@@ -525,12 +613,16 @@ class TestErrorMetricsEndpoints:
         assert data["message"] == "Error metrics have been reset"
         assert data["previous_stats"]["total_errors"] == 25
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.error_handler")
-    def test_error_metrics_failure(self, mock_error_handler, client):
+    async def test_error_metrics_failure(self, mock_error_handler):
         """Test error metrics endpoint failure."""
         mock_error_handler.get_error_stats.side_effect = Exception("Stats unavailable")
 
-        response = client.get("/api/analytics/errors/metrics")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/errors/metrics")
         assert response.status_code == 500
         assert "Failed to retrieve error metrics" in response.json()["detail"]
 
@@ -538,8 +630,9 @@ class TestErrorMetricsEndpoints:
 class TestSearchAnalyticsEndpoints:
     """Test search analytics endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
-    def test_get_search_performance_success(self, mock_service, client):
+    async def test_get_search_performance_success(self, mock_service):
         """Test successful search performance retrieval."""
         mock_stats = {
             "total_searches": 500,
@@ -549,27 +642,35 @@ class TestSearchAnalyticsEndpoints:
         }
         mock_service.get_search_performance_stats = AsyncMock(return_value=mock_stats)
 
-        response = client.get("/api/analytics/search/performance?days=30")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/search/performance?days=30")
         assert response.status_code == 200
 
         data = response.json()
         assert data["total_searches"] == 500
         assert data["performance"]["avg_execution_time_ms"] == 150
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
-    def test_get_search_performance_no_data(self, mock_service, client):
+    async def test_get_search_performance_no_data(self, mock_service):
         """Test search performance with no data."""
         mock_service.get_search_performance_stats = AsyncMock(return_value=None)
 
-        response = client.get("/api/analytics/search/performance?days=7")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/search/performance?days=7")
         assert response.status_code == 200
 
         data = response.json()
         assert "No search data found" in data["message"]
         assert data["period_days"] == 7
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
-    def test_get_search_trends_success(self, mock_service, client):
+    async def test_get_search_trends_success(self, mock_service):
         """Test successful search trends retrieval."""
         mock_trends = {
             "daily_volume": [{"date": "2024-01-01", "count": 100}],
@@ -577,27 +678,35 @@ class TestSearchAnalyticsEndpoints:
         }
         mock_service.get_query_trends = AsyncMock(return_value=mock_trends)
 
-        response = client.get("/api/analytics/search/trends?days=7")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/search/trends?days=7")
         assert response.status_code == 200
 
         data = response.json()
         assert len(data["daily_volume"]) == 1
         assert data["daily_volume"][0]["count"] == 100
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
-    def test_get_search_trends_empty(self, mock_service, client):
+    async def test_get_search_trends_empty(self, mock_service):
         """Test search trends with no data."""
         mock_service.get_query_trends = AsyncMock(return_value=None)
 
-        response = client.get("/api/analytics/search/trends?days=14")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/search/trends?days=14")
         assert response.status_code == 200
 
         data = response.json()
         assert "No trend data found" in data["message"]
         assert data["period_days"] == 14
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
-    def test_get_slow_queries_success(self, mock_service, client):
+    async def test_get_slow_queries_success(self, mock_service):
         """Test successful slow queries retrieval."""
         mock_slow_queries = [
             {"query": "complex search", "execution_time_ms": 2500, "count": 5},
@@ -605,33 +714,41 @@ class TestSearchAnalyticsEndpoints:
         ]
         mock_service.get_slow_queries = AsyncMock(return_value=mock_slow_queries)
 
-        response = client.get(
-            "/api/analytics/search/slow-queries?threshold_ms=1000&limit=10"
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/analytics/search/slow-queries?threshold_ms=1000&limit=10"
+            )
         assert response.status_code == 200
 
         data = response.json()
         assert len(data) == 2
         assert data[0]["execution_time_ms"] == 2500
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
-    def test_record_search_feedback_success(self, mock_service, client):
+    async def test_record_search_feedback_success(self, mock_service):
         """Test successful search feedback recording."""
         mock_service.record_user_feedback = AsyncMock()
 
         feedback_data = {"clicked_results": [1, 3, 5], "satisfaction_rating": 4}
 
-        response = client.post(
-            "/api/analytics/search/feedback/search-123", params=feedback_data
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/analytics/search/feedback/search-123", params=feedback_data
+            )
         assert response.status_code == 200
 
         data = response.json()
         assert data["message"] == "Feedback recorded successfully"
         assert data["search_id"] == "search-123"
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
-    def test_get_search_analytics_dashboard_success(self, mock_service, client):
+    async def test_get_search_analytics_dashboard_success(self, mock_service):
         """Test successful search analytics dashboard retrieval."""
         # Mock all required service calls
         mock_performance = {
@@ -653,7 +770,10 @@ class TestSearchAnalyticsEndpoints:
         mock_service.get_query_trends = AsyncMock(return_value=mock_trends)
         mock_service.get_slow_queries = AsyncMock(return_value=mock_slow_queries)
 
-        response = client.get("/api/analytics/search/dashboard")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/search/dashboard")
         assert response.status_code == 200
 
         data = response.json()
@@ -665,14 +785,19 @@ class TestSearchAnalyticsEndpoints:
 class TestAnalyticsEndpointsEdgeCases:
     """Test edge cases and error conditions."""
 
-    def test_track_activity_missing_required_fields(self, client):
+    @pytest.mark.asyncio
+    async def test_track_activity_missing_required_fields(self):
         """Test activity tracking with missing required fields."""
         incomplete_data = {"endpoint": "/api/test/"}  # Missing action_type
 
-        response = client.post("/api/analytics/track/activity", json=incomplete_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analytics/track/activity", json=incomplete_data)
         assert response.status_code == 422
 
-    def test_track_ai_usage_invalid_types(self, client):
+    @pytest.mark.asyncio
+    async def test_track_ai_usage_invalid_types(self):
         """Test AI usage tracking with invalid data types."""
         invalid_data = {
             "service_type": "openai",
@@ -683,58 +808,85 @@ class TestAnalyticsEndpointsEdgeCases:
             "cost_usd": 0.05,
         }
 
-        response = client.post("/api/analytics/track/ai-usage", json=invalid_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/analytics/track/ai-usage", json=invalid_data)
         assert response.status_code == 422
 
-    def test_get_usage_statistics_invalid_period(self, client):
+    @pytest.mark.asyncio
+    async def test_get_usage_statistics_invalid_period(self):
         """Test usage statistics with invalid period."""
-        response = client.get("/api/analytics/statistics?period=invalid_period")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/statistics?period=invalid_period")
         # Should still work as the service handles invalid periods
         assert response.status_code in [200, 400, 500]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_service_unavailable_error(self, mock_service, client):
+    async def test_service_unavailable_error(self, mock_service):
         """Test handling when analytics service is unavailable."""
         mock_service.get_usage_statistics = AsyncMock(
             side_effect=Exception("Service unavailable")
         )
 
-        response = client.get("/api/analytics/statistics")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/statistics")
         assert response.status_code == 500
         assert "Failed to get usage statistics" in response.json()["detail"]
 
-    def test_search_performance_invalid_parameters(self, client):
+    @pytest.mark.asyncio
+    async def test_search_performance_invalid_parameters(self):
         """Test search performance with invalid parameters."""
-        response = client.get(
-            "/api/analytics/search/performance?days=500"
-        )  # Exceeds max
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/analytics/search/performance?days=500"
+            )  # Exceeds max
         assert response.status_code == 422
 
-    def test_slow_queries_invalid_parameters(self, client):
+    @pytest.mark.asyncio
+    async def test_slow_queries_invalid_parameters(self):
         """Test slow queries with invalid parameters."""
-        response = client.get(
-            "/api/analytics/search/slow-queries?threshold_ms=50000"
-        )  # Exceeds max
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/analytics/search/slow-queries?threshold_ms=50000"
+            )  # Exceeds max
         assert response.status_code == 422
 
-    def test_search_feedback_invalid_rating(self, client):
+    @pytest.mark.asyncio
+    async def test_search_feedback_invalid_rating(self):
         """Test search feedback with invalid satisfaction rating."""
-        response = client.post(
-            "/api/analytics/search/feedback/test-123",
-            params={
-                "clicked_results": [1, 2],
-                "satisfaction_rating": 10,
-            },  # Exceeds max of 5
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/analytics/search/feedback/test-123",
+                params={
+                    "clicked_results": [1, 2],
+                    "satisfaction_rating": 10,
+                },  # Exceeds max of 5
+            )
         assert response.status_code == 422
 
 
 class TestSkillsAnalyticsEndpoints:
     """Test skills analytics endpoints."""
 
-    def test_get_skills_inventory_success(self, client):
+    @pytest.mark.asyncio
+    async def test_get_skills_inventory_success(self):
         """Test successful skills inventory retrieval."""
-        response = client.get("/api/analytics/skills/inventory")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/skills/inventory")
         assert response.status_code == 200
 
         data = response.json()
@@ -744,93 +896,137 @@ class TestSkillsAnalyticsEndpoints:
         assert "skills" in data
         assert isinstance(data["skills"], list)
 
-    def test_get_skills_inventory_with_search(self, client):
+    @pytest.mark.asyncio
+    async def test_get_skills_inventory_with_search(self):
         """Test skills inventory with search filter."""
-        response = client.get("/api/analytics/skills/inventory?search=python")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/skills/inventory?search=python")
         assert response.status_code == 200
 
         data = response.json()
         assert "skills" in data
 
-    def test_get_skills_inventory_with_skill_type(self, client):
+    @pytest.mark.asyncio
+    async def test_get_skills_inventory_with_skill_type(self):
         """Test skills inventory with skill type filter."""
-        response = client.get("/api/analytics/skills/inventory?skill_type=technical")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/skills/inventory?skill_type=technical")
         assert response.status_code == 200
 
         data = response.json()
         assert "skills" in data
 
-    def test_get_skills_inventory_with_min_job_count(self, client):
+    @pytest.mark.asyncio
+    async def test_get_skills_inventory_with_min_job_count(self):
         """Test skills inventory with minimum job count filter."""
-        response = client.get("/api/analytics/skills/inventory?min_job_count=5")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/skills/inventory?min_job_count=5")
         assert response.status_code == 200
 
         data = response.json()
         assert "skills" in data
 
-    def test_get_skills_inventory_with_pagination(self, client):
+    @pytest.mark.asyncio
+    async def test_get_skills_inventory_with_pagination(self):
         """Test skills inventory with pagination parameters."""
-        response = client.get("/api/analytics/skills/inventory?limit=50&offset=10")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/skills/inventory?limit=50&offset=10")
         assert response.status_code == 200
 
         data = response.json()
         assert data["limit"] == 50
         assert data["offset"] == 10
 
-    def test_get_skills_inventory_with_all_filters(self, client):
+    @pytest.mark.asyncio
+    async def test_get_skills_inventory_with_all_filters(self):
         """Test skills inventory with all filters combined."""
-        response = client.get(
-            "/api/analytics/skills/inventory?search=data&skill_type=technical&min_job_count=3&limit=20"
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/analytics/skills/inventory?search=data&skill_type=technical&min_job_count=3&limit=20"
+            )
         assert response.status_code == 200
 
         data = response.json()
         assert "skills" in data
         assert data["limit"] == 20
 
-    def test_get_top_skills_success(self, client):
+    @pytest.mark.asyncio
+    async def test_get_top_skills_success(self):
         """Test successful top skills retrieval."""
-        response = client.get("/api/analytics/skills/top")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/skills/top")
         assert response.status_code == 200
 
         data = response.json()
         assert "top_skills" in data
         assert isinstance(data["top_skills"], list)
 
-    def test_get_top_skills_with_limit(self, client):
+    @pytest.mark.asyncio
+    async def test_get_top_skills_with_limit(self):
         """Test top skills with custom limit."""
-        response = client.get("/api/analytics/skills/top?limit=20")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/skills/top?limit=20")
         assert response.status_code == 200
 
         data = response.json()
         assert "top_skills" in data
 
-    def test_get_top_skills_with_type_filter(self, client):
+    @pytest.mark.asyncio
+    async def test_get_top_skills_with_type_filter(self):
         """Test top skills filtered by skill type."""
-        response = client.get("/api/analytics/skills/top?skill_type=soft")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/skills/top?skill_type=soft")
         assert response.status_code == 200
 
         data = response.json()
         assert "top_skills" in data
 
-    def test_get_top_skills_limit_validation(self, client):
+    @pytest.mark.asyncio
+    async def test_get_top_skills_limit_validation(self):
         """Test top skills limit validation."""
         # Test exceeding max limit
-        response = client.get("/api/analytics/skills/top?limit=200")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/skills/top?limit=200")
         assert response.status_code == 422
 
-    def test_get_skill_types_success(self, client):
+    @pytest.mark.asyncio
+    async def test_get_skill_types_success(self):
         """Test successful skill types distribution retrieval."""
-        response = client.get("/api/analytics/skills/types")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/skills/types")
         assert response.status_code == 200
 
         data = response.json()
         assert "skill_types" in data
         assert isinstance(data["skill_types"], list)
 
-    def test_get_skills_statistics_success(self, client):
+    @pytest.mark.asyncio
+    async def test_get_skills_statistics_success(self):
         """Test successful skills statistics retrieval."""
-        response = client.get("/api/analytics/skills/stats")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/skills/stats")
         assert response.status_code == 200
 
         data = response.json()
@@ -841,72 +1037,104 @@ class TestSkillsAnalyticsEndpoints:
             or "statistics" in data
         )
 
-    def test_skills_inventory_invalid_min_job_count(self, client):
+    @pytest.mark.asyncio
+    async def test_skills_inventory_invalid_min_job_count(self):
         """Test skills inventory with invalid min_job_count."""
-        response = client.get("/api/analytics/skills/inventory?min_job_count=0")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/skills/inventory?min_job_count=0")
         assert response.status_code == 422
 
-    def test_skills_inventory_invalid_limit(self, client):
+    @pytest.mark.asyncio
+    async def test_skills_inventory_invalid_limit(self):
         """Test skills inventory with invalid limit."""
-        response = client.get("/api/analytics/skills/inventory?limit=2000")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/skills/inventory?limit=2000")
         assert response.status_code == 422
 
-    def test_skills_inventory_invalid_offset(self, client):
+    @pytest.mark.asyncio
+    async def test_skills_inventory_invalid_offset(self):
         """Test skills inventory with invalid offset."""
-        response = client.get("/api/analytics/skills/inventory?offset=-1")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/skills/inventory?offset=-1")
         assert response.status_code == 422
 
 
 class TestAnalyticsErrorHandling:
     """Test error handling across analytics endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_dashboard_service_error(self, mock_service, client):
+    async def test_dashboard_service_error(self, mock_service):
         """Test dashboard endpoint with service error."""
         mock_service.get_analytics_dashboard = AsyncMock(
             side_effect=Exception("Dashboard service failed")
         )
 
-        response = client.get("/api/analytics/dashboard")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/dashboard")
         assert response.status_code == 500
         assert "Failed to generate analytics dashboard" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.analytics_service")
-    def test_search_patterns_service_error(self, mock_service, client):
+    async def test_search_patterns_service_error(self, mock_service):
         """Test search patterns endpoint with service error."""
         mock_service.get_usage_statistics = AsyncMock(
             side_effect=Exception("Search patterns failed")
         )
 
-        response = client.get("/api/analytics/search-patterns")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/search-patterns")
         assert response.status_code == 500
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
-    def test_search_performance_service_error(self, mock_service, client):
+    async def test_search_performance_service_error(self, mock_service):
         """Test search performance endpoint with service error."""
         mock_service.get_search_performance_stats = AsyncMock(
             side_effect=Exception("Performance stats failed")
         )
 
-        response = client.get("/api/analytics/search/performance")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/search/performance")
         assert response.status_code == 500
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
-    def test_search_trends_service_error(self, mock_service, client):
+    async def test_search_trends_service_error(self, mock_service):
         """Test search trends endpoint with service error."""
         mock_service.get_query_trends = AsyncMock(
             side_effect=Exception("Trends service failed")
         )
 
-        response = client.get("/api/analytics/search/trends")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/search/trends")
         assert response.status_code == 500
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.analytics.search_analytics_service")
-    def test_slow_queries_service_error(self, mock_service, client):
+    async def test_slow_queries_service_error(self, mock_service):
         """Test slow queries endpoint with service error."""
         mock_service.get_slow_queries = AsyncMock(
             side_effect=Exception("Slow queries failed")
         )
 
-        response = client.get("/api/analytics/search/slow-queries")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/analytics/search/slow-queries")
         assert response.status_code == 500
