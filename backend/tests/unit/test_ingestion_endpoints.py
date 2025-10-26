@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime
 from pathlib import Path
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 from fastapi import UploadFile
 import tempfile
 import os
@@ -15,12 +15,6 @@ from jd_ingestion.api.main import app
 from jd_ingestion.database.models import (
     ContentChunk,
 )
-
-
-@pytest.fixture
-def client():
-    """Create test client."""
-    return TestClient(app)
 
 
 @pytest.fixture
@@ -98,9 +92,10 @@ def sample_processed_content():
 class TestScanDirectoryEndpoint:
     """Test scan directory endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.FileDiscovery")
-    def test_scan_directory_success(
-        self, mock_file_discovery_class, client, sample_file_metadata
+    async def test_scan_directory_success(
+        self, mock_file_discovery_class, sample_file_metadata
     ):
         """Test successful directory scanning."""
         # Mock FileDiscovery instance
@@ -115,10 +110,11 @@ class TestScanDirectoryEndpoint:
         }
         mock_file_discovery_class.return_value = mock_discovery
 
-        response = client.post(
-            "/api/ingestion/scan-directory",
-            params={"directory_path": "/test/path", "recursive": True},
-        )
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.post(
+                "/api/ingestion/scan-directory",
+                params={"directory_path": "/test/path", "recursive": True},
+            )
         assert response.status_code == 200
 
         data = response.json()
@@ -128,23 +124,27 @@ class TestScanDirectoryEndpoint:
         assert len(data["files"]) == 1
         assert data["files"][0]["job_number"] == "12345"
 
-    def test_scan_directory_nonexistent(self, client):
+    @pytest.mark.asyncio
+    async def test_scan_directory_nonexistent(self):
         """Test scanning non-existent directory."""
-        response = client.post(
-            "/api/ingestion/scan-directory",
-            params={"directory_path": "/nonexistent/path"},
-        )
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.post(
+                "/api/ingestion/scan-directory",
+                params={"directory_path": "/nonexistent/path"},
+            )
         assert response.status_code == 400
         assert "Directory does not exist" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.FileDiscovery")
-    def test_scan_directory_error(self, mock_file_discovery_class, client):
+    async def test_scan_directory_error(self, mock_file_discovery_class):
         """Test directory scanning with error."""
         mock_file_discovery_class.side_effect = Exception("Scan failed")
 
-        response = client.post(
-            "/api/ingestion/scan-directory", params={"directory_path": "/test/path"}
-        )
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.post(
+                "/api/ingestion/scan-directory", params={"directory_path": "/test/path"}
+            )
         assert response.status_code == 500
         assert "Scan failed" in response.json()["detail"]
 
@@ -152,15 +152,15 @@ class TestScanDirectoryEndpoint:
 class TestProcessFileEndpoint:
     """Test process file endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.ContentProcessor")
     @patch("jd_ingestion.api.endpoints.ingestion.FileDiscovery")
     @patch("builtins.open", create=True)
-    def test_process_file_success(
+    async def test_process_file_success(
         self,
         mock_open,
         mock_file_discovery_class,
         mock_content_processor_class,
-        client,
         sample_file_metadata,
         sample_processed_content,
     ):
@@ -182,10 +182,11 @@ class TestProcessFileEndpoint:
         mock_content_processor_class.return_value = mock_processor
 
         with patch("pathlib.Path.exists", return_value=True):
-            response = client.post(
-                "/api/ingestion/process-file",
-                params={"file_path": "/test/file.txt", "save_to_db": False},
-            )
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                response = await ac.post(
+                    "/api/ingestion/process-file",
+                    params={"file_path": "/test/file.txt", "save_to_db": False},
+                )
 
         assert response.status_code == 200
         data = response.json()
@@ -193,25 +194,27 @@ class TestProcessFileEndpoint:
         assert data["file_path"] == "/test/file.txt"
         assert data["processed_content"]["chunks_generated"] == 2
 
-    def test_process_file_nonexistent(self, client):
+    @pytest.mark.asyncio
+    async def test_process_file_nonexistent(self):
         """Test processing non-existent file."""
-        response = client.post(
-            "/api/ingestion/process-file", params={"file_path": "/nonexistent/file.txt"}
-        )
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.post(
+                "/api/ingestion/process-file", params={"file_path": "/nonexistent/file.txt"}
+            )
         assert response.status_code == 400
         assert "File does not exist" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.ContentProcessor")
     @patch("jd_ingestion.api.endpoints.ingestion.FileDiscovery")
     @patch("jd_ingestion.api.endpoints.ingestion.embedding_service")
     @patch("builtins.open", create=True)
-    def test_process_file_with_database_save(
+    async def test_process_file_with_database_save(
         self,
         mock_open,
         mock_embedding_service,
         mock_file_discovery_class,
         mock_content_processor_class,
-        client,
         sample_file_metadata,
         sample_processed_content,
     ):
@@ -253,22 +256,23 @@ class TestProcessFileEndpoint:
                 mock_result.scalars.return_value.all.return_value = [mock_chunk]
                 mock_db.execute = AsyncMock(return_value=mock_result)
 
-                response = client.post(
-                    "/api/ingestion/process-file",
-                    params={"file_path": "/test/file.txt", "save_to_db": True},
-                )
+                async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                    response = await ac.post(
+                        "/api/ingestion/process-file",
+                        params={"file_path": "/test/file.txt", "save_to_db": True},
+                    )
 
         assert response.status_code == 200
         data = response.json()
         assert data["saved_to_database"] is True
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.Document")
     @patch("jd_ingestion.api.endpoints.ingestion.FileDiscovery")
-    def test_process_docx_file(
+    async def test_process_docx_file(
         self,
         mock_file_discovery_class,
         mock_document_class,
-        client,
         sample_file_metadata,
     ):
         """Test processing .docx file."""
@@ -289,16 +293,18 @@ class TestProcessFileEndpoint:
                 "pathlib.Path.suffix",
                 new_callable=lambda: property(lambda self: ".docx"),
             ):
-                response = client.post(
-                    "/api/ingestion/process-file",
-                    params={"file_path": "/test/file.docx", "save_to_db": False},
-                )
+                async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                    response = await ac.post(
+                        "/api/ingestion/process-file",
+                        params={"file_path": "/test/file.docx", "save_to_db": False},
+                    )
 
         assert response.status_code == 200
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.FileDiscovery")
-    def test_process_pdf_file_not_implemented(
-        self, mock_file_discovery_class, client, sample_file_metadata
+    async def test_process_pdf_file_not_implemented(
+        self, mock_file_discovery_class, sample_file_metadata
     ):
         """Test processing .pdf file (not yet implemented)."""
         mock_discovery = Mock()
@@ -310,10 +316,11 @@ class TestProcessFileEndpoint:
                 "pathlib.Path.suffix",
                 new_callable=lambda: property(lambda self: ".pdf"),
             ):
-                response = client.post(
-                    "/api/ingestion/process-file",
-                    params={"file_path": "/test/file.pdf", "save_to_db": False},
-                )
+                async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                    response = await ac.post(
+                        "/api/ingestion/process-file",
+                        params={"file_path": "/test/file.pdf", "save_to_db": False},
+                    )
 
         assert response.status_code == 200
         data = response.json()
@@ -326,9 +333,10 @@ class TestProcessFileEndpoint:
 class TestBatchIngestEndpoint:
     """Test batch ingest endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.FileDiscovery")
-    def test_batch_ingest_success(
-        self, mock_file_discovery_class, client, sample_file_metadata
+    async def test_batch_ingest_success(
+        self, mock_file_discovery_class, sample_file_metadata
     ):
         """Test successful batch ingestion."""
         mock_discovery = Mock()
@@ -336,22 +344,24 @@ class TestBatchIngestEndpoint:
         mock_file_discovery_class.return_value = mock_discovery
 
         with patch("pathlib.Path.exists", return_value=True):
-            response = client.post(
-                "/api/ingestion/batch-ingest",
-                params={
-                    "directory_path": "/test/path",
-                    "recursive": True,
-                    "max_files": 10,
-                },
-            )
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                response = await ac.post(
+                    "/api/ingestion/batch-ingest",
+                    params={
+                        "directory_path": "/test/path",
+                        "recursive": True,
+                        "max_files": 10,
+                    },
+                )
 
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "started"
         assert data["files_to_process"] == 1
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.FileDiscovery")
-    def test_batch_ingest_no_valid_files(self, mock_file_discovery_class, client):
+    async def test_batch_ingest_no_valid_files(self, mock_file_discovery_class):
         """Test batch ingestion with no valid files."""
         invalid_metadata = Mock()
         invalid_metadata.is_valid = False
@@ -361,19 +371,22 @@ class TestBatchIngestEndpoint:
         mock_file_discovery_class.return_value = mock_discovery
 
         with patch("pathlib.Path.exists", return_value=True):
-            response = client.post(
-                "/api/ingestion/batch-ingest", params={"directory_path": "/test/path"}
-            )
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                response = await ac.post(
+                    "/api/ingestion/batch-ingest", params={"directory_path": "/test/path"}
+                )
 
         assert response.status_code == 400
         assert "No valid files found" in response.json()["detail"]
 
-    def test_batch_ingest_nonexistent_directory(self, client):
+    @pytest.mark.asyncio
+    async def test_batch_ingest_nonexistent_directory(self):
         """Test batch ingestion with non-existent directory."""
-        response = client.post(
-            "/api/ingestion/batch-ingest",
-            params={"directory_path": "/nonexistent/path"},
-        )
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.post(
+                "/api/ingestion/batch-ingest",
+                params={"directory_path": "/nonexistent/path"},
+            )
         assert response.status_code == 400
         assert "Directory does not exist" in response.json()["detail"]
 
@@ -381,9 +394,10 @@ class TestBatchIngestEndpoint:
 class TestUploadFileEndpoint:
     """Test upload file endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.process_single_file")
     @patch("jd_ingestion.api.endpoints.ingestion.settings")
-    def test_upload_file_success(self, mock_settings, mock_process_file, client):
+    async def test_upload_file_success(self, mock_settings, mock_process_file):
         """Test successful file upload."""
         # Mock settings
         mock_settings.supported_extensions_list = [".txt", ".docx", ".pdf"]
@@ -406,10 +420,11 @@ class TestUploadFileEndpoint:
 
             try:
                 with open(tmp_file.name, "rb") as file:
-                    response = client.post(
-                        "/api/ingestion/upload",
-                        files={"file": ("test.txt", file, "text/plain")},
-                    )
+                    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                        response = await ac.post(
+                            "/api/ingestion/upload",
+                            files={"file": ("test.txt", file, "text/plain")},
+                        )
 
                 assert response.status_code == 200
                 data = response.json()
@@ -418,16 +433,19 @@ class TestUploadFileEndpoint:
             finally:
                 os.unlink(tmp_file.name)
 
-    def test_upload_file_no_filename(self, client):
+    @pytest.mark.asyncio
+    async def test_upload_file_no_filename(self):
         """Test upload with no filename."""
-        response = client.post(
-            "/api/ingestion/upload", files={"file": ("", b"content", "text/plain")}
-        )
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.post(
+                "/api/ingestion/upload", files={"file": ("", b"content", "text/plain")}
+            )
         assert response.status_code == 400
         assert "No filename provided" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.settings")
-    def test_upload_file_unsupported_extension(self, mock_settings, client):
+    async def test_upload_file_unsupported_extension(self, mock_settings):
         """Test upload with unsupported file extension."""
         mock_settings.supported_extensions_list = [".txt"]
 
@@ -437,18 +455,20 @@ class TestUploadFileEndpoint:
 
             try:
                 with open(tmp_file.name, "rb") as file:
-                    response = client.post(
-                        "/api/ingestion/upload",
-                        files={"file": ("test.xyz", file, "application/octet-stream")},
-                    )
+                    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                        response = await ac.post(
+                            "/api/ingestion/upload",
+                            files={"file": ("test.xyz", file, "application/octet-stream")},
+                        )
 
                 assert response.status_code == 400
                 assert "Unsupported file extension" in response.json()["detail"]
             finally:
                 os.unlink(tmp_file.name)
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.settings")
-    def test_upload_file_too_large(self, mock_settings, client):
+    async def test_upload_file_too_large(self, mock_settings):
         """Test upload with file too large."""
         mock_settings.supported_extensions_list = [".txt"]
         mock_settings.max_file_size_mb = 1  # 1MB limit
@@ -467,7 +487,8 @@ class TestUploadFileEndpoint:
 class TestIngestionStatsEndpoint:
     """Test ingestion statistics endpoint."""
 
-    def test_get_ingestion_stats_success(self, client):
+    @pytest.mark.asyncio
+    async def test_get_ingestion_stats_success(self):
         """Test successful ingestion statistics retrieval."""
         with patch(
             "jd_ingestion.api.endpoints.ingestion.get_async_session"
@@ -482,7 +503,8 @@ class TestIngestionStatsEndpoint:
             mock_result.scalar_one_or_none.return_value = datetime.now()
             mock_db.execute.return_value = mock_result
 
-            response = client.get("/api/ingestion/stats")
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                response = await ac.get("/api/ingestion/stats")
             assert response.status_code == 200
 
             data = response.json()
@@ -491,7 +513,8 @@ class TestIngestionStatsEndpoint:
             assert "processing_status" in data
             assert "embedding_stats" in data
 
-    def test_get_ingestion_stats_error(self, client):
+    @pytest.mark.asyncio
+    async def test_get_ingestion_stats_error(self):
         """Test ingestion statistics with database error."""
         with patch(
             "jd_ingestion.api.endpoints.ingestion.get_async_session"
@@ -500,7 +523,8 @@ class TestIngestionStatsEndpoint:
             mock_session.return_value.__aenter__.return_value = mock_db
             mock_db.execute.side_effect = Exception("Database error")
 
-            response = client.get("/api/ingestion/stats")
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                response = await ac.get("/api/ingestion/stats")
             assert response.status_code == 500
             assert (
                 "Failed to retrieve ingestion statistics" in response.json()["detail"]
@@ -510,8 +534,9 @@ class TestIngestionStatsEndpoint:
 class TestTaskStatsEndpoint:
     """Test task statistics endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.celery_app")
-    def test_get_task_stats_success(self, mock_celery_app, client):
+    async def test_get_task_stats_success(self, mock_celery_app):
         """Test successful task statistics retrieval."""
         # Mock Celery inspect
         mock_inspect = Mock()
@@ -532,7 +557,8 @@ class TestTaskStatsEndpoint:
 
         mock_celery_app.control.inspect.return_value = mock_inspect
 
-        response = client.get("/api/ingestion/task-stats")
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.get("/api/ingestion/task-stats")
         assert response.status_code == 200
 
         data = response.json()
@@ -541,12 +567,14 @@ class TestTaskStatsEndpoint:
         assert data["task_stats"]["active_tasks"] == 2
         assert data["task_stats"]["workers_online"] == 1
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.celery_app")
-    def test_get_task_stats_celery_unavailable(self, mock_celery_app, client):
+    async def test_get_task_stats_celery_unavailable(self, mock_celery_app):
         """Test task statistics when Celery is unavailable."""
         mock_celery_app.control.inspect.side_effect = Exception("Celery unavailable")
 
-        response = client.get("/api/ingestion/task-stats")
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.get("/api/ingestion/task-stats")
         assert response.status_code == 200
 
         data = response.json()
@@ -557,7 +585,8 @@ class TestTaskStatsEndpoint:
 class TestEmbeddingGenerationEndpoint:
     """Test embedding generation endpoint."""
 
-    def test_generate_embeddings_success(self, client):
+    @pytest.mark.asyncio
+    async def test_generate_embeddings_success(self):
         """Test successful embedding generation start."""
         with patch(
             "jd_ingestion.api.endpoints.ingestion.get_async_session"
@@ -575,14 +604,16 @@ class TestEmbeddingGenerationEndpoint:
             mock_result.scalars.return_value.all.return_value = [mock_chunk]
             mock_db.execute.return_value = mock_result
 
-            response = client.post("/api/ingestion/generate-embeddings")
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                response = await ac.post("/api/ingestion/generate-embeddings")
             assert response.status_code == 200
 
             data = response.json()
             assert data["status"] == "started"
             assert data["chunks_to_process"] == 1
 
-    def test_generate_embeddings_no_chunks(self, client):
+    @pytest.mark.asyncio
+    async def test_generate_embeddings_no_chunks(self):
         """Test embedding generation with no chunks to process."""
         with patch(
             "jd_ingestion.api.endpoints.ingestion.get_async_session"
@@ -594,14 +625,16 @@ class TestEmbeddingGenerationEndpoint:
             mock_result.scalars.return_value.all.return_value = []
             mock_db.execute.return_value = mock_result
 
-            response = client.post("/api/ingestion/generate-embeddings")
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                response = await ac.post("/api/ingestion/generate-embeddings")
             assert response.status_code == 200
 
             data = response.json()
             assert data["status"] == "success"
             assert data["chunks_processed"] == 0
 
-    def test_generate_embeddings_with_job_ids(self, client):
+    @pytest.mark.asyncio
+    async def test_generate_embeddings_with_job_ids(self):
         """Test embedding generation for specific job IDs."""
         with patch(
             "jd_ingestion.api.endpoints.ingestion.get_async_session"
@@ -613,25 +646,28 @@ class TestEmbeddingGenerationEndpoint:
             mock_result.scalars.return_value.all.return_value = []
             mock_db.execute.return_value = mock_result
 
-            response = client.post(
-                "/api/ingestion/generate-embeddings",
-                params={"job_ids": [1, 2, 3], "force_regenerate": True},
-            )
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                response = await ac.post(
+                    "/api/ingestion/generate-embeddings",
+                    params={"job_ids": [1, 2, 3], "force_regenerate": True},
+                )
             assert response.status_code == 200
 
 
 class TestResilienceStatusEndpoint:
     """Test resilience status endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.circuit_breaker_manager")
-    def test_get_resilience_status_healthy(self, mock_cb_manager, client):
+    async def test_get_resilience_status_healthy(self, mock_cb_manager):
         """Test resilience status when all services are healthy."""
         mock_cb_manager.get_all_metrics.return_value = {
             "openai_api": {"state": "closed", "failure_count": 0},
             "database": {"state": "closed", "failure_count": 0},
         }
 
-        response = client.get("/api/ingestion/resilience-status")
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.get("/api/ingestion/resilience-status")
         assert response.status_code == 200
 
         data = response.json()
@@ -639,15 +675,17 @@ class TestResilienceStatusEndpoint:
         assert data["overall_health"] == "healthy"
         assert len(data["degraded_services"]) == 0
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.circuit_breaker_manager")
-    def test_get_resilience_status_degraded(self, mock_cb_manager, client):
+    async def test_get_resilience_status_degraded(self, mock_cb_manager):
         """Test resilience status when services are degraded."""
         mock_cb_manager.get_all_metrics.return_value = {
             "openai_api": {"state": "open", "failure_count": 5, "recovery_timeout": 60},
             "database": {"state": "closed", "failure_count": 0},
         }
 
-        response = client.get("/api/ingestion/resilience-status")
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.get("/api/ingestion/resilience-status")
         assert response.status_code == 200
 
         data = response.json()
@@ -655,12 +693,14 @@ class TestResilienceStatusEndpoint:
         assert "embedding_service" in data["degraded_services"]
         assert len(data["recommendations"]) > 0
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.circuit_breaker_manager")
-    def test_get_resilience_status_error(self, mock_cb_manager, client):
+    async def test_get_resilience_status_error(self, mock_cb_manager):
         """Test resilience status with error."""
         mock_cb_manager.get_all_metrics.side_effect = Exception("Circuit breaker error")
 
-        response = client.get("/api/ingestion/resilience-status")
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.get("/api/ingestion/resilience-status")
         assert response.status_code == 200
 
         data = response.json()
@@ -670,17 +710,19 @@ class TestResilienceStatusEndpoint:
 class TestCircuitBreakerResetEndpoint:
     """Test circuit breaker reset endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.circuit_breaker_manager")
-    def test_reset_specific_circuit_breaker(self, mock_cb_manager, client):
+    async def test_reset_specific_circuit_breaker(self, mock_cb_manager):
         """Test resetting specific circuit breaker."""
         mock_breaker = Mock()
         mock_breaker.reset = Mock()
         mock_cb_manager._breakers = {"openai_api": mock_breaker}
 
-        response = client.post(
-            "/api/ingestion/reset-circuit-breakers",
-            params={"service_name": "openai_api"},
-        )
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.post(
+                "/api/ingestion/reset-circuit-breakers",
+                params={"service_name": "openai_api"},
+            )
         assert response.status_code == 200
 
         data = response.json()
@@ -688,27 +730,31 @@ class TestCircuitBreakerResetEndpoint:
         assert "openai_api" in data["message"]
         mock_breaker.reset.assert_called_once()
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.circuit_breaker_manager")
-    def test_reset_nonexistent_circuit_breaker(self, mock_cb_manager, client):
+    async def test_reset_nonexistent_circuit_breaker(self, mock_cb_manager):
         """Test resetting non-existent circuit breaker."""
         mock_cb_manager._breakers = {}
 
-        response = client.post(
-            "/api/ingestion/reset-circuit-breakers",
-            params={"service_name": "nonexistent"},
-        )
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.post(
+                "/api/ingestion/reset-circuit-breakers",
+                params={"service_name": "nonexistent"},
+            )
         assert response.status_code == 200
 
         data = response.json()
         assert data["status"] == "error"
         assert "not found" in data["message"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.circuit_breaker_manager")
-    def test_reset_all_circuit_breakers(self, mock_cb_manager, client):
+    async def test_reset_all_circuit_breakers(self, mock_cb_manager):
         """Test resetting all circuit breakers."""
         mock_cb_manager.reset_all = Mock()
 
-        response = client.post("/api/ingestion/reset-circuit-breakers")
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.post("/api/ingestion/reset-circuit-breakers")
         assert response.status_code == 200
 
         data = response.json()
@@ -716,12 +762,14 @@ class TestCircuitBreakerResetEndpoint:
         assert "All circuit breakers reset" in data["message"]
         mock_cb_manager.reset_all.assert_called_once()
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.circuit_breaker_manager")
-    def test_reset_circuit_breakers_error(self, mock_cb_manager, client):
+    async def test_reset_circuit_breakers_error(self, mock_cb_manager):
         """Test circuit breaker reset with error."""
         mock_cb_manager.reset_all.side_effect = Exception("Reset failed")
 
-        response = client.post("/api/ingestion/reset-circuit-breakers")
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.post("/api/ingestion/reset-circuit-breakers")
         assert response.status_code == 500
         assert "Failed to reset circuit breakers" in response.json()["detail"]
 
@@ -729,40 +777,47 @@ class TestCircuitBreakerResetEndpoint:
 class TestIngestionEndpointsEdgeCases:
     """Test edge cases and error conditions."""
 
-    def test_missing_required_parameters(self, client):
+    @pytest.mark.asyncio
+    async def test_missing_required_parameters(self):
         """Test endpoints with missing required parameters."""
-        response = client.post("/api/ingestion/scan-directory")
-        assert response.status_code == 422
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.post("/api/ingestion/scan-directory")
+            assert response.status_code == 422
 
-        response = client.post("/api/ingestion/process-file")
-        assert response.status_code == 422
+            response = await ac.post("/api/ingestion/process-file")
+            assert response.status_code == 422
 
-        response = client.post("/api/ingestion/batch-ingest")
-        assert response.status_code == 422
+            response = await ac.post("/api/ingestion/batch-ingest")
+            assert response.status_code == 422
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.get_async_session")
-    def test_database_connection_error(self, mock_session, client):
+    async def test_database_connection_error(self, mock_session):
         """Test handling database connection errors."""
         mock_session.side_effect = Exception("Database connection failed")
 
-        response = client.get("/api/ingestion/stats")
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            response = await ac.get("/api/ingestion/stats")
         assert response.status_code == 500
 
-    def test_invalid_file_paths(self, client):
+    @pytest.mark.asyncio
+    async def test_invalid_file_paths(self):
         """Test endpoints with invalid file paths."""
-        # Invalid characters in path
-        response = client.post(
-            "/api/ingestion/process-file", params={"file_path": "invalid<>path"}
-        )
-        assert response.status_code in [400, 500]
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            # Invalid characters in path
+            response = await ac.post(
+                "/api/ingestion/process-file", params={"file_path": "invalid<>path"}
+            )
+            assert response.status_code in [400, 500]
 
-        # Empty path
-        response = client.post("/api/ingestion/process-file", params={"file_path": ""})
-        assert response.status_code == 422
+            # Empty path
+            response = await ac.post("/api/ingestion/process-file", params={"file_path": ""})
+            assert response.status_code == 422
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.ingestion.FileDiscovery")
-    def test_file_processing_with_encoding_error(
-        self, mock_file_discovery_class, client, sample_file_metadata
+    async def test_file_processing_with_encoding_error(
+        self, mock_file_discovery_class, sample_file_metadata
     ):
         """Test file processing with encoding errors."""
         mock_discovery = Mock()
@@ -774,13 +829,15 @@ class TestIngestionEndpointsEdgeCases:
                 "builtins.open",
                 side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid"),
             ):
-                response = client.post(
-                    "/api/ingestion/process-file",
-                    params={"file_path": "/test/file.txt"},
-                )
+                async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                    response = await ac.post(
+                        "/api/ingestion/process-file",
+                        params={"file_path": "/test/file.txt"},
+                    )
                 assert response.status_code == 500
 
-    def test_large_response_truncation(self, client):
+    @pytest.mark.asyncio
+    async def test_large_response_truncation(self):
         """Test that large file lists are truncated in responses."""
         with patch(
             "jd_ingestion.api.endpoints.ingestion.FileDiscovery"
@@ -809,10 +866,11 @@ class TestIngestionEndpointsEdgeCases:
             mock_discovery_class.return_value = mock_discovery
 
             with patch("pathlib.Path.exists", return_value=True):
-                response = client.post(
-                    "/api/ingestion/scan-directory",
-                    params={"directory_path": "/test/path"},
-                )
+                async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                    response = await ac.post(
+                        "/api/ingestion/scan-directory",
+                        params={"directory_path": "/test/path"},
+                    )
 
             assert response.status_code == 200
             data = response.json()

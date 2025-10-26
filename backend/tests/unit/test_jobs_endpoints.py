@@ -6,7 +6,7 @@ import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock, patch
 from fastapi import HTTPException
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 
 from jd_ingestion.api.main import app
 from jd_ingestion.database.models import JobDescription, JobSection
@@ -605,27 +605,27 @@ class TestExportFormats:
 class TestJobsEndpointsIntegration:
     """Test jobs endpoints integration."""
 
-    def test_jobs_endpoints_with_test_client(self):
+    @pytest.mark.asyncio
+    async def test_jobs_endpoints_with_test_client(self):
         """Test jobs endpoints through test client."""
-        client = TestClient(app)
-
         # Test that endpoints are properly routed
         endpoints_to_test = [
             "/api/jobs/status",
             "/api/jobs/export/formats",
         ]
 
-        for endpoint in endpoints_to_test:
-            response = client.get(endpoint, headers={"X-API-Key": "test_key"})
-            # Should not be 404 (route not found) - could be 401, 403, or 500 due to auth/db issues
-            assert response.status_code != 404, (
-                f"Endpoint {endpoint} not properly routed"
-            )
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            for endpoint in endpoints_to_test:
+                response = await ac.get(endpoint, headers={"X-API-Key": "test_key"})
+                # Should not be 404 (route not found) - could be 401, 403, or 500 due to auth/db issues
+                assert response.status_code != 404, (
+                    f"Endpoint {endpoint} not properly routed"
+                )
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.jobs.get_api_key")
-    def test_api_key_required(self, mock_get_api_key):
+    async def test_api_key_required(self, mock_get_api_key):
         """Test that API key is required for all endpoints."""
-        client = TestClient(app)
         mock_get_api_key.side_effect = HTTPException(
             status_code=403, detail="Invalid API key"
         )
@@ -638,9 +638,10 @@ class TestJobsEndpointsIntegration:
             "/api/jobs/export/formats",
         ]
 
-        for endpoint in endpoints:
-            response = client.get(endpoint)
-            assert response.status_code == 403
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            for endpoint in endpoints:
+                response = await ac.get(endpoint)
+                assert response.status_code == 403
 
 
 class TestJobsEndpointValidation:
@@ -666,14 +667,14 @@ class TestJobsEndpointValidation:
                 api_key="test_key",
             )
 
-    def test_job_id_validation_via_client(self):
+    @pytest.mark.asyncio
+    async def test_job_id_validation_via_client(self):
         """Test job ID validation through test client."""
-        client = TestClient(app)
-
-        # Test with invalid job ID (string instead of int)
-        response = client.get("/api/jobs/invalid_id", headers={"X-API-Key": "test_key"})
-        # Should be 422 (validation error) or handled by FastAPI
-        assert response.status_code in [422, 404, 401, 403, 500]
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            # Test with invalid job ID (string instead of int)
+            response = await ac.get("/api/jobs/invalid_id", headers={"X-API-Key": "test_key"})
+            # Should be 422 (validation error) or handled by FastAPI
+            assert response.status_code in [422, 404, 401, 403, 500]
 
 
 class TestJobsEndpointErrorHandling:
