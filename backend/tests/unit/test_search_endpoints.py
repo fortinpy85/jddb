@@ -86,11 +86,7 @@ class TestSearchJobsEndpoints:
     @patch("jd_ingestion.api.endpoints.search.search_analytics_service")
     @patch("jd_ingestion.api.endpoints.search.embedding_service")
     async def test_search_jobs_get_success(
-        self,
-        mock_embedding_service,
-        mock_analytics_service,
-        async_client,
-        async_session,
+        self, mock_embedding_service, mock_analytics_service
     ):
         """Test successful GET search."""
         mock_analytics_service.start_search_session = AsyncMock(
@@ -110,28 +106,26 @@ class TestSearchJobsEndpoints:
             ]
         )
 
-        # Create a test job in the database
-        from jd_ingestion.database.models import JobDescription
-
-        job = JobDescription(
-            id=1,
-            job_number="12345",
-            title="Data Scientist",
-            classification="EX-01",
-            language="en",
-            raw_content="Test content with python programming",
-        )
-        async_session.add(job)
-        await async_session.commit()
-
         with patch(
-            "jd_ingestion.api.endpoints.search._get_matching_sections"
-        ) as mock_sections:
-            mock_sections.return_value = []
+            "jd_ingestion.api.endpoints.search.get_async_session"
+        ) as mock_session:
+            mock_db = AsyncMock()
+            mock_session.return_value.__aenter__.return_value = mock_db
 
-            response = await async_client.get(
-                "/api/search/?q=python&classification=EX-01&limit=10"
-            )
+            # Mock job query
+            mock_job = Mock()
+            mock_job.id = 1
+            mock_job.raw_content = "Test content"
+            mock_result = Mock()
+            mock_result.scalar_one.return_value = mock_job
+            mock_db.execute.return_value = mock_result
+
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.get(
+                    "/api/search/?q=python&classification=EX-01&limit=10"
+                )
             assert response.status_code == 200
 
             data = response.json()
@@ -147,7 +141,6 @@ class TestSearchJobsEndpoints:
         mock_embedding_service,
         mock_analytics_service,
         sample_search_query,
-        async_client,
     ):
         """Test successful POST search."""
         mock_analytics_service.start_search_session = AsyncMock(
@@ -157,26 +150,35 @@ class TestSearchJobsEndpoints:
         mock_embedding_service.semantic_search = AsyncMock(return_value=[])
 
         with patch(
-            "jd_ingestion.api.endpoints.search._fulltext_search"
-        ) as mock_fulltext:
-            mock_fulltext.return_value = {
-                "query": "data scientist python",
-                "search_type": "fulltext",
-                "total_results": 0,
-                "results": [],
-            }
+            "jd_ingestion.api.endpoints.search.get_async_session"
+        ) as mock_session:
+            mock_db = AsyncMock()
+            mock_session.return_value.__aenter__.return_value = mock_db
 
-            response = await async_client.post("/api/search/", json=sample_search_query)
-            assert response.status_code == 200
+            with patch(
+                "jd_ingestion.api.endpoints.search._fulltext_search"
+            ) as mock_fulltext:
+                mock_fulltext.return_value = {
+                    "query": "data scientist python",
+                    "search_type": "fulltext",
+                    "total_results": 0,
+                    "results": [],
+                }
 
-            data = response.json()
-            assert data["query"] == "data scientist python"
-            assert data["search_type"] == "fulltext"
+                async with AsyncClient(
+                    transport=ASGITransport(app=app), base_url="http://test"
+                ) as ac:
+                    response = await ac.post("/api/search/", json=sample_search_query)
+                assert response.status_code == 200
+
+                data = response.json()
+                assert data["query"] == "data scientist python"
+                assert data["search_type"] == "fulltext"
 
     @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.search.embedding_service")
     async def test_semantic_search_success(
-        self, mock_embedding_service, sample_search_query, async_client, async_session
+        self, mock_embedding_service, sample_search_query
     ):
         """Test successful semantic search."""
         mock_embedding_service.semantic_search = AsyncMock(
@@ -193,28 +195,30 @@ class TestSearchJobsEndpoints:
             ]
         )
 
-        # Create a test job in the database
-        from jd_ingestion.database.models import JobDescription
-
-        job = JobDescription(
-            id=1,
-            job_number="12345",
-            title="Data Scientist",
-            classification="EX-01",
-            language="en",
-            raw_content="Test content with Python and data science",
-        )
-        async_session.add(job)
-        await async_session.commit()
-
         with patch(
-            "jd_ingestion.api.endpoints.search._get_matching_sections"
-        ) as mock_sections:
-            mock_sections.return_value = []
+            "jd_ingestion.api.endpoints.search.get_async_session"
+        ) as mock_session:
+            mock_db = AsyncMock()
+            mock_session.return_value.__aenter__.return_value = mock_db
 
-            response = await async_client.post(
-                "/api/search/semantic", json=sample_search_query
-            )
+            # Mock job query
+            mock_job = Mock()
+            mock_job.raw_content = "Test content with Python and data science"
+            mock_result = Mock()
+            mock_result.scalar_one.return_value = mock_job
+            mock_db.execute.return_value = mock_result
+
+            # Mock sections query
+            mock_sections_result = Mock()
+            mock_sections_result.scalars.return_value.all.return_value = []
+            mock_db.execute.side_effect = [mock_result, mock_sections_result]
+
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.post(
+                    "/api/search/semantic", json=sample_search_query
+                )
             assert response.status_code == 200
 
             data = response.json()
@@ -225,14 +229,15 @@ class TestSearchJobsEndpoints:
     @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.search.embedding_service")
     async def test_semantic_search_no_results(
-        self, mock_embedding_service, sample_search_query, async_client
+        self, mock_embedding_service, sample_search_query
     ):
         """Test semantic search with no results."""
         mock_embedding_service.semantic_search = AsyncMock(return_value=[])
 
-        response = await async_client.post(
-            "/api/search/semantic", json=sample_search_query
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/search/semantic", json=sample_search_query)
         assert response.status_code == 200
 
         data = response.json()
@@ -240,19 +245,22 @@ class TestSearchJobsEndpoints:
         assert "No semantic matches found" in data["message"]
 
     @pytest.mark.asyncio
-    async def test_search_invalid_parameters(self, async_client):
+    async def test_search_invalid_parameters(self):
         """Test search with invalid parameters."""
-        # Missing required query parameter
-        response = await async_client.get("/api/search/")
-        assert response.status_code == 422
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            # Missing required query parameter
+            response = await ac.get("/api/search/")
+            assert response.status_code == 422
 
-        # Invalid limit
-        response = await async_client.get("/api/search/?q=test&limit=200")
-        assert response.status_code == 422
+            # Invalid limit
+            response = await ac.get("/api/search/?q=test&limit=200")
+            assert response.status_code == 422
 
-        # Invalid POST data
-        response = await async_client.post("/api/search/", json={"invalid": "data"})
-        assert response.status_code == 422
+            # Invalid POST data
+            response = await ac.post("/api/search/", json={"invalid": "data"})
+            assert response.status_code == 422
 
 
 class TestAdvancedSearchEndpoint:
@@ -879,7 +887,7 @@ class TestSearchUtilityFunctions:
 
         snippet = _extract_snippet(content, query, max_length=50)
         assert "data science" in snippet.lower()
-        assert len(snippet) <= 56  # max_length + "..." on both ends = 50 + 6
+        assert len(snippet) <= 53  # max_length + "..."
 
     def test_extract_snippet_no_match(self):
         """Test snippet extraction when query terms not found."""

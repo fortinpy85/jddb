@@ -114,8 +114,7 @@ class TestUploadAndProcessEndpoint:
             response = await ac.post(
                 "/api/tasks/upload", files={"file": ("", b"content", "text/plain")}
             )
-        # FastAPI returns 422 for validation errors
-        assert response.status_code == 422
+        assert response.status_code == 400
         assert "No filename provided" in response.json()["detail"]
 
     @pytest.mark.asyncio
