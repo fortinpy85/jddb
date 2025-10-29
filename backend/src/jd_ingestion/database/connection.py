@@ -1,11 +1,14 @@
+from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
-    async_sessionmaker,
     AsyncSession,
 )
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
-from typing import AsyncIterator, Iterator
+from typing import (
+    AsyncGenerator,
+    Iterator,
+)
 
 from ..config import settings
 from ..utils.logging import get_logger
@@ -20,6 +23,7 @@ __all__ = [
     "Base",
     "configure_mappers",
     "get_async_session",
+    "async_session_context",
     "get_sync_session",
     "get_db",
 ]
@@ -58,10 +62,8 @@ SessionLocal = sessionmaker(
     autoflush=False,
 )
 
-AsyncSessionLocal = async_sessionmaker(
-    bind=async_engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
+AsyncSessionLocal = sessionmaker(
+    async_engine, class_=AsyncSession, expire_on_commit=False
 )
 
 
@@ -76,7 +78,17 @@ def configure_mappers() -> None:
         logger.debug(f"Mapper configuration skipped (likely already configured): {e}")
 
 
-async def get_async_session() -> AsyncIterator[AsyncSession]:
+# Async context manager version (for direct use with async with)
+@asynccontextmanager
+async def async_session_context() -> AsyncGenerator[AsyncSession, None]:
+    """Async context manager for database sessions. Use with 'async with'."""
+    async with AsyncSessionLocal() as session:
+        yield session
+
+
+# Dependency injection version (for FastAPI Depends())
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    """FastAPI dependency for async database sessions. Use with Depends()."""
     async with AsyncSessionLocal() as session:
         yield session
 

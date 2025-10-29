@@ -8,7 +8,7 @@ from typing import Callable, Optional
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from ..database.connection import get_async_session
+from ..database.connection import async_session_context
 from ..services.analytics_service import analytics_service
 from ..utils.logging import get_logger
 
@@ -83,8 +83,8 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
     ):
         """Track request analytics in background."""
         try:
-            # Get database session
-            async for db in get_async_session():
+            # Get database session using async context manager
+            async with async_session_context() as db:
                 try:
                     # Determine action type based on endpoint
                     action_type = self._determine_action_type(
@@ -144,16 +144,12 @@ class AnalyticsMiddleware(BaseHTTPMiddleware):
                         },
                     )
 
-                    break  # Exit the async for loop after successful tracking
-
                 except Exception as track_error:
                     logger.error(
                         "Failed to track request analytics",
                         path=request.url.path,
                         error=str(track_error),
                     )
-                finally:
-                    await db.close()
 
         except Exception as middleware_error:
             logger.error("Analytics middleware error", error=str(middleware_error))

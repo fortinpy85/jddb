@@ -163,7 +163,7 @@ class TestAnalyticsMiddleware:
             assert response == mock_response
             mock_asyncio.create_task.assert_not_called()
 
-    @patch("jd_ingestion.middleware.analytics_middleware.get_async_session")
+    @patch("jd_ingestion.middleware.analytics_middleware.async_session_context")
     @patch("jd_ingestion.middleware.analytics_middleware.analytics_service")
     async def test_track_request_success(
         self, mock_analytics_service, mock_get_session
@@ -172,13 +172,10 @@ class TestAnalyticsMiddleware:
         app = Mock()
         middleware = AnalyticsMiddleware(app)
 
-        # Mock database session as async generator
+        # Mock database session as async context manager
         mock_db = AsyncMock()
-
-        async def mock_async_gen():
-            yield mock_db
-
-        mock_get_session.return_value = mock_async_gen()
+        mock_get_session.return_value.__aenter__ = AsyncMock(return_value=mock_db)
+        mock_get_session.return_value.__aexit__ = AsyncMock(return_value=None)
 
         # Mock analytics service
         mock_analytics_service.track_activity = AsyncMock()
@@ -204,7 +201,7 @@ class TestAnalyticsMiddleware:
 
         mock_analytics_service.track_activity.assert_called_once()
 
-    @patch("jd_ingestion.middleware.analytics_middleware.get_async_session")
+    @patch("jd_ingestion.middleware.analytics_middleware.async_session_context")
     @patch("jd_ingestion.middleware.analytics_middleware.analytics_service")
     async def test_track_request_with_error(
         self, mock_analytics_service, mock_get_session
@@ -213,13 +210,10 @@ class TestAnalyticsMiddleware:
         app = Mock()
         middleware = AnalyticsMiddleware(app)
 
-        # Mock database session as async generator
+        # Mock database session as async context manager
         mock_db = AsyncMock()
-
-        async def mock_async_gen():
-            yield mock_db
-
-        mock_get_session.return_value = mock_async_gen()
+        mock_get_session.return_value.__aenter__ = AsyncMock(return_value=mock_db)
+        mock_get_session.return_value.__aexit__ = AsyncMock(return_value=None)
 
         # Mock analytics service
         mock_analytics_service.track_activity = AsyncMock()
@@ -246,7 +240,7 @@ class TestAnalyticsMiddleware:
         assert call_args.kwargs["status_code"] == 500
         assert call_args.kwargs["metadata"]["error"] == "Test error"
 
-    @patch("jd_ingestion.middleware.analytics_middleware.get_async_session")
+    @patch("jd_ingestion.middleware.analytics_middleware.async_session_context")
     @patch("jd_ingestion.middleware.analytics_middleware.logger")
     async def test_track_request_database_error(self, mock_logger, mock_get_session):
         """Test request tracking when database error occurs."""
@@ -359,20 +353,17 @@ class TestAnalyticsMiddleware:
         resource_id = middleware._extract_resource_id("/api/search")
         assert resource_id is None
 
-    @patch("jd_ingestion.middleware.analytics_middleware.get_async_session")
+    @patch("jd_ingestion.middleware.analytics_middleware.async_session_context")
     @patch("jd_ingestion.middleware.analytics_middleware.analytics_service")
     async def test_track_search_request(self, mock_analytics_service, mock_get_session):
         """Test tracking of search requests with query parameters."""
         app = Mock()
         middleware = AnalyticsMiddleware(app)
 
-        # Mock database session as async generator
+        # Mock database session as async context manager
         mock_db = AsyncMock()
-
-        async def mock_async_gen():
-            yield mock_db
-
-        mock_get_session.return_value = mock_async_gen()
+        mock_get_session.return_value.__aenter__ = AsyncMock(return_value=mock_db)
+        mock_get_session.return_value.__aexit__ = AsyncMock(return_value=None)
 
         # Mock analytics service
         mock_analytics_service.track_activity = AsyncMock()
@@ -443,7 +434,7 @@ class TestAnalyticsMiddlewareIntegration:
         assert response.status_code == 200
         assert response.json() == {"message": "test"}
 
-    @patch("jd_ingestion.middleware.analytics_middleware.get_async_session")
+    @patch("jd_ingestion.middleware.analytics_middleware.async_session_context")
     @patch("jd_ingestion.middleware.analytics_middleware.analytics_service")
     def test_middleware_with_tracking(
         self, mock_analytics_service, mock_get_session, mock_app
