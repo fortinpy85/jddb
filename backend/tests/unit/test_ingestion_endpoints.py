@@ -110,7 +110,9 @@ class TestScanDirectoryEndpoint:
         }
         mock_file_discovery_class.return_value = mock_discovery
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.post(
                 "/api/ingestion/scan-directory",
                 params={"directory_path": "/test/path", "recursive": True},
@@ -127,7 +129,9 @@ class TestScanDirectoryEndpoint:
     @pytest.mark.asyncio
     async def test_scan_directory_nonexistent(self):
         """Test scanning non-existent directory."""
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.post(
                 "/api/ingestion/scan-directory",
                 params={"directory_path": "/nonexistent/path"},
@@ -141,7 +145,9 @@ class TestScanDirectoryEndpoint:
         """Test directory scanning with error."""
         mock_file_discovery_class.side_effect = Exception("Scan failed")
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.post(
                 "/api/ingestion/scan-directory", params={"directory_path": "/test/path"}
             )
@@ -182,7 +188,9 @@ class TestProcessFileEndpoint:
         mock_content_processor_class.return_value = mock_processor
 
         with patch("pathlib.Path.exists", return_value=True):
-            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
                 response = await ac.post(
                     "/api/ingestion/process-file",
                     params={"file_path": "/test/file.txt", "save_to_db": False},
@@ -197,9 +205,12 @@ class TestProcessFileEndpoint:
     @pytest.mark.asyncio
     async def test_process_file_nonexistent(self):
         """Test processing non-existent file."""
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.post(
-                "/api/ingestion/process-file", params={"file_path": "/nonexistent/file.txt"}
+                "/api/ingestion/process-file",
+                params={"file_path": "/nonexistent/file.txt"},
             )
         assert response.status_code == 400
         assert "File does not exist" in response.json()["detail"]
@@ -256,7 +267,9 @@ class TestProcessFileEndpoint:
                 mock_result.scalars.return_value.all.return_value = [mock_chunk]
                 mock_db.execute = AsyncMock(return_value=mock_result)
 
-                async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                async with AsyncClient(
+                    transport=ASGITransport(app=app), base_url="http://test"
+                ) as ac:
                     response = await ac.post(
                         "/api/ingestion/process-file",
                         params={"file_path": "/test/file.txt", "save_to_db": True},
@@ -293,7 +306,9 @@ class TestProcessFileEndpoint:
                 "pathlib.Path.suffix",
                 new_callable=lambda: property(lambda self: ".docx"),
             ):
-                async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                async with AsyncClient(
+                    transport=ASGITransport(app=app), base_url="http://test"
+                ) as ac:
                     response = await ac.post(
                         "/api/ingestion/process-file",
                         params={"file_path": "/test/file.docx", "save_to_db": False},
@@ -316,7 +331,9 @@ class TestProcessFileEndpoint:
                 "pathlib.Path.suffix",
                 new_callable=lambda: property(lambda self: ".pdf"),
             ):
-                async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                async with AsyncClient(
+                    transport=ASGITransport(app=app), base_url="http://test"
+                ) as ac:
                     response = await ac.post(
                         "/api/ingestion/process-file",
                         params={"file_path": "/test/file.pdf", "save_to_db": False},
@@ -344,7 +361,9 @@ class TestBatchIngestEndpoint:
         mock_file_discovery_class.return_value = mock_discovery
 
         with patch("pathlib.Path.exists", return_value=True):
-            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
                 response = await ac.post(
                     "/api/ingestion/batch-ingest",
                     params={
@@ -371,9 +390,12 @@ class TestBatchIngestEndpoint:
         mock_file_discovery_class.return_value = mock_discovery
 
         with patch("pathlib.Path.exists", return_value=True):
-            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
                 response = await ac.post(
-                    "/api/ingestion/batch-ingest", params={"directory_path": "/test/path"}
+                    "/api/ingestion/batch-ingest",
+                    params={"directory_path": "/test/path"},
                 )
 
         assert response.status_code == 400
@@ -382,7 +404,9 @@ class TestBatchIngestEndpoint:
     @pytest.mark.asyncio
     async def test_batch_ingest_nonexistent_directory(self):
         """Test batch ingestion with non-existent directory."""
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.post(
                 "/api/ingestion/batch-ingest",
                 params={"directory_path": "/nonexistent/path"},
@@ -420,7 +444,9 @@ class TestUploadFileEndpoint:
 
             try:
                 with open(tmp_file.name, "rb") as file:
-                    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                    async with AsyncClient(
+                        transport=ASGITransport(app=app), base_url="http://test"
+                    ) as ac:
                         response = await ac.post(
                             "/api/ingestion/upload",
                             files={"file": ("test.txt", file, "text/plain")},
@@ -436,7 +462,9 @@ class TestUploadFileEndpoint:
     @pytest.mark.asyncio
     async def test_upload_file_no_filename(self):
         """Test upload with no filename."""
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.post(
                 "/api/ingestion/upload", files={"file": ("", b"content", "text/plain")}
             )
@@ -455,10 +483,14 @@ class TestUploadFileEndpoint:
 
             try:
                 with open(tmp_file.name, "rb") as file:
-                    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                    async with AsyncClient(
+                        transport=ASGITransport(app=app), base_url="http://test"
+                    ) as ac:
                         response = await ac.post(
                             "/api/ingestion/upload",
-                            files={"file": ("test.xyz", file, "application/octet-stream")},
+                            files={
+                                "file": ("test.xyz", file, "application/octet-stream")
+                            },
                         )
 
                 assert response.status_code == 400
@@ -503,7 +535,9 @@ class TestIngestionStatsEndpoint:
             mock_result.scalar_one_or_none.return_value = datetime.now()
             mock_db.execute.return_value = mock_result
 
-            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
                 response = await ac.get("/api/ingestion/stats")
             assert response.status_code == 200
 
@@ -523,7 +557,9 @@ class TestIngestionStatsEndpoint:
             mock_session.return_value.__aenter__.return_value = mock_db
             mock_db.execute.side_effect = Exception("Database error")
 
-            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
                 response = await ac.get("/api/ingestion/stats")
             assert response.status_code == 500
             assert (
@@ -557,7 +593,9 @@ class TestTaskStatsEndpoint:
 
         mock_celery_app.control.inspect.return_value = mock_inspect
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.get("/api/ingestion/task-stats")
         assert response.status_code == 200
 
@@ -573,7 +611,9 @@ class TestTaskStatsEndpoint:
         """Test task statistics when Celery is unavailable."""
         mock_celery_app.control.inspect.side_effect = Exception("Celery unavailable")
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.get("/api/ingestion/task-stats")
         assert response.status_code == 200
 
@@ -604,7 +644,9 @@ class TestEmbeddingGenerationEndpoint:
             mock_result.scalars.return_value.all.return_value = [mock_chunk]
             mock_db.execute.return_value = mock_result
 
-            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
                 response = await ac.post("/api/ingestion/generate-embeddings")
             assert response.status_code == 200
 
@@ -625,7 +667,9 @@ class TestEmbeddingGenerationEndpoint:
             mock_result.scalars.return_value.all.return_value = []
             mock_db.execute.return_value = mock_result
 
-            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
                 response = await ac.post("/api/ingestion/generate-embeddings")
             assert response.status_code == 200
 
@@ -646,7 +690,9 @@ class TestEmbeddingGenerationEndpoint:
             mock_result.scalars.return_value.all.return_value = []
             mock_db.execute.return_value = mock_result
 
-            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
                 response = await ac.post(
                     "/api/ingestion/generate-embeddings",
                     params={"job_ids": [1, 2, 3], "force_regenerate": True},
@@ -666,7 +712,9 @@ class TestResilienceStatusEndpoint:
             "database": {"state": "closed", "failure_count": 0},
         }
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.get("/api/ingestion/resilience-status")
         assert response.status_code == 200
 
@@ -684,7 +732,9 @@ class TestResilienceStatusEndpoint:
             "database": {"state": "closed", "failure_count": 0},
         }
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.get("/api/ingestion/resilience-status")
         assert response.status_code == 200
 
@@ -699,7 +749,9 @@ class TestResilienceStatusEndpoint:
         """Test resilience status with error."""
         mock_cb_manager.get_all_metrics.side_effect = Exception("Circuit breaker error")
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.get("/api/ingestion/resilience-status")
         assert response.status_code == 200
 
@@ -718,7 +770,9 @@ class TestCircuitBreakerResetEndpoint:
         mock_breaker.reset = Mock()
         mock_cb_manager._breakers = {"openai_api": mock_breaker}
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.post(
                 "/api/ingestion/reset-circuit-breakers",
                 params={"service_name": "openai_api"},
@@ -736,7 +790,9 @@ class TestCircuitBreakerResetEndpoint:
         """Test resetting non-existent circuit breaker."""
         mock_cb_manager._breakers = {}
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.post(
                 "/api/ingestion/reset-circuit-breakers",
                 params={"service_name": "nonexistent"},
@@ -753,7 +809,9 @@ class TestCircuitBreakerResetEndpoint:
         """Test resetting all circuit breakers."""
         mock_cb_manager.reset_all = Mock()
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.post("/api/ingestion/reset-circuit-breakers")
         assert response.status_code == 200
 
@@ -768,7 +826,9 @@ class TestCircuitBreakerResetEndpoint:
         """Test circuit breaker reset with error."""
         mock_cb_manager.reset_all.side_effect = Exception("Reset failed")
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.post("/api/ingestion/reset-circuit-breakers")
         assert response.status_code == 500
         assert "Failed to reset circuit breakers" in response.json()["detail"]
@@ -780,7 +840,9 @@ class TestIngestionEndpointsEdgeCases:
     @pytest.mark.asyncio
     async def test_missing_required_parameters(self):
         """Test endpoints with missing required parameters."""
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.post("/api/ingestion/scan-directory")
             assert response.status_code == 422
 
@@ -796,14 +858,18 @@ class TestIngestionEndpointsEdgeCases:
         """Test handling database connection errors."""
         mock_session.side_effect = Exception("Database connection failed")
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.get("/api/ingestion/stats")
         assert response.status_code == 500
 
     @pytest.mark.asyncio
     async def test_invalid_file_paths(self):
         """Test endpoints with invalid file paths."""
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             # Invalid characters in path
             response = await ac.post(
                 "/api/ingestion/process-file", params={"file_path": "invalid<>path"}
@@ -811,7 +877,9 @@ class TestIngestionEndpointsEdgeCases:
             assert response.status_code in [400, 500]
 
             # Empty path
-            response = await ac.post("/api/ingestion/process-file", params={"file_path": ""})
+            response = await ac.post(
+                "/api/ingestion/process-file", params={"file_path": ""}
+            )
             assert response.status_code == 422
 
     @pytest.mark.asyncio
@@ -829,7 +897,9 @@ class TestIngestionEndpointsEdgeCases:
                 "builtins.open",
                 side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid"),
             ):
-                async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                async with AsyncClient(
+                    transport=ASGITransport(app=app), base_url="http://test"
+                ) as ac:
                     response = await ac.post(
                         "/api/ingestion/process-file",
                         params={"file_path": "/test/file.txt"},
@@ -866,7 +936,9 @@ class TestIngestionEndpointsEdgeCases:
             mock_discovery_class.return_value = mock_discovery
 
             with patch("pathlib.Path.exists", return_value=True):
-                async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+                async with AsyncClient(
+                    transport=ASGITransport(app=app), base_url="http://test"
+                ) as ac:
                     response = await ac.post(
                         "/api/ingestion/scan-directory",
                         params={"directory_path": "/test/path"},

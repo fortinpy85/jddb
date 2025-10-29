@@ -8,6 +8,7 @@ from httpx import AsyncClient, ASGITransport
 
 from jd_ingestion.api.main import app
 
+
 @pytest.fixture
 def mock_quality_service():
     """Mock quality service."""
@@ -17,10 +18,12 @@ def mock_quality_service():
     service.get_quality_report = AsyncMock()
     return service
 
+
 @pytest.fixture
 def api_key_header():
     """Provide API key header for authenticated requests."""
     return {"X-API-Key": "test-api-key"}
+
 
 @pytest.fixture
 def sample_quality_metrics():
@@ -49,6 +52,7 @@ def sample_quality_metrics():
         },
     }
 
+
 @pytest.fixture
 def sample_batch_result():
     """Sample batch calculation result."""
@@ -58,6 +62,7 @@ def sample_batch_result():
         "failed": 2,
         "errors": ["Job 5: Missing content", "Job 7: Processing error"],
     }
+
 
 class TestQualityMetricsEndpoints:
     """Test quality metrics endpoints."""
@@ -74,8 +79,14 @@ class TestQualityMetricsEndpoints:
 
         request_data = {"job_ids": [1, 2, 3], "recalculate": False}
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            response = await ac.post("/api/quality/metrics/calculate", json=request_data, headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/quality/metrics/calculate",
+                json=request_data,
+                headers=api_key_header,
+            )
 
         assert response.status_code == 200
 
@@ -96,8 +107,14 @@ class TestQualityMetricsEndpoints:
 
         request_data = {"job_ids": None, "recalculate": True}  # Calculate for all jobs
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            response = await ac.post("/api/quality/metrics/calculate", json=request_data, headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/quality/metrics/calculate",
+                json=request_data,
+                headers=api_key_header,
+            )
 
         assert response.status_code == 200
 
@@ -107,7 +124,9 @@ class TestQualityMetricsEndpoints:
 
     @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_calculate_quality_metrics_service_error(self, mock_service, api_key_header):
+    async def test_calculate_quality_metrics_service_error(
+        self, mock_service, api_key_header
+    ):
         """Test quality metrics calculation with service error."""
         mock_service.batch_calculate_quality_metrics = AsyncMock(
             side_effect=Exception("Service error")
@@ -115,8 +134,14 @@ class TestQualityMetricsEndpoints:
 
         request_data = {"job_ids": [1, 2, 3], "recalculate": False}
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            response = await ac.post("/api/quality/metrics/calculate", json=request_data, headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/quality/metrics/calculate",
+                json=request_data,
+                headers=api_key_header,
+            )
 
         assert response.status_code == 500
         assert "Failed to calculate quality metrics" in response.json()["detail"]
@@ -131,7 +156,9 @@ class TestQualityMetricsEndpoints:
             return_value=sample_quality_metrics
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.get("/api/quality/metrics/123", headers=api_key_header)
 
         assert response.status_code == 200
@@ -142,42 +169,46 @@ class TestQualityMetricsEndpoints:
         assert data["metrics"]["content_completeness_score"] == 0.85
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_get_job_quality_metrics_not_found(self, mock_service, api_key_header):
+    async def test_get_job_quality_metrics_not_found(
+        self, mock_service, api_key_header
+    ):
         """Test job quality metrics retrieval for non-existent job."""
         mock_service.calculate_quality_metrics_for_job = AsyncMock(
             side_effect=ValueError("Job not found")
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.get("/api/quality/metrics/999", headers=api_key_header)
 
         assert response.status_code == 404
         assert "Job not found" in response.json()["detail"]
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_get_job_quality_metrics_service_error(self, mock_service, api_key_header):
+    async def test_get_job_quality_metrics_service_error(
+        self, mock_service, api_key_header
+    ):
         """Test job quality metrics retrieval with service error."""
         mock_service.calculate_quality_metrics_for_job = AsyncMock(
             side_effect=Exception("Database error")
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.get("/api/quality/metrics/123", headers=api_key_header)
 
         assert response.status_code == 500
         assert "Failed to retrieve quality metrics" in response.json()["detail"]
 
+
 class TestQualityReportEndpoints:
     """Test quality report endpoints."""
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
     async def test_generate_quality_report_for_job(self, mock_service, api_key_header):
         """Test generating quality report for specific job."""
@@ -200,9 +231,12 @@ class TestQualityReportEndpoints:
 
         request_data = {"job_id": 123, "include_details": True}
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.post("/api/quality/report", json=request_data, headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/quality/report", json=request_data, headers=api_key_header
+            )
 
         assert response.status_code == 200
 
@@ -212,9 +246,10 @@ class TestQualityReportEndpoints:
         assert data["report"]["overall_score"] == 0.85
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_generate_quality_report_system_wide(self, mock_service, api_key_header):
+    async def test_generate_quality_report_system_wide(
+        self, mock_service, api_key_header
+    ):
         """Test generating system-wide quality report."""
         mock_report = {
             "overview": {
@@ -239,9 +274,12 @@ class TestQualityReportEndpoints:
 
         request_data = {"job_id": None, "include_details": False}  # System-wide report
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.post("/api/quality/report", json=request_data, headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/quality/report", json=request_data, headers=api_key_header
+            )
 
         assert response.status_code == 200
 
@@ -250,9 +288,10 @@ class TestQualityReportEndpoints:
         assert data["report"]["overview"]["total_jobs"] == 100
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_generate_quality_report_invalid_request(self, mock_service, api_key_header):
+    async def test_generate_quality_report_invalid_request(
+        self, mock_service, api_key_header
+    ):
         """Test quality report generation with invalid request."""
         mock_service.get_quality_report = AsyncMock(
             side_effect=ValueError("Invalid job ID")
@@ -260,15 +299,17 @@ class TestQualityReportEndpoints:
 
         request_data = {"job_id": -1, "include_details": True}
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.post("/api/quality/report", json=request_data, headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/quality/report", json=request_data, headers=api_key_header
+            )
 
         assert response.status_code == 404
         assert "Invalid job ID" in response.json()["detail"]
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
     async def test_get_quality_overview_success(self, mock_service, api_key_header):
         """Test successful quality overview retrieval."""
@@ -286,8 +327,9 @@ class TestQualityReportEndpoints:
         }
         mock_service.get_quality_report = AsyncMock(return_value=mock_overview)
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.get("/api/quality/overview", headers=api_key_header)
 
         assert response.status_code == 200
@@ -297,7 +339,6 @@ class TestQualityReportEndpoints:
         assert data["overview"]["overview"]["total_jobs"] == 150
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
     async def test_get_quality_overview_error(self, mock_service, api_key_header):
         """Test quality overview with service error."""
@@ -305,28 +346,34 @@ class TestQualityReportEndpoints:
             side_effect=Exception("Database connection failed")
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.get("/api/quality/overview", headers=api_key_header)
 
         assert response.status_code == 500
         assert "Failed to generate quality overview" in response.json()["detail"]
+
 
 class TestQualityValidationEndpoints:
     """Test quality validation endpoints."""
 
     @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_validate_job_content_success(self, mock_service, sample_quality_metrics
-    , api_key_header):
+    async def test_validate_job_content_success(
+        self, mock_service, sample_quality_metrics, api_key_header
+    ):
         """Test successful job content validation."""
         mock_service.calculate_quality_metrics_for_job = AsyncMock(
             return_value=sample_quality_metrics
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.get("/api/quality/validation/123", headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/quality/validation/123", headers=api_key_header
+            )
 
         assert response.status_code == 200
 
@@ -337,7 +384,6 @@ class TestQualityValidationEndpoints:
         assert len(data["recommendations"]) == 2
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
     async def test_validate_job_content_not_found(self, mock_service, api_key_header):
         """Test job content validation for non-existent job."""
@@ -345,25 +391,34 @@ class TestQualityValidationEndpoints:
             side_effect=ValueError("Job not found")
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.get("/api/quality/validation/999", headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/quality/validation/999", headers=api_key_header
+            )
 
         assert response.status_code == 404
         assert "Job not found" in response.json()["detail"]
 
     @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_batch_validate_jobs_success(self, mock_service, sample_batch_result
-    , api_key_header):
+    async def test_batch_validate_jobs_success(
+        self, mock_service, sample_batch_result, api_key_header
+    ):
         """Test successful batch job validation."""
         mock_service.batch_calculate_quality_metrics = AsyncMock(
             return_value=sample_batch_result
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.post("/api/quality/batch/validate", params={"job_ids": [1, 2, 3, 4, 5]}, headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/quality/batch/validate",
+                params={"job_ids": [1, 2, 3, 4, 5]},
+                headers=api_key_header,
+            )
 
         assert response.status_code == 200
 
@@ -374,16 +429,21 @@ class TestQualityValidationEndpoints:
         assert data["validation_summary"]["failed_validations"] == 2
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_batch_validate_jobs_all(self, mock_service, sample_batch_result, api_key_header):
+    async def test_batch_validate_jobs_all(
+        self, mock_service, sample_batch_result, api_key_header
+    ):
         """Test batch validation for all jobs."""
         mock_service.batch_calculate_quality_metrics = AsyncMock(
             return_value=sample_batch_result
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            response = await ac.post("/api/quality/batch/validate", headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/quality/batch/validate", headers=api_key_header
+            )
 
         assert response.status_code == 200
 
@@ -392,7 +452,6 @@ class TestQualityValidationEndpoints:
         # Should use batch_calculate_quality_metrics with job_ids=None
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
     async def test_batch_validate_jobs_error(self, mock_service, api_key_header):
         """Test batch validation with service error."""
@@ -400,20 +459,27 @@ class TestQualityValidationEndpoints:
             side_effect=Exception("Batch processing failed")
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.post("/api/quality/batch/validate", params={"job_ids": [1, 2, 3]}, headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/quality/batch/validate",
+                params={"job_ids": [1, 2, 3]},
+                headers=api_key_header,
+            )
 
         assert response.status_code == 500
         assert "Batch validation failed" in response.json()["detail"]
+
 
 class TestQualityDistributionEndpoint:
     """Test quality distribution endpoint."""
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_get_quality_distribution_default_metric(self, mock_service, api_key_header):
+    async def test_get_quality_distribution_default_metric(
+        self, mock_service, api_key_header
+    ):
         """Test quality distribution with default metric."""
         mock_overview = {
             "quality_distribution": [
@@ -430,9 +496,12 @@ class TestQualityDistributionEndpoint:
         }
         mock_service.get_quality_report = AsyncMock(return_value=mock_overview)
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.get("/api/quality/stats/distribution", headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/quality/stats/distribution", headers=api_key_header
+            )
 
         assert response.status_code == 200
 
@@ -443,9 +512,10 @@ class TestQualityDistributionEndpoint:
         assert data["overview"]["total_jobs"] == 100
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_get_quality_distribution_custom_metric(self, mock_service, api_key_header):
+    async def test_get_quality_distribution_custom_metric(
+        self, mock_service, api_key_header
+    ):
         """Test quality distribution with custom metric."""
         mock_overview = {
             "quality_distribution": [
@@ -456,9 +526,13 @@ class TestQualityDistributionEndpoint:
         }
         mock_service.get_quality_report = AsyncMock(return_value=mock_overview)
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.get("/api/quality/stats/distribution?metric=language_quality_score", headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/quality/stats/distribution?metric=language_quality_score",
+                headers=api_key_header,
+            )
 
         assert response.status_code == 200
 
@@ -467,7 +541,6 @@ class TestQualityDistributionEndpoint:
         assert len(data["distribution"]) == 2
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
     async def test_get_quality_distribution_error(self, mock_service, api_key_header):
         """Test quality distribution with service error."""
@@ -475,20 +548,26 @@ class TestQualityDistributionEndpoint:
             side_effect=Exception("Distribution calculation failed")
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.get("/api/quality/stats/distribution?metric=invalid_metric", headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/quality/stats/distribution?metric=invalid_metric",
+                headers=api_key_header,
+            )
 
         assert response.status_code == 500
         assert "Failed to generate quality distribution" in response.json()["detail"]
+
 
 class TestQualityRecommendationsEndpoint:
     """Test quality recommendations endpoint."""
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_get_quality_recommendations_high_quality(self, mock_service, api_key_header):
+    async def test_get_quality_recommendations_high_quality(
+        self, mock_service, api_key_header
+    ):
         """Test quality recommendations for high-quality job."""
         mock_metrics = {
             "content_completeness_score": 0.95,
@@ -507,9 +586,12 @@ class TestQualityRecommendationsEndpoint:
             return_value=mock_metrics
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.get("/api/quality/recommendations/123", headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/quality/recommendations/123", headers=api_key_header
+            )
 
         assert response.status_code == 200
 
@@ -521,9 +603,10 @@ class TestQualityRecommendationsEndpoint:
         assert len(data["recommendations"]) == 2
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_get_quality_recommendations_needs_review(self, mock_service, api_key_header):
+    async def test_get_quality_recommendations_needs_review(
+        self, mock_service, api_key_header
+    ):
         """Test quality recommendations for job needing review."""
         mock_metrics = {
             "content_completeness_score": 0.65,
@@ -543,9 +626,12 @@ class TestQualityRecommendationsEndpoint:
             return_value=mock_metrics
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.get("/api/quality/recommendations/456", headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/quality/recommendations/456", headers=api_key_header
+            )
 
         assert response.status_code == 200
 
@@ -558,9 +644,10 @@ class TestQualityRecommendationsEndpoint:
         assert len(data["recommendations"]) == 3
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_get_quality_recommendations_processing_issues(self, mock_service, api_key_header):
+    async def test_get_quality_recommendations_processing_issues(
+        self, mock_service, api_key_header
+    ):
         """Test quality recommendations for job with processing issues."""
         mock_metrics = {
             "content_completeness_score": 0.30,
@@ -580,9 +667,12 @@ class TestQualityRecommendationsEndpoint:
             return_value=mock_metrics
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.get("/api/quality/recommendations/789", headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/quality/recommendations/789", headers=api_key_header
+            )
 
         assert response.status_code == 200
 
@@ -593,42 +683,50 @@ class TestQualityRecommendationsEndpoint:
         assert "URGENT" in data["recommendations"][0]
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_get_quality_recommendations_not_found(self, mock_service, api_key_header):
+    async def test_get_quality_recommendations_not_found(
+        self, mock_service, api_key_header
+    ):
         """Test quality recommendations for non-existent job."""
         mock_service.calculate_quality_metrics_for_job = AsyncMock(
             side_effect=ValueError("Job not found")
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.get("/api/quality/recommendations/999", headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/quality/recommendations/999", headers=api_key_header
+            )
 
         assert response.status_code == 404
         assert "Job not found" in response.json()["detail"]
 
     @pytest.mark.asyncio
-
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_get_quality_recommendations_service_error(self, mock_service, api_key_header):
+    async def test_get_quality_recommendations_service_error(
+        self, mock_service, api_key_header
+    ):
         """Test quality recommendations with service error."""
         mock_service.calculate_quality_metrics_for_job = AsyncMock(
             side_effect=Exception("Metrics calculation failed")
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.get("/api/quality/recommendations/123", headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/quality/recommendations/123", headers=api_key_header
+            )
 
         assert response.status_code == 500
         assert "Failed to generate recommendations" in response.json()["detail"]
+
 
 class TestQualityEndpointsValidation:
     """Test request validation for quality endpoints."""
 
     @pytest.mark.asyncio
-
     async def test_quality_metrics_request_validation(self, api_key_header):
         """Test quality metrics request validation."""
         # Valid request
@@ -640,28 +738,37 @@ class TestQualityEndpointsValidation:
             "recalculate": "not_a_boolean",  # Should be boolean
         }
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.post("/api/quality/metrics/calculate", json=invalid_request, headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/quality/metrics/calculate",
+                json=invalid_request,
+                headers=api_key_header,
+            )
 
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-
     async def test_quality_report_request_validation(self, api_key_header):
         """Test quality report request validation."""
         # Invalid job_id type
         invalid_request = {"job_id": "not_an_int", "include_details": True}
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-            response = await ac.post("/api/quality/report", json=invalid_request, headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/quality/report", json=invalid_request, headers=api_key_header
+            )
 
         assert response.status_code == 422
 
     @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.quality.quality_service")
-    async def test_batch_validate_invalid_parameters(self, mock_service, api_key_header):
+    async def test_batch_validate_invalid_parameters(
+        self, mock_service, api_key_header
+    ):
         """Test batch validation with invalid parameters."""
         # Mock the service to avoid actual processing
         mock_service.batch_calculate_quality_metrics = AsyncMock(
@@ -670,14 +777,19 @@ class TestQualityEndpointsValidation:
 
         # The endpoint accepts job_ids in body (not query params)
         # Passing query params doesn't cause validation error, it just gets ignored
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-            response = await ac.post("/api/quality/batch/validate", params={"job_ids": "invalid"}, headers=api_key_header)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/quality/batch/validate",
+                params={"job_ids": "invalid"},
+                headers=api_key_header,
+            )
 
         # Since query params are ignored and job_ids=None is valid, this succeeds
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-
     async def test_quality_distribution_invalid_metric(self, api_key_header):
         """Test quality distribution with potentially invalid metric names."""
         # The endpoint should handle any metric name gracefully
@@ -688,11 +800,16 @@ class TestQualityEndpointsValidation:
                 return_value={"quality_distribution": [], "overview": {}}
             )
 
-            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-                response = await ac.get("/api/quality/stats/distribution?metric=nonexistent_metric", headers=api_key_header)
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.get(
+                    "/api/quality/stats/distribution?metric=nonexistent_metric",
+                    headers=api_key_header,
+                )
 
             assert response.status_code == 200  # Should succeed but return empty data
+
 
 class TestQualityEndpointsIntegration:
     """Test integration aspects of quality endpoints."""
@@ -711,7 +828,9 @@ class TestQualityEndpointsIntegration:
             }
         )
 
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
             response = await ac.get("/api/quality/metrics/123", headers=api_key_header)
 
         assert response.status_code == 200
@@ -724,7 +843,6 @@ class TestQualityEndpointsIntegration:
         assert call_args[0][1] == 123
 
     @pytest.mark.asyncio
-
     async def test_quality_endpoints_error_response_format(self, api_key_header):
         """Test that error responses follow consistent format."""
         with patch(
@@ -734,9 +852,12 @@ class TestQualityEndpointsIntegration:
                 side_effect=Exception("Test error")
             )
 
-            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-
-                response = await ac.get("/api/quality/metrics/123", headers=api_key_header)
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.get(
+                    "/api/quality/metrics/123", headers=api_key_header
+                )
 
             assert response.status_code == 500
 

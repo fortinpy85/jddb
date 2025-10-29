@@ -1,5 +1,6 @@
 # Python
 __pycache__/
+other-ai-projects/
 *.py[cod]
 *$py.class
 *.so
@@ -35,7 +36,9 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 *.log
-
+__pycache__/
+*.pyc
+*.pyo
 # Virtual environments
 venv/
 ENV/
@@ -138,3 +141,8 @@ trivy-results.sarif
 
 # Claude Code local settings
 .claude/settings.local.json
+
+docs/_build/
+docs/.doctrees/
+docs/_static/
+docs/_templates/

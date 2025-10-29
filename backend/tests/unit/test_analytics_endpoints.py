@@ -243,7 +243,9 @@ class TestUsageStatisticsEndpoints:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
-            response = await ac.post("/api/analytics/metrics/generate?metric_type=daily")
+            response = await ac.post(
+                "/api/analytics/metrics/generate?metric_type=daily"
+            )
         assert response.status_code == 200
 
         data = response.json()
@@ -256,7 +258,9 @@ class TestUsageStatisticsEndpoints:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
-            response = await ac.post("/api/analytics/metrics/generate?metric_type=invalid")
+            response = await ac.post(
+                "/api/analytics/metrics/generate?metric_type=invalid"
+            )
         assert response.status_code == 400
         assert "Invalid metric type" in response.json()["detail"]
 
@@ -282,7 +286,9 @@ class TestAnalyticsSpecificEndpoints:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
-            response = await ac.get("/api/analytics/search-patterns?period=week&limit=10")
+            response = await ac.get(
+                "/api/analytics/search-patterns?period=week&limit=10"
+            )
         assert response.status_code == 200
 
         data = response.json()
@@ -309,7 +315,9 @@ class TestAnalyticsSpecificEndpoints:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
-            response = await ac.get("/api/analytics/search-patterns?period=month&limit=10")
+            response = await ac.get(
+                "/api/analytics/search-patterns?period=month&limit=10"
+            )
         assert response.status_code == 200
 
         data = response.json()
@@ -793,7 +801,9 @@ class TestAnalyticsEndpointsEdgeCases:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
-            response = await ac.post("/api/analytics/track/activity", json=incomplete_data)
+            response = await ac.post(
+                "/api/analytics/track/activity", json=incomplete_data
+            )
         assert response.status_code == 422
 
     @pytest.mark.asyncio
@@ -914,7 +924,9 @@ class TestSkillsAnalyticsEndpoints:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
-            response = await ac.get("/api/analytics/skills/inventory?skill_type=technical")
+            response = await ac.get(
+                "/api/analytics/skills/inventory?skill_type=technical"
+            )
         assert response.status_code == 200
 
         data = response.json()
@@ -938,7 +950,9 @@ class TestSkillsAnalyticsEndpoints:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
-            response = await ac.get("/api/analytics/skills/inventory?limit=50&offset=10")
+            response = await ac.get(
+                "/api/analytics/skills/inventory?limit=50&offset=10"
+            )
         assert response.status_code == 200
 
         data = response.json()
