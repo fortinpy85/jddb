@@ -3,7 +3,7 @@ Tests for saved searches API endpoints.
 """
 
 import pytest
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime
 
@@ -23,27 +23,9 @@ def override_get_async_session(mock_db_session):
     """Override function for database dependency."""
 
     async def _override():
-        return mock_db_session
+        yield mock_db_session
 
     return _override
-
-
-@pytest.fixture
-def client(override_get_async_session):
-    """Test client fixture with dependency overrides."""
-    # Clear any existing overrides first
-    app.dependency_overrides.clear()
-
-    # Override the database dependency
-    from jd_ingestion.database.connection import get_async_session
-
-    app.dependency_overrides[get_async_session] = override_get_async_session
-
-    client = TestClient(app)
-    yield client
-
-    # Clean up overrides
-    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -96,10 +78,18 @@ def sample_user_preference():
 class TestCreateSavedSearch:
     """Test create saved search endpoint."""
 
-    def test_create_saved_search_success(
-        self, mock_analytics_service, client, mock_db_session
+    @pytest.mark.asyncio
+    async def test_create_saved_search_success(
+        self, mock_analytics_service, override_get_async_session, mock_db_session
     ):
         """Test successful saved search creation."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
 
         # Mock the saved search creation
         mock_search = Mock()
@@ -127,9 +117,12 @@ class TestCreateSavedSearch:
 
         headers = {"x-user-id": "user123", "x-session-id": "session123"}
 
-        response = client.post(
-            "/api/saved-searches/", json=search_data, headers=headers
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/saved-searches/", json=search_data, headers=headers
+            )
 
         assert response.status_code == 200
         data = response.json()
@@ -139,32 +132,54 @@ class TestCreateSavedSearch:
 
         mock_analytics_service.track_activity.assert_called_once()
 
-    def test_create_saved_search_no_headers(self, client):
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_create_saved_search_no_headers(self):
         """Test saved search creation without required headers."""
         search_data = {"name": "Test Search"}
 
-        response = client.post("/api/saved-searches/", json=search_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/saved-searches/", json=search_data)
 
         assert response.status_code == 400
         assert (
             "x-user-id or x-session-id header is required" in response.json()["detail"]
         )
 
-    def test_create_saved_search_minimal_data(
-        self, mock_analytics_service, client, mock_db_session
+    @pytest.mark.asyncio
+    async def test_create_saved_search_minimal_data(
+        self, mock_analytics_service, override_get_async_session, mock_db_session
     ):
         """Test saved search creation with minimal data."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
 
         search_data = {"name": "Minimal Search"}
         headers = {"x-session-id": "session123"}
 
-        response = client.post(
-            "/api/saved-searches/", json=search_data, headers=headers
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/saved-searches/", json=search_data, headers=headers
+            )
 
         assert response.status_code == 200
 
-    def test_create_saved_search_error(self, client):
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_create_saved_search_error(self):
         """Test saved search creation with database error."""
         # Override the dependency to return a session that fails
         from jd_ingestion.database.connection import get_async_session
@@ -177,8 +192,8 @@ class TestCreateSavedSearch:
             def failing_add(*args, **kwargs):
                 raise Exception("Database error")
 
-            mock_db_session.add = failing_add
-            mock_db_session.rollback = AsyncMock()
+            mock_db.add = failing_add
+            mock_db.rollback = AsyncMock()
             return mock_db
 
         app.dependency_overrides[get_async_session] = error_db_session
@@ -187,28 +202,25 @@ class TestCreateSavedSearch:
         headers = {"x-user-id": "user123"}
 
         try:
-            response = client.post(
-                "/api/saved-searches/", json=search_data, headers=headers
-            )
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.post(
+                    "/api/saved-searches/", json=search_data, headers=headers
+                )
             assert response.status_code == 500
             assert "Failed to create saved search" in response.json()["detail"]
         finally:
             # Clean up the override
             app.dependency_overrides.clear()
-            # Restore the original override from the client fixture
-            from jd_ingestion.database.connection import get_async_session
-
-            async def _override():
-                return AsyncMock()
-
-            app.dependency_overrides[get_async_session] = _override
 
 
 class TestListSavedSearches:
     """Test list saved searches endpoint."""
 
-    def test_list_saved_searches_success(
-        self, mock_analytics_service, client, sample_saved_search
+    @pytest.mark.asyncio
+    async def test_list_saved_searches_success(
+        self, mock_analytics_service, sample_saved_search
     ):
         """Test successful listing of saved searches."""
         from jd_ingestion.database.connection import get_async_session
@@ -229,7 +241,7 @@ class TestListSavedSearches:
             ]
 
             # Set up side_effect to return count first, then search results
-            mock_db_session.execute.side_effect = [
+            mock_db.execute.side_effect = [
                 mock_count_result,
                 mock_search_result,
             ]
@@ -241,7 +253,10 @@ class TestListSavedSearches:
         headers = {"x-user-id": "user123", "x-session-id": "session123"}
 
         try:
-            response = client.get("/api/saved-searches/", headers=headers)
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.get("/api/saved-searches/", headers=headers)
             assert response.status_code == 200
             data = response.json()
             assert data["status"] == "success"
@@ -252,15 +267,10 @@ class TestListSavedSearches:
             # Clean up the override
             app.dependency_overrides.clear()
 
-            # Restore the original override from the client fixture
-            async def _override():
-                return AsyncMock()
-
-            app.dependency_overrides[get_async_session] = _override
-
         mock_analytics_service.track_activity.assert_called_once()
 
-    def test_list_saved_searches_with_filters(self, mock_analytics_service, client):
+    @pytest.mark.asyncio
+    async def test_list_saved_searches_with_filters(self, mock_analytics_service):
         """Test listing saved searches with filters."""
         from jd_ingestion.database.connection import get_async_session
         from jd_ingestion.api.main import app
@@ -273,7 +283,7 @@ class TestListSavedSearches:
 
             mock_count_result = Mock()
             mock_count_result.scalar_one.return_value = 0
-            mock_db_session.execute.side_effect = [mock_count_result, mock_result]
+            mock_db.execute.side_effect = [mock_count_result, mock_result]
 
             return mock_db
 
@@ -288,9 +298,12 @@ class TestListSavedSearches:
         }
 
         try:
-            response = client.get(
-                "/api/saved-searches/", headers=headers, params=params
-            )
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.get(
+                    "/api/saved-searches/", headers=headers, params=params
+                )
             assert response.status_code == 200
             data = response.json()
             assert data["pagination"]["skip"] == 10
@@ -299,29 +312,28 @@ class TestListSavedSearches:
             # Clean up the override
             app.dependency_overrides.clear()
 
-            # Restore the original override from the client fixture
-            async def _override():
-                return AsyncMock()
-
-            app.dependency_overrides[get_async_session] = _override
-
-    def test_list_saved_searches_no_headers(self, client):
+    @pytest.mark.asyncio
+    async def test_list_saved_searches_no_headers(self):
         """Test listing saved searches without required headers."""
-        response = client.get("/api/saved-searches/")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/saved-searches/")
 
         assert response.status_code == 400
         assert (
             "x-user-id or x-session-id header is required" in response.json()["detail"]
         )
 
-    def test_list_saved_searches_error(self, client):
+    @pytest.mark.asyncio
+    async def test_list_saved_searches_error(self):
         """Test listing saved searches with database error."""
         from jd_ingestion.database.connection import get_async_session
         from jd_ingestion.api.main import app
 
         async def error_db_session():
             mock_db = AsyncMock()
-            mock_db_session.execute.side_effect = Exception("Database error")
+            mock_db.execute.side_effect = Exception("Database error")
             return mock_db
 
         app.dependency_overrides[get_async_session] = error_db_session
@@ -329,27 +341,37 @@ class TestListSavedSearches:
         headers = {"x-user-id": "user123"}
 
         try:
-            response = client.get("/api/saved-searches/", headers=headers)
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.get("/api/saved-searches/", headers=headers)
             assert response.status_code == 500
             assert "Failed to list saved searches" in response.json()["detail"]
         finally:
             # Clean up the override
             app.dependency_overrides.clear()
 
-            # Restore the original override from the client fixture
-            async def _override():
-                return AsyncMock()
-
-            app.dependency_overrides[get_async_session] = _override
-
 
 class TestGetSavedSearch:
     """Test get saved search endpoint."""
 
-    def test_get_saved_search_success(
-        self, mock_analytics_service, client, mock_db_session, sample_saved_search
+    @pytest.mark.asyncio
+    async def test_get_saved_search_success(
+        self,
+        mock_analytics_service,
+        override_get_async_session,
+        mock_db_session,
+        sample_saved_search,
     ):
         """Test successful retrieval of a saved search."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
+
         # Setup mock database response
         mock_result = Mock()
         mock_result.scalar_one_or_none.return_value = sample_saved_search
@@ -357,7 +379,10 @@ class TestGetSavedSearch:
 
         headers = {"x-user-id": "user123", "x-session-id": "session123"}
 
-        response = client.get("/api/saved-searches/1", headers=headers)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/saved-searches/1", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -367,7 +392,11 @@ class TestGetSavedSearch:
 
         mock_analytics_service.track_activity.assert_called_once()
 
-    def test_get_saved_search_not_found(self, client):
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_get_saved_search_not_found(self):
         """Test getting non-existent saved search."""
         from jd_ingestion.database.connection import get_async_session
         from jd_ingestion.api.main import app
@@ -376,7 +405,7 @@ class TestGetSavedSearch:
             mock_db = AsyncMock()
             mock_result = Mock()
             mock_result.scalar_one_or_none.return_value = None
-            mock_db_session.execute.return_value = mock_result
+            mock_db.execute.return_value = mock_result
             return mock_db
 
         app.dependency_overrides[get_async_session] = mock_db_session
@@ -384,20 +413,18 @@ class TestGetSavedSearch:
         headers = {"x-user-id": "user123"}
 
         try:
-            response = client.get("/api/saved-searches/999", headers=headers)
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.get("/api/saved-searches/999", headers=headers)
             assert response.status_code == 404
             assert "Saved search not found" in response.json()["detail"]
         finally:
             # Clean up the override
             app.dependency_overrides.clear()
 
-            # Restore the original override from the client fixture
-            async def _override():
-                return AsyncMock()
-
-            app.dependency_overrides[get_async_session] = _override
-
-    def test_get_saved_search_access_denied(self, client, sample_saved_search):
+    @pytest.mark.asyncio
+    async def test_get_saved_search_access_denied(self, sample_saved_search):
         """Test access denied to saved search."""
         from jd_ingestion.database.connection import get_async_session
         from jd_ingestion.api.main import app
@@ -411,7 +438,7 @@ class TestGetSavedSearch:
 
             mock_result = Mock()
             mock_result.scalar_one_or_none.return_value = sample_saved_search
-            mock_db_session.execute.return_value = mock_result
+            mock_db.execute.return_value = mock_result
             return mock_db
 
         app.dependency_overrides[get_async_session] = mock_db_session
@@ -419,21 +446,19 @@ class TestGetSavedSearch:
         headers = {"x-user-id": "user123"}
 
         try:
-            response = client.get("/api/saved-searches/1", headers=headers)
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.get("/api/saved-searches/1", headers=headers)
             assert response.status_code == 403
             assert "Access denied to this saved search" in response.json()["detail"]
         finally:
             # Clean up the override
             app.dependency_overrides.clear()
 
-            # Restore the original override from the client fixture
-            async def _override():
-                return AsyncMock()
-
-            app.dependency_overrides[get_async_session] = _override
-
-    def test_get_public_saved_search(
-        self, mock_analytics_service, client, sample_saved_search
+    @pytest.mark.asyncio
+    async def test_get_public_saved_search(
+        self, mock_analytics_service, sample_saved_search
     ):
         """Test getting public saved search by different user."""
         from jd_ingestion.database.connection import get_async_session
@@ -448,7 +473,7 @@ class TestGetSavedSearch:
 
             mock_result = Mock()
             mock_result.scalar_one_or_none.return_value = sample_saved_search
-            mock_db_session.execute.return_value = mock_result
+            mock_db.execute.return_value = mock_result
             return mock_db
 
         app.dependency_overrides[get_async_session] = mock_db_session
@@ -456,24 +481,22 @@ class TestGetSavedSearch:
         headers = {"x-user-id": "user123"}
 
         try:
-            response = client.get("/api/saved-searches/1", headers=headers)
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.get("/api/saved-searches/1", headers=headers)
             assert response.status_code == 200
         finally:
             # Clean up the override
             app.dependency_overrides.clear()
 
-            # Restore the original override from the client fixture
-            async def _override():
-                return AsyncMock()
-
-            app.dependency_overrides[get_async_session] = _override
-
 
 class TestUpdateSavedSearch:
     """Test update saved search endpoint."""
 
-    def test_update_saved_search_success(
-        self, mock_analytics_service, client, sample_saved_search
+    @pytest.mark.asyncio
+    async def test_update_saved_search_success(
+        self, mock_analytics_service, sample_saved_search
     ):
         """Test successful saved search update."""
         from jd_ingestion.database.connection import get_async_session
@@ -483,7 +506,7 @@ class TestUpdateSavedSearch:
             mock_db = AsyncMock()
             mock_result = Mock()
             mock_result.scalar_one_or_none.return_value = sample_saved_search
-            mock_db_session.execute.return_value = mock_result
+            mock_db.execute.return_value = mock_result
             return mock_db
 
         app.dependency_overrides[get_async_session] = mock_db_session
@@ -496,9 +519,12 @@ class TestUpdateSavedSearch:
         headers = {"x-user-id": "user123"}
 
         try:
-            response = client.put(
-                "/api/saved-searches/1", json=update_data, headers=headers
-            )
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.put(
+                    "/api/saved-searches/1", json=update_data, headers=headers
+                )
             assert response.status_code == 200
             data = response.json()
             assert data["status"] == "success"
@@ -508,13 +534,8 @@ class TestUpdateSavedSearch:
             # Clean up the override
             app.dependency_overrides.clear()
 
-            # Restore the original override from the client fixture
-            async def _override():
-                return AsyncMock()
-
-            app.dependency_overrides[get_async_session] = _override
-
-    def test_update_saved_search_not_found(self, client):
+    @pytest.mark.asyncio
+    async def test_update_saved_search_not_found(self):
         """Test updating non-existent saved search."""
         from jd_ingestion.database.connection import get_async_session
         from jd_ingestion.api.main import app
@@ -523,7 +544,7 @@ class TestUpdateSavedSearch:
             mock_db = AsyncMock()
             mock_result = Mock()
             mock_result.scalar_one_or_none.return_value = None
-            mock_db_session.execute.return_value = mock_result
+            mock_db.execute.return_value = mock_result
             return mock_db
 
         app.dependency_overrides[get_async_session] = mock_db_session
@@ -532,22 +553,20 @@ class TestUpdateSavedSearch:
         headers = {"x-user-id": "user123"}
 
         try:
-            response = client.put(
-                "/api/saved-searches/999", json=update_data, headers=headers
-            )
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.put(
+                    "/api/saved-searches/999", json=update_data, headers=headers
+                )
             assert response.status_code == 404
             assert "Saved search not found" in response.json()["detail"]
         finally:
             # Clean up the override
             app.dependency_overrides.clear()
 
-            # Restore the original override from the client fixture
-            async def _override():
-                return AsyncMock()
-
-            app.dependency_overrides[get_async_session] = _override
-
-    def test_update_saved_search_permission_denied(self, client, sample_saved_search):
+    @pytest.mark.asyncio
+    async def test_update_saved_search_permission_denied(self, sample_saved_search):
         """Test updating saved search without permission."""
         from jd_ingestion.database.connection import get_async_session
         from jd_ingestion.api.main import app
@@ -560,7 +579,7 @@ class TestUpdateSavedSearch:
 
             mock_result = Mock()
             mock_result.scalar_one_or_none.return_value = sample_saved_search
-            mock_db_session.execute.return_value = mock_result
+            mock_db.execute.return_value = mock_result
             return mock_db
 
         app.dependency_overrides[get_async_session] = mock_db_session
@@ -569,9 +588,12 @@ class TestUpdateSavedSearch:
         headers = {"x-user-id": "user123"}
 
         try:
-            response = client.put(
-                "/api/saved-searches/1", json=update_data, headers=headers
-            )
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.put(
+                    "/api/saved-searches/1", json=update_data, headers=headers
+                )
             assert response.status_code == 403
             assert (
                 "Permission denied to update this saved search"
@@ -581,14 +603,9 @@ class TestUpdateSavedSearch:
             # Clean up the override
             app.dependency_overrides.clear()
 
-            # Restore the original override from the client fixture
-            async def _override():
-                return AsyncMock()
-
-            app.dependency_overrides[get_async_session] = _override
-
-    def test_update_saved_search_partial_update(
-        self, mock_analytics_service, client, sample_saved_search
+    @pytest.mark.asyncio
+    async def test_update_saved_search_partial_update(
+        self, mock_analytics_service, sample_saved_search
     ):
         """Test partial update of saved search."""
         from jd_ingestion.database.connection import get_async_session
@@ -598,7 +615,7 @@ class TestUpdateSavedSearch:
             mock_db = AsyncMock()
             mock_result = Mock()
             mock_result.scalar_one_or_none.return_value = sample_saved_search
-            mock_db_session.execute.return_value = mock_result
+            mock_db.execute.return_value = mock_result
             return mock_db
 
         app.dependency_overrides[get_async_session] = mock_db_session
@@ -608,28 +625,37 @@ class TestUpdateSavedSearch:
         headers = {"x-user-id": "user123"}
 
         try:
-            response = client.put(
-                "/api/saved-searches/1", json=update_data, headers=headers
-            )
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.put(
+                    "/api/saved-searches/1", json=update_data, headers=headers
+                )
             assert response.status_code == 200
         finally:
             # Clean up the override
             app.dependency_overrides.clear()
 
-            # Restore the original override from the client fixture
-            async def _override():
-                return AsyncMock()
-
-            app.dependency_overrides[get_async_session] = _override
-
 
 class TestDeleteSavedSearch:
     """Test delete saved search endpoint."""
 
-    def test_delete_saved_search_success(
-        self, mock_analytics_service, client, sample_saved_search, mock_db_session
+    @pytest.mark.asyncio
+    async def test_delete_saved_search_success(
+        self,
+        mock_analytics_service,
+        override_get_async_session,
+        sample_saved_search,
+        mock_db_session,
     ):
         """Test successful saved search deletion."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
 
         mock_result = Mock()
         mock_result.scalar_one_or_none.return_value = sample_saved_search
@@ -637,7 +663,10 @@ class TestDeleteSavedSearch:
 
         headers = {"x-user-id": "user123"}
 
-        response = client.delete("/api/saved-searches/1", headers=headers)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.delete("/api/saved-searches/1", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -647,8 +676,21 @@ class TestDeleteSavedSearch:
         mock_db_session.delete.assert_called_once_with(sample_saved_search)
         mock_analytics_service.track_activity.assert_called_once()
 
-    def test_delete_saved_search_not_found(self, client, mock_db_session):
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_delete_saved_search_not_found(
+        self, override_get_async_session, mock_db_session
+    ):
         """Test deleting non-existent saved search."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
 
         mock_result = Mock()
         mock_result.scalar_one_or_none.return_value = None
@@ -656,15 +698,29 @@ class TestDeleteSavedSearch:
 
         headers = {"x-user-id": "user123"}
 
-        response = client.delete("/api/saved-searches/999", headers=headers)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.delete("/api/saved-searches/999", headers=headers)
 
         assert response.status_code == 404
         assert "Saved search not found" in response.json()["detail"]
 
-    def test_delete_saved_search_permission_denied(
-        self, client, sample_saved_search, mock_db_session
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_delete_saved_search_permission_denied(
+        self, override_get_async_session, sample_saved_search, mock_db_session
     ):
         """Test deleting saved search without permission."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
 
         # Make search owned by different user
         sample_saved_search.user_id = "different_user"
@@ -675,21 +731,39 @@ class TestDeleteSavedSearch:
 
         headers = {"x-user-id": "user123"}
 
-        response = client.delete("/api/saved-searches/1", headers=headers)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.delete("/api/saved-searches/1", headers=headers)
 
         assert response.status_code == 403
         assert (
             "Permission denied to delete this saved search" in response.json()["detail"]
         )
 
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
 
 class TestExecuteSavedSearch:
     """Test execute saved search endpoint."""
 
-    def test_execute_saved_search_success(
-        self, mock_analytics_service, client, sample_saved_search, mock_db_session
+    @pytest.mark.asyncio
+    async def test_execute_saved_search_success(
+        self,
+        mock_analytics_service,
+        override_get_async_session,
+        sample_saved_search,
+        mock_db_session,
     ):
         """Test successful saved search execution."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
 
         mock_result = Mock()
         mock_result.scalar_one_or_none.return_value = sample_saved_search
@@ -697,7 +771,10 @@ class TestExecuteSavedSearch:
 
         headers = {"x-user-id": "user123"}
 
-        response = client.post("/api/saved-searches/1/execute", headers=headers)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/saved-searches/1/execute", headers=headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -709,8 +786,21 @@ class TestExecuteSavedSearch:
 
         mock_analytics_service.track_activity.assert_called_once()
 
-    def test_execute_saved_search_not_found(self, client, mock_db_session):
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_execute_saved_search_not_found(
+        self, override_get_async_session, mock_db_session
+    ):
         """Test executing non-existent saved search."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
 
         mock_result = Mock()
         mock_result.scalar_one_or_none.return_value = None
@@ -718,15 +808,29 @@ class TestExecuteSavedSearch:
 
         headers = {"x-user-id": "user123"}
 
-        response = client.post("/api/saved-searches/999/execute", headers=headers)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/saved-searches/999/execute", headers=headers)
 
         assert response.status_code == 404
         assert "Saved search not found" in response.json()["detail"]
 
-    def test_execute_saved_search_access_denied(
-        self, client, sample_saved_search, mock_db_session
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_execute_saved_search_access_denied(
+        self, override_get_async_session, sample_saved_search, mock_db_session
     ):
         """Test executing saved search without access."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
 
         # Make search private and owned by different user
         sample_saved_search.user_id = "different_user"
@@ -738,19 +842,33 @@ class TestExecuteSavedSearch:
 
         headers = {"x-user-id": "user123"}
 
-        response = client.post("/api/saved-searches/1/execute", headers=headers)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/saved-searches/1/execute", headers=headers)
 
         assert response.status_code == 403
         assert "Access denied to this saved search" in response.json()["detail"]
+
+        # Clean up overrides
+        app.dependency_overrides.clear()
 
 
 class TestGetPopularPublicSearches:
     """Test get popular public searches endpoint."""
 
-    def test_get_popular_public_searches_success(
-        self, client, sample_saved_search, mock_db_session
+    @pytest.mark.asyncio
+    async def test_get_popular_public_searches_success(
+        self, override_get_async_session, sample_saved_search, mock_db_session
     ):
         """Test successful retrieval of popular public searches."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
 
         # Make search public
         sample_saved_search.is_public = "true"
@@ -759,7 +877,10 @@ class TestGetPopularPublicSearches:
         mock_result.scalars.return_value.all.return_value = [sample_saved_search]
         mock_db_session.execute.return_value = mock_result
 
-        response = client.get("/api/saved-searches/public/popular?limit=5")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/saved-searches/public/popular?limit=5")
 
         assert response.status_code == 200
         data = response.json()
@@ -768,42 +889,92 @@ class TestGetPopularPublicSearches:
         assert len(data["popular_searches"]) == 1
         assert data["popular_searches"][0]["name"] == "Test Search"
 
-    def test_get_popular_public_searches_empty(self, client, mock_db_session):
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_get_popular_public_searches_empty(
+        self, override_get_async_session, mock_db_session
+    ):
         """Test getting popular public searches when none exist."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
 
         mock_result = Mock()
         mock_result.scalars.return_value.all.return_value = []
         mock_db_session.execute.return_value = mock_result
 
-        response = client.get("/api/saved-searches/public/popular")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/saved-searches/public/popular")
 
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
         assert len(data["popular_searches"]) == 0
 
-    def test_get_popular_public_searches_limit_validation(self, client):
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_get_popular_public_searches_limit_validation(self):
         """Test limit parameter validation."""
-        response = client.get("/api/saved-searches/public/popular?limit=100")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/saved-searches/public/popular?limit=100")
 
         assert response.status_code == 422  # Validation error
 
-    def test_get_popular_public_searches_error(self, client, mock_db_session):
+    @pytest.mark.asyncio
+    async def test_get_popular_public_searches_error(
+        self, override_get_async_session, mock_db_session
+    ):
         """Test error handling for popular public searches."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
+
         _mock_db = AsyncMock()
         mock_db_session.execute.side_effect = Exception("Database error")
 
-        response = client.get("/api/saved-searches/public/popular")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/saved-searches/public/popular")
 
         assert response.status_code == 500
         assert "Failed to get popular searches" in response.json()["detail"]
+
+        # Clean up overrides
+        app.dependency_overrides.clear()
 
 
 class TestUserPreferences:
     """Test user preferences endpoints."""
 
-    def test_set_user_preference_success(self, client, mock_db_session):
+    @pytest.mark.asyncio
+    async def test_set_user_preference_success(
+        self, override_get_async_session, mock_db_session
+    ):
         """Test successful user preference setting."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
 
         # Mock no existing preference
         mock_result = Mock()
@@ -821,9 +992,12 @@ class TestUserPreferences:
         }
         headers = {"x-user-id": "user123"}
 
-        response = client.post(
-            "/api/saved-searches/preferences", json=preference_data, headers=headers
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/saved-searches/preferences", json=preference_data, headers=headers
+            )
 
         assert response.status_code == 200
         data = response.json()
@@ -832,10 +1006,21 @@ class TestUserPreferences:
         assert data["preference"]["preference_key"] == "theme"
         assert data["preference"]["preference_value"] == "dark"
 
-    def test_set_user_preference_update_existing(
-        self, client, sample_user_preference, mock_db_session
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_set_user_preference_update_existing(
+        self, override_get_async_session, sample_user_preference, mock_db_session
     ):
         """Test updating existing user preference."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
 
         # Mock existing preference
         mock_result = Mock()
@@ -849,15 +1034,22 @@ class TestUserPreferences:
         }
         headers = {"x-user-id": "user123"}
 
-        response = client.post(
-            "/api/saved-searches/preferences", json=preference_data, headers=headers
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/saved-searches/preferences", json=preference_data, headers=headers
+            )
 
         assert response.status_code == 200
         data = response.json()
         assert data["preference"]["preference_value"] == "light"
 
-    def test_set_user_preference_no_headers(self, client):
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_set_user_preference_no_headers(self):
         """Test setting user preference without required headers."""
         preference_data = {
             "preference_type": "ui",
@@ -865,17 +1057,30 @@ class TestUserPreferences:
             "preference_value": "dark",
         }
 
-        response = client.post("/api/saved-searches/preferences", json=preference_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/saved-searches/preferences", json=preference_data
+            )
 
         assert response.status_code == 400
         assert (
             "x-user-id or x-session-id header is required" in response.json()["detail"]
         )
 
-    def test_get_user_preferences_success(
-        self, client, sample_user_preference, mock_db_session
+    @pytest.mark.asyncio
+    async def test_get_user_preferences_success(
+        self, override_get_async_session, sample_user_preference, mock_db_session
     ):
         """Test successful user preferences retrieval."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
 
         mock_result = Mock()
         mock_result.scalars.return_value.all.return_value = [sample_user_preference]
@@ -883,7 +1088,12 @@ class TestUserPreferences:
 
         headers = {"x-user-id": "user123"}
 
-        response = client.get("/api/saved-searches/preferences/ui", headers=headers)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/saved-searches/preferences/ui", headers=headers
+            )
 
         assert response.status_code == 200
         data = response.json()
@@ -892,8 +1102,21 @@ class TestUserPreferences:
         assert len(data["preferences"]) == 1
         assert data["preferences"][0]["preference_key"] == "theme"
 
-    def test_get_user_preferences_empty(self, client, mock_db_session):
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_get_user_preferences_empty(
+        self, override_get_async_session, mock_db_session
+    ):
         """Test getting user preferences when none exist."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
 
         mock_result = Mock()
         mock_result.scalars.return_value.all.return_value = []
@@ -901,15 +1124,27 @@ class TestUserPreferences:
 
         headers = {"x-session-id": "session123"}
 
-        response = client.get("/api/saved-searches/preferences/ui", headers=headers)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/saved-searches/preferences/ui", headers=headers
+            )
 
         assert response.status_code == 200
         data = response.json()
         assert len(data["preferences"]) == 0
 
-    def test_get_user_preferences_no_headers(self, client):
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_get_user_preferences_no_headers(self):
         """Test getting user preferences without required headers."""
-        response = client.get("/api/saved-searches/preferences/ui")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/saved-searches/preferences/ui")
 
         assert response.status_code == 400
         assert (
@@ -938,10 +1173,23 @@ class TestSavedSearchesEdgeCases:
         assert result["user_id"] is None
         assert result["session_id"] is None
 
-    def test_search_permission_logic_session_only(
-        self, mock_analytics_service, client, sample_saved_search, mock_db_session
+    @pytest.mark.asyncio
+    async def test_search_permission_logic_session_only(
+        self,
+        mock_analytics_service,
+        override_get_async_session,
+        sample_saved_search,
+        mock_db_session,
     ):
         """Test permission logic for session-only users."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
+
         _mock_db = AsyncMock()
 
         # Make search owned by session only
@@ -955,18 +1203,36 @@ class TestSavedSearchesEdgeCases:
 
         # Access with same session
         headers = {"x-session-id": "session123"}
-        response = client.get("/api/saved-searches/1", headers=headers)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/saved-searches/1", headers=headers)
         assert response.status_code == 200
 
         # Access with different session
         headers = {"x-session-id": "different_session"}
-        response = client.get("/api/saved-searches/1", headers=headers)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/saved-searches/1", headers=headers)
         assert response.status_code == 403
 
-    def test_search_filters_in_list_endpoint(
-        self, mock_analytics_service, client, mock_db_session
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_search_filters_in_list_endpoint(
+        self, mock_analytics_service, override_get_async_session, mock_db_session
     ):
         """Test search filtering logic in list endpoint."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
+
         _mock_db = AsyncMock()
 
         # Mock empty results for filters test
@@ -981,23 +1247,52 @@ class TestSavedSearchesEdgeCases:
         headers = {"x-user-id": "user123"}
 
         # Test search type filter
-        response = client.get(
-            "/api/saved-searches/?search_type=semantic", headers=headers
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/saved-searches/?search_type=semantic", headers=headers
+            )
         assert response.status_code == 200
 
         # Test favorite filter
-        response = client.get("/api/saved-searches/?is_favorite=true", headers=headers)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/saved-searches/?is_favorite=true", headers=headers
+            )
         assert response.status_code == 200
 
         # Test pagination
-        response = client.get("/api/saved-searches/?skip=20&limit=5", headers=headers)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(
+                "/api/saved-searches/?skip=20&limit=5", headers=headers
+            )
         assert response.status_code == 200
 
-    def test_analytics_tracking_calls(
-        self, mock_analytics_service, client, sample_saved_search, mock_db_session
+        # Clean up overrides
+        app.dependency_overrides.clear()
+
+    @pytest.mark.asyncio
+    async def test_analytics_tracking_calls(
+        self,
+        mock_analytics_service,
+        override_get_async_session,
+        sample_saved_search,
+        mock_db_session,
     ):
         """Test that analytics tracking is called with correct parameters."""
+        # Clear any existing overrides first
+        app.dependency_overrides.clear()
+
+        # Override the database dependency
+        from jd_ingestion.database.connection import get_async_session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
+
         _mock_db = AsyncMock()
 
         mock_result = Mock()
@@ -1007,7 +1302,10 @@ class TestSavedSearchesEdgeCases:
         headers = {"x-user-id": "user123", "x-session-id": "session123"}
 
         # Test get saved search analytics
-        response = client.get("/api/saved-searches/1", headers=headers)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/saved-searches/1", headers=headers)
         assert response.status_code == 200
 
         # Verify analytics call
@@ -1017,3 +1315,6 @@ class TestSavedSearchesEdgeCases:
         assert call_kwargs["resource_id"] == "1"
         assert call_kwargs["user_id"] == "user123"
         assert call_kwargs["session_id"] == "session123"
+
+        # Clean up overrides
+        app.dependency_overrides.clear()

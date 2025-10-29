@@ -6,16 +6,10 @@ import pytest
 import json
 from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 
 from jd_ingestion.api.main import app
 from jd_ingestion.api.endpoints.websocket import ConnectionManager, manager
-
-
-@pytest.fixture
-def client():
-    """Test client fixture."""
-    return TestClient(app)
 
 
 @pytest.fixture
@@ -399,17 +393,22 @@ class TestConnectionManager:
 class TestWebSocketEndpoints:
     """Test WebSocket endpoint functionality."""
 
-    def test_get_active_sessions_empty(self, client):
+    @pytest.mark.asyncio
+    async def test_get_active_sessions_empty(self):
         """Test getting active sessions when none exist."""
         # Reset global manager state
         manager.editing_sessions.clear()
 
-        response = client.get("/api/ws/sessions/active")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/ws/sessions/active")
         assert response.status_code == 200
         data = response.json()
         assert data["active_sessions"] == []
 
-    def test_get_active_sessions_with_data(self, client):
+    @pytest.mark.asyncio
+    async def test_get_active_sessions_with_data(self):
         """Test getting active sessions with existing sessions."""
         # Set up test data in global manager
         manager.editing_sessions["session_1"] = {
@@ -427,7 +426,10 @@ class TestWebSocketEndpoints:
             "operation_count": 0,
         }
 
-        response = client.get("/api/ws/sessions/active")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/ws/sessions/active")
         assert response.status_code == 200
         data = response.json()
         assert len(data["active_sessions"]) == 2
@@ -442,7 +444,8 @@ class TestWebSocketEndpoints:
         # Clean up
         manager.editing_sessions.clear()
 
-    def test_get_session_state_success(self, client):
+    @pytest.mark.asyncio
+    async def test_get_session_state_success(self):
         """Test getting session state for existing session."""
         session_id = "test_session"
         manager.editing_sessions[session_id] = {
@@ -453,7 +456,10 @@ class TestWebSocketEndpoints:
             "operation_count": 10,
         }
 
-        response = client.get(f"/api/ws/sessions/{session_id}/state")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get(f"/api/ws/sessions/{session_id}/state")
         assert response.status_code == 200
         data = response.json()
         assert data["session_id"] == session_id
@@ -465,9 +471,13 @@ class TestWebSocketEndpoints:
         # Clean up
         del manager.editing_sessions[session_id]
 
-    def test_get_session_state_not_found(self, client):
+    @pytest.mark.asyncio
+    async def test_get_session_state_not_found(self):
         """Test getting session state for non-existent session."""
-        response = client.get("/api/ws/sessions/nonexistent/state")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/ws/sessions/nonexistent/state")
         assert response.status_code == 404
         assert "Session not found" in response.json()["detail"]
 

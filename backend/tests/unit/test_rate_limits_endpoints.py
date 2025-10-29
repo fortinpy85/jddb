@@ -3,7 +3,7 @@ Tests for rate limiting API endpoints.
 """
 
 import pytest
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime
 
@@ -13,12 +13,6 @@ from jd_ingestion.services.rate_limiting_service import (
     RateLimit,
     RateLimitStatus,
 )
-
-
-@pytest.fixture
-def client():
-    """Test client fixture."""
-    return TestClient(app)
 
 
 @pytest.fixture
@@ -74,13 +68,13 @@ def sample_rate_limit_status():
 class TestGetRateLimitStatus:
     """Test rate limit status endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_get_rate_limit_status_success(
+    async def test_get_rate_limit_status_success(
         self,
         mock_session,
         mock_rate_limiting_service,
         mock_log_performance,
-        client,
         sample_usage_stats,
     ):
         """Test successful rate limit status retrieval."""
@@ -118,7 +112,10 @@ class TestGetRateLimitStatus:
             side_effect=mock_get_recommended_delay
         )
 
-        response = client.get("/api/rate-limits/status/openai")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/status/openai")
 
         assert response.status_code == 200
         data = response.json()
@@ -128,20 +125,25 @@ class TestGetRateLimitStatus:
         assert "recommended_delay_seconds" in data
         assert "status_timestamp" in data
 
-    def test_get_rate_limit_status_service_not_found(
-        self, mock_rate_limiting_service, client
+    @pytest.mark.asyncio
+    async def test_get_rate_limit_status_service_not_found(
+        self, mock_rate_limiting_service
     ):
         """Test rate limit status for non-existent service."""
         mock_rate_limiting_service.rate_limits = {}
 
-        response = client.get("/api/rate-limits/status/nonexistent")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/status/nonexistent")
 
         assert response.status_code == 404
         assert "Service 'nonexistent' not found" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_get_rate_limit_status_error(
-        self, mock_session, mock_rate_limiting_service, mock_log_performance, client
+    async def test_get_rate_limit_status_error(
+        self, mock_session, mock_rate_limiting_service, mock_log_performance
     ):
         """Test rate limit status with service error."""
         mock_rate_limiting_service.rate_limits = {"openai": {}}
@@ -149,7 +151,10 @@ class TestGetRateLimitStatus:
             side_effect=Exception("Database error")
         )
 
-        response = client.get("/api/rate-limits/status/openai")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/status/openai")
 
         assert response.status_code == 500
         assert "Failed to get rate limit status" in response.json()["detail"]
@@ -158,13 +163,13 @@ class TestGetRateLimitStatus:
 class TestCheckRateLimit:
     """Test rate limit checking endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_check_rate_limit_allowed(
+    async def test_check_rate_limit_allowed(
         self,
         mock_session,
         mock_rate_limiting_service,
         mock_log_performance,
-        client,
         sample_rate_limit_status,
     ):
         """Test rate limit check when request is allowed."""
@@ -173,15 +178,18 @@ class TestCheckRateLimit:
         )
         mock_rate_limiting_service.get_recommended_delay = AsyncMock(return_value=0.0)
 
-        response = client.post(
-            "/api/rate-limits/check/openai",
-            params={
-                "operation_type": "text_generation",
-                "estimated_tokens": 100,
-                "estimated_cost": 0.002,
-                "user_id": "user123",
-            },
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/rate-limits/check/openai",
+                params={
+                    "operation_type": "text_generation",
+                    "estimated_tokens": 100,
+                    "estimated_cost": 0.002,
+                    "user_id": "user123",
+                },
+            )
 
         assert response.status_code == 200
         data = response.json()
@@ -193,13 +201,13 @@ class TestCheckRateLimit:
         assert "rate_limit_statuses" in data
         assert "check_timestamp" in data
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_check_rate_limit_not_allowed(
+    async def test_check_rate_limit_not_allowed(
         self,
         mock_session,
         mock_rate_limiting_service,
         mock_log_performance,
-        client,
         sample_rate_limit_status,
     ):
         """Test rate limit check when request is not allowed."""
@@ -211,29 +219,36 @@ class TestCheckRateLimit:
         )
         mock_rate_limiting_service.get_recommended_delay = AsyncMock(return_value=60.0)
 
-        response = client.post(
-            "/api/rate-limits/check/openai",
-            params={"operation_type": "text_generation", "estimated_tokens": 1000},
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/rate-limits/check/openai",
+                params={"operation_type": "text_generation", "estimated_tokens": 1000},
+            )
 
         assert response.status_code == 200
         data = response.json()
         assert data["is_allowed"] is False
         assert data["recommended_delay_seconds"] == 60.0
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_check_rate_limit_error(
-        self, mock_session, mock_rate_limiting_service, mock_log_performance, client
+    async def test_check_rate_limit_error(
+        self, mock_session, mock_rate_limiting_service, mock_log_performance
     ):
         """Test rate limit check with service error."""
         mock_rate_limiting_service.check_rate_limit = AsyncMock(
             side_effect=Exception("Service error")
         )
 
-        response = client.post(
-            "/api/rate-limits/check/openai",
-            params={"operation_type": "text_generation"},
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/rate-limits/check/openai",
+                params={"operation_type": "text_generation"},
+            )
 
         assert response.status_code == 500
         assert "Failed to check rate limit" in response.json()["detail"]
@@ -242,22 +257,26 @@ class TestCheckRateLimit:
 class TestRecordUsage:
     """Test usage recording endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_record_usage_success(
-        self, mock_session, mock_rate_limiting_service, mock_log_performance, client
+    async def test_record_usage_success(
+        self, mock_session, mock_rate_limiting_service, mock_log_performance
     ):
         """Test successful usage recording."""
         mock_rate_limiting_service.record_usage = AsyncMock()
 
-        response = client.post(
-            "/api/rate-limits/record/openai",
-            params={
-                "operation_type": "text_generation",
-                "tokens_used": 150,
-                "cost": 0.003,
-                "user_id": "user123",
-            },
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/rate-limits/record/openai",
+                params={
+                    "operation_type": "text_generation",
+                    "tokens_used": 150,
+                    "cost": 0.003,
+                    "user_id": "user123",
+                },
+            )
 
         assert response.status_code == 200
         data = response.json()
@@ -276,35 +295,43 @@ class TestRecordUsage:
             user_id="user123",
         )
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_record_usage_minimal_params(
-        self, mock_session, mock_rate_limiting_service, mock_log_performance, client
+    async def test_record_usage_minimal_params(
+        self, mock_session, mock_rate_limiting_service, mock_log_performance
     ):
         """Test usage recording with minimal parameters."""
         mock_rate_limiting_service.record_usage = AsyncMock()
 
-        response = client.post(
-            "/api/rate-limits/record/openai", params={"operation_type": "embedding"}
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/rate-limits/record/openai", params={"operation_type": "embedding"}
+            )
 
         assert response.status_code == 200
         data = response.json()
         assert data["tokens_used"] == 1  # default value
         assert data["cost"] == 0.0  # default value
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_record_usage_error(
-        self, mock_session, mock_rate_limiting_service, mock_log_performance, client
+    async def test_record_usage_error(
+        self, mock_session, mock_rate_limiting_service, mock_log_performance
     ):
         """Test usage recording with service error."""
         mock_rate_limiting_service.record_usage = AsyncMock(
             side_effect=Exception("Recording error")
         )
 
-        response = client.post(
-            "/api/rate-limits/record/openai",
-            params={"operation_type": "text_generation", "tokens_used": 100},
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/rate-limits/record/openai",
+                params={"operation_type": "text_generation", "tokens_used": 100},
+            )
 
         assert response.status_code == 500
         assert "Failed to record usage" in response.json()["detail"]
@@ -313,13 +340,13 @@ class TestRecordUsage:
 class TestGetUsageStatistics:
     """Test usage statistics endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_get_usage_statistics_success(
+    async def test_get_usage_statistics_success(
         self,
         mock_session,
         mock_rate_limiting_service,
         mock_log_performance,
-        client,
         sample_usage_stats,
     ):
         """Test successful usage statistics retrieval."""
@@ -327,7 +354,10 @@ class TestGetUsageStatistics:
             return_value=sample_usage_stats
         )
 
-        response = client.get("/api/rate-limits/usage/openai?period_hours=48")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/usage/openai?period_hours=48")
 
         assert response.status_code == 200
         data = response.json()
@@ -340,13 +370,13 @@ class TestGetUsageStatistics:
             mock_session.return_value.__aenter__.return_value, "openai", 48
         )
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_get_usage_statistics_default_period(
+    async def test_get_usage_statistics_default_period(
         self,
         mock_session,
         mock_rate_limiting_service,
         mock_log_performance,
-        client,
         sample_usage_stats,
     ):
         """Test usage statistics with default period."""
@@ -354,7 +384,10 @@ class TestGetUsageStatistics:
             return_value=sample_usage_stats
         )
 
-        response = client.get("/api/rate-limits/usage/openai")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/usage/openai")
 
         assert response.status_code == 200
         mock_rate_limiting_service.get_usage_stats.assert_called_once_with(
@@ -363,23 +396,31 @@ class TestGetUsageStatistics:
             24,  # default period
         )
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_get_usage_statistics_invalid_period(self, mock_session, client):
+    async def test_get_usage_statistics_invalid_period(self, mock_session):
         """Test usage statistics with invalid period."""
-        response = client.get("/api/rate-limits/usage/openai?period_hours=200")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/usage/openai?period_hours=200")
 
         assert response.status_code == 422  # Validation error
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_get_usage_statistics_error(
-        self, mock_session, mock_rate_limiting_service, mock_log_performance, client
+    async def test_get_usage_statistics_error(
+        self, mock_session, mock_rate_limiting_service, mock_log_performance
     ):
         """Test usage statistics with service error."""
         mock_rate_limiting_service.get_usage_stats = AsyncMock(
             side_effect=Exception("Database error")
         )
 
-        response = client.get("/api/rate-limits/usage/openai")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/usage/openai")
 
         assert response.status_code == 500
         assert "Failed to get usage statistics" in response.json()["detail"]
@@ -388,9 +429,10 @@ class TestGetUsageStatistics:
 class TestGetCostOptimization:
     """Test cost optimization recommendations endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_get_cost_optimization_success(
-        self, mock_session, mock_rate_limiting_service, mock_log_performance, client
+    async def test_get_cost_optimization_success(
+        self, mock_session, mock_rate_limiting_service, mock_log_performance
     ):
         """Test successful cost optimization recommendations."""
         sample_recommendations = [
@@ -416,7 +458,10 @@ class TestGetCostOptimization:
             return_value=sample_recommendations
         )
 
-        response = client.get("/api/rate-limits/optimization/openai")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/optimization/openai")
 
         assert response.status_code == 200
         data = response.json()
@@ -425,16 +470,20 @@ class TestGetCostOptimization:
         assert data[0]["priority"] == "high"
         assert data[1]["category"] == "model_selection"
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_get_cost_optimization_default_service(
-        self, mock_session, mock_rate_limiting_service, mock_log_performance, client
+    async def test_get_cost_optimization_default_service(
+        self, mock_session, mock_rate_limiting_service, mock_log_performance
     ):
         """Test cost optimization with default service parameter."""
         mock_rate_limiting_service.get_cost_optimization_recommendations = AsyncMock(
             return_value=[]
         )
 
-        response = client.get("/api/rate-limits/optimization/")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/optimization/")
 
         assert response.status_code == 200
         mock_rate_limiting_service.get_cost_optimization_recommendations.assert_called_once_with(
@@ -442,16 +491,20 @@ class TestGetCostOptimization:
             "openai",  # default service
         )
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_get_cost_optimization_error(
-        self, mock_session, mock_rate_limiting_service, mock_log_performance, client
+    async def test_get_cost_optimization_error(
+        self, mock_session, mock_rate_limiting_service, mock_log_performance
     ):
         """Test cost optimization with service error."""
         mock_rate_limiting_service.get_cost_optimization_recommendations = AsyncMock(
             side_effect=Exception("Analysis error")
         )
 
-        response = client.get("/api/rate-limits/optimization/openai")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/optimization/openai")
 
         assert response.status_code == 500
         assert "Failed to generate recommendations" in response.json()["detail"]
@@ -460,9 +513,10 @@ class TestGetCostOptimization:
 class TestUpdateRateLimits:
     """Test rate limit update endpoint."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_update_rate_limits_success(
-        self, mock_session, mock_rate_limiting_service, mock_log_performance, client
+    async def test_update_rate_limits_success(
+        self, mock_session, mock_rate_limiting_service, mock_log_performance
     ):
         """Test successful rate limit update."""
         mock_rate_limiting_service.update_rate_limits = AsyncMock(return_value=True)
@@ -480,7 +534,10 @@ class TestUpdateRateLimits:
             },
         }
 
-        response = client.put("/api/rate-limits/limits/openai", json=limits_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.put("/api/rate-limits/limits/openai", json=limits_data)
 
         assert response.status_code == 200
         data = response.json()
@@ -489,9 +546,10 @@ class TestUpdateRateLimits:
         assert "updated_at" in data
         assert "updated_limits" in data
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_update_rate_limits_invalid_type(
-        self, mock_session, mock_rate_limiting_service, mock_log_performance, client
+    async def test_update_rate_limits_invalid_type(
+        self, mock_session, mock_rate_limiting_service, mock_log_performance
     ):
         """Test rate limit update with invalid limit type."""
         mock_rate_limiting_service.update_rate_limits = AsyncMock(return_value=True)
@@ -501,33 +559,44 @@ class TestUpdateRateLimits:
             "requests_per_minute": {"limit": 3000, "window_seconds": 60},
         }
 
-        response = client.put("/api/rate-limits/limits/openai", json=limits_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.put("/api/rate-limits/limits/openai", json=limits_data)
 
         assert response.status_code == 200  # Should succeed with valid limits only
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_update_rate_limits_no_valid_limits(self, mock_session, client):
+    async def test_update_rate_limits_no_valid_limits(self, mock_session):
         """Test rate limit update with no valid limits."""
         limits_data = {
             "invalid_type_1": {"limit": 1000},
             "invalid_type_2": {"limit": 2000},
         }
 
-        response = client.put("/api/rate-limits/limits/openai", json=limits_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.put("/api/rate-limits/limits/openai", json=limits_data)
 
         assert response.status_code == 400
         assert "No valid rate limits provided" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
-    def test_update_rate_limits_service_failure(
-        self, mock_session, mock_rate_limiting_service, mock_log_performance, client
+    async def test_update_rate_limits_service_failure(
+        self, mock_session, mock_rate_limiting_service, mock_log_performance
     ):
         """Test rate limit update with service failure."""
         mock_rate_limiting_service.update_rate_limits = AsyncMock(return_value=False)
 
         limits_data = {"requests_per_minute": {"limit": 3000, "window_seconds": 60}}
 
-        response = client.put("/api/rate-limits/limits/openai", json=limits_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.put("/api/rate-limits/limits/openai", json=limits_data)
 
         assert response.status_code == 500
         assert "Failed to update rate limits" in response.json()["detail"]
@@ -536,7 +605,8 @@ class TestUpdateRateLimits:
 class TestListServices:
     """Test services listing endpoint."""
 
-    def test_list_services_success(self, mock_rate_limiting_service, client):
+    @pytest.mark.asyncio
+    async def test_list_services_success(self, mock_rate_limiting_service):
         """Test successful services listing."""
         mock_rate_limits = {
             "openai": {
@@ -556,7 +626,10 @@ class TestListServices:
 
         mock_rate_limiting_service.rate_limits = mock_rate_limits
 
-        response = client.get("/api/rate-limits/services")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/services")
 
         assert response.status_code == 200
         data = response.json()
@@ -567,21 +640,29 @@ class TestListServices:
         assert "requests_per_minute" in openai_service["rate_limits"]
         assert "tokens_per_minute" in openai_service["rate_limits"]
 
-    def test_list_services_empty(self, mock_rate_limiting_service, client):
+    @pytest.mark.asyncio
+    async def test_list_services_empty(self, mock_rate_limiting_service):
         """Test services listing when no services configured."""
         mock_rate_limiting_service.rate_limits = {}
 
-        response = client.get("/api/rate-limits/services")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/services")
 
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 0
 
-    def test_list_services_error(self, mock_rate_limiting_service, client):
+    @pytest.mark.asyncio
+    async def test_list_services_error(self, mock_rate_limiting_service):
         """Test services listing with error."""
         mock_rate_limiting_service.rate_limits = None  # Cause AttributeError
 
-        response = client.get("/api/rate-limits/services")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/services")
 
         assert response.status_code == 500
         assert "Failed to list services" in response.json()["detail"]
@@ -590,7 +671,8 @@ class TestListServices:
 class TestHealthCheck:
     """Test health check endpoint."""
 
-    def test_health_check_healthy(self, mock_rate_limiting_service, client):
+    @pytest.mark.asyncio
+    async def test_health_check_healthy(self, mock_rate_limiting_service):
         """Test healthy rate limiting service."""
         mock_rate_limiting_service.rate_limits = {"openai": {}, "anthropic": {}}
         mock_rate_limiting_service.token_buckets = {
@@ -598,7 +680,10 @@ class TestHealthCheck:
             "anthropic": {"bucket1": Mock()},
         }
 
-        response = client.get("/api/rate-limits/health")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/health")
 
         assert response.status_code == 200
         data = response.json()
@@ -607,11 +692,15 @@ class TestHealthCheck:
         assert data["token_buckets_active"] == 3
         assert "timestamp" in data
 
-    def test_health_check_unhealthy(self, mock_rate_limiting_service, client):
+    @pytest.mark.asyncio
+    async def test_health_check_unhealthy(self, mock_rate_limiting_service):
         """Test unhealthy rate limiting service."""
         mock_rate_limiting_service.rate_limits = None  # Cause error
 
-        response = client.get("/api/rate-limits/health")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/health")
 
         assert response.status_code == 200  # Endpoint returns 200 even when unhealthy
         data = response.json()
@@ -623,15 +712,15 @@ class TestHealthCheck:
 class TestRateLimitsEndpointsIntegration:
     """Test rate limits endpoints integration scenarios."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.rate_limits.get_async_session")
     @patch("jd_ingestion.api.endpoints.rate_limits.log_performance_metric")
-    def test_performance_logging_integration(
+    async def test_performance_logging_integration(
         self,
         mock_log_metric,
         mock_session,
         mock_rate_limiting_service,
         mock_log_performance,
-        client,
     ):
         """Test that performance metrics are logged correctly."""
         mock_rate_limiting_service.rate_limits = {"openai": {}}
@@ -639,7 +728,10 @@ class TestRateLimitsEndpointsIntegration:
         mock_rate_limiting_service.token_buckets = {}
         mock_rate_limiting_service.get_recommended_delay = AsyncMock(return_value=0.0)
 
-        response = client.get("/api/rate-limits/status/openai")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/rate-limits/status/openai")
 
         assert response.status_code == 200
         mock_log_metric.assert_called_once()
@@ -647,25 +739,29 @@ class TestRateLimitsEndpointsIntegration:
         assert args[0] == "rate_limit_status"  # metric name
         assert isinstance(args[1], float)  # duration
 
-    def test_query_parameter_validation(self, client):
+    @pytest.mark.asyncio
+    async def test_query_parameter_validation(self):
         """Test query parameter validation."""
-        # Test invalid estimated_tokens (should be >= 1)
-        response = client.post(
-            "/api/rate-limits/check/openai",
-            params={"operation_type": "test", "estimated_tokens": 0},
-        )
-        assert response.status_code == 422
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            # Test invalid estimated_tokens (should be >= 1)
+            response = await ac.post(
+                "/api/rate-limits/check/openai",
+                params={"operation_type": "test", "estimated_tokens": 0},
+            )
+            assert response.status_code == 422
 
-        # Test invalid estimated_cost (should be >= 0)
-        response = client.post(
-            "/api/rate-limits/check/openai",
-            params={"operation_type": "test", "estimated_cost": -1.0},
-        )
-        assert response.status_code == 422
+            # Test invalid estimated_cost (should be >= 0)
+            response = await ac.post(
+                "/api/rate-limits/check/openai",
+                params={"operation_type": "test", "estimated_cost": -1.0},
+            )
+            assert response.status_code == 422
 
-        # Test invalid tokens_used in record endpoint (should be >= 0)
-        response = client.post(
-            "/api/rate-limits/record/openai",
-            params={"operation_type": "test", "tokens_used": -10},
-        )
-        assert response.status_code == 422
+            # Test invalid tokens_used in record endpoint (should be >= 0)
+            response = await ac.post(
+                "/api/rate-limits/record/openai",
+                params={"operation_type": "test", "tokens_used": -10},
+            )
+            assert response.status_code == 422

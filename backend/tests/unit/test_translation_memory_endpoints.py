@@ -3,29 +3,25 @@ Tests for translation memory API endpoints.
 """
 
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 from datetime import datetime
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 
 from jd_ingestion.api.main import app
 
 
 @pytest.fixture
-def client():
-    """Create test client."""
-    return TestClient(app)
-
-
-@pytest.fixture
 def mock_tm_service():
     """Mock translation memory service."""
-    service = Mock()
-    service.create_project = Mock()
-    service.add_translation_memory = Mock()
-    service.get_translation_suggestions = Mock()
-    service.search_similar_translations = Mock()
-    service.update_usage_stats = Mock()
-    service.get_project_statistics = Mock()
+    from unittest.mock import AsyncMock
+
+    service = AsyncMock()
+    service.create_project = AsyncMock()
+    service.add_translation_memory = AsyncMock()
+    service.get_translation_suggestions = AsyncMock()
+    service.search_similar_translations = AsyncMock()
+    service.update_usage_stats = AsyncMock()
+    service.get_project_statistics = AsyncMock()
     return service
 
 
@@ -93,18 +89,22 @@ def mock_translation():
 class TestTranslationProjectEndpoints:
     """Test translation project management endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_create_project_success(
-        self, mock_service, client, sample_project_data, mock_project
+    async def test_create_project_success(
+        self, mock_service, sample_project_data, mock_project
     ):
         """Test successful project creation."""
         from unittest.mock import AsyncMock
 
         mock_service.create_project = AsyncMock(return_value=mock_project)
 
-        response = client.post(
-            "/api/translation-memory/projects", json=sample_project_data
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/projects", json=sample_project_data
+            )
         assert response.status_code == 200
 
         data = response.json()
@@ -114,20 +114,25 @@ class TestTranslationProjectEndpoints:
         assert data["project"]["source_language"] == "en"
         assert data["project"]["target_language"] == "fr"
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_create_project_service_error(
-        self, mock_service, client, sample_project_data
+    async def test_create_project_service_error(
+        self, mock_service, sample_project_data
     ):
         """Test project creation with service error."""
         mock_service.create_project.side_effect = Exception("Database error")
 
-        response = client.post(
-            "/api/translation-memory/projects", json=sample_project_data
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/projects", json=sample_project_data
+            )
         assert response.status_code == 500
         assert "Failed to create translation project" in response.json()["detail"]
 
-    def test_create_project_validation_error(self, client):
+    @pytest.mark.asyncio
+    async def test_create_project_validation_error(self):
         """Test project creation with validation errors."""
         invalid_data = {
             "name": "",  # Empty name
@@ -136,21 +141,30 @@ class TestTranslationProjectEndpoints:
             # Missing required fields
         }
 
-        response = client.post("/api/translation-memory/projects", json=invalid_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/projects", json=invalid_data
+            )
         assert response.status_code == 422
 
-    def test_list_projects_success(self, client):
+    @pytest.mark.asyncio
+    async def test_list_projects_success(self):
         """Test successful project listing."""
         with patch(
-            "jd_ingestion.api.endpoints.translation_memory.get_db"
+            "jd_ingestion.api.endpoints.translation_memory.get_async_session"
         ) as mock_get_db:
-            mock_db = Mock()
+            mock_db = AsyncMock()
             mock_get_db.return_value = mock_db
 
-            # Mock query
-            mock_query = Mock()
-            mock_query.count.return_value = 2
-            mock_query.offset.return_value.limit.return_value.all.return_value = [
+            # Mock count query result
+            count_result = Mock()
+            count_result.scalar_one.return_value = 2
+
+            # Mock project query result
+            project_result = Mock()
+            project_result.scalars.return_value.all.return_value = [
                 Mock(
                     id=1,
                     name="Project 1",
@@ -160,6 +174,7 @@ class TestTranslationProjectEndpoints:
                     project_type="job_descriptions",
                     status="active",
                     created_at=datetime(2024, 1, 1, 12, 0, 0),
+                    updated_at=None,
                 ),
                 Mock(
                     id=2,
@@ -170,11 +185,17 @@ class TestTranslationProjectEndpoints:
                     project_type="job_descriptions",
                     status="active",
                     created_at=datetime(2024, 1, 2, 12, 0, 0),
+                    updated_at=None,
                 ),
             ]
-            mock_db.query.return_value = mock_query
+            mock_db.execute.side_effect = [count_result, project_result]
 
-            response = client.get("/api/translation-memory/projects?skip=0&limit=10")
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.get(
+                    "/api/translation-memory/projects?skip=0&limit=10"
+                )
             assert response.status_code == 200
 
             data = response.json()
@@ -183,20 +204,27 @@ class TestTranslationProjectEndpoints:
             assert len(data["projects"]) == 2
             assert data["projects"][0]["name"] == "Project 1"
 
-    def test_list_projects_with_pagination(self, client):
+    @pytest.mark.asyncio
+    async def test_list_projects_with_pagination(self):
         """Test project listing with pagination parameters."""
         with patch(
-            "jd_ingestion.api.endpoints.translation_memory.get_db"
+            "jd_ingestion.api.endpoints.translation_memory.get_async_session"
         ) as mock_get_db:
-            mock_db = Mock()
+            mock_db = AsyncMock()
             mock_get_db.return_value = mock_db
 
-            mock_query = Mock()
-            mock_query.count.return_value = 100
-            mock_query.offset.return_value.limit.return_value.all.return_value = []
-            mock_db.query.return_value = mock_query
+            count_result = Mock()
+            count_result.scalar_one.return_value = 100
+            project_result = Mock()
+            project_result.scalars.return_value.all.return_value = []
+            mock_db.execute.side_effect = [count_result, project_result]
 
-            response = client.get("/api/translation-memory/projects?skip=20&limit=5")
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.get(
+                    "/api/translation-memory/projects?skip=20&limit=5"
+                )
             assert response.status_code == 200
 
             data = response.json()
@@ -204,14 +232,20 @@ class TestTranslationProjectEndpoints:
             assert data["limit"] == 5
             assert data["total"] == 100
 
-    def test_list_projects_error(self, client):
+    @pytest.mark.asyncio
+    async def test_list_projects_error(self):
         """Test project listing with database error."""
         with patch(
-            "jd_ingestion.api.endpoints.translation_memory.get_db"
+            "jd_ingestion.api.endpoints.translation_memory.get_async_session"
         ) as mock_get_db:
-            mock_get_db.side_effect = Exception("Database connection failed")
+            mock_db = AsyncMock()
+            mock_get_db.return_value = mock_db
+            mock_db.execute.side_effect = Exception("Database connection failed")
 
-            response = client.get("/api/translation-memory/projects")
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.get("/api/translation-memory/projects")
             assert response.status_code == 500
             assert "Failed to list translation projects" in response.json()["detail"]
 
@@ -219,17 +253,37 @@ class TestTranslationProjectEndpoints:
 class TestTranslationMemoryEndpoints:
     """Test translation memory management endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_add_translation_success(
-        self, mock_service, client, sample_translation_data, mock_translation
+    async def test_add_translation_success(
+        self, mock_service, sample_translation_data, mock_translation
     ):
         """Test successful translation addition."""
-        mock_service.add_translation_memory.return_value = mock_translation
+        from unittest.mock import AsyncMock
 
-        response = client.post(
-            "/api/translation-memory/projects/1/translations",
-            json=sample_translation_data,
+        mock_service.add_translation_memory = AsyncMock(
+            return_value={
+                "id": 1,
+                "source_text": "Data Scientist",
+                "target_text": "Scientifique des données",
+                "source_language": "en",
+                "target_language": "fr",
+                "domain": "technology",
+                "subdomain": "data_science",
+                "quality_score": 0.95,
+                "confidence_score": 0.90,
+                "usage_count": 5,
+                "created_at": datetime(2024, 1, 1, 12, 0, 0),
+            }
         )
+
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/projects/1/translations",
+                json=sample_translation_data,
+            )
         assert response.status_code == 200
 
         data = response.json()
@@ -239,23 +293,28 @@ class TestTranslationMemoryEndpoints:
         assert data["translation"]["target_text"] == "Scientifique des données"
         assert data["translation"]["quality_score"] == 0.95
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_add_translation_service_error(
-        self, mock_service, client, sample_translation_data
+    async def test_add_translation_service_error(
+        self, mock_service, sample_translation_data
     ):
         """Test translation addition with service error."""
         mock_service.add_translation_memory.side_effect = Exception(
             "Translation creation failed"
         )
 
-        response = client.post(
-            "/api/translation-memory/projects/1/translations",
-            json=sample_translation_data,
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/projects/1/translations",
+                json=sample_translation_data,
+            )
         assert response.status_code == 500
         assert "Failed to add translation" in response.json()["detail"]
 
-    def test_add_translation_validation_error(self, client):
+    @pytest.mark.asyncio
+    async def test_add_translation_validation_error(self):
         """Test translation addition with validation errors."""
         invalid_data = {
             "source_text": "",  # Empty text
@@ -266,17 +325,21 @@ class TestTranslationMemoryEndpoints:
             "confidence_score": -0.1,  # Out of range
         }
 
-        response = client.post(
-            "/api/translation-memory/projects/1/translations", json=invalid_data
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/projects/1/translations", json=invalid_data
+            )
         assert response.status_code == 422
 
 
 class TestTranslationSuggestionsEndpoints:
     """Test translation suggestion endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_get_translation_suggestions_success(self, mock_service, client):
+    async def test_get_translation_suggestions_success(self, mock_service):
         """Test successful translation suggestions retrieval."""
         from unittest.mock import AsyncMock
 
@@ -310,7 +373,12 @@ class TestTranslationSuggestionsEndpoints:
             "context": "job_title",
         }
 
-        response = client.post("/api/translation-memory/suggestions", json=request_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/suggestions", json=request_data
+            )
         assert response.status_code == 200
 
         data = response.json()
@@ -319,10 +387,13 @@ class TestTranslationSuggestionsEndpoints:
         assert len(data["suggestions"]) == 2
         assert data["suggestions"][0]["similarity_score"] == 0.95
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_get_translation_suggestions_empty_results(self, mock_service, client):
+    async def test_get_translation_suggestions_empty_results(self, mock_service):
         """Test translation suggestions with no results."""
-        mock_service.get_translation_suggestions.return_value = []
+        from unittest.mock import AsyncMock
+
+        mock_service.get_translation_suggestions = AsyncMock(return_value=[])
 
         request_data = {
             "source_text": "Unique specialized term",
@@ -330,7 +401,12 @@ class TestTranslationSuggestionsEndpoints:
             "target_language": "fr",
         }
 
-        response = client.post("/api/translation-memory/suggestions", json=request_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/suggestions", json=request_data
+            )
         assert response.status_code == 200
 
         data = response.json()
@@ -338,8 +414,9 @@ class TestTranslationSuggestionsEndpoints:
         assert data["count"] == 0
         assert len(data["suggestions"]) == 0
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_get_translation_suggestions_table_not_exists(self, mock_service, client):
+    async def test_get_translation_suggestions_table_not_exists(self, mock_service):
         """Test translation suggestions when table doesn't exist."""
         mock_service.get_translation_suggestions.side_effect = Exception(
             'relation "translation_memory" does not exist'
@@ -351,7 +428,12 @@ class TestTranslationSuggestionsEndpoints:
             "target_language": "fr",
         }
 
-        response = client.post("/api/translation-memory/suggestions", json=request_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/suggestions", json=request_data
+            )
         assert response.status_code == 200
 
         data = response.json()
@@ -360,8 +442,9 @@ class TestTranslationSuggestionsEndpoints:
         assert "warning" in data
         assert "temporarily unavailable" in data["warning"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_get_translation_suggestions_service_error(self, mock_service, client):
+    async def test_get_translation_suggestions_service_error(self, mock_service):
         """Test translation suggestions with service error."""
         mock_service.get_translation_suggestions.side_effect = Exception(
             "Service failure"
@@ -373,7 +456,12 @@ class TestTranslationSuggestionsEndpoints:
             "target_language": "fr",
         }
 
-        response = client.post("/api/translation-memory/suggestions", json=request_data)
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/suggestions", json=request_data
+            )
         assert response.status_code == 500
         assert "Failed to get translation suggestions" in response.json()["detail"]
 
@@ -381,8 +469,9 @@ class TestTranslationSuggestionsEndpoints:
 class TestTranslationSearchEndpoints:
     """Test translation search endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_search_similar_translations_success(self, mock_service, client):
+    async def test_search_similar_translations_success(self, mock_service):
         """Test successful similar translations search."""
         mock_results = [
             {
@@ -400,19 +489,24 @@ class TestTranslationSearchEndpoints:
                 "project_id": 1,
             },
         ]
-        mock_service.search_similar_translations.return_value = mock_results
+        from unittest.mock import AsyncMock
 
-        response = client.post(
-            "/api/translation-memory/search",
-            params={
-                "query_text": "Senior Software Engineer",
-                "source_language": "en",
-                "target_language": "fr",
-                "project_id": 1,
-                "similarity_threshold": 0.7,
-                "limit": 10,
-            },
-        )
+        mock_service.search_similar_translations = AsyncMock(return_value=mock_results)
+
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/search",
+                params={
+                    "query_text": "Senior Software Engineer",
+                    "source_language": "en",
+                    "target_language": "fr",
+                    "project_id": 1,
+                    "similarity_threshold": 0.7,
+                    "limit": 10,
+                },
+            )
         assert response.status_code == 200
 
         data = response.json()
@@ -421,67 +515,85 @@ class TestTranslationSearchEndpoints:
         assert data["query"]["similarity_threshold"] == 0.7
         assert len(data["results"]) == 2
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_search_similar_translations_with_defaults(self, mock_service, client):
+    async def test_search_similar_translations_with_defaults(self, mock_service):
         """Test similar translations search with default parameters."""
-        mock_service.search_similar_translations.return_value = []
+        from unittest.mock import AsyncMock
 
-        response = client.post(
-            "/api/translation-memory/search",
-            params={
-                "query_text": "Project Manager",
-                "source_language": "en",
-                "target_language": "fr",
-            },
-        )
+        mock_service.search_similar_translations = AsyncMock(return_value=[])
+
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/search",
+                params={
+                    "query_text": "Project Manager",
+                    "source_language": "en",
+                    "target_language": "fr",
+                },
+            )
         assert response.status_code == 200
 
         data = response.json()
         assert data["query"]["similarity_threshold"] == 0.7  # default
         assert data["count"] == 0
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_search_similar_translations_error(self, mock_service, client):
+    async def test_search_similar_translations_error(self, mock_service):
         """Test similar translations search with error."""
         mock_service.search_similar_translations.side_effect = Exception(
             "Search failed"
         )
 
-        response = client.post(
-            "/api/translation-memory/search",
-            params={
-                "query_text": "Manager",
-                "source_language": "en",
-                "target_language": "fr",
-            },
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/search",
+                params={
+                    "query_text": "Manager",
+                    "source_language": "en",
+                    "target_language": "fr",
+                },
+            )
         assert response.status_code == 500
         assert "Failed to search similar translations" in response.json()["detail"]
 
-    def test_search_similar_translations_invalid_parameters(self, client):
+    @pytest.mark.asyncio
+    async def test_search_similar_translations_invalid_parameters(self):
         """Test similar translations search with invalid parameters."""
         # Missing required parameters
-        response = client.post("/api/translation-memory/search")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post("/api/translation-memory/search")
         assert response.status_code == 422
 
         # Invalid similarity threshold
-        response = client.post(
-            "/api/translation-memory/search",
-            params={
-                "query_text": "Manager",
-                "source_language": "en",
-                "target_language": "fr",
-                "similarity_threshold": 1.5,  # Invalid range
-            },
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/search",
+                params={
+                    "query_text": "Manager",
+                    "source_language": "en",
+                    "target_language": "fr",
+                    "similarity_threshold": 1.5,  # Invalid range
+                },
+            )
         assert response.status_code == 422
 
 
 class TestTranslationUsageEndpoints:
     """Test translation usage tracking endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_update_translation_usage_success(self, mock_service, client):
+    async def test_update_translation_usage_success(self, mock_service):
         """Test successful translation usage update."""
         from unittest.mock import AsyncMock
 
@@ -492,9 +604,12 @@ class TestTranslationUsageEndpoints:
             "user_feedback": {"rating": 5, "comment": "Excellent translation"},
         }
 
-        response = client.put(
-            "/api/translation-memory/translations/1/usage", json=request_data
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.put(
+                "/api/translation-memory/translations/1/usage", json=request_data
+            )
         assert response.status_code == 200
 
         data = response.json()
@@ -502,8 +617,9 @@ class TestTranslationUsageEndpoints:
         assert data["translation_id"] == 1
         assert "updated successfully" in data["message"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_update_translation_usage_not_found(self, mock_service, client):
+    async def test_update_translation_usage_not_found(self, mock_service):
         """Test translation usage update for non-existent translation."""
         mock_service.update_usage_stats.side_effect = ValueError(
             "Translation not found"
@@ -511,22 +627,29 @@ class TestTranslationUsageEndpoints:
 
         request_data = {"used_translation": False}
 
-        response = client.put(
-            "/api/translation-memory/translations/999/usage", json=request_data
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.put(
+                "/api/translation-memory/translations/999/usage", json=request_data
+            )
         assert response.status_code == 404
         assert "Translation not found" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_update_translation_usage_service_error(self, mock_service, client):
+    async def test_update_translation_usage_service_error(self, mock_service):
         """Test translation usage update with service error."""
         mock_service.update_usage_stats.side_effect = Exception("Database error")
 
         request_data = {"used_translation": True}
 
-        response = client.put(
-            "/api/translation-memory/translations/1/usage", json=request_data
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.put(
+                "/api/translation-memory/translations/1/usage", json=request_data
+            )
         assert response.status_code == 500
         assert "Failed to update translation usage" in response.json()["detail"]
 
@@ -534,8 +657,9 @@ class TestTranslationUsageEndpoints:
 class TestProjectStatisticsEndpoints:
     """Test project statistics endpoints."""
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_get_project_statistics_success(self, mock_service, client):
+    async def test_get_project_statistics_success(self, mock_service):
         """Test successful project statistics retrieval."""
         mock_stats = {
             "project_id": 1,
@@ -549,9 +673,14 @@ class TestProjectStatisticsEndpoints:
                 "translations_used_last_week": 89,
             },
         }
-        mock_service.get_project_statistics.return_value = mock_stats
+        from unittest.mock import AsyncMock
 
-        response = client.get("/api/translation-memory/projects/1/statistics")
+        mock_service.get_project_statistics = AsyncMock(return_value=mock_stats)
+
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/translation-memory/projects/1/statistics")
         assert response.status_code == 200
 
         data = response.json()
@@ -560,25 +689,33 @@ class TestProjectStatisticsEndpoints:
         assert data["statistics"]["average_quality_score"] == 0.87
         assert "domains" in data["statistics"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_get_project_statistics_not_found(self, mock_service, client):
+    async def test_get_project_statistics_not_found(self, mock_service):
         """Test project statistics for non-existent project."""
         mock_service.get_project_statistics.side_effect = ValueError(
             "Project not found"
         )
 
-        response = client.get("/api/translation-memory/projects/999/statistics")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/translation-memory/projects/999/statistics")
         assert response.status_code == 404
         assert "Project not found" in response.json()["detail"]
 
+    @pytest.mark.asyncio
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_get_project_statistics_service_error(self, mock_service, client):
+    async def test_get_project_statistics_service_error(self, mock_service):
         """Test project statistics with service error."""
         mock_service.get_project_statistics.side_effect = Exception(
             "Statistics calculation failed"
         )
 
-        response = client.get("/api/translation-memory/projects/1/statistics")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/translation-memory/projects/1/statistics")
         assert response.status_code == 500
         assert "Failed to get project statistics" in response.json()["detail"]
 
@@ -586,9 +723,13 @@ class TestProjectStatisticsEndpoints:
 class TestTranslationMemoryHealthEndpoint:
     """Test translation memory health endpoint."""
 
-    def test_health_check_success(self, client):
+    @pytest.mark.asyncio
+    async def test_health_check_success(self):
         """Test successful health check."""
-        response = client.get("/api/translation-memory/health")
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.get("/api/translation-memory/health")
         assert response.status_code == 200
 
         data = response.json()
@@ -683,10 +824,11 @@ class TestTranslationMemoryEndpointsValidation:
 class TestTranslationMemoryEndpointsIntegration:
     """Test integration aspects of translation memory endpoints."""
 
-    @patch("jd_ingestion.api.endpoints.translation_memory.get_db")
+    @pytest.mark.asyncio
+    @patch("jd_ingestion.api.endpoints.translation_memory.get_async_session")
     @patch("jd_ingestion.api.endpoints.translation_memory.tm_service")
-    def test_endpoints_database_session_handling(
-        self, mock_service, mock_get_db, client, sample_project_data
+    async def test_endpoints_database_session_handling(
+        self, mock_service, mock_get_db, sample_project_data
     ):
         """Test proper database session handling."""
         from unittest.mock import AsyncMock
@@ -706,9 +848,12 @@ class TestTranslationMemoryEndpointsIntegration:
         }
         mock_service.create_project = AsyncMock(return_value=mock_project_dict)
 
-        response = client.post(
-            "/api/translation-memory/projects", json=sample_project_data
-        )
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/api/translation-memory/projects", json=sample_project_data
+            )
         assert response.status_code == 200
 
         # Verify service was called with database session
@@ -716,17 +861,25 @@ class TestTranslationMemoryEndpointsIntegration:
         call_kwargs = mock_service.create_project.call_args[1]
         assert call_kwargs["db"] == mock_db
 
-    def test_translation_memory_error_response_format(self, client):
+    @pytest.mark.asyncio
+    async def test_translation_memory_error_response_format(self):
         """Test that error responses follow consistent format."""
         with patch(
             "jd_ingestion.api.endpoints.translation_memory.tm_service"
         ) as mock_service:
             mock_service.create_project.side_effect = Exception("Test error")
 
-            response = client.post(
-                "/api/translation-memory/projects",
-                json={"name": "Test", "source_language": "en", "target_language": "fr"},
-            )
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                response = await ac.post(
+                    "/api/translation-memory/projects",
+                    json={
+                        "name": "Test",
+                        "source_language": "en",
+                        "target_language": "fr",
+                    },
+                )
             assert response.status_code == 500
 
             error_data = response.json()
