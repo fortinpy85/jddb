@@ -672,6 +672,9 @@ async def upload_file(
             if temp_file_path.exists():
                 temp_file_path.unlink()
 
+    except HTTPException:
+        # Re-raise HTTP exceptions (400, 404, etc.) without modification
+        raise
     except Exception as e:
         logger.error("File upload failed", filename=file.filename, error=str(e))
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
