@@ -61,6 +61,7 @@ python-docx = "^1.2.0"
 textstat = "^0.7.10"
 scikit-learn = "^1.7.2"
 bcrypt = "<5.0.0"
+starlette = "^0.49.1"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.2" # Using the latest specified version
 pytest-asyncio = "^1.2.0"
