@@ -10,13 +10,26 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
 
 from ...database.connection import get_async_session
-from ...services.analytics_service import analytics_service
-from ...services.search_analytics_service import search_analytics_service
+from ...services.analytics_service import AnalyticsService
+from ...services.search_analytics_service import SearchAnalyticsService
+from ...utils import error_handler
 from ...utils.logging import get_logger
-from ...utils.error_handler import error_handler
 
 logger = get_logger(__name__)
 router = APIRouter(tags=["analytics"])
+
+
+async def get_analytics_service(
+    db: AsyncSession = Depends(get_async_session),
+) -> AnalyticsService:
+    return AnalyticsService()
+
+
+async def get_search_analytics_service(
+    db: AsyncSession = Depends(get_async_session),
+) -> SearchAnalyticsService:
+    return SearchAnalyticsService()
+
 
 # Error metrics endpoint added for comprehensive monitoring
 
@@ -51,11 +64,16 @@ class AIUsageTrackingRequest(BaseModel):
     metadata: Optional[Dict] = None
 
 
-@router.post("/track/activity")
+class ActivityTrackingResponse(BaseModel):
+    status: str
+    message: str
+
+
+@router.post("/track/activity", response_model=ActivityTrackingResponse)
 async def track_activity(
     request: ActivityTrackingRequest,
     http_request: Request,
-    db: AsyncSession = Depends(get_async_session),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Track user activity and system usage.
@@ -77,7 +95,6 @@ async def track_activity(
         session_id = http_request.headers.get("x-session-id")
 
         await analytics_service.track_activity(
-            db=db,
             action_type=request.action_type,
             endpoint=request.endpoint,
             http_method=request.http_method,
@@ -102,9 +119,15 @@ async def track_activity(
         )
 
 
-@router.post("/track/ai-usage")
+class AIUsageTrackingResponse(BaseModel):
+    status: str
+    message: str
+
+
+@router.post("/track/ai-usage", response_model=AIUsageTrackingResponse)
 async def track_ai_usage(
-    request: AIUsageTrackingRequest, db: AsyncSession = Depends(get_async_session)
+    request: AIUsageTrackingRequest,
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Track AI service usage and costs.
@@ -118,7 +141,6 @@ async def track_ai_usage(
     """
     try:
         await analytics_service.track_ai_usage(
-            db=db,
             service_type=request.service_type,
             operation_type=request.operation_type,
             model_name=request.model_name,
@@ -140,12 +162,17 @@ async def track_ai_usage(
         )
 
 
-@router.get("/statistics")
+class UsageStatisticsResponse(BaseModel):
+    status: str
+    statistics: Dict[str, Any]
+
+
+@router.get("/statistics", response_model=UsageStatisticsResponse)
 async def get_usage_statistics(
     period: str = Query("day", description="Time period: hour, day, week, month"),
     start_date: Optional[str] = Query(None, description="Start date (ISO format)"),
     end_date: Optional[str] = Query(None, description="End date (ISO format)"),
-    db: AsyncSession = Depends(get_async_session),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Get usage statistics for a specified period.
@@ -170,7 +197,7 @@ async def get_usage_statistics(
             end_datetime = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
 
         stats = await analytics_service.get_usage_statistics(
-            db=db, period=period, start_date=start_datetime, end_date=end_datetime
+            period=period, start_date=start_datetime, end_date=end_datetime
         )
 
         return {"status": "success", "statistics": stats}
@@ -185,9 +212,14 @@ async def get_usage_statistics(
         )
 
 
-@router.get("/dashboard")
+class AnalyticsDashboardResponse(BaseModel):
+    status: str
+    dashboard: Dict[str, Any]
+
+
+@router.get("/dashboard", response_model=AnalyticsDashboardResponse)
 async def get_analytics_dashboard(
-    db: AsyncSession = Depends(get_async_session),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Get comprehensive analytics dashboard data.
@@ -199,7 +231,7 @@ async def get_analytics_dashboard(
         Dashboard analytics data
     """
     try:
-        dashboard_data = await analytics_service.get_analytics_dashboard(db)
+        dashboard_data = await analytics_service.get_analytics_dashboard()
 
         return {"status": "success", "dashboard": dashboard_data}
 
@@ -210,12 +242,17 @@ async def get_analytics_dashboard(
         )
 
 
-@router.post("/metrics/generate")
+class SystemMetricsResponse(BaseModel):
+    status: str
+    metrics: Dict[str, Any]
+
+
+@router.post("/metrics/generate", response_model=SystemMetricsResponse)
 async def generate_system_metrics(
     metric_type: str = Query(
         "daily", description="Metric type: hourly, daily, weekly, monthly"
     ),
-    db: AsyncSession = Depends(get_async_session),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Generate and store aggregated system metrics.
@@ -232,7 +269,7 @@ async def generate_system_metrics(
             raise HTTPException(status_code=400, detail="Invalid metric type")
 
         metrics_summary = await analytics_service.generate_system_metrics(
-            db=db, metric_type=metric_type
+            metric_type=metric_type
         )
 
         return {"status": "success", "metrics": metrics_summary}
@@ -246,11 +283,17 @@ async def generate_system_metrics(
         )
 
 
-@router.get("/search-patterns")
+class SearchPatternsResponse(BaseModel):
+    status: str
+    period: str
+    search_patterns: Dict[str, Any]
+
+
+@router.get("/search-patterns", response_model=SearchPatternsResponse)
 async def get_search_patterns(
     period: str = Query("week", description="Analysis period"),
     limit: int = Query(20, description="Number of top patterns to return"),
-    db: AsyncSession = Depends(get_async_session),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Get search patterns and popular queries.
@@ -264,7 +307,7 @@ async def get_search_patterns(
         Search patterns analysis
     """
     try:
-        stats = await analytics_service.get_usage_statistics(db, period)
+        stats = await analytics_service.get_usage_statistics(period)
         search_patterns = stats["search_patterns"]
 
         # Limit popular searches
@@ -286,10 +329,16 @@ async def get_search_patterns(
         )
 
 
-@router.get("/performance")
+class PerformanceMetricsResponse(BaseModel):
+    status: str
+    period: str
+    performance: Dict[str, Any]
+
+
+@router.get("/performance", response_model=PerformanceMetricsResponse)
 async def get_performance_metrics(
     period: str = Query("day", description="Analysis period"),
-    db: AsyncSession = Depends(get_async_session),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Get system performance metrics.
@@ -302,7 +351,7 @@ async def get_performance_metrics(
         Performance metrics
     """
     try:
-        stats = await analytics_service.get_usage_statistics(db, period)
+        stats = await analytics_service.get_usage_statistics(period)
         performance_metrics = stats["performance"]
 
         return {
@@ -318,10 +367,16 @@ async def get_performance_metrics(
         )
 
 
-@router.get("/performance-summary")
+class PerformanceSummaryResponse(BaseModel):
+    status: str
+    period: str
+    summary: Dict[str, Any]
+
+
+@router.get("/performance-summary", response_model=PerformanceSummaryResponse)
 async def get_performance_summary(
     period: str = Query("day", description="Analysis period"),
-    db: AsyncSession = Depends(get_async_session),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Get system performance summary (alias for performance endpoint).
@@ -334,7 +389,7 @@ async def get_performance_summary(
         Performance summary data
     """
     try:
-        stats = await analytics_service.get_usage_statistics(db, period)
+        stats = await analytics_service.get_usage_statistics(period)
         performance_metrics = stats["performance"]
 
         return {
@@ -350,10 +405,16 @@ async def get_performance_summary(
         )
 
 
-@router.get("/ai-usage")
+class AIUsageAnalysisResponse(BaseModel):
+    status: str
+    period: str
+    ai_usage: Dict[str, Any]
+
+
+@router.get("/ai-usage", response_model=AIUsageAnalysisResponse)
 async def get_ai_usage_analysis(
     period: str = Query("week", description="Analysis period"),
-    db: AsyncSession = Depends(get_async_session),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Get detailed AI usage analysis.
@@ -366,7 +427,7 @@ async def get_ai_usage_analysis(
         AI usage analysis
     """
     try:
-        stats = await analytics_service.get_usage_statistics(db, period)
+        stats = await analytics_service.get_usage_statistics(period)
         ai_usage = stats["ai_usage"]
 
         return {"status": "success", "period": period, "ai_usage": ai_usage}
@@ -378,14 +439,21 @@ async def get_ai_usage_analysis(
         )
 
 
-@router.get("/trends")
+class UsageTrendsResponse(BaseModel):
+    status: str
+    metric: str
+    period_days: int
+    trends: List[Dict[str, Any]]
+
+
+@router.get("/trends", response_model=UsageTrendsResponse)
 async def get_usage_trends(
     metric: str = Query(
         "requests",
         description="Metric to analyze: requests, sessions, searches, ai_cost",
     ),
     days: int = Query(30, description="Number of days for trend analysis"),
-    db: AsyncSession = Depends(get_async_session),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Get usage trends over time.
@@ -410,20 +478,19 @@ async def get_usage_trends(
             day_end = current_date - timedelta(days=i)
 
             daily_stats = await analytics_service.get_usage_statistics(
-                db=db, period="day", start_date=day_start, end_date=day_end
+                period="day", start_date=day_start, end_date=day_end
             )
 
             # Extract the requested metric
-            if metric == "requests":
-                value = daily_stats["usage"]["total_requests"]
-            elif metric == "sessions":
-                value = daily_stats["usage"]["unique_sessions"]
-            elif metric == "searches":
-                value = daily_stats["search_patterns"]["total_searches"]
-            elif metric == "ai_cost":
-                value = daily_stats["ai_usage"]["total_cost_usd"]
-            else:
-                value = 0
+            value = 0
+            if "usage" in daily_stats and metric == "requests":
+                value = daily_stats["usage"].get("total_requests", 0)
+            elif "usage" in daily_stats and metric == "sessions":
+                value = daily_stats["usage"].get("unique_sessions", 0)
+            elif "search_patterns" in daily_stats and metric == "searches":
+                value = daily_stats["search_patterns"].get("total_searches", 0)
+            elif "ai_usage" in daily_stats and metric == "ai_cost":
+                value = daily_stats["ai_usage"].get("total_cost_usd", 0)
 
             trends_data.append({"date": day_start.isoformat(), "value": value})
 
@@ -444,11 +511,18 @@ async def get_usage_trends(
         )
 
 
-@router.get("/export")
+class ExportAnalyticsResponse(BaseModel):
+    status: str
+    format: str
+    message: Optional[str]
+    data: Optional[Dict[str, Any]]
+
+
+@router.get("/export", response_model=ExportAnalyticsResponse)
 async def export_analytics_data(
     period: str = Query("month", description="Period to export"),
     format: str = Query("json", description="Export format: json, csv"),
-    db: AsyncSession = Depends(get_async_session),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Export analytics data in various formats.
@@ -462,7 +536,7 @@ async def export_analytics_data(
         Exported analytics data
     """
     try:
-        stats = await analytics_service.get_usage_statistics(db, period)
+        stats = await analytics_service.get_usage_statistics(period)
 
         if format.lower() == "csv":
             # For CSV export, we'd typically generate CSV content
@@ -484,7 +558,13 @@ async def export_analytics_data(
 
 
 # Utility endpoint for session management
-@router.get("/session/generate")
+class SessionIDResponse(BaseModel):
+    status: str
+    session_id: str
+    instructions: str
+
+
+@router.get("/session/generate", response_model=SessionIDResponse)
 async def generate_session_id() -> Dict[str, Any]:
     """
     Generate a new session ID for client tracking.
@@ -503,7 +583,13 @@ async def generate_session_id() -> Dict[str, Any]:
     }
 
 
-@router.get("/errors/metrics")
+class ErrorMetricsResponse(BaseModel):
+    status: str
+    timestamp: str
+    error_metrics: Dict[str, Any]
+
+
+@router.get("/errors/metrics", response_model=ErrorMetricsResponse)
 async def get_error_metrics() -> Dict[str, Any]:
     """
     Get comprehensive error metrics and statistics.
@@ -605,7 +691,14 @@ async def get_error_metrics() -> Dict[str, Any]:
         )
 
 
-@router.post("/errors/reset")
+class ResetErrorMetricsResponse(BaseModel):
+    status: str
+    message: str
+    timestamp: str
+    previous_stats: Dict[str, Any]
+
+
+@router.post("/errors/reset", response_model=ResetErrorMetricsResponse)
 async def reset_error_metrics() -> Dict[str, Any]:
     """
     Reset error metrics counters.
@@ -648,16 +741,28 @@ async def reset_error_metrics() -> Dict[str, Any]:
 # Merged from search_analytics.py for consolidation
 
 
-@router.get("/search/performance")
+class SearchPerformanceResponse(BaseModel):
+    message: Optional[str] = None
+    period_days: Optional[int] = None
+    total_searches: Optional[int] = None
+    successful_searches: Optional[int] = None
+    failed_searches: Optional[int] = None
+    performance: Optional[Dict[str, Any]] = None
+    search_types: Optional[Dict[str, Any]] = None
+    success_rates: Optional[Dict[str, Any]] = None
+    popular_queries: Optional[List[Dict[str, Any]]] = None
+
+
+@router.get("/search/performance", response_model=SearchPerformanceResponse)
 async def get_search_performance(
     days: int = Query(30, ge=1, le=365, description="Number of days to analyze"),
-    db: AsyncSession = Depends(get_async_session),
+    search_analytics_service: SearchAnalyticsService = Depends(
+        get_search_analytics_service
+    ),
 ) -> Dict[str, Any]:
     """Get search performance statistics for the specified time period."""
     try:
-        stats = await search_analytics_service.get_search_performance_stats(
-            db=db, days=days
-        )
+        stats = await search_analytics_service.get_search_performance_stats(days=days)
 
         if not stats:
             return {
@@ -674,14 +779,23 @@ async def get_search_performance(
         )
 
 
-@router.get("/search/trends")
+class SearchTrendsResponse(BaseModel):
+    message: Optional[str] = None
+    period_days: Optional[int] = None
+    daily_volume: Optional[List[Dict[str, Any]]] = None
+    performance_trends: Optional[List[Dict[str, Any]]] = None
+
+
+@router.get("/search/trends", response_model=SearchTrendsResponse)
 async def get_search_trends(
     days: int = Query(7, ge=1, le=90, description="Number of days for trend analysis"),
-    db: AsyncSession = Depends(get_async_session),
+    search_analytics_service: SearchAnalyticsService = Depends(
+        get_search_analytics_service
+    ),
 ) -> Dict[str, Any]:
     """Get search query trends over time."""
     try:
-        trends = await search_analytics_service.get_query_trends(db=db, days=days)
+        trends = await search_analytics_service.get_query_trends(days=days)
 
         if not trends:
             return {
@@ -696,18 +810,27 @@ async def get_search_trends(
         raise HTTPException(status_code=500, detail="Failed to retrieve search trends")
 
 
-@router.get("/search/slow-queries")
+class SlowQueryResponse(BaseModel):
+    query_text: str
+    execution_time_ms: int
+    timestamp: datetime
+    search_id: str
+
+
+@router.get("/search/slow-queries", response_model=List[SlowQueryResponse])
 async def get_slow_queries(
     threshold_ms: int = Query(
         1000, ge=100, le=10000, description="Minimum execution time in milliseconds"
     ),
     limit: int = Query(10, ge=1, le=50, description="Number of queries to return"),
-    db: AsyncSession = Depends(get_async_session),
+    search_analytics_service: SearchAnalyticsService = Depends(
+        get_search_analytics_service
+    ),
 ) -> List[Dict[str, Any]]:
     """Get the slowest search queries above the threshold."""
     try:
         slow_queries = await search_analytics_service.get_slow_queries(
-            db=db, threshold_ms=threshold_ms, limit=limit
+            threshold_ms=threshold_ms, limit=limit
         )
 
         return slow_queries
@@ -724,19 +847,27 @@ class SearchFeedbackRequest(BaseModel):
     satisfaction_rating: Optional[int] = Field(None, ge=1, le=5)
 
 
-@router.post("/search/feedback/{search_id}")
+class SearchFeedbackRecordResponse(BaseModel):
+    message: str
+    search_id: str
+
+
+@router.post(
+    "/search/feedback/{search_id}", response_model=SearchFeedbackRecordResponse
+)
 async def record_search_feedback(
     search_id: str,
     clicked_results: List[int] = Query(default=[]),
     satisfaction_rating: Optional[int] = Query(
         None, ge=1, le=5, description="User satisfaction rating (1-5)"
     ),
-    db: AsyncSession = Depends(get_async_session),
+    search_analytics_service: SearchAnalyticsService = Depends(
+        get_search_analytics_service
+    ),
 ) -> Dict[str, str]:
     """Record user feedback for a specific search."""
     try:
         await search_analytics_service.record_user_feedback(
-            db=db,
             search_id=search_id,
             clicked_results=clicked_results,
             satisfaction_rating=satisfaction_rating,
@@ -751,24 +882,85 @@ async def record_search_feedback(
         raise HTTPException(status_code=500, detail="Failed to record search feedback")
 
 
-@router.get("/search/dashboard")
+class SearchAnalyticsDashboardResponse(BaseModel):
+    overview: Dict[str, Any]
+    trends: Dict[str, Any]
+    performance_issues: Dict[str, Any]
+    popular_queries: List[Dict[str, Any]]
+
+
+@router.get("/search/dashboard", response_model=SearchAnalyticsDashboardResponse)
 async def get_search_analytics_dashboard(
-    db: AsyncSession = Depends(get_async_session),
+    search_analytics_service: SearchAnalyticsService = Depends(
+        get_search_analytics_service
+    ),
 ) -> Dict[str, Any]:
     """Get comprehensive search analytics data for dashboard display."""
     try:
         # Get performance stats for last 30 days
         performance_stats = await search_analytics_service.get_search_performance_stats(
-            db=db, days=30
+            days=30
         )
 
         # Get trends for last 7 days
-        trends = await search_analytics_service.get_query_trends(db=db, days=7)
+        trends = await search_analytics_service.get_query_trends(days=7)
 
         # Get slow queries
         slow_queries = await search_analytics_service.get_slow_queries(
-            db=db, threshold_ms=1000, limit=5
+            threshold_ms=1000, limit=5
         )
+
+        def _generate_search_performance_alerts(
+            performance_stats: Dict[str, Any],
+        ) -> List[Dict[str, str]]:
+            """Generate performance alerts based on search analytics data."""
+            alerts: List[Dict[str, str]] = []
+
+            if not performance_stats:
+                return alerts
+
+            perf_data = performance_stats.get("performance", {})
+            avg_time = perf_data.get("avg_execution_time_ms", 0)
+            p95_time = perf_data.get("p95_execution_time_ms", 0)
+
+            # Alert for slow average response time
+            if avg_time > 2000:
+                alerts.append(
+                    {
+                        "type": "warning",
+                        "message": f"Average search time is {avg_time:.0f}ms - consider optimization",
+                        "metric": "avg_response_time",
+                    }
+                )
+
+            # Alert for slow 95th percentile
+            if p95_time > 5000:
+                alerts.append(
+                    {
+                        "type": "critical",
+                        "message": f"95th percentile response time is {p95_time:.0f}ms - urgent optimization needed",
+                        "metric": "p95_response_time",
+                    }
+                )
+
+            # Alert for low success rate
+            success_rates = performance_stats.get("success_rates", {})
+            error_count = success_rates.get("error", 0)
+            total_searches = performance_stats.get("total_searches", 0)
+
+            if (
+                total_searches > 0 and error_count / total_searches > 0.05
+            ):  # >5% error rate
+                error_rate = (error_count / total_searches) * 100
+                alerts.append(
+                    {
+                        "type": "warning",
+                        "message": f"Search error rate is {error_rate:.1f}% - investigate failures",
+                        "metric": "error_rate",
+                    }
+                )
+
+            return alerts
 
         dashboard_data = {
             "overview": {
@@ -799,67 +991,34 @@ async def get_search_analytics_dashboard(
         return dashboard_data
 
     except Exception as e:
-        logger.error("Failed to get search analytics dashboard data", error=str(e))
+        logger.error(f"Failed to get search analytics dashboard: {str(e)}")
         raise HTTPException(
-            status_code=500, detail="Failed to retrieve search dashboard data"
+            status_code=500, detail="Failed to get search analytics dashboard"
         )
-
-
-def _generate_search_performance_alerts(
-    performance_stats: Dict[str, Any],
-) -> List[Dict[str, str]]:
-    """Generate performance alerts based on search analytics data."""
-    alerts: List[Dict[str, str]] = []
-
-    if not performance_stats:
-        return alerts
-
-    perf_data = performance_stats.get("performance", {})
-    avg_time = perf_data.get("avg_execution_time_ms", 0)
-    p95_time = perf_data.get("p95_execution_time_ms", 0)
-
-    # Alert for slow average response time
-    if avg_time > 2000:
-        alerts.append(
-            {
-                "type": "warning",
-                "message": f"Average search time is {avg_time:.0f}ms - consider optimization",
-                "metric": "avg_response_time",
-            }
-        )
-
-    # Alert for slow 95th percentile
-    if p95_time > 5000:
-        alerts.append(
-            {
-                "type": "critical",
-                "message": f"95th percentile response time is {p95_time:.0f}ms - urgent optimization needed",
-                "metric": "p95_response_time",
-            }
-        )
-
-    # Alert for low success rate
-    success_rates = performance_stats.get("success_rates", {})
-    error_count = success_rates.get("error", 0)
-    total_searches = performance_stats.get("total_searches", 0)
-
-    if total_searches > 0 and error_count / total_searches > 0.05:  # >5% error rate
-        error_rate = (error_count / total_searches) * 100
-        alerts.append(
-            {
-                "type": "warning",
-                "message": f"Search error rate is {error_rate:.1f}% - investigate failures",
-                "metric": "error_rate",
-            }
-        )
-
-    return alerts
 
 
 # === Skills Analytics Endpoints ===
 
 
-@router.get("/skills/inventory")
+class SkillInventoryItem(BaseModel):
+    id: int
+    lightcast_id: str
+    name: str
+    skill_type: Optional[str]
+    category: Optional[str]
+    subcategory: Optional[str]
+    job_count: int
+    avg_confidence: float
+
+
+class SkillInventoryResponse(BaseModel):
+    total: int
+    limit: int
+    offset: int
+    skills: List[SkillInventoryItem]
+
+
+@router.get("/skills/inventory", response_model=SkillInventoryResponse)
 async def get_skills_inventory(
     search: Optional[str] = Query(None, description="Search skills by name"),
     skill_type: Optional[str] = Query(None, description="Filter by skill type"),
@@ -869,6 +1028,7 @@ async def get_skills_inventory(
     limit: int = Query(100, ge=1, le=1000, description="Number of skills to return"),
     offset: int = Query(0, ge=0, description="Number of skills to skip"),
     db: AsyncSession = Depends(get_async_session),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Get comprehensive skills inventory with job counts and statistics.
@@ -879,80 +1039,16 @@ async def get_skills_inventory(
     - Skill type and category information
     """
     try:
-        from sqlalchemy import func, select, desc
-        from ...database.models import Skill, job_description_skills
-
-        # Build base query for skills with job counts
-        skills_query = (
-            select(
-                Skill.id,
-                Skill.lightcast_id,
-                Skill.name,
-                Skill.skill_type,
-                Skill.category,
-                Skill.subcategory,
-                func.count(job_description_skills.c.job_id).label("job_count"),
-                func.avg(job_description_skills.c.confidence).label("avg_confidence"),
-            )
-            .outerjoin(
-                job_description_skills,
-                Skill.id == job_description_skills.c.skill_id,
-            )
-            .group_by(
-                Skill.id,
-                Skill.lightcast_id,
-                Skill.name,
-                Skill.skill_type,
-                Skill.category,
-                Skill.subcategory,
-            )
+        skills_data = await analytics_service.get_skills_inventory(
+            db=db,
+            search=search,
+            skill_type=skill_type,
+            min_job_count=min_job_count,
+            limit=limit,
+            offset=offset,
         )
 
-        # Apply filters
-        if search:
-            skills_query = skills_query.where(Skill.name.ilike(f"%{search}%"))
-        if skill_type:
-            skills_query = skills_query.where(Skill.skill_type == skill_type)
-        if min_job_count:
-            skills_query = skills_query.having(
-                func.count(job_description_skills.c.job_id) >= min_job_count
-            )
-
-        # Get total count before pagination
-        count_query = select(func.count()).select_from(skills_query.subquery())
-        count_result = await db.execute(count_query)
-        total_count = count_result.scalar_one()
-
-        # Apply ordering and pagination
-        skills_query = (
-            skills_query.order_by(desc("job_count"), Skill.name)
-            .limit(limit)
-            .offset(offset)
-        )
-
-        result = await db.execute(skills_query)
-        skills = result.all()
-
-        return {
-            "total": total_count,
-            "limit": limit,
-            "offset": offset,
-            "skills": [
-                {
-                    "id": skill.id,
-                    "lightcast_id": skill.lightcast_id,
-                    "name": skill.name,
-                    "skill_type": skill.skill_type,
-                    "category": skill.category,
-                    "subcategory": skill.subcategory,
-                    "job_count": skill.job_count,
-                    "avg_confidence": round(float(skill.avg_confidence), 3)
-                    if skill.avg_confidence
-                    else 0.0,
-                }
-                for skill in skills
-            ],
-        }
+        return skills_data
 
     except Exception as e:
         logger.error("Failed to get skills inventory", error=str(e))
@@ -961,11 +1057,29 @@ async def get_skills_inventory(
         )
 
 
-@router.get("/skills/top")
+class TopSkillItem(BaseModel):
+    id: int
+    lightcast_id: str
+    name: str
+    skill_type: Optional[str]
+    category: Optional[str]
+    job_count: int
+    percentage: float
+    avg_confidence: float
+    confidence_range: Dict[str, float]
+
+
+class TopSkillsResponse(BaseModel):
+    total_jobs: int
+    top_skills: List[TopSkillItem]
+
+
+@router.get("/skills/top", response_model=TopSkillsResponse)
 async def get_top_skills(
     limit: int = Query(10, ge=1, le=100, description="Number of top skills to return"),
     skill_type: Optional[str] = Query(None, description="Filter by skill type"),
     db: AsyncSession = Depends(get_async_session),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Get top N most frequently requested skills across all job descriptions.
@@ -973,86 +1087,32 @@ async def get_top_skills(
     Returns skills ordered by the number of jobs that require them.
     """
     try:
-        from sqlalchemy import func, select, desc
-        from ...database.models import Skill, JobDescription, job_description_skills
-
-        # Query for top skills
-        query = (
-            select(
-                Skill.id,
-                Skill.lightcast_id,
-                Skill.name,
-                Skill.skill_type,
-                Skill.category,
-                func.count(job_description_skills.c.job_id).label("job_count"),
-                func.avg(job_description_skills.c.confidence).label("avg_confidence"),
-                func.max(job_description_skills.c.confidence).label("max_confidence"),
-                func.min(job_description_skills.c.confidence).label("min_confidence"),
-            )
-            .join(
-                job_description_skills,
-                Skill.id == job_description_skills.c.skill_id,
-            )
-            .group_by(
-                Skill.id,
-                Skill.lightcast_id,
-                Skill.name,
-                Skill.skill_type,
-                Skill.category,
-            )
+        top_skills_data = await analytics_service.get_top_skills(
+            db=db, limit=limit, skill_type=skill_type
         )
 
-        # Apply filter
-        if skill_type:
-            query = query.where(Skill.skill_type == skill_type)
-
-        # Order by job count and limit
-        query = query.order_by(desc("job_count"), Skill.name).limit(limit)
-
-        result = await db.execute(query)
-        skills = result.all()
-
-        # Get total job count for percentage calculation
-        total_jobs_result = await db.execute(select(func.count(JobDescription.id)))
-        total_jobs = total_jobs_result.scalar_one()
-
-        return {
-            "total_jobs": total_jobs,
-            "top_skills": [
-                {
-                    "id": skill.id,
-                    "lightcast_id": skill.lightcast_id,
-                    "name": skill.name,
-                    "skill_type": skill.skill_type,
-                    "category": skill.category,
-                    "job_count": skill.job_count,
-                    "percentage": round((skill.job_count / total_jobs * 100), 2)
-                    if total_jobs > 0
-                    else 0.0,
-                    "avg_confidence": round(float(skill.avg_confidence), 3)
-                    if skill.avg_confidence
-                    else 0.0,
-                    "confidence_range": {
-                        "min": round(float(skill.min_confidence), 3)
-                        if skill.min_confidence
-                        else 0.0,
-                        "max": round(float(skill.max_confidence), 3)
-                        if skill.max_confidence
-                        else 0.0,
-                    },
-                }
-                for skill in skills
-            ],
-        }
+        return top_skills_data
 
     except Exception as e:
         logger.error("Failed to get top skills", error=str(e))
         raise HTTPException(status_code=500, detail="Failed to retrieve top skills")
 
 
-@router.get("/skills/types")
+class SkillTypeItem(BaseModel):
+    type: str
+    skill_count: int
+    job_count: int
+
+
+class SkillTypesResponse(BaseModel):
+    skill_types: List[SkillTypeItem]
+    total_types: int
+
+
+@router.get("/skills/types", response_model=SkillTypesResponse)
 async def get_skill_types(
     db: AsyncSession = Depends(get_async_session),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Get distribution of skills by type.
@@ -1060,51 +1120,29 @@ async def get_skill_types(
     Returns count of skills for each skill type category.
     """
     try:
-        from sqlalchemy import func, select, desc
-        from ...database.models import Skill, job_description_skills
+        skill_types_data = await analytics_service.get_skill_types(db=db)
 
-        # Query for skill types distribution
-        query = (
-            select(
-                Skill.skill_type,
-                func.count(Skill.id).label("skill_count"),
-                func.count(func.distinct(job_description_skills.c.job_id)).label(
-                    "job_count"
-                ),
-            )
-            .outerjoin(
-                job_description_skills,
-                Skill.id == job_description_skills.c.skill_id,
-            )
-            .group_by(Skill.skill_type)
-            .order_by(desc("skill_count"))
-        )
-
-        result = await db.execute(query)
-        types = result.all()
-
-        return {
-            "skill_types": [
-                {
-                    "type": skill_type.skill_type
-                    if skill_type.skill_type
-                    else "Unknown",
-                    "skill_count": skill_type.skill_count,
-                    "job_count": skill_type.job_count,
-                }
-                for skill_type in types
-            ],
-            "total_types": len(types),
-        }
+        return skill_types_data
 
     except Exception as e:
         logger.error("Failed to get skill types", error=str(e))
         raise HTTPException(status_code=500, detail="Failed to retrieve skill types")
 
 
-@router.get("/skills/stats")
+class SkillsStatisticsResponse(BaseModel):
+    total_unique_skills: int
+    total_skill_associations: int
+    jobs_with_skills: int
+    total_jobs: int
+    skills_coverage_percentage: float
+    avg_skills_per_job: float
+    avg_confidence_score: float
+
+
+@router.get("/skills/stats", response_model=SkillsStatisticsResponse)
 async def get_skills_statistics(
     db: AsyncSession = Depends(get_async_session),
+    analytics_service: AnalyticsService = Depends(get_analytics_service),
 ) -> Dict[str, Any]:
     """
     Get overall skills statistics.
@@ -1112,59 +1150,9 @@ async def get_skills_statistics(
     Returns summary statistics about skills in the system.
     """
     try:
-        from sqlalchemy import func, select
-        from ...database.models import Skill, JobDescription, job_description_skills
+        skills_stats_data = await analytics_service.get_skills_statistics(db=db)
 
-        # Total unique skills
-        total_skills_result = await db.execute(select(func.count(Skill.id)))
-        total_skills = total_skills_result.scalar_one()
-
-        # Total skill-job associations
-        total_associations_result = await db.execute(
-            select(func.count()).select_from(job_description_skills)
-        )
-        total_associations = total_associations_result.scalar_one()
-
-        # Jobs with skills
-        jobs_with_skills_result = await db.execute(
-            select(
-                func.count(func.distinct(job_description_skills.c.job_id))
-            ).select_from(job_description_skills)
-        )
-        jobs_with_skills = jobs_with_skills_result.scalar_one()
-
-        # Total jobs
-        total_jobs_result = await db.execute(select(func.count(JobDescription.id)))
-        total_jobs = total_jobs_result.scalar_one()
-
-        # Average skills per job
-        avg_skills_per_job = (
-            total_associations / jobs_with_skills if jobs_with_skills > 0 else 0
-        )
-
-        # Average confidence score
-        avg_confidence_result = await db.execute(
-            select(func.avg(job_description_skills.c.confidence)).select_from(
-                job_description_skills
-            )
-        )
-        avg_confidence = avg_confidence_result.scalar_one()
-
-        return {
-            "total_unique_skills": total_skills,
-            "total_skill_associations": total_associations,
-            "jobs_with_skills": jobs_with_skills,
-            "total_jobs": total_jobs,
-            "skills_coverage_percentage": round(
-                (jobs_with_skills / total_jobs * 100), 2
-            )
-            if total_jobs > 0
-            else 0.0,
-            "avg_skills_per_job": round(avg_skills_per_job, 2),
-            "avg_confidence_score": round(float(avg_confidence), 3)
-            if avg_confidence
-            else 0.0,
-        }
+        return skills_stats_data
 
     except Exception as e:
         logger.error("Failed to get skills statistics", error=str(e))

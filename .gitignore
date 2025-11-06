@@ -89,6 +89,7 @@ debug/
 .env.*.local
 .env.production
 .env.staging
+.env.test
 !.env.example
 
 # Caches
@@ -119,12 +120,32 @@ Desktop.ini
 # Project specific
 backend/logs/
 backend/alembic/__pycache__/
+backend/alembic/versions/__pycache__/
 backend/src/__pycache__/
 backend/tests/__pycache__/
+backend/tests/performance/__pycache__/
 backend/.pytest_cache/
 backend/htmlcov/
+backend/init_database.sql
+backend/docker-compose.test.yml
+backend/migrate_test_fixtures.py
+backend/refactor_*.py
+backend/tests/test_init.sql
 nul
 backend/nul
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Claude documentation (session notes, not production docs)
+claudedocs/
+COMMIT_VERIFICATION_*.md
+TEST_FAILURES_*.md
+*_ANALYSIS.md
+*_SUMMARY.md
+*_PROGRESS.md
+*_STATUS.md
+todo.md
 
 # Security scan results (artifacts, not source code)
 *-report.json
